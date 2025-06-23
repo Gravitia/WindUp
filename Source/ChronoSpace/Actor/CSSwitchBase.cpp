@@ -18,33 +18,34 @@ ACSSwitchBase::ACSSwitchBase()
 	StaticMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComp"));
 	StaticMeshComp->SetIsReplicated(true);
 	RootComponent = StaticMeshComp;
-
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> StaticMeshRef(TEXT("/Script/Engine.StaticMesh'/Game/Mesh/Switch/functional_elements.functional_elements'"));
+	
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> StaticMeshRef(TEXT("/Script/Engine.StaticMesh'/Game/30_Mesh/Switch/functional_elements.functional_elements'"));
 	if ( StaticMeshRef.Succeeded() )
 	{
 		StaticMeshComp->SetStaticMesh(StaticMeshRef.Object);
 	}
 
+	
 	// Material
-	static ConstructorHelpers::FObjectFinder<UMaterialInstance> MaterialGlowNonInteractedRef(TEXT("/Script/Engine.MaterialInstanceConstant'/Game/Material/MI_Switch_GlowNonInteracted.MI_Switch_GlowNonInteracted'"));
+	static ConstructorHelpers::FObjectFinder<UMaterialInstance> MaterialGlowNonInteractedRef(TEXT("/Script/Engine.MaterialInstanceConstant'/Game/31_Material/MI_Switch_GlowNonInteracted.MI_Switch_GlowNonInteracted'"));
 	if (MaterialGlowNonInteractedRef.Succeeded())
 	{
 		MaterialGlowNonInteracted = MaterialGlowNonInteractedRef.Object;
 	}
 
-	static ConstructorHelpers::FObjectFinder<UMaterialInstance> MaterialGlowInteractedRef(TEXT("/Script/Engine.MaterialInstanceConstant'/Game/Material/MI_Switch_GlowInteracted.MI_Switch_GlowInteracted'"));
+	static ConstructorHelpers::FObjectFinder<UMaterialInstance> MaterialGlowInteractedRef(TEXT("/Script/Engine.MaterialInstanceConstant'/Game/31_Material/MI_Switch_GlowInteracted.MI_Switch_GlowInteracted'"));
 	if (MaterialGlowInteractedRef.Succeeded())
 	{
 		MaterialGlowInteracted = MaterialGlowInteractedRef.Object;
 	}
 
-	static ConstructorHelpers::FObjectFinder<UMaterialInstance> MaterialSolidNonInteractedRef(TEXT("/Script/Engine.MaterialInstanceConstant'/Game/Material/MI_Switch_SolidNonInteracted.MI_Switch_SolidNonInteracted'"));
+	static ConstructorHelpers::FObjectFinder<UMaterialInstance> MaterialSolidNonInteractedRef(TEXT("/Script/Engine.MaterialInstanceConstant'/Game/31_Material/MI_Switch_SolidNonInteracted.MI_Switch_SolidNonInteracted'"));
 	if (MaterialSolidNonInteractedRef.Succeeded())
 	{
 		MaterialSolidNonInteracted = MaterialSolidNonInteractedRef.Object;
 	}
 
-	static ConstructorHelpers::FObjectFinder<UMaterialInstance> MaterialSolidInteractedRef(TEXT("/Script/Engine.MaterialInstanceConstant'/Game/Material/MI_Switch_SolidInteracted.MI_Switch_SolidInteracted'"));
+	static ConstructorHelpers::FObjectFinder<UMaterialInstance> MaterialSolidInteractedRef(TEXT("/Script/Engine.MaterialInstanceConstant'/Game/31_Material/MI_Switch_SolidInteracted.MI_Switch_SolidInteracted'"));
 	if (MaterialSolidInteractedRef.Succeeded())
 	{
 		MaterialSolidInteracted = MaterialSolidInteractedRef.Object;
@@ -73,7 +74,7 @@ ACSSwitchBase::ACSSwitchBase()
 	InteractionPromptComponent->SetupAttachment(Trigger);
 	InteractionPromptComponent->SetRelativeLocation(FVector(0.0f, 0.0f, 130.0f));
 
-	static ConstructorHelpers::FClassFinder<UUserWidget> InteractionPromptWidgetRef(TEXT("/Game/Blueprint/UI/BP_InteractionPrompt.BP_InteractionPrompt_C"));
+	static ConstructorHelpers::FClassFinder<UUserWidget> InteractionPromptWidgetRef(TEXT("/Game/01_Blueprint/UI/BP_InteractionPrompt.BP_InteractionPrompt_C"));
 	if (InteractionPromptWidgetRef.Class)
 	{
 		InteractionPromptComponent->SetWidgetClass(InteractionPromptWidgetRef.Class);
