@@ -33,7 +33,7 @@ ACSLabyrinthKeyAltar::ACSLabyrinthKeyAltar()
 	SphereTrigger->SetIsReplicated(true);
 
 
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> StaticMeshRef(TEXT("/Script/Engine.StaticMesh'/Game/Mesh/StaticMesh/SM_SM_Altar.SM_SM_Altar'"));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> StaticMeshRef(TEXT("/Script/Engine.StaticMesh'/Game/30_Mesh/StaticMesh/SM_SM_Altar.SM_SM_Altar'"));
 	if (StaticMeshRef.Object)
 	{
 		StaticMeshComp->SetStaticMesh(StaticMeshRef.Object);
