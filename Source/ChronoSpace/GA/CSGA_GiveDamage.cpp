@@ -36,7 +36,7 @@ void UCSGA_GiveDamage::ActivateAbility(const FGameplayAbilitySpecHandle Handle, 
 
 void UCSGA_GiveDamage::OnTraceResultCallback(const FGameplayAbilityTargetDataHandle& TargetDataHandle)
 {
-	int32 idx = 0;
+	
 	FGameplayEffectSpecHandle EffectSpecHandle = MakeOutgoingGameplayEffectSpec(DamageEffect);
 	//UE_LOG(LogCS, Log, TEXT("OnTraceResultCallback"));
 	if (EffectSpecHandle.IsValid())
@@ -45,7 +45,8 @@ void UCSGA_GiveDamage::OnTraceResultCallback(const FGameplayAbilityTargetDataHan
 		ApplyGameplayEffectSpecToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, EffectSpecHandle, TargetDataHandle);
 	}
 
-	/*while (UAbilitySystemBlueprintLibrary::TargetDataHasHitResult(TargetDataHandle, idx))
+	/*int32 idx = 0;
+	while (UAbilitySystemBlueprintLibrary::TargetDataHasHitResult(TargetDataHandle, idx))
 	{
 		FHitResult HitResult = UAbilitySystemBlueprintLibrary::GetHitResultFromTargetData(TargetDataHandle, idx);
 		
