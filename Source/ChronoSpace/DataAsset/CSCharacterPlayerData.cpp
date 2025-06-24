@@ -11,6 +11,7 @@ UCSCharacterPlayerData::UCSCharacterPlayerData()
 	MaxWalkSpeed = 500.f;
 	MinAnalogWalkSpeed = 20.f;
 	BrakingDecelerationWalking = 2000.f;
+	MaxDashSpeed = 900.f;
 
 	TargetArmLength = 400.0f;
 	CameraOffset = FVector();

@@ -75,6 +75,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UInputAction> AbilityPreviewAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UInputAction> DashAction;
+
 // ASC Section
 protected:
 	UPROPERTY(EditAnywhere, Category = GAS)
@@ -121,4 +124,17 @@ public:
 public:
 	UFUNCTION(BlueprintCallable, Category = "UI")
 	void RequestUIRefresh();
+
+
+// Dash
+protected:
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float WalkSpeed = 500.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float DashSpeed = 900.0f;
+
+	void StartDash();
+	void StopDash();
+
 };
