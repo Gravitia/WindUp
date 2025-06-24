@@ -116,6 +116,9 @@ void ACSCharacterPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	EnhancedInputComponent->BindAction(ShoulderMoveAction, ETriggerEvent::Triggered, this, &ACSCharacterPlayer::ShoulderMove);
 	EnhancedInputComponent->BindAction(ShoulderLookAction, ETriggerEvent::Triggered, this, &ACSCharacterPlayer::ShoulderLook);
 
+	EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Started, this, &ACSCharacterPlayer::StartDash);
+	EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Completed, this, &ACSCharacterPlayer::StopDash);
+
 	GASManagerComponent->SetupGASInputComponent(Cast<UEnhancedInputComponent>(PlayerInputComponent));
 	InteractionComponent->SetInteractionInputComponent(Cast<UEnhancedInputComponent>(PlayerInputComponent));
 }
@@ -185,6 +188,10 @@ void ACSCharacterPlayer::SetData()
 	GetCharacterMovement()->MaxWalkSpeed = Data->MaxWalkSpeed;
 	GetCharacterMovement()->MinAnalogWalkSpeed = Data->MinAnalogWalkSpeed;
 	GetCharacterMovement()->BrakingDecelerationWalking = Data->BrakingDecelerationWalking;
+	
+	WalkSpeed = Data->MaxWalkSpeed;
+	DashSpeed = Data->MaxDashSpeed;
+
 
 	GetCapsuleComponent()->SetCapsuleSize(Data->CapsuleRadius, Data->CapsuleHeight); 
 
@@ -228,4 +235,14 @@ void ACSCharacterPlayer::RequestUIRefresh()
 	{
 		PC->RefreshGameUI();
 	}
+}
+
+void ACSCharacterPlayer::StartDash()
+{
+	GetCharacterMovement()->MaxWalkSpeed = DashSpeed;
+}
+
+void ACSCharacterPlayer::StopDash()
+{
+	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 }
