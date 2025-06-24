@@ -46,7 +46,7 @@ ACSLabyrinthKeyAltar::ACSLabyrinthKeyAltar()
 	InteractionPromptComponent->SetupAttachment(SphereTrigger);
 	InteractionPromptComponent->SetRelativeLocation(FVector(0.0f, 0.0f, 100.0f));
 
-	static ConstructorHelpers::FClassFinder<UUserWidget> InteractionPromptWidgetRef(TEXT("/Game/Blueprint/UI/BP_InteractionPromptAltar.BP_InteractionPromptAltar_C"));
+	static ConstructorHelpers::FClassFinder<UUserWidget> InteractionPromptWidgetRef(TEXT("/Game/01_Blueprint/UI/BP_InteractionPromptAltar.BP_InteractionPromptAltar_C"));
 	if (InteractionPromptWidgetRef.Class)
 	{
 		InteractionPromptComponent->SetWidgetClass(InteractionPromptWidgetRef.Class);
