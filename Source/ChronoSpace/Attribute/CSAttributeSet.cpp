@@ -59,6 +59,13 @@ void UCSAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallback
 			}
 		}
 	}
+
+
+	if (Data.EvaluatedData.Attribute == GetHealingAttribute())
+	{
+		SetHealth(FMath::Clamp(GetHealth() + GetHealing(), MinimumHealth, GetMaxHealth()));
+
+	}
 }
 
 void UCSAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
