@@ -12,7 +12,7 @@ ACSTA_BoxTrigger::ACSTA_BoxTrigger()
 {
     bReplicates = true;
 
-    const FString AssetPath = TEXT("/Game/DataAssets/CSDA_BoxProperties.CSDA_BoxProperties");
+    const FString AssetPath = TEXT("/Game/04_DataAssets/CSDA_BoxProperties.CSDA_BoxProperties");
     UCSDA_BoxProperties* BoxPropertiesAsset = Cast<UCSDA_BoxProperties>(StaticLoadObject(UCSDA_BoxProperties::StaticClass(), nullptr, *AssetPath));
     
     BoxExtentSize = 200.0f; // default value
@@ -45,7 +45,7 @@ ACSTA_BoxTrigger::ACSTA_BoxTrigger()
     StaticMeshComp->SetupAttachment(BoxTrigger);
     StaticMeshComp->SetIsReplicated(true);
     
-    static ConstructorHelpers::FObjectFinder<UStaticMesh> StaticMeshRef(TEXT("/Script/Engine.StaticMesh'/Game/Mesh/StaticMesh/SM_Cube.SM_Cube'"));
+    static ConstructorHelpers::FObjectFinder<UStaticMesh> StaticMeshRef(TEXT("/Script/Engine.StaticMesh'/Game/30_Mesh/StaticMesh/SM_Cube.SM_Cube'"));
     if ( StaticMeshRef.Object )
     {
         StaticMeshComp->SetStaticMesh(StaticMeshRef.Object);

@@ -46,13 +46,13 @@ ACSTA_BlackHoleSphere::ACSTA_BlackHoleSphere()
 	StaticMeshComp->SetupAttachment(GravitySphereTrigger);
 	StaticMeshComp->SetIsReplicated(true);
 
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> StaticMeshRef(TEXT("/Script/Engine.StaticMesh'/Game/Mesh/StaticMesh/MaterialSphere.MaterialSphere'"));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> StaticMeshRef(TEXT("/Script/Engine.StaticMesh'/Game/30_Mesh/StaticMesh/MaterialSphere.MaterialSphere'"));
 	if (StaticMeshRef.Object)
 	{
 		StaticMeshComp->SetStaticMesh(StaticMeshRef.Object);
 	}
 
-	static ConstructorHelpers::FObjectFinder<UMaterialInstance> MaterialRef(TEXT("/Script/Engine.MaterialInstanceConstant'/Game/Material/MI_BlackHole.MI_BlackHole'"));
+	static ConstructorHelpers::FObjectFinder<UMaterialInstance> MaterialRef(TEXT("/Script/Engine.MaterialInstanceConstant'/Game/31_Material/MI_BlackHole.MI_BlackHole'"));
 	if (MaterialRef.Object)
 	{
 		StaticMeshComp->SetMaterial(0, MaterialRef.Object);
