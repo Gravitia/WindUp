@@ -46,6 +46,12 @@ public:
 	UFUNCTION()
 	virtual void OnRep_MaxHealth(const FGameplayAttributeData& OldMaxHealth);
 
+	UPROPERTY(BlueprintReadOnly, Category = "Energy", Meta = (AllowPrivateAccess = true))
+	FGameplayAttributeData Damage;
+	ATTRIBUTE_ACCESSORS(UCSAttributeSet, Damage);
+
 protected:
+	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
 	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
+	
 };

@@ -7,11 +7,10 @@
 #include "Player/CSPlayerController.h"
 #include "Net/UnrealNetwork.h"
 
-UCSAttributeSet::UCSAttributeSet()
+UCSAttributeSet::UCSAttributeSet() : MaxHealth(100.0f), Damage(0.0f)
 {
-	// 기본값 설정
-	InitHealth(100.0f);
-	InitMaxHealth(100.0f);
+	InitHealth(GetMaxHealth());
+
 }
 
 void UCSAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -32,13 +31,44 @@ void UCSAttributeSet::OnRep_MaxHealth(const FGameplayAttributeData& OldMaxHealth
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UCSAttributeSet, MaxHealth, OldMaxHealth);
 }
 
+void UCSAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
+{
+	if (Attribute == GetDamageAttribute())
+	{
+		NewValue = NewValue < 0.0f ? 0.0f : NewValue;
+	}
+
+}
+
 void UCSAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
 {
 	Super::PostGameplayEffectExecute(Data);
 
+	float MinimumHealth = 0.0f;
+
 	// HP 클램핑
 	if (Data.EvaluatedData.Attribute == GetHealthAttribute())
 	{
-		SetHealth(FMath::Clamp(GetHealth(), 0.0f, GetMaxHealth()));
+		SetHealth(FMath::Clamp(GetHealth(), MinimumHealth, GetMaxHealth()));
+	}
+
+	if (Data.EvaluatedData.Attribute == GetDamageAttribute())
+	{
+		SetHealth(FMath::Clamp(GetHealth() - GetDamage(), MinimumHealth, GetMaxHealth()));
+
+		UE_LOG(LogTemp, Warning, TEXT(" Damage Detected : %f | Now Energy : %f"), GetDamage(), GetHealth());
+
+		AActor* TargetActor = Data.Target.GetAvatarActor();
+		if (TargetActor == nullptr) return;
+
+		if (APawn* Pawn = Cast<APawn>(TargetActor))
+		{
+			ACSPlayerController* PC = Cast<ACSPlayerController>(Pawn->GetController());
+
+			if (PC)
+			{
+				PC->ShakeCamera();
+			}
+		}
 	}
 }
