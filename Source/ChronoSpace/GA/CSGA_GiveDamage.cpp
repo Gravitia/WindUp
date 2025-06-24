@@ -16,13 +16,18 @@ UCSGA_GiveDamage::UCSGA_GiveDamage()
 	if ( DamageEffectRef.Succeeded() )
 	{
 		DamageEffect = DamageEffectRef.Class;
+		UE_LOG(LogCS, Log, TEXT("DamageEffect class not null "));
+	}
+	else
+	{
+		UE_LOG(LogCS, Log, TEXT("DamageEffect is null"));
 	}
 }
 
 void UCSGA_GiveDamage::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
-	//UE_LOG(LogCS, Log, TEXT("ActivateAbility - GiveDamage"));
+	UE_LOG(LogCS, Log, TEXT("ActivateAbility - GiveDamage"));
 
 	UCSAT_MultiTrace* DamageTraceTask = UCSAT_MultiTrace::CreateTask(this, ACSTA_MultiTrace::StaticClass());
 	DamageTraceTask->OnComplete.AddDynamic(this, &UCSGA_GiveDamage::OnTraceResultCallback);

@@ -7,7 +7,7 @@
 #include "Player/CSPlayerController.h"
 #include "Net/UnrealNetwork.h"
 
-UCSAttributeSet::UCSAttributeSet() : MaxHealth(100.0f), Damage(0.0f)
+UCSAttributeSet::UCSAttributeSet() : MaxHealth(100.0f), Damage(30.0f)
 {
 	InitHealth(GetMaxHealth());
 
@@ -40,9 +40,16 @@ void UCSAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, fl
 
 }
 
+bool UCSAttributeSet::PreGameplayEffectExecute(FGameplayEffectModCallbackData& Data)
+{
+	return true;
+}
+
 void UCSAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
 {
 	Super::PostGameplayEffectExecute(Data);
+
+	UE_LOG(LogCS, Log, TEXT("PostGameplayEffectExecute"));
 
 	float MinimumHealth = 0.0f;
 
