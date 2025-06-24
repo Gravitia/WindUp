@@ -48,11 +48,11 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Energy", Meta = (AllowPrivateAccess = true))
 	FGameplayAttributeData Damage;
-	ATTRIBUTE_ACCESSORS(UCSAttributeSet, Damage);
+	ATTRIBUTE_ACCESSORS(UCSAttributeSet, Damage)
 
 protected:
 	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
-	virtual bool PreGameplayEffectExecute(struct FGameplayEffectModCallbackData& Data) override;
+	//virtual bool PreGameplayEffectExecute(struct FGameplayEffectModCallbackData& Data) override;
 	virtual void PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData& Data) override;
 	
 };

@@ -2,33 +2,14 @@
 
 
 #include "Attribute/CSAttributeSet.h"
-#include "ChronoSpace.h"
 #include "GameplayEffectExtension.h"
 #include "Player/CSPlayerController.h"
 #include "Net/UnrealNetwork.h"
+#include "ChronoSpace.h"
 
-UCSAttributeSet::UCSAttributeSet() : MaxHealth(100.0f), Damage(30.0f)
+UCSAttributeSet::UCSAttributeSet() : MaxHealth(100.0f), Damage(30.0f) 
 {
 	InitHealth(GetMaxHealth());
-
-}
-
-void UCSAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME_CONDITION_NOTIFY(UCSAttributeSet, Health, COND_None, REPNOTIFY_Always);
-	DOREPLIFETIME_CONDITION_NOTIFY(UCSAttributeSet, MaxHealth, COND_None, REPNOTIFY_Always);
-}
-
-void UCSAttributeSet::OnRep_Health(const FGameplayAttributeData& OldHealth)
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(UCSAttributeSet, Health, OldHealth);
-}
-
-void UCSAttributeSet::OnRep_MaxHealth(const FGameplayAttributeData& OldMaxHealth)
-{
-	GAMEPLAYATTRIBUTE_REPNOTIFY(UCSAttributeSet, MaxHealth, OldMaxHealth);
 }
 
 void UCSAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
@@ -40,10 +21,10 @@ void UCSAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, fl
 
 }
 
-bool UCSAttributeSet::PreGameplayEffectExecute(FGameplayEffectModCallbackData& Data)
+/*bool UCSAttributeSet::PreGameplayEffectExecute(FGameplayEffectModCallbackData& Data)
 {
 	return true;
-}
+}*/
 
 void UCSAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
 {
@@ -63,7 +44,7 @@ void UCSAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallback
 	{
 		SetHealth(FMath::Clamp(GetHealth() - GetDamage(), MinimumHealth, GetMaxHealth()));
 
-		UE_LOG(LogTemp, Warning, TEXT(" Damage Detected : %f | Now Energy : %f"), GetDamage(), GetHealth());
+		UE_LOG(LogCS, Warning, TEXT(" Damage Detected : %f | Now Energy : %f"), GetDamage(), GetHealth());
 
 		AActor* TargetActor = Data.Target.GetAvatarActor();
 		if (TargetActor == nullptr) return;
@@ -78,4 +59,22 @@ void UCSAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallback
 			}
 		}
 	}
+}
+
+void UCSAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION_NOTIFY(UCSAttributeSet, Health, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UCSAttributeSet, MaxHealth, COND_None, REPNOTIFY_Always);
+}
+
+void UCSAttributeSet::OnRep_Health(const FGameplayAttributeData& OldHealth)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UCSAttributeSet, Health, OldHealth);
+}
+
+void UCSAttributeSet::OnRep_MaxHealth(const FGameplayAttributeData& OldMaxHealth)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UCSAttributeSet, MaxHealth, OldMaxHealth);
 }
