@@ -21,16 +21,25 @@ public:
 	virtual void Interact() override;
 
 protected:
+	virtual void BeginPlay() override;
+
+protected:
 	void ChangeLevel();
 
 	UPROPERTY(VisibleAnywhere, Category = "Trigger", Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class USphereComponent> SphereTrigger;
 
-	UPROPERTY(VisibleAnywhere, Category = "Mesh", Meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, Category = "Mesh")
 	TObjectPtr<class UStaticMeshComponent> StaticMeshComp;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Mesh")
+	TSoftObjectPtr<class UStaticMesh> StaticMesh;
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UWidgetComponent> InteractionPromptComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Interaction")
+	TSoftClassPtr<UUserWidget> InteractionPromptWidgetClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trigger")
 	float TriggerRange = 150.0f;

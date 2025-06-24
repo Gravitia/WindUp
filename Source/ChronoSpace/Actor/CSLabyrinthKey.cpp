@@ -12,7 +12,6 @@
 #include "Net/UnrealNetwork.h"
 #include "ChronoSpace.h"
 
-// Sets default values
 ACSLabyrinthKey::ACSLabyrinthKey()
 {
 	bReplicates = true;
@@ -33,29 +32,10 @@ ACSLabyrinthKey::ACSLabyrinthKey()
 	SphereTrigger->SetCollisionProfileName(CPROFILE_OVERLAPALL);
 	SphereTrigger->SetIsReplicated(true);
 
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> StaticMeshRef(TEXT("/Script/Engine.StaticMesh'/Game/30_Mesh/StaticMesh/MapClockworkLabyrinth/Key/SM_SM_LabyrinthKey.SM_SM_LabyrinthKey'"));
-	if (StaticMeshRef.Object)
-	{
-		StaticMeshComp->SetStaticMesh(StaticMeshRef.Object);
-	}
-
-	/*float MeshRadius = 50.0f;
-	float MeshScale = (TriggerRange / MeshRadius) * 0.75f;
-	StaticMeshComp->SetRelativeScale3D(FVector(MeshScale, MeshScale, MeshScale));*/
-
 	// Widget
 	InteractionPromptComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("InteractionPromptComponent"));
 	InteractionPromptComponent->SetupAttachment(SphereTrigger);
 	InteractionPromptComponent->SetRelativeLocation(FVector(0.0f, 0.0f, 100.0f));
-
-	static ConstructorHelpers::FClassFinder<UUserWidget> InteractionPromptWidgetRef(TEXT("/Game/01_Blueprint/UI/BP_InteractionPrompt.BP_InteractionPrompt_C"));
-	if (InteractionPromptWidgetRef.Class)
-	{
-		InteractionPromptComponent->SetWidgetClass(InteractionPromptWidgetRef.Class);
-		InteractionPromptComponent->SetWidgetSpace(EWidgetSpace::Screen);
-		InteractionPromptComponent->SetDrawSize(FVector2D(500.0f, 30.f));
-		InteractionPromptComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	}
 
 	InteractionPromptComponent->SetVisibility(false);
 
@@ -88,11 +68,11 @@ void ACSLabyrinthKey::Interact()
 
 void ACSLabyrinthKey::OnRep_bIsActive()
 {
-	if ( GetWorld() )
+	if (GetWorld())
 	{
 		UE_LOG(LogCS, Log, TEXT("[NetMode : %d] OnRep_bIsActive, %d"), GetWorld()->GetNetMode(), bIsActive);
 	}
-	
+
 	SetActorHiddenInGame(!bIsActive);
 	SetActorEnableCollision(bIsActive);
 	//SetActorTickEnabled(bIsActive);
@@ -100,11 +80,48 @@ void ACSLabyrinthKey::OnRep_bIsActive()
 
 void ACSLabyrinthKey::SetActive(bool bActive)
 {
-	if ( HasAuthority() )
+	if (HasAuthority())
 	{
 		bIsActive = bActive;
 		OnRep_bIsActive();
 	}
+}
+
+void ACSLabyrinthKey::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (!StaticMesh.IsValid())
+	{
+		StaticMesh.LoadSynchronous();
+	}
+
+	if (StaticMesh.IsValid())
+	{
+		StaticMeshComp->SetStaticMesh(StaticMesh.Get());
+	}
+	else
+	{
+		UE_LOG(LogCS, Error, TEXT("StaticMesh failed to load in ACSLabyrinthKey"));
+	}
+
+	if (!InteractionPromptWidgetClass.IsValid())
+	{
+		InteractionPromptWidgetClass.LoadSynchronous();
+	}
+
+	if (InteractionPromptWidgetClass.IsValid())
+	{
+		InteractionPromptComponent->SetWidgetClass(InteractionPromptWidgetClass.Get());
+		InteractionPromptComponent->SetWidgetSpace(EWidgetSpace::Screen);
+		InteractionPromptComponent->SetDrawSize(FVector2D(500.0f, 30.f));
+		InteractionPromptComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+	else
+	{
+		UE_LOG(LogCS, Error, TEXT("InteractionPromptWidgetClass failed to load in ACSLabyrinthKey"));
+	}
+
 }
 
 void ACSLabyrinthKey::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
