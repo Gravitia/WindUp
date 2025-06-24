@@ -2,16 +2,70 @@
 
 
 #include "Attribute/CSAttributeSet.h"
-#include "ChronoSpace.h"
 #include "GameplayEffectExtension.h"
 #include "Player/CSPlayerController.h"
 #include "Net/UnrealNetwork.h"
+#include "ChronoSpace.h"
 
-UCSAttributeSet::UCSAttributeSet()
+UCSAttributeSet::UCSAttributeSet() : MaxHealth(100.0f), Damage(30.0f) 
 {
-	// 기본값 설정
-	InitHealth(100.0f);
-	InitMaxHealth(100.0f);
+	InitHealth(GetMaxHealth());
+}
+
+void UCSAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
+{
+	if (Attribute == GetDamageAttribute())
+	{
+		NewValue = NewValue < 0.0f ? 0.0f : NewValue;
+	}
+
+}
+
+/*bool UCSAttributeSet::PreGameplayEffectExecute(FGameplayEffectModCallbackData& Data)
+{
+	return true;
+}*/
+
+void UCSAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
+{
+	Super::PostGameplayEffectExecute(Data);
+
+	UE_LOG(LogCS, Log, TEXT("PostGameplayEffectExecute"));
+
+	float MinimumHealth = 0.0f;
+
+	// HP 클램핑
+	if (Data.EvaluatedData.Attribute == GetHealthAttribute())
+	{
+		SetHealth(FMath::Clamp(GetHealth(), MinimumHealth, GetMaxHealth()));
+	}
+
+	if (Data.EvaluatedData.Attribute == GetDamageAttribute())
+	{
+		SetHealth(FMath::Clamp(GetHealth() - GetDamage(), MinimumHealth, GetMaxHealth()));
+
+		UE_LOG(LogCS, Warning, TEXT(" Damage Detected : %f | Now Energy : %f"), GetDamage(), GetHealth());
+
+		AActor* TargetActor = Data.Target.GetAvatarActor();
+		if (TargetActor == nullptr) return;
+
+		if (APawn* Pawn = Cast<APawn>(TargetActor))
+		{
+			ACSPlayerController* PC = Cast<ACSPlayerController>(Pawn->GetController());
+
+			if (PC)
+			{
+				PC->ShakeCamera();
+			}
+		}
+	}
+
+
+	if (Data.EvaluatedData.Attribute == GetHealingAttribute())
+	{
+		SetHealth(FMath::Clamp(GetHealth() + GetHealing(), MinimumHealth, GetMaxHealth()));
+
+	}
 }
 
 void UCSAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -30,15 +84,4 @@ void UCSAttributeSet::OnRep_Health(const FGameplayAttributeData& OldHealth)
 void UCSAttributeSet::OnRep_MaxHealth(const FGameplayAttributeData& OldMaxHealth)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UCSAttributeSet, MaxHealth, OldMaxHealth);
-}
-
-void UCSAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
-{
-	Super::PostGameplayEffectExecute(Data);
-
-	// HP 클램핑
-	if (Data.EvaluatedData.Attribute == GetHealthAttribute())
-	{
-		SetHealth(FMath::Clamp(GetHealth(), 0.0f, GetMaxHealth()));
-	}
 }

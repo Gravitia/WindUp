@@ -12,17 +12,22 @@ UCSGA_GiveDamage::UCSGA_GiveDamage()
 	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::ServerOnly;
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 
-	static ConstructorHelpers::FClassFinder<UGameplayEffect> DamageEffectRef(TEXT("/Game/Blueprint/GA/GE/BPGE_PatrolDamage.BPGE_PatrolDamage_C"));
+	static ConstructorHelpers::FClassFinder<UGameplayEffect> DamageEffectRef(TEXT("/Game/01_Blueprint/GA/GE/BPGE_PatrolDamage.BPGE_PatrolDamage_C"));
 	if ( DamageEffectRef.Succeeded() )
 	{
 		DamageEffect = DamageEffectRef.Class;
+		UE_LOG(LogCS, Log, TEXT("DamageEffect class not null "));
+	}
+	else
+	{
+		UE_LOG(LogCS, Log, TEXT("DamageEffect is null"));
 	}
 }
 
 void UCSGA_GiveDamage::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
-	//UE_LOG(LogCS, Log, TEXT("ActivateAbility - GiveDamage"));
+	UE_LOG(LogCS, Log, TEXT("ActivateAbility - GiveDamage"));
 
 	UCSAT_MultiTrace* DamageTraceTask = UCSAT_MultiTrace::CreateTask(this, ACSTA_MultiTrace::StaticClass());
 	DamageTraceTask->OnComplete.AddDynamic(this, &UCSGA_GiveDamage::OnTraceResultCallback);
@@ -31,7 +36,7 @@ void UCSGA_GiveDamage::ActivateAbility(const FGameplayAbilitySpecHandle Handle, 
 
 void UCSGA_GiveDamage::OnTraceResultCallback(const FGameplayAbilityTargetDataHandle& TargetDataHandle)
 {
-	int32 idx = 0;
+	
 	FGameplayEffectSpecHandle EffectSpecHandle = MakeOutgoingGameplayEffectSpec(DamageEffect);
 	//UE_LOG(LogCS, Log, TEXT("OnTraceResultCallback"));
 	if (EffectSpecHandle.IsValid())
@@ -40,7 +45,8 @@ void UCSGA_GiveDamage::OnTraceResultCallback(const FGameplayAbilityTargetDataHan
 		ApplyGameplayEffectSpecToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, EffectSpecHandle, TargetDataHandle);
 	}
 
-	/*while (UAbilitySystemBlueprintLibrary::TargetDataHasHitResult(TargetDataHandle, idx))
+	/*int32 idx = 0;
+	while (UAbilitySystemBlueprintLibrary::TargetDataHasHitResult(TargetDataHandle, idx))
 	{
 		FHitResult HitResult = UAbilitySystemBlueprintLibrary::GetHitResultFromTargetData(TargetDataHandle, idx);
 		
