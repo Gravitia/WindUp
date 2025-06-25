@@ -20,7 +20,7 @@ ACSCharacterBase::ACSCharacterBase()
 	bUseControllerRotationRoll = false;
 
 	// Capsule
-	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
+	GetCapsuleComponent()->InitCapsuleSize(100.f, 200.0f);
 	GetCapsuleComponent()->SetCollisionProfileName(CPROFILE_CSCAPSULE);
 
 	// Movement

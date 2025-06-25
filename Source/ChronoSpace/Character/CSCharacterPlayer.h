@@ -137,4 +137,15 @@ protected:
 	void StartDash();
 	void StopDash();
 
+
+// Scale
+public:
+
+	UPROPERTY(EditAnywhere, Category = "Capsule")
+	float BaseCapsuleRadius = 34.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Capsule")
+	float BaseCapsuleHalfHeight = 88.0f;
+
+
 };

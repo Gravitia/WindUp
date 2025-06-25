@@ -7,6 +7,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Engine/Engine.h"
 #include "TimerManager.h"
+#include "Character/CSCharacterPlayer.h"
 
 
 
@@ -162,9 +163,15 @@ void UCSCharacterScaleComponent::ApplyScaleToCharacter(float NewScale)
     // 선택적으로 캡슐 컴포넌트 크기 조정
     if (UCapsuleComponent* CapsuleComp = Character->GetCapsuleComponent())
     {
-        // 원본 크기 기준으로 스케일링
-        float BaseRadius = 34.0f; // 기본 캐릭터 캡슐 반지름
-        float BaseHalfHeight = 88.0f; // 기본 캐릭터 캡슐 절반 높이
+        float BaseRadius = 34.0f;
+        float BaseHalfHeight = 88.0f;
+
+        // CSCharacterPlayer로부터 기본 캡슐 크기를 가져오기
+        if (ACSCharacterPlayer* CSPlayer = Cast<ACSCharacterPlayer>(Character))
+        {
+            BaseRadius = CSPlayer->BaseCapsuleRadius;
+            BaseHalfHeight = CSPlayer->BaseCapsuleHalfHeight;
+        }
 
         CapsuleComp->SetCapsuleSize(BaseRadius * NewScale, BaseHalfHeight * NewScale);
     }

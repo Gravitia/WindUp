@@ -43,31 +43,6 @@ ACSCharacterPlayer::ACSCharacterPlayer()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
 
-	/*
-	// UI 
-	EnergyBar = CreateDefaultSubobject<UCSGASWidgetComponent>(TEXT("Widget"));
-	EnergyBar->SetupAttachment(GetMesh());
-	EnergyBar->SetRelativeLocation(FVector(0.0f, 0.0f, 180.0f));
-	
-	//static ConstructorHelpers::FClassFinder<UUserWidget> EnergyBarWidgetRef(TEXT("/Game/ArenaBattle/UI/WBP_HpBar.WBP_HpBar_C"));
-	static ConstructorHelpers::FClassFinder<UUserWidget> EnergyBarWidgetRef(TEXT("/Game/Blueprint/UI/BP_EnergyBar.BP_EnergyBar_C"));
-	if (EnergyBarWidgetRef.Class)
-	{
-		EnergyBar->SetWidgetClass(EnergyBarWidgetRef.Class);
-		EnergyBar->SetWidgetSpace(EWidgetSpace::Screen);
-		EnergyBar->SetDrawSize(FVector2D(200.0f, 20.f));
-		EnergyBar->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		if (EnergyBar)
-		{
-			UE_LOG(LogTemp, Log, TEXT("EnergyBar is valid and configured."));
-		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("EnergyBar is not valid!"));
-		}
-	}
-	*/
-
 	// ASC
 	ASC = nullptr;
 
@@ -130,7 +105,6 @@ void ACSCharacterPlayer::OnRep_PlayerState()
 	ACSPlayerState* CSPS = GetPlayerState<ACSPlayerState>();
 	ASC = CSPS->GetAbilitySystemComponent();
 	GASManagerComponent->SetASC(ASC, CSPS);
-	// EnergyBar->ActivateGAS();
 }
 
 void ACSCharacterPlayer::BeginPlay()
@@ -138,11 +112,6 @@ void ACSCharacterPlayer::BeginPlay()
 	Super::BeginPlay();
 	//UE_LOG(LogCS, Log, TEXT("[NetMode: %d] BeginPlay"), GetWorld()->GetNetMode());
 
-	if ( HasAuthority() )
-	{
-		// EnergyBar->ActivateGAS();
-	}
-	
 	if (!IsLocallyControlled())
 	{
 		return;
@@ -192,8 +161,12 @@ void ACSCharacterPlayer::SetData()
 	WalkSpeed = Data->MaxWalkSpeed;
 	DashSpeed = Data->MaxDashSpeed;
 
+	BaseCapsuleRadius = Data->CapsuleRadius;
+	BaseCapsuleHalfHeight = Data->CapsuleHeight;
 
 	GetCapsuleComponent()->SetCapsuleSize(Data->CapsuleRadius, Data->CapsuleHeight); 
+
+	// SetCapsulSize vs InitCapsuleSize 
 
 	GetMesh()->SetSkeletalMesh(Data->Mesh);
 	GetMesh()->SetAnimInstanceClass(Data->AnimInstance);
