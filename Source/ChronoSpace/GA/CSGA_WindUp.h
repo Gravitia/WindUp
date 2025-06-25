@@ -65,11 +65,11 @@ protected:
 
     // 초당 회복할 체력
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WindUp Settings")
-    float HealthPerSecond = 10.0f;
+    float HealthPerSecond = 5.0f;
 
     // 태엽 감기 틱 간격 (초)
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WindUp Settings")
-    float TickInterval = 0.2f;
+    float TickInterval = 0.1f;
 
     // === GameplayEffect ===
 

@@ -20,14 +20,14 @@
 UCSGA_WindUp::UCSGA_WindUp()
 {
     // 어빌리티 기본 설정
-    InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
     NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::ServerOnly;
+    InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 
     // 입력 유지 타입으로 설정 (G 키를 누르고 있는 동안 지속)
     bRetriggerInstancedAbility = false;
 
     // 어빌리티 태그 설정 (선택사항)
-    AbilityTags.AddTag(FGameplayTag::RequestGameplayTag(FName("Ability.WindUp")));
+    // AbilityTags.AddTag(FGameplayTag::RequestGameplayTag(FName("Ability.WindUp")));
 
     // 초기화
     CurrentTargetPlayer = nullptr;
@@ -158,6 +158,13 @@ void UCSGA_WindUp::OnWindUpTick()
         EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
         return;
     }
+
+    // 디버깅: 타겟 정보 자세히 로깅
+    UE_LOG(LogCS, Log, TEXT("=== Target Debug Info ==="));
+    UE_LOG(LogCS, Log, TEXT("Target Name: %s"), *CurrentTargetPlayer->GetName());
+    UE_LOG(LogCS, Log, TEXT("Target Class: %s"), *CurrentTargetPlayer->GetClass()->GetName());
+    UE_LOG(LogCS, Log, TEXT("Has Controller: %s"), CurrentTargetPlayer->GetController() ? TEXT("YES") : TEXT("NO"));
+    UE_LOG(LogCS, Log, TEXT("Has PlayerState: %s"), CurrentTargetPlayer->GetPlayerState() ? TEXT("YES") : TEXT("NO"));
 
     // 거리 체크
     ACharacter* OwnerCharacter = Cast<ACharacter>(GetAvatarActorFromActorInfo());
@@ -336,21 +343,37 @@ void UCSGA_WindUp::ApplyHealingEffect(ACharacter* TargetPlayer)
 {
     if (!TargetPlayer || !HealingEffect)
     {
+        UE_LOG(LogCS, Warning, TEXT("Invalid TargetPlayer or HealingEffect"));
         return;
     }
 
-    UAbilitySystemComponent* TargetASC = TargetPlayer->FindComponentByClass<UAbilitySystemComponent>();
+    // 방법 1: UAbilitySystemBlueprintLibrary 사용 (더 안전함)
+    UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetPlayer);
+
+
     if (!TargetASC)
     {
-        UE_LOG(LogCS, Warning, TEXT("Target has no AbilitySystemComponent"));
+        UE_LOG(LogCS, Error, TEXT("Target %s has no AbilitySystemComponent anywhere!"), *TargetPlayer->GetName());
+        UE_LOG(LogCS, Error, TEXT("Target Controller: %s"), TargetPlayer->GetController() ? *TargetPlayer->GetController()->GetName() : TEXT("NULL"));
+        UE_LOG(LogCS, Error, TEXT("Target PlayerState: %s"), TargetPlayer->GetPlayerState() ? *TargetPlayer->GetPlayerState()->GetName() : TEXT("NULL"));
+
         return;
     }
 
+    UE_LOG(LogCS, Log, TEXT("Found ASC for %s: %s"), *TargetPlayer->GetName(), *TargetASC->GetName());
+
     // GameplayEffect 적용
-    FGameplayEffectContextHandle ContextHandle = TargetASC->MakeEffectContext();
+    UAbilitySystemComponent* SourceASC = GetAbilitySystemComponentFromActorInfo();
+    if (!SourceASC)
+    {
+        UE_LOG(LogCS, Error, TEXT("Source ASC is null"));
+        return;
+    }
+
+    FGameplayEffectContextHandle ContextHandle = SourceASC->MakeEffectContext();
     ContextHandle.AddSourceObject(GetAvatarActorFromActorInfo());
 
-    FGameplayEffectSpecHandle SpecHandle = TargetASC->MakeOutgoingSpec(
+    FGameplayEffectSpecHandle SpecHandle = SourceASC->MakeOutgoingSpec(
         HealingEffect,
         GetAbilityLevel(),
         ContextHandle
@@ -358,10 +381,20 @@ void UCSGA_WindUp::ApplyHealingEffect(ACharacter* TargetPlayer)
 
     if (SpecHandle.IsValid())
     {
-        // 매번 새로운 효과 적용 (즉시 회복)
-        TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+        FActiveGameplayEffectHandle ActiveHandle = TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 
-        UE_LOG(LogCS, Log, TEXT("Healing effect applied to %s"), *TargetPlayer->GetName());
+        if (ActiveHandle.IsValid())
+        {
+            UE_LOG(LogCS, Log, TEXT("Healing effect successfully applied to %s"), *TargetPlayer->GetName());
+        }
+        else
+        {
+            UE_LOG(LogCS, Log, TEXT("Failed to apply healing effect to %s, Maybe WindUp CoolTime"), *TargetPlayer->GetName());
+        }
+    }
+    else
+    {
+        UE_LOG(LogCS, Error, TEXT("Invalid EffectSpecHandle for healing"));
     }
 }
 
