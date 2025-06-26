@@ -124,6 +124,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "UI")
 	void RequestUIRefresh();
 
+/* Character Movemenet Origin Value Save */
 
 // Dash
 public:
@@ -133,14 +134,18 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float DashSpeed = 900.0f; //  default and init DataAsset 
 
-// Scale
-public:
+// GravityScale
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float GravityScale = 2.0f; //  default and init DataAsset 
 
+
+// Scale
 	UPROPERTY(EditAnywhere, Category = "Capsule")
 	float BaseCapsuleRadius = 34.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Capsule")
 	float BaseCapsuleHalfHeight = 88.0f;
+
 
 
 };

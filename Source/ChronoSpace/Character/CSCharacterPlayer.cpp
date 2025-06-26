@@ -155,12 +155,15 @@ void ACSCharacterPlayer::SetData()
 	GetCharacterMovement()->MaxWalkSpeed = Data->MaxWalkSpeed;
 	GetCharacterMovement()->MinAnalogWalkSpeed = Data->MinAnalogWalkSpeed;
 	GetCharacterMovement()->BrakingDecelerationWalking = Data->BrakingDecelerationWalking;
+	GetCharacterMovement()->GravityScale = Data->GravityScale;
 	
 	WalkSpeed = Data->MaxWalkSpeed;
 	DashSpeed = Data->MaxDashSpeed;
 
 	BaseCapsuleRadius = Data->CapsuleRadius;
 	BaseCapsuleHalfHeight = Data->CapsuleHeight;
+
+	GravityScale = Data->GravityScale;
 
 	GetCapsuleComponent()->SetCapsuleSize(Data->CapsuleRadius, Data->CapsuleHeight); 
 
