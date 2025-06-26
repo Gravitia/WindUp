@@ -122,6 +122,41 @@ void ACSCharacterPlayer::BeginPlay()
 	}
 
 	AttachWindUpKeyToSocket();
+	
+	if (HasAuthority())
+	{
+		// 서버에서 Multicast로 모든 클라이언트에 적용
+		Multicast_ApplyClockUnwind();
+	}
+	else
+	{
+		// 클라이언트에서 서버에 요청
+		Server_ApplyClockUnwind();
+	}
+}
+
+void ACSCharacterPlayer::Server_ApplyClockUnwind_Implementation()
+{
+	// 서버에서 Multicast 호출
+	Multicast_ApplyClockUnwind();
+}
+
+void ACSCharacterPlayer::Multicast_ApplyClockUnwind_Implementation()
+{
+	ApplyClockUnwind_Internal();
+}
+
+// 실제 GE 적용 함수 (변경 없음)
+void ACSCharacterPlayer::ApplyClockUnwind_Internal()
+{
+	if (ClockUnwindEffect && ASC)
+	{
+		FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(ClockUnwindEffect, 1.f, ASC->MakeEffectContext());
+		if (SpecHandle.IsValid())
+		{
+			ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+		}
+	}
 }
 
 void ACSCharacterPlayer::PreInitializeComponents()

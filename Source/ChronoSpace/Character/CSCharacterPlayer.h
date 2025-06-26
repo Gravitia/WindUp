@@ -124,6 +124,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "UI")
 	void RequestUIRefresh();
 
+// Auto ClockUnwindDOT
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS|PassiveEffect")
+	TSubclassOf<class UGameplayEffect> ClockUnwindEffect;
+
 /* Character Movemenet Origin Value Save */
 
 // Dash
@@ -148,4 +152,17 @@ public:
 
 
 
+
+
+// UnwindUp RPC
+protected:
+	UFUNCTION(Server, Reliable)
+	void Server_ApplyClockUnwind();
+
+	// 새로 추가할 Multicast 함수 선언
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_ApplyClockUnwind();
+
+private:
+	void ApplyClockUnwind_Internal();
 };

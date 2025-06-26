@@ -51,6 +51,10 @@ public:
 	ATTRIBUTE_ACCESSORS(UCSAttributeSet, Damage)
 
 	UPROPERTY(BlueprintReadOnly, Category = "Health", Meta = (AllowPrivateAccess = true))
+	FGameplayAttributeData ClockUnwind;
+	ATTRIBUTE_ACCESSORS(UCSAttributeSet, ClockUnwind)
+
+	UPROPERTY(BlueprintReadOnly, Category = "Health", Meta = (AllowPrivateAccess = true))
 	FGameplayAttributeData Healing;
 	ATTRIBUTE_ACCESSORS(UCSAttributeSet, Healing)
 

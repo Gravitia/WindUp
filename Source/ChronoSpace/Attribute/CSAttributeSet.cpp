@@ -7,7 +7,7 @@
 #include "Net/UnrealNetwork.h"
 #include "ChronoSpace.h"
 
-UCSAttributeSet::UCSAttributeSet() : MaxHealth(100.0f), Damage(0.0f), Healing(0.0f)
+UCSAttributeSet::UCSAttributeSet() : MaxHealth(100.0f), Damage(0.0f), ClockUnwind(0.0f), Healing(0.0f)
 {
 	InitHealth(GetMaxHealth());
 }
@@ -38,6 +38,13 @@ void UCSAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallback
 	if (Data.EvaluatedData.Attribute == GetHealthAttribute())
 	{
 		SetHealth(FMath::Clamp(GetHealth(), MinimumHealth, GetMaxHealth()));
+	}
+
+	if (Data.EvaluatedData.Attribute == GetClockUnwindAttribute())
+	{
+		UE_LOG(LogCS, Log, TEXT("PostGameplayEffectExecute ClockUnwind"));
+
+		SetHealth(FMath::Clamp(GetHealth() - GetClockUnwind(), MinimumHealth, GetMaxHealth()));
 	}
 
 	if (Data.EvaluatedData.Attribute == GetDamageAttribute())
