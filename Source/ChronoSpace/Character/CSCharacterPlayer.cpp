@@ -91,8 +91,6 @@ void ACSCharacterPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	EnhancedInputComponent->BindAction(ShoulderMoveAction, ETriggerEvent::Triggered, this, &ACSCharacterPlayer::ShoulderMove);
 	EnhancedInputComponent->BindAction(ShoulderLookAction, ETriggerEvent::Triggered, this, &ACSCharacterPlayer::ShoulderLook);
 
-	EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Started, this, &ACSCharacterPlayer::StartDash);
-	EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Completed, this, &ACSCharacterPlayer::StopDash);
 
 	GASManagerComponent->SetupGASInputComponent(Cast<UEnhancedInputComponent>(PlayerInputComponent));
 	InteractionComponent->SetInteractionInputComponent(Cast<UEnhancedInputComponent>(PlayerInputComponent));
@@ -210,12 +208,3 @@ void ACSCharacterPlayer::RequestUIRefresh()
 	}
 }
 
-void ACSCharacterPlayer::StartDash()
-{
-	GetCharacterMovement()->MaxWalkSpeed = DashSpeed;
-}
-
-void ACSCharacterPlayer::StopDash()
-{
-	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
-}
