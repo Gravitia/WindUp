@@ -165,4 +165,27 @@ protected:
 
 private:
 	void ApplyClockUnwind_Internal();
+
+
+	// ─────────── Coyote-Time(코요테 점프) ───────────
+	UFUNCTION(BlueprintCallable)
+	void StartCoyoteTimer();
+
+	UFUNCTION(BlueprintCallable)
+	void DisableCoyoteTime();
+
+	UPROPERTY()
+	bool bCanCoyoteJump = false;
+
+	UPROPERTY(EditAnywhere)
+	float CoyoteTime = 0.33f;          // 관용 구간(초)
+
+	UPROPERTY(EditAnywhere)
+	FTimerHandle CoyoteTimerHandle;
+
+	virtual bool CanJumpInternal_Implementation() const override;
+	virtual void Falling() override;
+	virtual void OnJumped_Implementation() override;
+	virtual void OnMovementModeChanged(EMovementMode PrevMode,
+		uint8 PrevCustomMode = 0) override;
 };

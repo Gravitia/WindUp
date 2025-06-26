@@ -199,6 +199,7 @@ void ACSCharacterPlayer::SetData()
 	BaseCapsuleHalfHeight = Data->CapsuleHeight;
 
 	GravityScale = Data->GravityScale;
+	CoyoteTime = Data->CoyoteTime;
 
 	GetCapsuleComponent()->SetCapsuleSize(Data->CapsuleRadius, Data->CapsuleHeight); 
 
@@ -246,3 +247,51 @@ void ACSCharacterPlayer::RequestUIRefresh()
 	}
 }
 
+
+// 1. 점프 가능 조건에 코요테 bool OR 연산
+bool ACSCharacterPlayer::CanJumpInternal_Implementation() const
+{
+	return Super::CanJumpInternal_Implementation() || bCanCoyoteJump;
+}
+
+// 2. 타이머 시작 / 종료
+void ACSCharacterPlayer::StartCoyoteTimer()
+{
+	bCanCoyoteJump = true;
+	GetWorldTimerManager().SetTimer(
+		CoyoteTimerHandle,
+		this,
+		&ACSCharacterPlayer::DisableCoyoteTime,
+		CoyoteTime,
+		false);
+}
+
+void ACSCharacterPlayer::DisableCoyoteTime()
+{
+	bCanCoyoteJump = false;
+}
+
+// 3. 공중으로 들어가면 타이머 시작
+void ACSCharacterPlayer::Falling()
+{
+	Super::Falling();
+	StartCoyoteTimer();
+}
+
+// 4. 실제 점프가 발생하거나 착지하면 bool 리셋
+void ACSCharacterPlayer::OnJumped_Implementation()
+{
+	Super::OnJumped_Implementation();
+	bCanCoyoteJump = false;
+}
+
+void ACSCharacterPlayer::OnMovementModeChanged(
+	EMovementMode PrevMode, uint8 PrevCustomMode)
+{
+	Super::OnMovementModeChanged(PrevMode, PrevCustomMode);
+
+	if (!bPressedJump && !GetCharacterMovement()->IsFalling())
+	{
+		bCanCoyoteJump = false;    // 착지 시 안전하게 종료
+	}
+}

@@ -47,6 +47,9 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float GravityScale;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float CoyoteTime;
 	
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
