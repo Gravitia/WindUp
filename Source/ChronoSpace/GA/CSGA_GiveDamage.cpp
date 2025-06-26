@@ -12,7 +12,7 @@ UCSGA_GiveDamage::UCSGA_GiveDamage()
 	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::ServerOnly;
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 
-	static ConstructorHelpers::FClassFinder<UGameplayEffect> DamageEffectRef(TEXT("/Game/01_Blueprint/GA/GE/BPGE_PatrolDamage.BPGE_PatrolDamage_C"));
+	/*static ConstructorHelpers::FClassFinder<UGameplayEffect> DamageEffectRef(TEXT("/Game/01_Blueprint/GA/GE/BPGE_PatrolDamage.BPGE_PatrolDamage_C"));
 	if ( DamageEffectRef.Succeeded() )
 	{
 		DamageEffect = DamageEffectRef.Class;
@@ -21,7 +21,8 @@ UCSGA_GiveDamage::UCSGA_GiveDamage()
 	else
 	{
 		UE_LOG(LogCS, Log, TEXT("DamageEffect is null"));
-	}
+	}*/
+	DamageEffect = nullptr;
 }
 
 void UCSGA_GiveDamage::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
@@ -36,7 +37,8 @@ void UCSGA_GiveDamage::ActivateAbility(const FGameplayAbilitySpecHandle Handle, 
 
 void UCSGA_GiveDamage::OnTraceResultCallback(const FGameplayAbilityTargetDataHandle& TargetDataHandle)
 {
-	
+	check(DamageEffect != nullptr);
+
 	FGameplayEffectSpecHandle EffectSpecHandle = MakeOutgoingGameplayEffectSpec(DamageEffect);
 	//UE_LOG(LogCS, Log, TEXT("OnTraceResultCallback"));
 	if (EffectSpecHandle.IsValid())
