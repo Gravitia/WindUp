@@ -1,20 +1,20 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "GA/CSGA_Dash.h"
+#include "GA/CSGA_Sprint.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Character/CSCharacterPlayer.h"
 #include "ChronoSpace.h"
 
 
-UCSGA_Dash::UCSGA_Dash()
+UCSGA_Sprint::UCSGA_Sprint()
 {
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::ServerInitiated;
 }
 
-void UCSGA_Dash::ActivateAbility(
+void UCSGA_Sprint::ActivateAbility(
 	const FGameplayAbilitySpecHandle Handle,
 	const FGameplayAbilityActorInfo* ActorInfo,
 	const FGameplayAbilityActivationInfo ActivationInfo,
@@ -22,7 +22,7 @@ void UCSGA_Dash::ActivateAbility(
 {
 	if (!CommitAbility(Handle, ActorInfo, ActivationInfo)) return;
 
-	UE_LOG(LogTemp, Log, TEXT("ActivateAbility Dash"));
+	UE_LOG(LogTemp, Log, TEXT("ActivateAbility Sprint"));
 
 	ACharacter* Character = Cast<ACharacter>(ActorInfo->AvatarActor.Get());
 	if (Character)
@@ -34,7 +34,7 @@ void UCSGA_Dash::ActivateAbility(
 	}
 }
 
-void UCSGA_Dash::InputReleased(
+void UCSGA_Sprint::InputReleased(
 	const FGameplayAbilitySpecHandle Handle,
 	const FGameplayAbilityActorInfo* ActorInfo,
 	const FGameplayAbilityActivationInfo ActivationInfo)
@@ -42,7 +42,7 @@ void UCSGA_Dash::InputReleased(
 	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }
 
-void UCSGA_Dash::EndAbility(
+void UCSGA_Sprint::EndAbility(
 	const FGameplayAbilitySpecHandle Handle,
 	const FGameplayAbilityActorInfo* ActorInfo,
 	const FGameplayAbilityActivationInfo ActivationInfo,

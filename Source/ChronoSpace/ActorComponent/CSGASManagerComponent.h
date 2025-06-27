@@ -15,7 +15,7 @@ enum class EAbilityIndex : int32
 	WeakenGravity10P = 4,
 	WeakenGravity50P = 5,
 
-	Dash = 50,
+	Sprint = 50,
 
 	ChronoControl = 100,
 	TimeRewind = 101,
@@ -109,7 +109,7 @@ protected:
 	TObjectPtr<class UInputAction> ScaleLargeAction;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<class UInputAction> DashAction;
+	TObjectPtr<class UInputAction> SprintAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UInputAction> WindUpAction;

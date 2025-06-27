@@ -4,18 +4,19 @@
 
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbility.h"
-#include "CSGA_Dash.generated.h"
+#include "CSGA_Sprint.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class CHRONOSPACE_API UCSGA_Dash : public UGameplayAbility
+class CHRONOSPACE_API UCSGA_Sprint : public UGameplayAbility
 {
 	GENERATED_BODY()
 	
+
 public:
-	UCSGA_Dash();
+	UCSGA_Sprint();
 
 	virtual void ActivateAbility(
 		const FGameplayAbilitySpecHandle Handle,
@@ -40,8 +41,8 @@ public:
 
 protected:
 	UPROPERTY(EditAnywhere, Category = "Dash")
-	float DashSpeed = 1000.f;
+	float DashSpeed = 1000.f;    // default 
 
 	UPROPERTY(EditAnywhere, Category = "Dash")
-	float WalkSpeed = 600.f;
+	float WalkSpeed = 600.f;     // default 
 };
