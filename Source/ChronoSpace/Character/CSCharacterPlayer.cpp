@@ -123,6 +123,13 @@ void ACSCharacterPlayer::BeginPlay()
 
 	AttachWindUpKeyToSocket();
 	
+	/* AlwaysClockUnwind not using now 
+	AlwaysClockUnwind();
+	*/
+}
+
+void ACSCharacterPlayer::AlwaysClockUnwind()
+{
 	if (HasAuthority())
 	{
 		// 서버에서 Multicast로 모든 클라이언트에 적용

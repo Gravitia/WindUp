@@ -45,4 +45,13 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Dash")
 	float WalkSpeed = 600.f;     // default 
+
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effect")
+	TSubclassOf<class UGameplayEffect> SprintCostEffect;
+
+
+	UPROPERTY()
+	FActiveGameplayEffectHandle SprintCostEffectHandle;
 };

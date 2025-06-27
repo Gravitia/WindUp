@@ -155,6 +155,10 @@ public:
 
 
 // UnwindUp RPC
+
+private:
+	void AlwaysClockUnwind();
+
 protected:
 	UFUNCTION(Server, Reliable)
 	void Server_ApplyClockUnwind();
@@ -165,9 +169,10 @@ protected:
 
 private:
 	void ApplyClockUnwind_Internal();
+	
 
 
-	// ─────────── Coyote-Time(코요테 점프) ───────────
+// ─────────── Coyote-Time(코요테 점프) ───────────
 	UFUNCTION(BlueprintCallable)
 	void StartCoyoteTimer();
 
