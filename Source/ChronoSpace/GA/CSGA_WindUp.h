@@ -37,9 +37,13 @@ protected:
         OUT FGameplayTagContainer* OptionalRelevantTags = nullptr) const override;
 
 private:
-    // 태엽 감기 틱 함수
+    // WindUp 완료 함수 (1초 후 호출)
     UFUNCTION()
-    void OnWindUpTick();
+    void OnWindUpComplete();
+
+    // 거리 체크 함수 (0.1초마다 호출)
+    UFUNCTION()
+    void CheckDistanceToTarget();
 
     // 근처 플레이어 찾기
     UFUNCTION(BlueprintCallable)
@@ -52,55 +56,49 @@ private:
     UFUNCTION(BlueprintCallable)
     void StopWindUpEffect();
 
-    // GameplayEffect 적용/제거
+    // GameplayEffect 적용
     void ApplyHealingEffect(ACharacter* TargetPlayer);
-    void RemoveHealingEffect();
 
 protected:
-    // === 태엽 감기 설정 ===
-
-    // 태엽 감기 범위 (단위: cm)
+    // === WindUp 설정 ===
+    // WindUp 범위 (단위: cm)
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WindUp Settings")
     float WindUpRange = 300.0f;
 
-    // 초당 회복할 체력
+    // WindUp 완료까지 필요한 시간 (초)
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WindUp Settings")
-    float HealthPerSecond = 5.0f;
+    float WindUpDuration = 1.0f;
 
-    // 태엽 감기 틱 간격 (초)
+    // 거리 체크 간격 (초)
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WindUp Settings")
-    float TickInterval = 0.1f;
+    float DistanceCheckInterval = 0.1f;
 
     // === GameplayEffect ===
-
     // 체력 회복 GameplayEffect
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WindUp Effects")
     TSubclassOf<class UGameplayEffect> HealingEffect;
 
     // === 시각/청각 효과 ===
-
-    // 태엽 감기 이펙트 파티클
+    // WindUp 이펙트 파티클
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WindUp Effects")
     class UParticleSystem* WindUpParticleEffect;
 
-    // 태엽 감기 사운드
+    // WindUp 사운드
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WindUp Effects")
     class USoundBase* WindUpSound;
 
-    // 태엽 감기 애니메이션
+    // WindUp 애니메이션
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WindUp Effects")
     class UAnimMontage* WindUpAnimation;
 
 private:
-    // 타이머 핸들
-    FTimerHandle WindUpTimerHandle;
+    // 타이머 핸들들
+    FTimerHandle WindUpCompleteTimerHandle;  // 1초 후 완료
+    FTimerHandle DistanceCheckTimerHandle;   // 거리 체크용
 
     // 현재 타겟 플레이어
     UPROPERTY()
     ACharacter* CurrentTargetPlayer;
-
-    // 현재 적용된 GameplayEffect 핸들
-    FActiveGameplayEffectHandle CurrentHealingEffectHandle;
 
     // 이펙트 컴포넌트들
     UPROPERTY()

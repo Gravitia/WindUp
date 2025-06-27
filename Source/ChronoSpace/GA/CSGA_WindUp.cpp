@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "GA/CSGA_WindUp.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/PlayerController.h"
@@ -26,21 +25,13 @@ UCSGA_WindUp::UCSGA_WindUp()
     // 입력 유지 타입으로 설정 (G 키를 누르고 있는 동안 지속)
     bRetriggerInstancedAbility = false;
 
-    // 어빌리티 태그 설정 (선택사항)
-    // AbilityTags.AddTag(FGameplayTag::RequestGameplayTag(FName("Ability.WindUp")));
-
     // 초기화
     CurrentTargetPlayer = nullptr;
     CurrentParticleComponent = nullptr;
     CurrentAudioComponent = nullptr;
 
-    // 기본 GameplayEffect 로드 (블루프린트에서 설정하거나 여기서 로드)
-    static ConstructorHelpers::FClassFinder<UGameplayEffect> HealingEffectRef(
-        TEXT("/Game/01_Blueprint/GA/GE/BPGE_WindUpHealing.BPGE_WindUpHealing_C")
-    );
-    if (HealingEffectRef.Succeeded())
+    if (HealingEffect)
     {
-        HealingEffect = HealingEffectRef.Class;
         UE_LOG(LogCS, Log, TEXT("WindUp HealingEffect loaded successfully"));
     }
 }
@@ -50,7 +41,7 @@ void UCSGA_WindUp::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 {
     Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-    UE_LOG(LogCS, Log, TEXT("WindUp Ability Activated"));
+    UE_LOG(LogCS, Log, TEXT("WindUp Ability Activated - Charging for %f seconds"), WindUpDuration);
 
     // 근처 플레이어 찾기
     ACharacter* TargetPlayer = FindNearbyPlayer();
@@ -62,13 +53,22 @@ void UCSGA_WindUp::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 
         UE_LOG(LogCS, Log, TEXT("WindUp started on target: %s"), *TargetPlayer->GetName());
 
-        // 타이머로 주기적으로 체력 회복 및 거리 체크
+        // 1초 후 WindUp 완료 타이머 시작
         GetWorld()->GetTimerManager().SetTimer(
-            WindUpTimerHandle,
+            WindUpCompleteTimerHandle,
             this,
-            &UCSGA_WindUp::OnWindUpTick,
-            TickInterval,
-            true  // 반복
+            &UCSGA_WindUp::OnWindUpComplete,
+            WindUpDuration,
+            false  // 한번만 실행
+        );
+
+        // 거리 체크 타이머 시작 (주기적으로 거리 확인)
+        GetWorld()->GetTimerManager().SetTimer(
+            DistanceCheckTimerHandle,
+            this,
+            &UCSGA_WindUp::CheckDistanceToTarget,
+            DistanceCheckInterval,
+            true  // 반복 실행
         );
     }
     else
@@ -82,17 +82,23 @@ void UCSGA_WindUp::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 void UCSGA_WindUp::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
     const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
-    UE_LOG(LogCS, Log, TEXT("WindUp Ability Ended"));
+    UE_LOG(LogCS, Log, TEXT("WindUp Ability Ended (Cancelled: %s)"), bWasCancelled ? TEXT("YES") : TEXT("NO"));
 
-    // 타이머 정리
-    if (GetWorld() && WindUpTimerHandle.IsValid())
+    // 모든 타이머 정리
+    if (GetWorld())
     {
-        GetWorld()->GetTimerManager().ClearTimer(WindUpTimerHandle);
+        if (WindUpCompleteTimerHandle.IsValid())
+        {
+            GetWorld()->GetTimerManager().ClearTimer(WindUpCompleteTimerHandle);
+        }
+        if (DistanceCheckTimerHandle.IsValid())
+        {
+            GetWorld()->GetTimerManager().ClearTimer(DistanceCheckTimerHandle);
+        }
     }
 
     // 이펙트 정리
     StopWindUpEffect();
-    RemoveHealingEffect();
 
     CurrentTargetPlayer = nullptr;
 
@@ -103,20 +109,18 @@ void UCSGA_WindUp::InputPressed(const FGameplayAbilitySpecHandle Handle, const F
     const FGameplayAbilityActivationInfo ActivationInfo)
 {
     UE_LOG(LogCS, Log, TEXT("WindUp Input Pressed"));
-
-    // WindUp은 지속형 어빌리티이므로 InputPressed에서는 특별한 처리 없음
-    // GAS가 자동으로 TryActivateAbility를 호출해줍니다
+    // GAS가 자동으로 TryActivateAbility를 호출합니다
 }
 
 void UCSGA_WindUp::InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
     const FGameplayAbilityActivationInfo ActivationInfo)
 {
-    UE_LOG(LogCS, Log, TEXT("WindUp Input Released"));
+    UE_LOG(LogCS, Log, TEXT("WindUp Input Released - Ability cancelled"));
 
-    // 어빌리티가 활성화되어 있다면 종료
+    // 키를 놓으면 어빌리티 취소 (1초 전에 놓으면 힐링 안됨)
     if (IsActive())
     {
-        EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
+        EndAbility(Handle, ActorInfo, ActivationInfo, true, true); // bWasCancelled = true
     }
 }
 
@@ -137,7 +141,6 @@ bool UCSGA_WindUp::CanActivateAbility(const FGameplayAbilitySpecHandle Handle, c
     }
 
     // 근처에 플레이어가 있는지 체크
-    // 임시로 const_cast 사용 (실제로는 const 함수에서 수정하지 않음)
     UCSGA_WindUp* NonConstThis = const_cast<UCSGA_WindUp*>(this);
     ACharacter* NearbyPlayer = NonConstThis->FindNearbyPlayer();
 
@@ -150,23 +153,48 @@ bool UCSGA_WindUp::CanActivateAbility(const FGameplayAbilitySpecHandle Handle, c
     return true;
 }
 
-void UCSGA_WindUp::OnWindUpTick()
+void UCSGA_WindUp::OnWindUpComplete()
 {
+    UE_LOG(LogCS, Log, TEXT("WindUp COMPLETED! Applying healing now"));
+
     if (!CurrentTargetPlayer)
     {
-        UE_LOG(LogCS, Warning, TEXT("WindUp tick: No target player"));
+        UE_LOG(LogCS, Warning, TEXT("WindUp completed but no target player"));
         EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
         return;
     }
 
-    // 디버깅: 타겟 정보 자세히 로깅
-    UE_LOG(LogCS, Log, TEXT("=== Target Debug Info ==="));
-    UE_LOG(LogCS, Log, TEXT("Target Name: %s"), *CurrentTargetPlayer->GetName());
-    UE_LOG(LogCS, Log, TEXT("Target Class: %s"), *CurrentTargetPlayer->GetClass()->GetName());
-    UE_LOG(LogCS, Log, TEXT("Has Controller: %s"), CurrentTargetPlayer->GetController() ? TEXT("YES") : TEXT("NO"));
-    UE_LOG(LogCS, Log, TEXT("Has PlayerState: %s"), CurrentTargetPlayer->GetPlayerState() ? TEXT("YES") : TEXT("NO"));
+    // 마지막 거리 체크
+    ACharacter* OwnerCharacter = Cast<ACharacter>(GetAvatarActorFromActorInfo());
+    if (OwnerCharacter)
+    {
+        float Distance = FVector::Dist(OwnerCharacter->GetActorLocation(), CurrentTargetPlayer->GetActorLocation());
+        if (Distance > WindUpRange)
+        {
+            UE_LOG(LogCS, Log, TEXT("WindUp completed but target too far away: %f"), Distance);
+            EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
+            return;
+        }
+    }
 
-    // 거리 체크
+    // 힐링 적용!
+    ApplyHealingEffect(CurrentTargetPlayer);
+
+    UE_LOG(LogCS, Log, TEXT("WindUp healing successfully applied to %s"), *CurrentTargetPlayer->GetName());
+
+    // 어빌리티 종료
+    EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+}
+
+void UCSGA_WindUp::CheckDistanceToTarget()
+{
+    if (!CurrentTargetPlayer)
+    {
+        UE_LOG(LogCS, Warning, TEXT("Distance check: No target player"));
+        EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
+        return;
+    }
+
     ACharacter* OwnerCharacter = Cast<ACharacter>(GetAvatarActorFromActorInfo());
     if (!OwnerCharacter)
     {
@@ -176,16 +204,14 @@ void UCSGA_WindUp::OnWindUpTick()
     float Distance = FVector::Dist(OwnerCharacter->GetActorLocation(), CurrentTargetPlayer->GetActorLocation());
     if (Distance > WindUpRange)
     {
-        UE_LOG(LogCS, Log, TEXT("WindUp target too far away: %f"), Distance);
-        // 범위를 벗어나면 어빌리티 종료
-        EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+        UE_LOG(LogCS, Log, TEXT("WindUp cancelled - target too far away: %f"), Distance);
+        // 범위를 벗어나면 어빌리티 취소
+        EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
         return;
     }
 
-    // GameplayEffect를 통한 체력 회복
-    ApplyHealingEffect(CurrentTargetPlayer);
-
-    UE_LOG(LogCS, Log, TEXT("WindUp healing applied to %s"), *CurrentTargetPlayer->GetName());
+    // 거리가 괜찮으면 계속 진행
+    UE_LOG(LogCS, VeryVerbose, TEXT("Distance check OK: %f"), Distance);
 }
 
 ACharacter* UCSGA_WindUp::FindNearbyPlayer()
@@ -202,12 +228,11 @@ ACharacter* UCSGA_WindUp::FindNearbyPlayer()
         return nullptr;
     }
 
-    // 구체 범위 내 액터들만 검색 (훨씬 효율적!)
+    // 구체 범위 내 액터들만 검색
     TArray<FOverlapResult> OverlapResults;
     FCollisionQueryParams QueryParams;
     QueryParams.AddIgnoredActor(OwnerCharacter); // 자신 제외
 
-    // 범위 내 모든 Pawn 타입 액터 검색
     bool bHit = World->OverlapMultiByObjectType(
         OverlapResults,
         OwnerCharacter->GetActorLocation(),
@@ -230,19 +255,17 @@ ACharacter* UCSGA_WindUp::FindNearbyPlayer()
     {
         ACharacter* Character = Cast<ACharacter>(Result.GetActor());
 
-        // 캐릭터가 아니면 스킵
         if (!Character)
         {
             continue;
         }
 
-        // 플레이어 컨트롤러가 있는 캐릭터만 (실제 플레이어)
+        // 플레이어 컨트롤러가 있는 캐릭터만
         if (!Character->GetController() || !Character->GetController()->IsA<APlayerController>())
         {
             continue;
         }
 
-        // 거리 계산 (정확한 거리)
         float Distance = FVector::Dist(OwnerCharacter->GetActorLocation(), Character->GetActorLocation());
 
         if (Distance < ClosestDistance)
@@ -347,22 +370,16 @@ void UCSGA_WindUp::ApplyHealingEffect(ACharacter* TargetPlayer)
         return;
     }
 
-    // 방법 1: UAbilitySystemBlueprintLibrary 사용 (더 안전함)
     UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetPlayer);
-
 
     if (!TargetASC)
     {
-        UE_LOG(LogCS, Error, TEXT("Target %s has no AbilitySystemComponent anywhere!"), *TargetPlayer->GetName());
-        UE_LOG(LogCS, Error, TEXT("Target Controller: %s"), TargetPlayer->GetController() ? *TargetPlayer->GetController()->GetName() : TEXT("NULL"));
-        UE_LOG(LogCS, Error, TEXT("Target PlayerState: %s"), TargetPlayer->GetPlayerState() ? *TargetPlayer->GetPlayerState()->GetName() : TEXT("NULL"));
-
+        UE_LOG(LogCS, Error, TEXT("Target %s has no AbilitySystemComponent!"), *TargetPlayer->GetName());
         return;
     }
 
     UE_LOG(LogCS, Log, TEXT("Found ASC for %s: %s"), *TargetPlayer->GetName(), *TargetASC->GetName());
 
-    // GameplayEffect 적용
     UAbilitySystemComponent* SourceASC = GetAbilitySystemComponentFromActorInfo();
     if (!SourceASC)
     {
@@ -381,33 +398,13 @@ void UCSGA_WindUp::ApplyHealingEffect(ACharacter* TargetPlayer)
 
     if (SpecHandle.IsValid())
     {
-        FActiveGameplayEffectHandle ActiveHandle = TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+        // HealingAmount를 GameplayEffect의 Magnitude에 설정할 수도 있습니다
+        // 또는 GameplayEffect에서 직접 값을 설정
 
-        if (ActiveHandle.IsValid())
-        {
-            UE_LOG(LogCS, Log, TEXT("Healing effect successfully applied to %s"), *TargetPlayer->GetName());
-        }
-        else
-        {
-            UE_LOG(LogCS, Log, TEXT("Failed to apply healing effect to %s, Maybe WindUp CoolTime"), *TargetPlayer->GetName());
-        }
+        FActiveGameplayEffectHandle ActiveHandle = TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
     }
     else
     {
         UE_LOG(LogCS, Error, TEXT("Invalid EffectSpecHandle for healing"));
-    }
-}
-
-void UCSGA_WindUp::RemoveHealingEffect()
-{
-    // 지속적인 효과가 있다면 제거
-    if (CurrentHealingEffectHandle.IsValid() && CurrentTargetPlayer)
-    {
-        UAbilitySystemComponent* TargetASC = CurrentTargetPlayer->FindComponentByClass<UAbilitySystemComponent>();
-        if (TargetASC)
-        {
-            TargetASC->RemoveActiveGameplayEffect(CurrentHealingEffectHandle);
-            CurrentHealingEffectHandle = FActiveGameplayEffectHandle();
-        }
     }
 }
