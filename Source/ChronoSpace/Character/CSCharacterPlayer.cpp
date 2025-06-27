@@ -215,10 +215,22 @@ void ACSCharacterPlayer::SetData()
 
 void ACSCharacterPlayer::ShoulderMove(const FInputActionValue& Value)
 {
-	FVector2D MovementVector = Value.Get<FVector2D>();
-	//UE_LOG(LogCS, Log, TEXT("[NetMode %d] ShoulderMove"), GetWorld()->GetNetMode());
-	AddMovementInput( FollowCamera->GetForwardVector(), MovementVector.X);
-	AddMovementInput( FollowCamera->GetRightVector(), MovementVector.Y);
+	// 1) 입력 축
+	const FVector2D MoveAxis = Value.Get<FVector2D>();      // X = Forward, Y = Right
+	if (MoveAxis.IsNearlyZero()) return;                    // 입력 없으면 패스
+
+	// 2) 컨트롤러 회전에서 Yaw 만 추출
+	const FRotator ControlRot = Controller ? Controller->GetControlRotation()
+		: FRotator::ZeroRotator;
+	const FRotator YawOnlyRot(0.f, ControlRot.Yaw, 0.f);    // Pitch·Roll → 0
+
+	// 3) 평면 단위 벡터 계산
+	const FVector ForwardDir = FRotationMatrix(YawOnlyRot).GetUnitAxis(EAxis::X);
+	const FVector RightDir = FRotationMatrix(YawOnlyRot).GetUnitAxis(EAxis::Y);
+
+	// 4) 이동 입력?항상 일정한 속도
+	AddMovementInput(ForwardDir, MoveAxis.X);
+	AddMovementInput(RightDir, MoveAxis.Y);
 }
 
 void ACSCharacterPlayer::ShoulderLook(const FInputActionValue& Value)
