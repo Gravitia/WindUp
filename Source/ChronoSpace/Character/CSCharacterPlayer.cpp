@@ -100,7 +100,7 @@ void ACSCharacterPlayer::PossessedBy(AController* NewController)
 	Super::PossessedBy(NewController);
 
 	ACSPlayerState* CSPS = GetPlayerState<ACSPlayerState>();
-	
+	ASC = CSPS->GetAbilitySystemComponent();
 	GASManagerComponent->SetASC(CSPS->GetAbilitySystemComponent(), CSPS);
 	GASManagerComponent->SetGASAbilities();
 }
@@ -123,8 +123,8 @@ void ACSCharacterPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 void ACSCharacterPlayer::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
-
 	ACSPlayerState* CSPS = GetPlayerState<ACSPlayerState>();
+	ASC = CSPS->GetAbilitySystemComponent();
 	GASManagerComponent->SetASC(ASC, CSPS);
 	// EnergyBar->ActivateGAS();
 }
