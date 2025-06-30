@@ -21,58 +21,53 @@ class CHRONOSPACE_API ACSCheckPoint : public AActor
 {
 	GENERATED_BODY()
 	
-public:
-    ACSCheckPoint();
+public:	
+	// Sets default values for this actor's properties
+	ACSCheckPoint();
 
 protected:
-    virtual void BeginPlay() override;
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
 
 public:
-    // === Components ===
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    // Components
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     UBoxComponent* TriggerBox;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-    UStaticMeshComponent* CheckPointMesh;
-
-    // === Settings ===
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CheckPoint Settings")
+    // Settings
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
     int32 ChapterNumber = 1;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CheckPoint Settings")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
     int32 StageNumber = 1;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CheckPoint Settings")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
     int32 CheckPointNumber = 1;
 
-    UPROPERTY(BlueprintReadOnly, Category = "CheckPoint State")
+    UPROPERTY(BlueprintReadOnly)
     FString CheckPointID;
 
-    UPROPERTY(BlueprintReadOnly, Category = "CheckPoint State")
+    UPROPERTY(BlueprintReadOnly)
     ECheckPointState CurrentState = ECheckPointState::Locked;
 
 public:
-    // === Core Functions ===
-    UFUNCTION(BlueprintCallable, Category = "CheckPoint")
+    UFUNCTION(BlueprintCallable)
+    void UnlockCheckPoint();
+
+    UFUNCTION(BlueprintCallable)
     void ActivateCheckPoint();
 
-    UFUNCTION(BlueprintCallable, Category = "CheckPoint")
+    UFUNCTION(BlueprintCallable)
     bool IsActive() const { return CurrentState == ECheckPointState::Active; }
 
-    UFUNCTION(BlueprintCallable, Category = "CheckPoint")
+    UFUNCTION(BlueprintCallable)
     FString GetCheckPointID() const { return CheckPointID; }
 
-    // === Events ===
     UFUNCTION()
     void OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
         UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
         bool bFromSweep, const FHitResult& SweepResult);
 
-    // === Blueprint Events ===
-    UFUNCTION(BlueprintImplementableEvent, Category = "CheckPoint Events")
-    void OnCheckPointActivated();
-
 private:
     void GenerateID();
-    class ACSGameMode* GetCSGameMode() const;
 };

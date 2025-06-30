@@ -24,52 +24,16 @@ class CHRONOSPACE_API ACSKillZone : public AActor
 {
 	GENERATED_BODY()
 	
-public:
-    ACSKillZone();
+public:	
+	// Sets default values for this actor's properties
+	ACSKillZone();
 
 protected:
-    virtual void BeginPlay() override;
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
 
-public:
-    // === Components ===
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-    UBoxComponent* KillVolume;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-    UStaticMeshComponent* VisualMesh;
-
-    // === Settings ===
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Kill Zone Settings")
-    EKillZoneType KillZoneType = EKillZoneType::Fall;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Kill Zone Settings")
-    bool bIsActive = true;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Kill Zone Settings")
-    bool bAffectsPlayersOnly = true;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual Settings")
-    bool bShowVisualMesh = false;
-
-public:
-    // === Core Functions ===
-    UFUNCTION(BlueprintCallable, Category = "Kill Zone")
-    void KillPlayer(APawn* Player);
-
-    UFUNCTION(BlueprintCallable, Category = "Kill Zone")
-    void SetActive(bool bNewActive);
-
-    // === Events ===
-    UFUNCTION()
-    void OnVolumeBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
-        UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
-        bool bFromSweep, const FHitResult& SweepResult);
-
-    // === Blueprint Events ===
-    UFUNCTION(BlueprintImplementableEvent, Category = "Kill Zone Events")
-    void OnPlayerKilled(APawn* Player);
-
-private:
-    class ACSGameState* GetCSGameState() const;
+public:	
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
 
 };
