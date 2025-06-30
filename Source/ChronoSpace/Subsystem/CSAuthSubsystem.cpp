@@ -15,10 +15,7 @@ void UCSAuthSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 void UCSAuthSubsystem::Deinitialize()
 {
-	if ( IdentityInterface.IsValid() )
-	{
-		IdentityInterface->ClearOnLoginCompleteDelegate_Handle(0, LoginCompleteHandle);
-	}
+	
 	
 	Super::Deinitialize();
 }
@@ -26,29 +23,32 @@ void UCSAuthSubsystem::Deinitialize()
 void UCSAuthSubsystem::LoginWithDeviceId()
 {
 	// for EOS
-	IOnlineSubsystem* EOS = IOnlineSubsystem::Get(TEXT("EOS"));
-	if (!EOS)
+	IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get(TEXT("EIK"));
+	if (!Subsystem)
 	{
-		UE_LOG(LogCS, Warning, TEXT("No EOS Subsystem"));
+		UE_LOG(LogCS, Error, TEXT("No EIK Subsystem"));
 		return;
 	}
 	//UE_LOG(LogCS, Log, TEXT("Valid EOS Subsystem"));
 
-	IdentityInterface = EOS->GetIdentityInterface();
-	if (!IdentityInterface.IsValid()) return;
+	IOnlineIdentityPtr Identity = Subsystem->GetIdentityInterface();
+	if ( !Identity.IsValid() )
+	{
+		UE_LOG(LogCS, Error, TEXT("Invalid IOnlineIdentityPtr"));
+		return;
+	}
 
-	LoginCompleteHandle = IdentityInterface->AddOnLoginCompleteDelegate_Handle(
-		0,
-		FOnLoginCompleteDelegate::CreateUObject(this, &UCSAuthSubsystem::OnLoginComplete)
+	FOnlineAccountCredentials Creds;
+	Creds.Type = TEXT("noeas_+_EIK_ECT_DEVICEID_ACCESS_TOKEN");
+	Creds.Id = TEXT("Guest_000");
+	Creds.Token = TEXT("");
+
+	Identity->OnLoginCompleteDelegates->AddUObject(
+		this,
+		&UCSAuthSubsystem::OnLoginComplete
 	);
 
-	// Deviceid login credentials setting
-	FOnlineAccountCredentials Credenials;
-	Credenials.Type = TEXT("deviceid");
-	Credenials.Id = TEXT("");
-	Credenials.Token = TEXT("");
-
-	IdentityInterface->Login(0, Credenials);
+	Identity->Login(0, Creds);
 }
 
 void UCSAuthSubsystem::OnLoginComplete(int32 LocalUserNum, bool bWasSuccessful, const FUniqueNetId& UserId, const FString& Error)
