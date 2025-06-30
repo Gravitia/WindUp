@@ -2,26 +2,78 @@
 
 
 #include "Actor/System/CSKillZone.h"
+#include "Game/CSGameState.h"
+#include "Components/BoxComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "Engine/World.h"
+#include "GameFramework/Pawn.h"
 
-// Sets default values
 ACSKillZone::ACSKillZone()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+    PrimaryActorTick.bCanEverTick = false;
 
+    // Kill Volume as root
+    KillVolume = CreateDefaultSubobject<UBoxComponent>(TEXT("KillVolume"));
+    RootComponent = KillVolume;
+    KillVolume->SetBoxExtent(FVector(500.0f, 500.0f, 100.0f));
+    KillVolume->SetCollisionProfileName("Trigger");
+
+    // Optional visual mesh
+    VisualMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("VisualMesh"));
+    VisualMesh->SetupAttachment(RootComponent);
+    VisualMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    VisualMesh->SetVisibility(bShowVisualMesh);
 }
 
-// Called when the game starts or when spawned
 void ACSKillZone::BeginPlay()
 {
-	Super::BeginPlay();
-	
+    Super::BeginPlay();
+
+    KillVolume->OnComponentBeginOverlap.AddDynamic(this, &ACSKillZone::OnVolumeBeginOverlap);
+    VisualMesh->SetVisibility(bShowVisualMesh);
 }
 
-// Called every frame
-void ACSKillZone::Tick(float DeltaTime)
+void ACSKillZone::KillPlayer(APawn* Player)
 {
-	Super::Tick(DeltaTime);
+    if (!Player || !IsValid(Player))
+        return;
 
+    // Tell GameState that player died
+    ACSGameState* GameState = GetCSGameState();
+    if (GameState)
+    {
+        GameState->HandlePlayerDeath(Player);
+    }
+
+    OnPlayerKilled(Player);
+
+    UE_LOG(LogTemp, Warning, TEXT("Player killed by KillZone: %s"), *Player->GetName());
 }
 
+void ACSKillZone::SetActive(bool bNewActive)
+{
+    bIsActive = bNewActive;
+}
+
+void ACSKillZone::OnVolumeBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+    UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
+    bool bFromSweep, const FHitResult& SweepResult)
+{
+    if (!bIsActive)
+        return;
+
+    APawn* Player = Cast<APawn>(OtherActor);
+    if (Player)
+    {
+        // Check if affects players only
+        if (bAffectsPlayersOnly && !Player->IsPlayerControlled())
+            return;
+
+        KillPlayer(Player);
+    }
+}
+
+ACSGameState* ACSKillZone::GetCSGameState() const
+{
+    return Cast<ACSGameState>(GetWorld()->GetGameState());
+}

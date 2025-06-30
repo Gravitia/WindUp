@@ -4,7 +4,20 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Components/BoxComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "CSKillZone.generated.h"
+
+UENUM(BlueprintType)
+enum class EKillZoneType : uint8
+{
+	Fall,
+	Lava,
+	Water,
+	Toxic,
+	Laser,
+	Void
+};
 
 UCLASS()
 class CHRONOSPACE_API ACSKillZone : public AActor
