@@ -26,7 +26,7 @@ class CHRONOSPACE_API ACSGameMode : public AGameModeBase
 
 public:
     ACSGameMode();
-    /*
+    
 protected:
     virtual void BeginPlay() override;
     virtual void PostLogin(APlayerController* NewPlayer) override;
@@ -93,5 +93,5 @@ private:
     void DeactivateAllCheckpoints();
     class ACSGameState* GetCSGameState() const;
 
-    */
+    
 };
