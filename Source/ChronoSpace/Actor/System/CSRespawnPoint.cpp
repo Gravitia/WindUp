@@ -2,26 +2,43 @@
 
 
 #include "Actor/System/CSRespawnPoint.h"
+#include "Game/CSGameMode.h"
+#include "Components/ArrowComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "Engine/World.h"
+#include "GameFramework/Pawn.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/PlayerState.h"
 
-// Sets default values
 ACSRespawnPoint::ACSRespawnPoint()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+    PrimaryActorTick.bCanEverTick = false;
 
+    // Direction Arrow as root
+    DirectionArrow = CreateDefaultSubobject<UArrowComponent>(TEXT("DirectionArrow"));
+    RootComponent = DirectionArrow;
+    DirectionArrow->SetArrowColor(FLinearColor::Blue);
+    DirectionArrow->ArrowSize = 2.0f;
 }
 
-// Called when the game starts or when spawned
-void ACSRespawnPoint::BeginPlay()
+void ACSRespawnPoint::SpawnPlayerHere(APawn* Player)
 {
-	Super::BeginPlay();
-	
+    if (!Player)
+        return;
+
+    // Set player location and rotation
+    Player->SetActorLocation(GetActorLocation());
+    Player->SetActorRotation(GetActorRotation());
+
+    // Clear velocity
+    if (ACharacter* Character = Cast<ACharacter>(Player))
+    {
+        if (UCharacterMovementComponent* MovementComp = Character->GetCharacterMovement())
+        {
+            MovementComp->Velocity = FVector::ZeroVector;
+        }
+    }
+
+    UE_LOG(LogTemp, Log, TEXT("Player spawned at RespawnPoint"));
 }
-
-// Called every frame
-void ACSRespawnPoint::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-

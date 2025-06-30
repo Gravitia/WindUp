@@ -310,7 +310,7 @@ void ACSGameState::TriggerAllPlayersRespawn()
     // GameMode에게 리스폰 실행 요청
     if (ACSGameMode* GameMode = Cast<ACSGameMode>(GetWorld()->GetAuthGameMode()))
     {
-        GameMode->RespawnAllPlayersAtCheckpoint();
+        GameMode->RespawnAllPlayersAtCurrentPoint();
 
         // 모든 플레이어 상태를 살아있음으로 리셋
         for (FPlayerDeathState& DeathState : PlayerDeathStates)
