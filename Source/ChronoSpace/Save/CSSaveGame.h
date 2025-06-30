@@ -101,4 +101,4 @@ private:
     void EnsureStageRecordExists(int32 ChapterNumber, int32 StageNumber);
     void InitializeDefaultStages();
 };
-};
+
