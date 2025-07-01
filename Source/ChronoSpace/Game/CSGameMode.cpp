@@ -23,6 +23,8 @@ void ACSGameMode::BeginPlay()
 {
     Super::BeginPlay();
 
+    UE_LOG(LogTemp, Log, TEXT("CSLog: CSGameMode BeginPlay"));
+
     UE_LOG(LogTemp, Log, TEXT("CSGameMode: Simple respawn system initialized"));
 }
 
@@ -69,8 +71,7 @@ void ACSGameMode::SetCurrentRespawnPoint(ACSRespawnPoint* NewRespawnPoint)
     {
         CurrentRespawnPoint = NewRespawnPoint;
         OnRespawnPointChanged(NewRespawnPoint);
-
-        UE_LOG(LogTemp, Log, TEXT("Current respawn point updated"));
+        UE_LOG(LogTemp, Log, TEXT("CSLog : Current respawn point updated"));
     }
 }
 
@@ -130,6 +131,42 @@ void ACSGameMode::HandlePlayerDeath(APawn* DeadPlayer)
     {
         UE_LOG(LogTemp, Warning, TEXT("CSGameState not found for player death handling"));
     }
+}
+
+
+bool ACSGameMode::RespawnSinglePlayer(APawn* Player)
+{
+    UE_LOG(LogTemp, Log, TEXT("CSLog : RespawnSinglePlayer() "));
+
+    if (!Player)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Invalid player for respawn"));
+        return false;
+    }
+
+    if (!CurrentRespawnPoint)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("No current respawn point set for single player respawn"));
+        return false;
+    }
+
+    // Respawn the player at current respawn point
+    CurrentRespawnPoint->SpawnPlayerHere(Player);
+
+    // Reset player death state in GameState
+    ACSGameState* CSGameState = GetCSGameState();
+    if (CSGameState)
+    {
+        CSGameState->HandlePlayerRevive(Player);
+    }
+
+    UE_LOG(LogTemp, Log, TEXT("Single player respawned: %s"), *Player->GetName());
+    return true;
+}
+
+bool ACSGameMode::RespawnPlayerAtCurrentPoint(APawn* Player)
+{
+    return RespawnSinglePlayer(Player);
 }
 
 ACSGameState* ACSGameMode::GetCSGameState() const

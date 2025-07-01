@@ -46,6 +46,13 @@ public:
     UFUNCTION(BlueprintImplementableEvent, Category = "GameMode Events")
     void OnAllPlayersRespawned();
 
+    // === Single Player Respawn ===
+    UFUNCTION(BlueprintCallable, Category = "Respawn")
+    bool RespawnSinglePlayer(APawn* Player);
+
+    UFUNCTION(BlueprintCallable, Category = "Respawn")
+    bool RespawnPlayerAtCurrentPoint(APawn* Player);
+
 private:
     class ACSGameState* GetCSGameState() const;
     

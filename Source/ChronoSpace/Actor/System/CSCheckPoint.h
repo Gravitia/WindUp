@@ -35,6 +35,14 @@ public:
         UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
         bool bFromSweep, const FHitResult& SweepResult);
 
+    // === Debug Functions ===
+    UFUNCTION(BlueprintCallable, Category = "Debug")
+    void DebugNetworkInfo() const;
+
+    // === RPC Alternative (Optional) ===
+    UFUNCTION(Server, Reliable, Category = "CheckPoint")
+    void ServerActivateCheckpoint(APawn* Player);
+
 private:
     class ACSGameMode* GetCSGameMode() const;
 };
