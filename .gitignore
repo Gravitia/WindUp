@@ -75,3 +75,5 @@ DerivedDataCache/*
 
 !Plugins/EOSIntegrationKit-Version5/Source/ThirdParty/EIKSDK/
 !Plugins/EOSIntegrationKit-Version5/Source/ThirdParty/EIKSDK/**
+!Plugins/EOSIntegrationKit-Version5/Source/ThirdParty/EIKSDK/**/*.dll
+!Plugins/EOSIntegrationKit-Version5/Source/ThirdParty/EIKSDK/**/*.lib
