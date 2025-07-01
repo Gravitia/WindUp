@@ -32,13 +32,6 @@ ACSLabyrinthKeyAltar::ACSLabyrinthKeyAltar()
 	SphereTrigger->SetCollisionProfileName(CPROFILE_OVERLAPALL);
 	SphereTrigger->SetIsReplicated(true);
 
-
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> StaticMeshRef(TEXT("/Script/Engine.StaticMesh'/Game/Mesh/StaticMesh/SM_SM_Altar.SM_SM_Altar'"));
-	if (StaticMeshRef.Object)
-	{
-		StaticMeshComp->SetStaticMesh(StaticMeshRef.Object);
-	}
-
 	//SphereTrigger->OnComponentBeginOverlap.AddDynamic(this, &ACSLabyrinthKeyAltar::OnComponentBeginOverlapCallback);
 	//SphereTrigger->OnComponentEndOverlap.AddDynamic(this, &ACSLabyrinthKeyAltar::OnComponentEndOverlapCallback);
 
@@ -46,18 +39,45 @@ ACSLabyrinthKeyAltar::ACSLabyrinthKeyAltar()
 	InteractionPromptComponent->SetupAttachment(SphereTrigger);
 	InteractionPromptComponent->SetRelativeLocation(FVector(0.0f, 0.0f, 100.0f));
 
-	static ConstructorHelpers::FClassFinder<UUserWidget> InteractionPromptWidgetRef(TEXT("/Game/Blueprint/UI/BP_InteractionPromptAltar.BP_InteractionPromptAltar_C"));
-	if (InteractionPromptWidgetRef.Class)
+	InteractionPromptComponent->SetVisibility(false);
+
+	RequiredKeyCount = 5;
+}
+
+void ACSLabyrinthKeyAltar::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (!StaticMesh.IsValid())
 	{
-		InteractionPromptComponent->SetWidgetClass(InteractionPromptWidgetRef.Class);
+		StaticMesh.LoadSynchronous();
+	}
+
+	if (StaticMesh.IsValid())
+	{
+		StaticMeshComp->SetStaticMesh(StaticMesh.Get());
+	}
+	else
+	{
+		UE_LOG(LogCS, Error, TEXT("StaticMesh failed to load in ACSLabyrinthKey"));
+	}
+
+	if (!InteractionPromptWidgetClass.IsValid())
+	{
+		InteractionPromptWidgetClass.LoadSynchronous();
+	}
+
+	if (InteractionPromptWidgetClass.IsValid())
+	{
+		InteractionPromptComponent->SetWidgetClass(InteractionPromptWidgetClass.Get());
 		InteractionPromptComponent->SetWidgetSpace(EWidgetSpace::Screen);
 		InteractionPromptComponent->SetDrawSize(FVector2D(500.0f, 30.f));
 		InteractionPromptComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
-
-	InteractionPromptComponent->SetVisibility(false);
-
-	RequiredKeyCount = 5;
+	else
+	{
+		UE_LOG(LogCS, Error, TEXT("InteractionPromptWidgetClass failed to load in ACSLabyrinthKeyAltar"));
+	}
 }
 
 void ACSLabyrinthKeyAltar::BeginInteraction()

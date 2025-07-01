@@ -14,16 +14,13 @@ ACSPlayerController::ACSPlayerController()
 	bEnableClickEvents = false;
 	bEnableMouseOverEvents = false;
 
-	static ConstructorHelpers::FClassFinder<UCameraShakeBase> CameraShakeRef(TEXT("/Game/Blueprint/Camera/BP_CameraShake.BP_CameraShake_C"));
-	if ( CameraShakeRef.Succeeded() )
-	{
-		CameraShake = CameraShakeRef.Class;
-	}
 }
 
 void ACSPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+
+	check(CameraShake);
 
 	SetupInputMode();
 

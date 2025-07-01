@@ -37,17 +37,6 @@ ACSCharacterBase::ACSCharacterBase()
 	GetMesh()->SetAnimationMode(EAnimationMode::AnimationBlueprint);
 	GetMesh()->SetCollisionProfileName(TEXT("NoCollision"));
 
-	//static ConstructorHelpers::FObjectFinder<USkeletalMesh> CharacterMeshRef(TEXT("/Script/Engine.SkeletalMesh'/Game/Chibi_characters/Meshes/MainCharacter.MainCharacter'"));
-	//if (CharacterMeshRef.Object)
-	//{
-	//	GetMesh()->SetSkeletalMesh(CharacterMeshRef.Object);
-	//}
-	//// /Script/Engine.SkeletalMesh'/Game/Chibi_characters/Meshes/MainCharacter.MainCharacter'
-	//static ConstructorHelpers::FClassFinder<UAnimInstance> AnimInstanceClassRef(TEXT("/Game/Characters/Mannequins/Animations/ABP_Quinn.ABP_Quinn_C"));
-	//if (AnimInstanceClassRef.Class)
-	//{
-	//	GetMesh()->SetAnimInstanceClass(AnimInstanceClassRef.Class);
-	//}
 
 	// Gravity Core
 	CustomGravityDirComponent = CreateDefaultSubobject<UCSCustomGravityDirComponent>(TEXT("CustomGravityDirComponent"));
@@ -63,7 +52,7 @@ void ACSCharacterBase::SetDead()
 void ACSCharacterBase::AttachWindUpKeyToSocket()
 {
 	// 1. 블루프린트 클래스 로드
-	const FString WindUpKeyBPPath = TEXT("/Game/Blueprint/Character/WindUpKey.WindUpKey_C");
+	const FString WindUpKeyBPPath = TEXT("/Game/01_Blueprint/Character/WindUpKey.WindUpKey_C");
 	UClass* WindUpKeyBPClass = Cast<UClass>(StaticLoadObject(UClass::StaticClass(), nullptr, *WindUpKeyBPPath));
 
 	if (!WindUpKeyBPClass)
@@ -85,7 +74,7 @@ void ACSCharacterBase::AttachWindUpKeyToSocket()
 	}
 
 	// 3. 크기 조정 (스폰된 블루프린트의 루트 컴포넌트에 적용)
-	FVector DesiredScale(0.12f, 0.12f, 0.12f);
+	FVector DesiredScale(0.18f, 0.18f, 0.18f);
 	WindUpKeyActor->SetActorScale3D(DesiredScale);
 
 	// 4. 소켓 위치 가져오기

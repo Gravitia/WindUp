@@ -26,11 +26,7 @@ ACSGravityCoreSphere::ACSGravityCoreSphere()
 	StaticMeshComp->SetCollisionProfileName(CPROFILE_CSCAPSULE);
 	StaticMeshComp->SetIsReplicated(true);
 
-	/*static ConstructorHelpers::FObjectFinder<UStaticMesh> StaticMeshRef(TEXT("/Script/Engine.StaticMesh'/Game/Mesh/StaticMesh/BlockSphere.BlockSphere'"));
-	if (StaticMeshRef.Object)
-	{
-		StaticMeshComp->SetStaticMesh(StaticMeshRef.Object);
-	}*/
+
 
 	float MeshRadius = 50.0f;
 	float MeshScale = (GravityInfluenceRange / MeshRadius) * 0.75f;
