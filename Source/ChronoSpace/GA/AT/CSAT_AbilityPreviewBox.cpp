@@ -14,6 +14,9 @@ UCSAT_AbilityPreviewBox::UCSAT_AbilityPreviewBox()
 {
     // TickTask 활성화
     bTickingTask = true;
+
+    Dist = 350.0f;
+    Vert = 100.0f;
 }
 
 UCSAT_AbilityPreviewBox* UCSAT_AbilityPreviewBox::CreateTask(UGameplayAbility* OwningAbility)
@@ -176,24 +179,22 @@ void UCSAT_AbilityPreviewBox::PlayerFollowPreviewBox()
     }
 
     // 위치 계산
-    FVector ForwardVector = AvatarActor->GetActorForwardVector();
-    FVector RightVector = AvatarActor->GetActorRightVector(); // 플레이어의 오른쪽 방향 벡터
+    /*FVector ForwardVector = AvatarActor->GetActorForwardVector();
     FVector ActorLocation = AvatarActor->GetActorLocation();
 
     // ForwardVector와 RightVector를 기반으로 PlayerOffset 계산
     FVector ForwardOffset = ForwardVector * 350.0f; // 플레이어 앞 방향으로 350 단위
     FVector UpOffset(0.0f, 0.0f, 100.0f + (CurrentSize - 200.0f));          // 위쪽으로 100 단위
 
-    FVector NewLocation = ActorLocation + ForwardOffset /*+ RightOffset*/ + UpOffset;
+    FVector NewLocation = ActorLocation + ForwardOffset + UpOffset;*/
+
+    float CalcedVert = Vert + (CurrentSize - 200.0f);
+
+    FVector LocalOffset(Dist, 0.0f, CalcedVert);
+    FVector WorldOffset = AvatarActor->GetActorTransform().TransformVectorNoScale(LocalOffset);
 
     // 박스 위치 업데이트
-    PreviewBox->SetWorldLocation(NewLocation);
-
-    // 디버그 로그
-    //UE_LOG(LogTemp, Log, TEXT("ActorLocation: X=%.2f, Y=%.2f, Z=%.2f"), ActorLocation.X, ActorLocation.Y, ActorLocation.Z);
-    //UE_LOG(LogTemp, Log, TEXT("ForwardOffset: X=%.2f, Y=%.2f, Z=%.2f"), ForwardOffset.X, ForwardOffset.Y, ForwardOffset.Z);
-    //UE_LOG(LogTemp, Log, TEXT("RightOffset: X=%.2f, Y=%.2f, Z=%.2f"), RightOffset.X, RightOffset.Y, RightOffset.Z);
-    //UE_LOG(LogTemp, Log, TEXT("NewLocation: X=%.2f, Y=%.2f, Z=%.2f, YOffset: %.2f"), NewLocation.X, NewLocation.Y, NewLocation.Z, YOffset);
+    PreviewBox->SetWorldLocation( AvatarActor->GetActorLocation() + WorldOffset );
 }
 
 void UCSAT_AbilityPreviewBox::TickTask(float DeltaTime)

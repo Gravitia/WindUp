@@ -52,6 +52,7 @@ void ACSTA_ChronoControl::StartTargeting(UGameplayAbility* Ability)
 {
     Super::StartTargeting(Ability);
     SourceActor = Ability->GetCurrentActorInfo()->AvatarActor.Get();
+    UE_LOG(LogCS, Log, TEXT("ACSTA_ChronoControl StartTargeting"));
 }
 
 void ACSTA_ChronoControl::ConfirmTargetingAndContinue()
