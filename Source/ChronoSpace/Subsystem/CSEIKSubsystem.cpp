@@ -110,6 +110,7 @@ void UCSEIKSubsystem::CreateSession()
 	Settings.bShouldAdvertise = true;
 	Settings.bUsesPresence = true;
 	Settings.bAllowJoinInProgress = true;
+	Settings.Set(FName("MAPNAME"), FString("L_StageSize"), EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 
 	Session->CreateSession(0, NAME_GameSession, Settings);
 }
