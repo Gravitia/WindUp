@@ -178,16 +178,6 @@ void UCSAT_AbilityPreviewBox::PlayerFollowPreviewBox()
         YOffset = YOffsets[CurrentIndex];
     }
 
-    // 위치 계산
-    /*FVector ForwardVector = AvatarActor->GetActorForwardVector();
-    FVector ActorLocation = AvatarActor->GetActorLocation();
-
-    // ForwardVector와 RightVector를 기반으로 PlayerOffset 계산
-    FVector ForwardOffset = ForwardVector * 350.0f; // 플레이어 앞 방향으로 350 단위
-    FVector UpOffset(0.0f, 0.0f, 100.0f + (CurrentSize - 200.0f));          // 위쪽으로 100 단위
-
-    FVector NewLocation = ActorLocation + ForwardOffset + UpOffset;*/
-
     float CalcedVert = Vert + (CurrentSize - 200.0f);
 
     FVector LocalOffset(Dist, 0.0f, CalcedVert);
