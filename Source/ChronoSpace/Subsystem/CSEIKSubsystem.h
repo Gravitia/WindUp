@@ -40,6 +40,12 @@ protected:
 	FOnCreateSessionCompleteDelegate OnCreateSessionCompleteDelegate;
 	FDelegateHandle OnCreateSessionCompleteDelegateHandle;
 
+	// Start Session
+protected:
+	void OnStartSessionComplete(FName SessionName, bool bWasSuccessful);
+	FOnStartSessionCompleteDelegate OnStartSessionCompleteDelegate;
+	FDelegateHandle OnStartSessionCompleteDelegateHandle;
+
 	// Find Session
 public:
 	UFUNCTION(BlueprintCallable)
@@ -58,7 +64,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void JoinSessionForBlueprint(FBlueprintSessionResult& SearchResult);
 
-	void JoinSession(const FOnlineSessionSearchResult& SearchResult);	// FOnlineSessionSearchResult는 리플렉션 지원이 안됨
+	void JoinSession(const FOnlineSessionSearchResult& SearchResult);   // FOnlineSessionSearchResult는 리플렉션 지원이 안됨
 
 protected:
 	void OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result);
