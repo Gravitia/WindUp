@@ -125,6 +125,9 @@ void UCSEIKSubsystem::OnCreateSessionComplete(FName SessionName, bool bWasSucces
 	{
 		UE_LOG(LogCS, Log, TEXT("Create Session Success: %s"), *SessionName.ToString());
 
+		Session->StartSession(NAME_GameSession);
+
+
 		if (GetWorld())
 		{
 			GetWorld()->ServerTravel("/Game/02_Map/L_StageSize?listen");
