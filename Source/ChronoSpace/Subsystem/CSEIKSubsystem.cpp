@@ -12,9 +12,10 @@
 
 void UCSEIKSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
+    return;
     Super::Initialize(Collection);
 
-    LoginWithDeviceId();
+    // LoginWithDeviceId();
 }
 
 void UCSEIKSubsystem::Deinitialize()
