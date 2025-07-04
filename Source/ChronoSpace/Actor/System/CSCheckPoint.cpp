@@ -8,6 +8,8 @@
 #include "Components/BoxComponent.h"
 #include "GameFramework/Pawn.h"
 #include "Engine/World.h"
+#include "Subsystem/CSGameProgressSubsystem.h"
+#include "Kismet/GameplayStatics.h"
 
 ACSCheckPoint::ACSCheckPoint()
 {
@@ -70,6 +72,23 @@ void ACSCheckPoint::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComp, A
 
         UE_LOG(LogTemp, Log, TEXT("CSLog : CheckPoint - Setting respawn point"));
         GameMode->SetCurrentRespawnPoint(ConnectedRespawnPoint);
+
+        if (SaveStageClear)
+        {
+            UCSGameProgressSubsystem* ProgressSubsystem = GetGameProgressSubsystem();
+            if (ProgressSubsystem)
+            {
+                ProgressSubsystem->ClearStage(CurrentChapterNumber, CurrentStageNumber);
+                ProgressSubsystem->SetLastPlayedStage(CurrentChapterNumber, CurrentStageNumber);
+
+                UE_LOG(LogTemp, Log, TEXT("CSLog : Stage cleared and saved: C%d_S%d"),
+                    CurrentChapterNumber, CurrentStageNumber);
+            }
+            else
+            {
+                UE_LOG(LogTemp, Warning, TEXT("CSLog : GameProgressSubsystem not found for stage save"));
+            }
+        }
     }
 }
 
@@ -133,5 +152,15 @@ ACSGameMode* ACSCheckPoint::GetCSGameMode() const
     }
 
     UE_LOG(LogTemp, Warning, TEXT("CSLog : GetCSGameMode called on client - returning nullptr"));
+    return nullptr;
+}
+
+UCSGameProgressSubsystem* ACSCheckPoint::GetGameProgressSubsystem() const
+{
+    UGameInstance* GameInstance = GetGameInstance();
+    if (GameInstance)
+    {
+        return GameInstance->GetSubsystem<UCSGameProgressSubsystem>();
+    }
     return nullptr;
 }

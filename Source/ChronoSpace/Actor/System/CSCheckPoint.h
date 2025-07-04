@@ -45,4 +45,30 @@ public:
 
 private:
     class ACSGameMode* GetCSGameMode() const;
+    // CSGameProgressSubsystem const; 
+    
+// Save 
+public:
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Save Stage")
+    bool SaveStageClear = false;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Save Stage")
+    int32 CurrentChapterNumber;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Save Stage")
+    int32 CurrentStageNumber;
+    
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Move Next Stage")
+    bool MoveNextStage = false;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Move Next Stage")
+    int32 NextChapterNumber;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Move Next Stage")
+    int32 NextStageNumber;
+
+private:
+    class UCSGameProgressSubsystem* GetGameProgressSubsystem() const;
+
 };

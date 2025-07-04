@@ -55,7 +55,6 @@ void ACSKillZone::SetActive(bool bNewActive)
     bIsActive = bNewActive;
 }
 
-// 수정: 함수명을 OnTriggerBeginOverlap으로 변경
 void ACSKillZone::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
     bool bFromSweep, const FHitResult& SweepResult)
