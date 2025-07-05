@@ -13,13 +13,13 @@ const FName ACSAIController::bShouldStopMoveKey(TEXT("bShouldStopMove"));
 
 ACSAIController::ACSAIController()
 {
-	static ConstructorHelpers::FObjectFinder<UBlackboardData> BBObjRef(TEXT("/Script/AIModule.BlackboardData'/Game/BehaviorTree/BB_CSCharacterPatrol.BB_CSCharacterPatrol'"));
+	static ConstructorHelpers::FObjectFinder<UBlackboardData> BBObjRef(TEXT("/Script/AIModule.BlackboardData'/Game/10_BehaviorTree/BB_CSCharacterPatrol.BB_CSCharacterPatrol'"));
 	if ( BBObjRef.Succeeded() )
 	{
 		BBAsset = BBObjRef.Object;
 	}
 
-	static ConstructorHelpers::FObjectFinder<UBehaviorTree> BTObjRef(TEXT("/Script/AIModule.BehaviorTree'/Game/BehaviorTree/BT_CSCharacterPatrol.BT_CSCharacterPatrol'"));
+	static ConstructorHelpers::FObjectFinder<UBehaviorTree> BTObjRef(TEXT("/Script/AIModule.BehaviorTree'/Game/10_BehaviorTree/BT_CSCharacterPatrol.BT_CSCharacterPatrol'"));
 	if (BTObjRef.Succeeded())
 	{
 		BTAsset = BTObjRef.Object;

@@ -33,7 +33,7 @@ ACSLabyrinthKey::ACSLabyrinthKey()
 	SphereTrigger->SetCollisionProfileName(CPROFILE_OVERLAPALL);
 	SphereTrigger->SetIsReplicated(true);
 
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> StaticMeshRef(TEXT("/Script/Engine.StaticMesh'/Game/Mesh/StaticMesh/MapClockworkLabyrinth/Key/SM_SM_LabyrinthKey.SM_SM_LabyrinthKey'"));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> StaticMeshRef(TEXT("/Script/Engine.StaticMesh'/Game/30_Mesh/StaticMesh/MapClockworkLabyrinth/Key/SM_SM_LabyrinthKey.SM_SM_LabyrinthKey'"));
 	if (StaticMeshRef.Object)
 	{
 		StaticMeshComp->SetStaticMesh(StaticMeshRef.Object);
@@ -48,7 +48,7 @@ ACSLabyrinthKey::ACSLabyrinthKey()
 	InteractionPromptComponent->SetupAttachment(SphereTrigger);
 	InteractionPromptComponent->SetRelativeLocation(FVector(0.0f, 0.0f, 100.0f));
 
-	static ConstructorHelpers::FClassFinder<UUserWidget> InteractionPromptWidgetRef(TEXT("/Game/Blueprint/UI/BP_InteractionPrompt.BP_InteractionPrompt_C"));
+	static ConstructorHelpers::FClassFinder<UUserWidget> InteractionPromptWidgetRef(TEXT("/Game/01_Blueprint/UI/BP_InteractionPrompt.BP_InteractionPrompt_C"));
 	if (InteractionPromptWidgetRef.Class)
 	{
 		InteractionPromptComponent->SetWidgetClass(InteractionPromptWidgetRef.Class);

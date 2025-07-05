@@ -44,7 +44,7 @@ void UCSGA_AbilityPreviewBox::RunAbility(float BoxSize)
 	// /Script/ChronoSpace.CSDA_BoxProperties'/Game/DataAssets/CSDA_BoxProperties.CSDA_BoxProperties'
 
 	// 데이터 에셋 경로
-	const FString AssetPath = TEXT("/Game/DataAssets/CSDA_BoxProperties.CSDA_BoxProperties");
+	const FString AssetPath = TEXT("/Game/04_DataAssets/CSDA_BoxProperties.CSDA_BoxProperties");
 	UCSDA_BoxProperties* BoxPropertiesAsset = Cast<UCSDA_BoxProperties>(StaticLoadObject(UCSDA_BoxProperties::StaticClass(), nullptr, *AssetPath));
 
 	if (BoxPropertiesAsset)

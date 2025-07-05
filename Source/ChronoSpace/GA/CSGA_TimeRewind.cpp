@@ -118,7 +118,7 @@ void UCSGA_TimeRewind::OnTimeRewindFinishedDelegate()
     UCharacterMovementComponent* MovementComp = PlayerCharacter->GetCharacterMovement();
     if (MovementComp)
     {
-        MovementComp->GravityScale = 1.0f;
+        MovementComp->GravityScale = PlayerCharacter->GravityScale;
         UE_LOG(LogTemp, Log, TEXT("Gravity re-enabled after Time Rewind."));
     }
 
