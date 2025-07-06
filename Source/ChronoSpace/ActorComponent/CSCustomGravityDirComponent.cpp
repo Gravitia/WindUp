@@ -28,7 +28,7 @@ void UCSCustomGravityDirComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	SetComponentTickEnabled(false);
+	//SetComponentTickEnabled(false);
 
 	UCSCustomGravityDirComponent::OrgGravityDirection = FVector(0.0f, 0.0f, -1.0f);
 
@@ -102,7 +102,7 @@ void UCSCustomGravityDirComponent::OnActorBeginOverlapCallback(AActor* Overlappe
 		UE_LOG(LogCS, Log, TEXT("[Netmode %d] UCSCustomGravityDirComponent OnActorBeginOverlapCallback"), GetWorld()->GetNetMode());
 		CurrentGravityCore = Core;
 		
-		SetComponentTickEnabled(true);
+		//SetComponentTickEnabled(true);
 		bIsGravityCustomized = true;
 	}
 }
@@ -118,7 +118,7 @@ void UCSCustomGravityDirComponent::OnActorEndOverlapCallback(AActor* OverlappedA
 		Character->GetCharacterMovement()->SetGravityDirection(OrgGravityDirection);
 		CurrentGravityCore = nullptr;
 
-		SetComponentTickEnabled(false);
+		//SetComponentTickEnabled(false);
 		bIsGravityCustomized = false;
 	}
 }
