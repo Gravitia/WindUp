@@ -14,9 +14,6 @@ class CHRONOSPACE_API UCSCustomGravityDirComponent : public UActorComponent
 
 public:	
 	UCSCustomGravityDirComponent();
-
-	FORCEINLINE bool IsGravityCustomzied() { return bIsGravityCustomized; }
-
 	
 	static FVector OrgGravityDirection;
 
@@ -56,7 +53,4 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gravity")
 	float GravityInterpSpeed;
-
-	UPROPERTY(Replicated)
-	bool bIsGravityCustomized;
 };

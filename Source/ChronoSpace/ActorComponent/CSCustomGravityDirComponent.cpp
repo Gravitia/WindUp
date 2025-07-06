@@ -18,8 +18,6 @@ UCSCustomGravityDirComponent::UCSCustomGravityDirComponent()
 
 	GravityInterpSpeed = 5.0f;
 
-	bIsGravityCustomized = false;
-
 	SetIsReplicatedByDefault(true);
 }
 
@@ -27,9 +25,6 @@ UCSCustomGravityDirComponent::UCSCustomGravityDirComponent()
 void UCSCustomGravityDirComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-	SetComponentTickEnabled(false);
-
 	UCSCustomGravityDirComponent::OrgGravityDirection = FVector(0.0f, 0.0f, -1.0f);
 
 	if ( GetOwner() )
@@ -48,7 +43,7 @@ void UCSCustomGravityDirComponent::BeginPlay()
 void UCSCustomGravityDirComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	
+	//UE_LOG(LogCS, Log, TEXT("TickComponent"));
 	if ( OwnerCharacter->HasAuthority() )
 	{
 		CheckGravity();
@@ -72,7 +67,6 @@ void UCSCustomGravityDirComponent::GetLifetimeReplicatedProps(TArray<FLifetimePr
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(UCSCustomGravityDirComponent, CurrentGravityDirection);
-	DOREPLIFETIME(UCSCustomGravityDirComponent, bIsGravityCustomized);
 }
 
 FVector UCSCustomGravityDirComponent::GetDirection()
@@ -101,9 +95,6 @@ void UCSCustomGravityDirComponent::OnActorBeginOverlapCallback(AActor* Overlappe
 	{
 		UE_LOG(LogCS, Log, TEXT("[Netmode %d] UCSCustomGravityDirComponent OnActorBeginOverlapCallback"), GetWorld()->GetNetMode());
 		CurrentGravityCore = Core;
-		
-		SetComponentTickEnabled(true);
-		bIsGravityCustomized = true;
 	}
 }
 
@@ -117,9 +108,6 @@ void UCSCustomGravityDirComponent::OnActorEndOverlapCallback(AActor* OverlappedA
 		CurrentGravityDirection = OrgGravityDirection;
 		Character->GetCharacterMovement()->SetGravityDirection(OrgGravityDirection);
 		CurrentGravityCore = nullptr;
-
-		SetComponentTickEnabled(false);
-		bIsGravityCustomized = false;
 	}
 }
 
