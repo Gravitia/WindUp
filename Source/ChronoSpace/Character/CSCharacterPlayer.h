@@ -75,6 +75,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UInputAction> AbilityPreviewAction;
 
+
+
 // ASC Section
 protected:
 	UPROPERTY(EditAnywhere, Category = GAS)
@@ -121,4 +123,74 @@ public:
 public:
 	UFUNCTION(BlueprintCallable, Category = "UI")
 	void RequestUIRefresh();
+
+// Auto ClockUnwindDOT
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS|PassiveEffect")
+	TSubclassOf<class UGameplayEffect> ClockUnwindEffect;
+
+/* Character Movemenet Origin Value Save */
+
+// Dash
+public:
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float WalkSpeed = 500.0f;  // default and init DataAsset 
+
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float DashSpeed = 900.0f; //  default and init DataAsset 
+
+// GravityScale
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float GravityScale = 2.0f; //  default and init DataAsset 
+
+
+// Scale
+	UPROPERTY(EditAnywhere, Category = "Capsule")
+	float BaseCapsuleRadius = 34.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Capsule")
+	float BaseCapsuleHalfHeight = 88.0f;
+
+
+
+
+
+// UnwindUp RPC
+
+private:
+	void AlwaysClockUnwind();
+
+protected:
+	UFUNCTION(Server, Reliable)
+	void Server_ApplyClockUnwind();
+
+	// 새로 추가할 Multicast 함수 선언
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_ApplyClockUnwind();
+
+private:
+	void ApplyClockUnwind_Internal();
+	
+
+
+// ─────────── Coyote-Time(코요테 점프) ───────────
+	UFUNCTION(BlueprintCallable)
+	void StartCoyoteTimer();
+
+	UFUNCTION(BlueprintCallable)
+	void DisableCoyoteTime();
+
+	UPROPERTY()
+	bool bCanCoyoteJump = false;
+
+	UPROPERTY(EditAnywhere)
+	float CoyoteTime = 0.33f;          // 관용 구간(초)
+
+	UPROPERTY(EditAnywhere)
+	FTimerHandle CoyoteTimerHandle;
+
+	virtual bool CanJumpInternal_Implementation() const override;
+	virtual void Falling() override;
+	virtual void OnJumped_Implementation() override;
+	virtual void OnMovementModeChanged(EMovementMode PrevMode,
+		uint8 PrevCustomMode = 0) override;
 };

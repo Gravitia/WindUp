@@ -7,7 +7,7 @@
 #include "Net/UnrealNetwork.h"
 #include "ChronoSpace.h"
 
-UCSAttributeSet::UCSAttributeSet() : MaxHealth(100.0f), Damage(30.0f) 
+UCSAttributeSet::UCSAttributeSet() : MaxHealth(100.0f), Damage(0.0f), ClockUnwind(0.0f), Healing(0.0f)
 {
 	InitHealth(GetMaxHealth());
 }
@@ -40,11 +40,18 @@ void UCSAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallback
 		SetHealth(FMath::Clamp(GetHealth(), MinimumHealth, GetMaxHealth()));
 	}
 
+	if (Data.EvaluatedData.Attribute == GetClockUnwindAttribute())
+	{
+		UE_LOG(LogCS, Log, TEXT("PostGameplayEffectExecute ClockUnwind"));
+
+		SetHealth(FMath::Clamp(GetHealth() - GetClockUnwind(), MinimumHealth, GetMaxHealth()));
+	}
+
 	if (Data.EvaluatedData.Attribute == GetDamageAttribute())
 	{
 		SetHealth(FMath::Clamp(GetHealth() - GetDamage(), MinimumHealth, GetMaxHealth()));
 
-		UE_LOG(LogCS, Warning, TEXT(" Damage Detected : %f | Now Energy : %f"), GetDamage(), GetHealth());
+		UE_LOG(LogCS, Warning, TEXT(" Damage Detected : %f | Now Health : %f"), GetDamage(), GetHealth());
 
 		AActor* TargetActor = Data.Target.GetAvatarActor();
 		if (TargetActor == nullptr) return;
@@ -58,6 +65,13 @@ void UCSAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallback
 				PC->ShakeCamera();
 			}
 		}
+	}
+
+
+	if (Data.EvaluatedData.Attribute == GetHealingAttribute())
+	{
+		UE_LOG(LogCS, Warning, TEXT(" Healing Detected : %f | Now Health : %f"), GetHealing(), GetHealth());
+		SetHealth(FMath::Clamp(GetHealth() + GetHealing(), MinimumHealth, GetMaxHealth()));
 	}
 }
 
