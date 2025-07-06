@@ -6,6 +6,7 @@
 #include "Components/SphereComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Physics/CSCollision.h"
+#include "DataAsset/CSSwitchBaseData.h"
 #include "ChronoSpace.h"
 
 // Sets default values
@@ -23,43 +24,6 @@ ACSSwitchBase::ACSSwitchBase()
 	if ( StaticMeshRef.Succeeded() )
 	{
 		StaticMeshComp->SetStaticMesh(StaticMeshRef.Object);
-	}
-
-	
-	// Material
-	static ConstructorHelpers::FObjectFinder<UMaterialInstance> MaterialGlowNonInteractedRef(TEXT("/Script/Engine.MaterialInstanceConstant'/Game/31_Material/MI_Switch_GlowNonInteracted.MI_Switch_GlowNonInteracted'"));
-	if (MaterialGlowNonInteractedRef.Succeeded())
-	{
-		MaterialGlowNonInteracted = MaterialGlowNonInteractedRef.Object;
-	}
-
-	static ConstructorHelpers::FObjectFinder<UMaterialInstance> MaterialGlowInteractedRef(TEXT("/Script/Engine.MaterialInstanceConstant'/Game/31_Material/MI_Switch_GlowInteracted.MI_Switch_GlowInteracted'"));
-	if (MaterialGlowInteractedRef.Succeeded())
-	{
-		MaterialGlowInteracted = MaterialGlowInteractedRef.Object;
-	}
-
-	static ConstructorHelpers::FObjectFinder<UMaterialInstance> MaterialSolidNonInteractedRef(TEXT("/Script/Engine.MaterialInstanceConstant'/Game/31_Material/MI_Switch_SolidNonInteracted.MI_Switch_SolidNonInteracted'"));
-	if (MaterialSolidNonInteractedRef.Succeeded())
-	{
-		MaterialSolidNonInteracted = MaterialSolidNonInteractedRef.Object;
-	}
-
-	static ConstructorHelpers::FObjectFinder<UMaterialInstance> MaterialSolidInteractedRef(TEXT("/Script/Engine.MaterialInstanceConstant'/Game/31_Material/MI_Switch_SolidInteracted.MI_Switch_SolidInteracted'"));
-	if (MaterialSolidInteractedRef.Succeeded())
-	{
-		MaterialSolidInteracted = MaterialSolidInteractedRef.Object;
-	}
-
-	if (bIsInteracted)
-	{
-		StaticMeshComp->SetMaterial(1, MaterialSolidInteracted);
-		StaticMeshComp->SetMaterial(3, MaterialGlowInteracted);
-	}
-	else
-	{
-		StaticMeshComp->SetMaterial(1, MaterialSolidNonInteracted);
-		StaticMeshComp->SetMaterial(3, MaterialGlowNonInteracted);
 	}
 
 	// Trigger
@@ -88,6 +52,16 @@ ACSSwitchBase::ACSSwitchBase()
 
 void ACSSwitchBase::BeginInteraction()
 {
+	if ( !Data->InteractionPromptWidgetClass.IsValid() )
+	{
+		Data->InteractionPromptWidgetClass.LoadSynchronous();
+
+		InteractionPromptComponent->SetWidgetClass(Data->InteractionPromptWidgetClass.Get()); 
+		InteractionPromptComponent->SetWidgetSpace(EWidgetSpace::Screen);
+		InteractionPromptComponent->SetDrawSize(FVector2D(500.0f, 30.f));
+		InteractionPromptComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+
 	InteractionPromptComponent->SetVisibility(true);
 }
 
@@ -104,6 +78,13 @@ void ACSSwitchBase::Interact()
 	SetMaterial();
 }
 
+void ACSSwitchBase::BeginPlay()
+{
+	Super::BeginPlay();
+
+	SetMaterial();
+}
+
 void ACSSwitchBase::SetMaterial()
 {
 	NetMulticastSetMaterial(bIsInteracted);
@@ -111,17 +92,53 @@ void ACSSwitchBase::SetMaterial()
 
 void ACSSwitchBase::NetMulticastSetMaterial_Implementation(bool bInIsInteracted)
 {
+	if (Data == nullptr) return;
+
 	bIsInteracted = bInIsInteracted;
 	//UE_LOG(LogCS, Log, TEXT("[NetMode : %d] NetMulticastSetMaterial_Implementation, %d"), GetWorld()->GetNetMode(), bIsInteracted);
 	if (bIsInteracted)
 	{
-		StaticMeshComp->SetMaterial(1, MaterialSolidInteracted);
-		StaticMeshComp->SetMaterial(3, MaterialGlowInteracted);
+		if ( Data->MaterialSolidInteracted.IsValid() )
+		{
+			StaticMeshComp->SetMaterial(1, Data->MaterialSolidInteracted.Get());
+		}
+		else
+		{
+			Data->MaterialSolidInteracted.LoadSynchronous();
+			StaticMeshComp->SetMaterial(1, Data->MaterialSolidInteracted.Get()); 
+		}
+
+		if ( Data->MaterialGlowInteracted.IsValid() )
+		{
+			StaticMeshComp->SetMaterial(3, Data->MaterialGlowInteracted.Get());  
+		} 
+		else
+		{
+			Data->MaterialGlowInteracted.LoadSynchronous();
+			StaticMeshComp->SetMaterial(3, Data->MaterialGlowInteracted.Get());
+		}
 	}
 	else
 	{
-		StaticMeshComp->SetMaterial(1, MaterialSolidNonInteracted);
-		StaticMeshComp->SetMaterial(3, MaterialGlowNonInteracted);
+		if (Data->MaterialSolidNonInteracted.IsValid())
+		{
+			StaticMeshComp->SetMaterial(1, Data->MaterialSolidNonInteracted.Get());
+		}
+		else
+		{
+			Data->MaterialSolidNonInteracted.LoadSynchronous();
+			StaticMeshComp->SetMaterial(1, Data->MaterialSolidNonInteracted.Get());
+		}
+
+		if (Data->MaterialGlowNonInteracted.IsValid())
+		{
+			StaticMeshComp->SetMaterial(3, Data->MaterialGlowNonInteracted.Get());
+		}
+		else
+		{
+			Data->MaterialGlowNonInteracted.LoadSynchronous();
+			StaticMeshComp->SetMaterial(3, Data->MaterialGlowNonInteracted.Get());
+		}
 	}
 }
 

@@ -26,10 +26,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ability")
 	EAbilityIndex Ability;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ability")
-	TSubclassOf<class UCSGA_WeakenGravity> WeakenGravity10P;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ability")
-	TSubclassOf<class UCSGA_WeakenGravity> WeakenGravity50P;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ability")
+	TSubclassOf<class UGameplayAbility> AbilityClass;
 
 private:
 	void ActivateTask();

@@ -51,7 +51,7 @@ ACSCharacterPlayer::ACSCharacterPlayer()
 	Trigger->SetCollisionProfileName( CPROFILE_OVERLAPALL );
 	Trigger->SetupAttachment(GetCapsuleComponent());
 
-	// Ä³¸¯ÅÍ¿¡ ÄÄÆ÷³ÍÆ® Ãß°¡
+	// Ä³ï¿½ï¿½ï¿½Í¿ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ß°ï¿½
 	PushingCharacterComponent = CreateDefaultSubobject<UCSPushingCharacterComponent>(TEXT("PushingCharacterComponent"));
 	PushingCharacterComponent->SetTrigger(Trigger);
 
@@ -75,7 +75,9 @@ void ACSCharacterPlayer::PossessedBy(AController* NewController)
 	Super::PossessedBy(NewController);
 
 	ACSPlayerState* CSPS = GetPlayerState<ACSPlayerState>();
-	ASC = CSPS->GetAbilitySystemComponent(); 
+	
+	ASC = CSPS->GetAbilitySystemComponent();
+
 	GASManagerComponent->SetASC(CSPS->GetAbilitySystemComponent(), CSPS);
 	GASManagerComponent->SetGASAbilities();
 }
@@ -99,7 +101,6 @@ void ACSCharacterPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 void ACSCharacterPlayer::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
-
 	ACSPlayerState* CSPS = GetPlayerState<ACSPlayerState>();
 	ASC = CSPS->GetAbilitySystemComponent();
 	GASManagerComponent->SetASC(ASC, CSPS);

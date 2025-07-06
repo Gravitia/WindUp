@@ -37,6 +37,8 @@ ACSCharacterPatrol::ACSCharacterPatrol()
 	ASC = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("ASC"));
 	ASC->SetIsReplicated(true);
 	AttributeSet = CreateDefaultSubobject<UCSAttributeSet>(TEXT("AttributeSet"));
+
+	GiveDamageAbility = nullptr;
 }
 
 FVector ACSCharacterPatrol::GetPatrolPos()
@@ -64,13 +66,15 @@ void ACSCharacterPatrol::BeginPlay()
 {
 	Super::BeginPlay();
 
+	check(GiveDamageAbility != nullptr);
+
 	if ( HasAuthority() )
 	{
 		PatrolPosesLength = PatrolPoses.Num();
 
 		if (ASC)
 		{
-			FGameplayAbilitySpec DamageSpec(UCSGA_GiveDamage::StaticClass());
+			FGameplayAbilitySpec DamageSpec( GiveDamageAbility );
 			ASC->GiveAbility(FGameplayAbilitySpec(DamageSpec));
 		}
 	}
@@ -153,7 +157,7 @@ void ACSCharacterPatrol::ActivateGiveDamage()
 {
 	if ( HasAuthority() && ASC )
 	{
-		ASC->TryActivateAbilityByClass( UCSGA_GiveDamage::StaticClass() );
+		ASC->TryActivateAbilityByClass(GiveDamageAbility); 
 	}
 }
 

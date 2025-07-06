@@ -15,7 +15,7 @@ public:
 	ACSWhiteHall();
 
 protected:
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mesh")
 	TObjectPtr<class UStaticMeshComponent> StaticMeshComp;
 
 };

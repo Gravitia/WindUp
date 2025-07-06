@@ -13,7 +13,7 @@ ACSWhiteHall::ACSWhiteHall()
 	RootComponent = StaticMeshComp;
 	StaticMeshComp->SetIsReplicated(true);
 
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> StaticMeshRef(TEXT("/Script/Engine.StaticMesh'/Game/30_Mesh/StaticMesh/MaterialSphere.MaterialSphere'"));
+	/*static ConstructorHelpers::FObjectFinder<UStaticMesh> StaticMeshRef(TEXT("/Script/Engine.StaticMesh'/Game/30_Mesh/StaticMesh/MaterialSphere.MaterialSphere'"));
 	if (StaticMeshRef.Object)
 	{
 		StaticMeshComp->SetStaticMesh(StaticMeshRef.Object);
@@ -23,7 +23,7 @@ ACSWhiteHall::ACSWhiteHall()
 	if (MaterialRef.Object)
 	{
 		StaticMeshComp->SetMaterial(0, MaterialRef.Object);
-	}
+	}*/
 }
 
 
