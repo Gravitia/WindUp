@@ -3,6 +3,7 @@
 #include "CSAnimInstance.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "ActorComponent/CSCustomGravityDirComponent.h"
 
 UCSAnimInstance::UCSAnimInstance()
 {
@@ -19,6 +20,7 @@ void UCSAnimInstance::NativeInitializeAnimation()
 	if ( Owner )
 	{
 		Movement = Owner->GetCharacterMovement();
+		GravityComponent = Owner->GetComponentByClass<UCSCustomGravityDirComponent>();
 	}
 }
 
@@ -33,5 +35,10 @@ void UCSAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		bIsIdle = GroundSpeed < MovingThreshold;
 		bIsFalling = Movement->IsFalling(); 
 		bIsJumping = bIsFalling & (Velocity.Z > JumpingThreshold); 
+	}
+
+	if ( GravityComponent )
+	{
+		bIsGravityCustomized = GravityComponent->IsGravityCustomzied();
 	}
 }

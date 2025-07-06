@@ -27,6 +27,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Character)
 	TObjectPtr<class UCharacterMovementComponent> Movement;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Character)
+	TObjectPtr<class UCSCustomGravityDirComponent> GravityComponent;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Character)
 	FVector Velocity;
 
@@ -46,6 +49,10 @@ protected:
 	uint8 bIsJumping : 1;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Character)
+	uint8 bIsGravityCustomized : 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Character)
 	float JumpingThreshold;
 
+	
 };
