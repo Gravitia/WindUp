@@ -7,6 +7,7 @@
 #include "CSPlayerController.generated.h"
 
 class UCSGameUIWidget;
+class SCSServerTravelWidget;
 
 /**
  * 
@@ -50,6 +51,24 @@ public:
 	UCSGameUIWidget* GetGameUIWidget() const { return GameUIWidget; }
 	*/
 
+	// =========================
+	// Server Travel UI 관련 함수들
+	// =========================
+
+	UFUNCTION(BlueprintCallable, Category = "Server Travel")
+	void ShowServerTravelUI();
+
+	UFUNCTION(BlueprintCallable, Category = "Server Travel")
+	void HideServerTravelUI();
+
+	UFUNCTION(BlueprintCallable, Category = "Server Travel")
+	void ToggleServerTravelUI();
+
+	UFUNCTION(BlueprintPure, Category = "Server Travel")
+	bool IsServerTravelUIVisible() const;
+
+
+
 	void ShakeCamera();
 
 protected:
@@ -70,7 +89,12 @@ private:
 	void CreateGameUI();
 	void InitializeUI();
 
+	// Server Travel Slate 위젯 관련
+	void CreateServerTravelWidget();
+
 	// UI 생성 지연 타이머
 	FTimerHandle UICreationTimerHandle;
 
+	// Server Travel Slate UI 위젯
+	TSharedPtr<SCSServerTravelWidget> ServerTravelWidget;
 };

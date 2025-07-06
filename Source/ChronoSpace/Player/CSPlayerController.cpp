@@ -3,6 +3,7 @@
 
 #include "Player/CSPlayerController.h"
 #include "ChronoSpace.h"
+#include "UI/SCSServerTravelWidget.h"
 #include "UI/CSGameUIWidget.h"
 #include "Engine/Engine.h"
 #include "Engine/World.h"
@@ -66,6 +67,13 @@ void ACSPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	{
 		GameUIWidget->RemoveFromParent();
 		GameUIWidget = nullptr;
+	}
+
+	// Slate UI 정리
+	if (ServerTravelWidget.IsValid() && GEngine && GEngine->GameViewport)
+	{
+		GEngine->GameViewport->RemoveViewportWidgetContent(ServerTravelWidget.ToSharedRef());
+		ServerTravelWidget.Reset();
 	}
 
 	Super::EndPlay(EndPlayReason);
@@ -170,4 +178,89 @@ bool ACSPlayerController::IsGameUIVisible() const
 	return GameUIWidget &&
 		GameUIWidget->IsInViewport() &&
 		GameUIWidget->GetVisibility() == ESlateVisibility::Visible;
+}
+
+
+void ACSPlayerController::CreateServerTravelWidget()
+{
+	// 로컬 플레이어에서만 생성
+	if (!IsLocalPlayerController())
+	{
+		return;
+	}
+
+	// 이미 생성되어 있으면 패스
+	if (ServerTravelWidget.IsValid())
+	{
+		return;
+	}
+
+	// Slate 위젯 생성
+	ServerTravelWidget = SNew(SCSServerTravelWidget);
+
+	if (GEngine && ServerTravelWidget.IsValid())
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Cyan,
+			TEXT("Server Travel Widget Created"));
+	}
+}
+
+void ACSPlayerController::ShowServerTravelUI()
+{
+	// 로컬 플레이어에서만 실행
+	if (!IsLocalPlayerController())
+	{
+		return;
+	}
+
+	// 위젯이 없으면 생성
+	CreateServerTravelWidget();
+
+	// GameViewport에 추가
+	if (ServerTravelWidget.IsValid() && GEngine && GEngine->GameViewport)
+	{
+		GEngine->GameViewport->AddViewportWidgetContent(
+			ServerTravelWidget.ToSharedRef(),
+			1000  // Z-Order (높을수록 앞에 표시)
+		);
+
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow,
+				TEXT("Server Travel UI Shown"));
+		}
+	}
+}
+
+void ACSPlayerController::HideServerTravelUI()
+{
+	if (ServerTravelWidget.IsValid() && GEngine && GEngine->GameViewport)
+	{
+		GEngine->GameViewport->RemoveViewportWidgetContent(ServerTravelWidget.ToSharedRef());
+
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Orange,
+				TEXT("Server Travel UI Hidden"));
+		}
+	}
+}
+
+void ACSPlayerController::ToggleServerTravelUI()
+{
+	if (IsServerTravelUIVisible())
+	{
+		HideServerTravelUI();
+	}
+	else
+	{
+		ShowServerTravelUI();
+	}
+}
+
+bool ACSPlayerController::IsServerTravelUIVisible() const
+{
+	// Slate 위젯의 가시성은 GameViewport에 추가되어 있는지로 판단
+	// 정확한 체크를 위해서는 별도의 bool 변수를 관리하는 것이 좋음
+	return ServerTravelWidget.IsValid();
 }

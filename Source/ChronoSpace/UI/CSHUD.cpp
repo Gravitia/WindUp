@@ -2,4 +2,21 @@
 
 
 #include "UI/CSHUD.h"
+#include "Engine/Engine.h"
 
+void ACSHUD::BeginPlay() 
+{
+	Super::BeginPlay();
+
+    if (GEngine && GEngine->GameViewport)
+    {
+        // Slate 위젯 생성
+        ServerTravelWidget = SNew(SCSServerTravelWidget);
+
+        // 게임 뷰포트에 추가
+        GEngine->GameViewport->AddViewportWidgetContent(
+            ServerTravelWidget.ToSharedRef(),
+            1000  // Z-Order (높을수록 앞에 표시)
+        );
+    }
+}
