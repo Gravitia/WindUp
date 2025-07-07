@@ -45,7 +45,7 @@ void UCSGASManagerComponent::SetGASAbilities()
 
 void UCSGASManagerComponent::SetupGASInputComponent(UEnhancedInputComponent* InputComponent) 
 {
-	ensure(InputComponent != nullptr);
+	if (InputComponent == nullptr) return;
 
 	InputComponent->BindAction(ReverseGravityAction, ETriggerEvent::Triggered, this, &UCSGASManagerComponent::GASInputPressed, static_cast<int32>(EAbilityIndex::ReverseGravity));
 	InputComponent->BindAction(ReverseGravityAction, ETriggerEvent::Completed, this, &UCSGASManagerComponent::GASInputReleased, static_cast<int32>(EAbilityIndex::ReverseGravity));
@@ -88,8 +88,10 @@ void UCSGASManagerComponent::SetupGASInputComponent(UEnhancedInputComponent* Inp
 	InputComponent->BindAction(SprintAction, ETriggerEvent::Triggered, this, &UCSGASManagerComponent::GASInputPressed, static_cast<int32>(EAbilityIndex::Sprint));
 	InputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &UCSGASManagerComponent::GASInputReleased, static_cast<int32>(EAbilityIndex::Sprint));
 
-
-	ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Ability.Movement")));
+	if ( ASC )
+	{
+		ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Ability.Movement")));
+	}
 }
 
 void UCSGASManagerComponent::GASInputPressed(int32 InputId)

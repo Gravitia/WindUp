@@ -104,6 +104,7 @@ void ACSCharacterPlayer::OnRep_PlayerState()
 	ACSPlayerState* CSPS = GetPlayerState<ACSPlayerState>();
 	ASC = CSPS->GetAbilitySystemComponent();
 	GASManagerComponent->SetASC(ASC, CSPS);
+	GASManagerComponent->SetupGASInputComponent(Cast<UEnhancedInputComponent>(InputComponent));
 }
 
 void ACSCharacterPlayer::BeginPlay()
