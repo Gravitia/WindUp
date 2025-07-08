@@ -8,7 +8,7 @@
 #include "Engine/Engine.h"
 #include "TimerManager.h"
 #include "Character/CSCharacterPlayer.h"
-
+#include "DataAsset/CSCharacterScaleData.h"
 
 
 // Sets default values for this component's properties
@@ -21,9 +21,9 @@ UCSCharacterScaleComponent::UCSCharacterScaleComponent()
     // 기본값 설정
     CurrentScaleType = ECharacterScaleType::Normal;
     CurrentScaleValue = 1.0f;
-    NormalScale = 1.0f;
+   /* NormalScale = 1.0f;
     LargeScale = 1.5f;
-    SmallScale = 0.5f;
+    SmallScale = 0.5f;*/
     ScaleTransitionSpeed = 2.0f;
 
     // 트랜지션 관련 초기화
@@ -61,6 +61,8 @@ void UCSCharacterScaleComponent::TickComponent(float DeltaTime, ELevelTick TickT
 
 void UCSCharacterScaleComponent::RequestScaleChange(ECharacterScaleType NewScaleType)
 {
+    check(ScaleData);
+
     UE_LOG(LogTemp, Log, TEXT("CharacterScaleLog ! RequestScaleChange "));
     if (NewScaleType == CurrentScaleType)
     {
@@ -205,13 +207,13 @@ float UCSCharacterScaleComponent::GetScaleValueFromType(ECharacterScaleType Scal
     switch (ScaleType)
     {
     case ECharacterScaleType::Normal:
-        return NormalScale;
+        return ScaleData->ScaleNormal;
     case ECharacterScaleType::Large:
-        return LargeScale;
+        return ScaleData->ScaleLarge;
     case ECharacterScaleType::Small:
-        return SmallScale;
+        return ScaleData->ScaleSmall;
     default:
-        return NormalScale;
+        return ScaleData->ScaleNormal;
     }
 }
 

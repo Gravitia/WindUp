@@ -52,14 +52,14 @@ protected:
     float CurrentScaleValue;
 
     // 스케일 설정
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Scale")
+    /*UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Scale")
     float NormalScale;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Scale")
     float LargeScale;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Scale")
-    float SmallScale;
+    float SmallScale;*/
 
     // 스케일 변화 속도
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Scale")
@@ -100,5 +100,8 @@ private:
     // 스케일 보간 업데이트
     void UpdateScaleTransition();
 
+protected:
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Data")
+    TObjectPtr<class UCSCharacterScaleData> ScaleData;
 		
 };

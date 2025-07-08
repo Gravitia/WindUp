@@ -115,7 +115,7 @@ public:
 // Character Scaling 
 
 public:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<class UCSCharacterScaleComponent> ScaleComponent;
 
 
