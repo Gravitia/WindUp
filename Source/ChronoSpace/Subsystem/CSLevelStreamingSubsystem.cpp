@@ -1,11 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "Subsystem/CSLevelStreamingSubsystem.h"
 #include "Subsystem/CSGameProgressSubsystem.h"
 #include "Game/CSGameState.h"
 #include "Engine/World.h"
 #include "Engine/LevelStreamingDynamic.h"
+#include "Engine/DataTable.h"
 
 UCSLevelStreamingSubsystem::UCSLevelStreamingSubsystem()
 {
@@ -13,6 +13,8 @@ UCSLevelStreamingSubsystem::UCSLevelStreamingSubsystem()
     CurrentStreamingLevel = nullptr;
     CurrentChapter = 1;
     CurrentStage = 1;
+    StageDataTable = nullptr;
+    CurrentSpawnPosition = FVector::ZeroVector;
 }
 
 void UCSLevelStreamingSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -34,7 +36,6 @@ void UCSLevelStreamingSubsystem::Deinitialize()
 
 bool UCSLevelStreamingSubsystem::StreamLevel(int32 ChapterNumber, int32 StageNumber)
 {
-    /*
     // Only host/server can stream levels in multiplayer
     if (IsMultiplayerClient())
     {
@@ -42,12 +43,26 @@ bool UCSLevelStreamingSubsystem::StreamLevel(int32 ChapterNumber, int32 StageNum
         return false;
     }
 
-    // Calculate level index from chapter and stage
-    int32 LevelIndex = CalculateLevelIndex(ChapterNumber, StageNumber);
-
-    if (!LevelAssets.IsValidIndex(LevelIndex))
+    // 현재 레벨이 있다면 언로드
+    if (CurrentStreamingLevel)
     {
-        UE_LOG(LogTemp, Error, TEXT("Invalid level for C%d_S%d (Index: %d)"), ChapterNumber, StageNumber, LevelIndex);
+        UE_LOG(LogTemp, Log, TEXT("Unloading current level before streaming new one"));
+        UnloadCurrentLevel();
+    }
+
+    // 데이터 테이블에서 스테이지 정보 가져오기
+    FStageData* StageData = GetStageDataFromTable(ChapterNumber, StageNumber);
+    if (!StageData)
+    {
+        UE_LOG(LogTemp, Error, TEXT("No stage data found for C%d_S%d in DataTable"), ChapterNumber, StageNumber);
+        return false;
+    }
+
+    // 레벨 경로 결정
+    FString ActualLevelPath = GetActualLevelPath(StageData);
+    if (ActualLevelPath.IsEmpty())
+    {
+        UE_LOG(LogTemp, Error, TEXT("Cannot determine level path for C%d_S%d"), ChapterNumber, StageNumber);
         return false;
     }
 
@@ -58,38 +73,48 @@ bool UCSLevelStreamingSubsystem::StreamLevel(int32 ChapterNumber, int32 StageNum
         return false;
     }
 
-    FString LevelPath = LevelAssets[LevelIndex].GetLongPackageName();
+    // 레벨 스트리밍 시도 로그
+    UE_LOG(LogTemp, Log, TEXT("Attempting to stream level: %s for C%d_S%d"),
+        *ActualLevelPath, ChapterNumber, StageNumber);
 
+    // UE5 레벨 스트리밍
+    bool bLoadSuccess = false;
     CurrentStreamingLevel = ULevelStreamingDynamic::LoadLevelInstance(
         World,
-        LevelPath,
+        ActualLevelPath,
         FVector::ZeroVector,
-        FRotator::ZeroRotator
+        FRotator::ZeroRotator,
+        bLoadSuccess
     );
 
-    if (CurrentStreamingLevel)
+    if (CurrentStreamingLevel && bLoadSuccess)
     {
+        // 스트리밍 성공
         CurrentChapter = ChapterNumber;
         CurrentStage = StageNumber;
-        CurrentLevelIndex = LevelIndex;
+        CurrentSpawnPosition = StageData->SpawnPosition;
 
-        // Update progress subsystem with current stage
+        // Progress subsystem 업데이트
         UCSGameProgressSubsystem* ProgressSubsystem = GetProgressSubsystem();
         if (ProgressSubsystem)
         {
             ProgressSubsystem->SetLastPlayedStage(ChapterNumber, StageNumber);
         }
 
+        // 이벤트 브로드캐스트
         OnLevelStreamed.Broadcast(ChapterNumber, StageNumber);
-        UE_LOG(LogTemp, Log, TEXT("Level streamed successfully: C%d_S%d (Index: %d)"), ChapterNumber, StageNumber, LevelIndex);
+
+        UE_LOG(LogTemp, Log, TEXT("Level streamed successfully: %s for C%d_S%d at position %s"),
+            *ActualLevelPath, ChapterNumber, StageNumber, *StageData->SpawnPosition.ToString());
+
         return true;
     }
     else
     {
-        UE_LOG(LogTemp, Error, TEXT("Failed to stream level: C%d_S%d (Index: %d)"), ChapterNumber, StageNumber, LevelIndex);
+        UE_LOG(LogTemp, Error, TEXT("Failed to stream level: %s for C%d_S%d (LoadSuccess: %s)"),
+            *ActualLevelPath, ChapterNumber, StageNumber, bLoadSuccess ? TEXT("true") : TEXT("false"));
         return false;
     }
-    */
 }
 
 bool UCSLevelStreamingSubsystem::UnloadCurrentLevel()
@@ -122,20 +147,142 @@ bool UCSLevelStreamingSubsystem::UnloadCurrentLevel()
 
 FVector UCSLevelStreamingSubsystem::GetSpawnPosition() const
 {
-    if (SpawnPositions.IsValidIndex(CurrentLevelIndex))
-    {
-        return SpawnPositions[CurrentLevelIndex];
-    }
-
-    UE_LOG(LogTemp, Warning, TEXT("No spawn position for C%d_S%d (Index: %d)"), CurrentChapter, CurrentStage, CurrentLevelIndex);
-    return FVector::ZeroVector;
+    return CurrentSpawnPosition;
 }
 
-void UCSLevelStreamingSubsystem::SetLevelData(const TArray<TSoftObjectPtr<UWorld>>& InLevelAssets, const TArray<FVector>& InSpawnPositions)
+void UCSLevelStreamingSubsystem::SetStageDataTable(UDataTable* InStageDataTable)
 {
-    LevelAssets = InLevelAssets;
-    SpawnPositions = InSpawnPositions;
-    UE_LOG(LogTemp, Log, TEXT("Level data set: %d levels, %d spawn positions"), LevelAssets.Num(), SpawnPositions.Num());
+    StageDataTable = InStageDataTable;
+
+    if (StageDataTable)
+    {
+        UE_LOG(LogTemp, Log, TEXT("Stage data table set successfully"));
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Stage data table set to null"));
+    }
+}
+
+bool UCSLevelStreamingSubsystem::StreamLevelByName(const FString& LevelName, const FVector& SpawnPosition)
+{
+    if (IsMultiplayerClient())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Clients cannot stream levels"));
+        return false;
+    }
+
+    if (LevelName.IsEmpty())
+    {
+        UE_LOG(LogTemp, Error, TEXT("Level name is empty"));
+        return false;
+    }
+
+    UWorld* World = GetWorld();
+    if (!World)
+    {
+        UE_LOG(LogTemp, Error, TEXT("No valid world for level streaming"));
+        return false;
+    }
+
+    // 현재 레벨 언로드
+    if (CurrentStreamingLevel)
+    {
+        UnloadCurrentLevel();
+    }
+
+    UE_LOG(LogTemp, Log, TEXT("Streaming level by name: %s"), *LevelName);
+
+    bool bLoadSuccess = false;
+    CurrentStreamingLevel = ULevelStreamingDynamic::LoadLevelInstance(
+        World,
+        LevelName,
+        FVector::ZeroVector,
+        FRotator::ZeroRotator,
+        bLoadSuccess
+    );
+
+    if (CurrentStreamingLevel && bLoadSuccess)
+    {
+        CurrentSpawnPosition = SpawnPosition;
+        UE_LOG(LogTemp, Log, TEXT("Level streamed successfully by name: %s"), *LevelName);
+        return true;
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("Failed to stream level by name: %s (LoadSuccess: %s)"),
+            *LevelName, bLoadSuccess ? TEXT("true") : TEXT("false"));
+        return false;
+    }
+}
+
+// === C++ Only Functions ===
+
+FStageData* UCSLevelStreamingSubsystem::GetStageDataFromTable(int32 ChapterNumber, int32 StageNumber) const
+{
+    if (!StageDataTable)
+    {
+        UE_LOG(LogTemp, Error, TEXT("StageDataTable is null! Please assign DataTable in Blueprint or C++"));
+        return nullptr;
+    }
+
+    // 데이터 테이블에서 모든 행 가져오기
+    TArray<FStageData*> AllRows;
+    StageDataTable->GetAllRows<FStageData>(TEXT("GetStageDataFromTable"), AllRows);
+
+    UE_LOG(LogTemp, Log, TEXT("Searching for C%d_S%d in DataTable with %d rows"),
+        ChapterNumber, StageNumber, AllRows.Num());
+
+    // 해당 챕터/스테이지 찾기
+    for (FStageData* Row : AllRows)
+    {
+        if (Row && Row->ChapterNumber == ChapterNumber && Row->StageNumber == StageNumber)
+        {
+            UE_LOG(LogTemp, Log, TEXT("Found stage data: C%d_S%d -> Name: %s, Path: %s, Spawn: %s"),
+                Row->ChapterNumber, Row->StageNumber, *Row->LevelName, *Row->LevelPath, *Row->SpawnPosition.ToString());
+            return Row;
+        }
+    }
+
+    // 찾지 못한 경우 디버그 정보 출력
+    UE_LOG(LogTemp, Warning, TEXT("Stage C%d_S%d not found. Available stages:"), ChapterNumber, StageNumber);
+    for (FStageData* Row : AllRows)
+    {
+        if (Row)
+        {
+            UE_LOG(LogTemp, Warning, TEXT("  - C%d_S%d: Name=%s, Path=%s"),
+                Row->ChapterNumber, Row->StageNumber, *Row->LevelName, *Row->LevelPath);
+        }
+    }
+
+    return nullptr;
+}
+
+FString UCSLevelStreamingSubsystem::GetActualLevelPath(const FStageData* StageData) const
+{
+    if (!StageData)
+    {
+        UE_LOG(LogTemp, Error, TEXT("StageData is null"));
+        return FString();
+    }
+
+    // LevelPath가 우선순위
+    if (!StageData->LevelPath.IsEmpty())
+    {
+        UE_LOG(LogTemp, Log, TEXT("Using LevelPath: %s"), *StageData->LevelPath);
+        return StageData->LevelPath;
+    }
+
+    // LevelPath가 비어있으면 LevelName 사용
+    if (!StageData->LevelName.IsEmpty())
+    {
+        UE_LOG(LogTemp, Log, TEXT("Using LevelName: %s"), *StageData->LevelName);
+        return StageData->LevelName;
+    }
+
+    // 둘 다 비어있으면 빈 문자열 반환
+    UE_LOG(LogTemp, Error, TEXT("Both LevelPath and LevelName are empty"));
+    return FString();
 }
 
 void UCSLevelStreamingSubsystem::CompleteCurrentStage()
@@ -164,13 +311,6 @@ void UCSLevelStreamingSubsystem::GetCurrentStage(int32& OutChapter, int32& OutSt
 bool UCSLevelStreamingSubsystem::IsLevelStreaming() const
 {
     return CurrentStreamingLevel != nullptr;
-}
-
-int32 UCSLevelStreamingSubsystem::CalculateLevelIndex(int32 ChapterNumber, int32 StageNumber) const
-{
-    // Assuming 10 stages per chapter, starting from Chapter 1, Stage 1
-    // C1_S1 = Index 0, C1_S2 = Index 1, ... C2_S1 = Index 10, etc.
-    return (ChapterNumber - 1) * 10 + (StageNumber - 1);
 }
 
 bool UCSLevelStreamingSubsystem::IsMultiplayerClient() const

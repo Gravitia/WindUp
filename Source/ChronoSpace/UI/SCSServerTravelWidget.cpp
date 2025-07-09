@@ -27,7 +27,7 @@ void SCSServerTravelWidget::Construct(const FArguments& InArgs)
                         .Text(FText::FromString("Go to Stage 1"))
                         .OnClicked_Lambda([this]()
                             {
-                                return OnStageTravelClicked("L_Stage_01_01");
+                                return OnStageTravelClicked("L_TestLevel1");
                             })
                 ]
                 // Stage 2 버튼
@@ -39,7 +39,7 @@ void SCSServerTravelWidget::Construct(const FArguments& InArgs)
                         .Text(FText::FromString("Go to Stage 2"))
                         .OnClicked_Lambda([this]()
                             {
-                                return OnStageTravelClicked("L_Dimension");
+                                return OnStageTravelClicked("L_TestLevel2");
                             })
                 ]
                 // Stage 3 버튼
@@ -51,7 +51,31 @@ void SCSServerTravelWidget::Construct(const FArguments& InArgs)
                         .Text(FText::FromString("Go to Stage 3"))
                         .OnClicked_Lambda([this]()
                             {
-                                return OnStageTravelClicked("L_Gym");
+                                return OnStageTravelClicked("L_TestLevel3");
+                            })
+                ]
+                // Stage 4 버튼
+                + SVerticalBox::Slot()
+                .AutoHeight()
+                .Padding(10)
+                [
+                    SNew(SButton)
+                        .Text(FText::FromString("Go to Stage 4"))
+                        .OnClicked_Lambda([this]()
+                            {
+                                return OnStageTravelClicked("L_TestLevel4");
+                            })
+                ]
+                // Stage 5 버튼
+                + SVerticalBox::Slot()
+                .AutoHeight()
+                .Padding(10)
+                [
+                    SNew(SButton)
+                        .Text(FText::FromString("Go to Stage 5"))
+                        .OnClicked_Lambda([this]()
+                            {
+                                return OnStageTravelClicked("L_TestLevel5");
                             })
                 ]
         ];
