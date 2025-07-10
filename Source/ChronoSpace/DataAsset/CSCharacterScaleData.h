@@ -25,7 +25,7 @@ public:
 	float RadiusSmall;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Small")
-	float HeightSmall;
+	float HalfHeightSmall;
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Normal")
@@ -35,7 +35,7 @@ public:
 	float RadiusNormal;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Normal")
-	float HeightNormal;
+	float HalfHeightNormal;
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Large")
@@ -45,5 +45,5 @@ public:
 	float RadiusLarge;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Large")
-	float HeightLarge;
+	float HalfHeightLarge;
 };

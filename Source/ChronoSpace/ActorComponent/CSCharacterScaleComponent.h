@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -26,78 +26,81 @@ public:
     // Called every frame
     virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-    // ÇöÀç ½ºÄÉÀÏ Å¸ÀÔ °¡Á®¿À±â
+    // í˜„ì¬ ìŠ¤ì¼€ì¼ íƒ€ì… ê°€ì ¸ì˜¤ê¸°
     UFUNCTION(BlueprintPure, Category = "Character Scale")
     ECharacterScaleType GetCurrentScaleType() const { return CurrentScaleType; }
 
-    // ½ºÄÉÀÏ º¯°æ ¿äÃ» (¼­¹ö RPC)
+    // ìŠ¤ì¼€ì¼ ë³€ê²½ ìš”ì²­ (ì„œë²„ RPC)
     UFUNCTION(BlueprintCallable, Category = "Character Scale")
     void RequestScaleChange(ECharacterScaleType NewScaleType);
 
-    // ÇöÀç ½ºÄÉÀÏ °ª °¡Á®¿À±â
+    // í˜„ì¬ ìŠ¤ì¼€ì¼ ê°’ ê°€ì ¸ì˜¤ê¸°
     UFUNCTION(BlueprintPure, Category = "Character Scale")
     float GetCurrentScaleValue() const;
 
-    // ½ºÄÉÀÏ º¯°æ ÀÌº¥Æ®
+    // ìŠ¤ì¼€ì¼ ë³€ê²½ ì´ë²¤íŠ¸
     UPROPERTY(BlueprintAssignable, Category = "Character Scale")
     FOnCharacterScaleChanged OnCharacterScaleChanged;
 
 protected:
-    // ¸®ÇÃ¸®ÄÉÀÌÆ®µÇ´Â ÇöÀç ½ºÄÉÀÏ Å¸ÀÔ
+    // ë¦¬í”Œë¦¬ì¼€ì´íŠ¸ë˜ëŠ” í˜„ì¬ ìŠ¤ì¼€ì¼ íƒ€ì…
     UPROPERTY(ReplicatedUsing = OnRep_CurrentScaleType, BlueprintReadOnly, Category = "Character Scale")
     ECharacterScaleType CurrentScaleType;
 
-    // ¸®ÇÃ¸®ÄÉÀÌÆ®µÇ´Â ÇöÀç ½ºÄÉÀÏ °ª
+    // ë¦¬í”Œë¦¬ì¼€ì´íŠ¸ë˜ëŠ” í˜„ì¬ ìŠ¤ì¼€ì¼ ê°’
     UPROPERTY(ReplicatedUsing = OnRep_CurrentScaleValue, BlueprintReadOnly, Category = "Character Scale")
     float CurrentScaleValue;
 
-    // ½ºÄÉÀÏ ¼³Á¤
-    /*UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Scale")
-    float NormalScale;
+    UPROPERTY(ReplicatedUsing = OnRep_CurrentScaleValue, BlueprintReadOnly, Category = "Character Radius")
+    float CurrentRadiusValue;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Scale")
-    float LargeScale;
+    UPROPERTY(ReplicatedUsing = OnRep_CurrentScaleValue, BlueprintReadOnly, Category = "Character Height")
+    float CurrentHalfHeightValue;
+    
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Scale")
-    float SmallScale;*/
-
-    // ½ºÄÉÀÏ º¯È­ ¼Óµµ
+    // ìŠ¤ì¼€ì¼ ë³€í™” ì†ë„
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Scale")
     float ScaleTransitionSpeed;
 
 private:
-    // ¼­¹ö RPC - ½ºÄÉÀÏ º¯°æ
+    // ì„œë²„ RPC - ìŠ¤ì¼€ì¼ ë³€ê²½
     UFUNCTION(Server, Reliable, WithValidation)
     void ServerChangeScale(ECharacterScaleType NewScaleType);
 
-    // ¸ÖÆ¼Ä³½ºÆ® RPC - ½ºÄÉÀÏ Àû¿ë
+    // ë©€í‹°ìºìŠ¤íŠ¸ RPC - ìŠ¤ì¼€ì¼ ì ìš©
     UFUNCTION(NetMulticast, Reliable)
     void MulticastApplyScale(ECharacterScaleType NewScaleType, float NewScale);
 
-    // ¸®ÇÃ¸®ÄÉÀÌ¼Ç ÇÔ¼öµé
+    // ë¦¬í”Œë¦¬ì¼€ì´ì…˜ í•¨ìˆ˜ë“¤
     UFUNCTION()
     void OnRep_CurrentScaleType(ECharacterScaleType OldScaleType);
 
     UFUNCTION()
     void OnRep_CurrentScaleValue();
 
-    // ½ÇÁ¦ ½ºÄÉÀÏ Àû¿ë
-    void ApplyScaleToCharacter(float NewScale);
+    // ì‹¤ì œ ìŠ¤ì¼€ì¼ ì ìš©
+    void ApplyInterpolatedScale(float NewScale, float NewCapsuleRadius, float NewCapsuleHalfHeight);
 
-    // ½ºÄÉÀÏ Å¸ÀÔ¿¡¼­ °ª °è»ê
+    // ìŠ¤ì¼€ì¼ íƒ€ì…ì—ì„œ ê°’ ê³„ì‚°
     float GetScaleValueFromType(ECharacterScaleType ScaleType) const;
+    float GetCapsuleRadiusFromType(ECharacterScaleType ScaleType) const;
+    float GetCapsuleHalfHeightFromType(ECharacterScaleType ScaleType) const;
 
-    // ½ºÄÉÀÏ º¸°£À» À§ÇÑ º¯¼öµé
+    // ìŠ¤ì¼€ì¼ ë³´ê°„ì„ ìœ„í•œ ë³€ìˆ˜ë“¤
     float StartScale;
     float TargetScale;
+    float StartCapsuleRadius;
+    float TargetCapsuleRadius;
+    float StartCapsuleHalfHeight;
+    float TargetCapsuleHalfHeight;
     float TransitionTime;
     float ElapsedTime;
     bool bIsTransitioning;
 
-    // Å¸ÀÌ¸Ó ÇÚµé
+    // íƒ€ì´ë¨¸ í•¸ë“¤
     FTimerHandle ScaleTransitionTimer;
 
-    // ½ºÄÉÀÏ º¸°£ ¾÷µ¥ÀÌÆ®
+    // ìŠ¤ì¼€ì¼ ë³´ê°„ ì—…ë°ì´íŠ¸
     void UpdateScaleTransition();
 
 protected:
