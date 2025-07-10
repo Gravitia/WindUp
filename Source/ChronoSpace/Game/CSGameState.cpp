@@ -3,7 +3,6 @@
 #include "Game/CSGameState.h"
 #include "Player/CSPlayerState.h"
 #include "Game/CSGameMode.h"
-#include "Subsystem/CSLevelStreamingSubsystem.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/World.h"
 
@@ -32,7 +31,7 @@ void ACSGameState::BeginPlay()
     }
 }
 
-// === 기존: 플레이어 상태 관리 ===
+// === 플레이어 상태 관리 ===
 TArray<ACSPlayerState*> ACSGameState::GetAllMyPlayerStates() const
 {
     TArray<ACSPlayerState*> MyPlayerStates;
@@ -232,94 +231,6 @@ TArray<APawn*> ACSGameState::GetDeadPlayers() const
     return DeadPlayers;
 }
 
-// === 추가: Level Streaming RPC 구현 ===
-
-void ACSGameState::ServerStreamLevel_Implementation(int32 ChapterNumber, int32 StageNumber)
-{
-    UE_LOG(LogTemp, Log, TEXT("Server received StreamLevel request for C%d_S%d via GameState"), ChapterNumber, StageNumber);
-
-    UCSLevelStreamingSubsystem* LevelSubsystem = GetLevelStreamingSubsystem();
-    if (LevelSubsystem)
-    {
-        bool bSuccess = LevelSubsystem->StreamLevel(ChapterNumber, StageNumber);
-        if (bSuccess)
-        {
-            // 성공하면 모든 클라이언트에 알림
-            FVector SpawnPos = LevelSubsystem->GetSpawnPosition();
-            MulticastOnLevelStreamed(ChapterNumber, StageNumber, SpawnPos);
-        }
-        else
-        {
-            UE_LOG(LogTemp, Error, TEXT("Failed to stream level C%d_S%d on server"), ChapterNumber, StageNumber);
-        }
-    }
-    else
-    {
-        UE_LOG(LogTemp, Error, TEXT("Failed to get LevelStreamingSubsystem on server"));
-    }
-}
-
-void ACSGameState::ServerUnloadCurrentLevel_Implementation()
-{
-    UE_LOG(LogTemp, Log, TEXT("Server received UnloadCurrentLevel request via GameState"));
-
-    UCSLevelStreamingSubsystem* LevelSubsystem = GetLevelStreamingSubsystem();
-    if (LevelSubsystem)
-    {
-        int32 CurrentChapter, CurrentStage;
-        LevelSubsystem->GetCurrentStage(CurrentChapter, CurrentStage);
-
-        bool bSuccess = LevelSubsystem->UnloadCurrentLevel();
-        if (bSuccess)
-        {
-            // 성공하면 모든 클라이언트에 알림
-            MulticastOnLevelUnloaded(CurrentChapter, CurrentStage);
-        }
-        else
-        {
-            UE_LOG(LogTemp, Error, TEXT("Failed to unload current level on server"));
-        }
-    }
-    else
-    {
-        UE_LOG(LogTemp, Error, TEXT("Failed to get LevelStreamingSubsystem on server"));
-    }
-}
-
-void ACSGameState::MulticastOnLevelStreamed_Implementation(int32 ChapterNumber, int32 StageNumber, const FVector& SpawnPosition)
-{
-    UCSLevelStreamingSubsystem* LevelSubsystem = GetLevelStreamingSubsystem();
-    if (LevelSubsystem)
-    {
-        // 클라이언트에서 상태 동기화
-        LevelSubsystem->SetCurrentStage(ChapterNumber, StageNumber, SpawnPosition);
-        LevelSubsystem->NotifyLevelStreamed(ChapterNumber, StageNumber);
-
-        UE_LOG(LogTemp, Log, TEXT("Level streamed notification received via GameState: C%d_S%d at %s"),
-            ChapterNumber, StageNumber, *SpawnPosition.ToString());
-    }
-    else
-    {
-        UE_LOG(LogTemp, Error, TEXT("Failed to get LevelStreamingSubsystem on client"));
-    }
-}
-
-void ACSGameState::MulticastOnLevelUnloaded_Implementation(int32 ChapterNumber, int32 StageNumber)
-{
-    UCSLevelStreamingSubsystem* LevelSubsystem = GetLevelStreamingSubsystem();
-    if (LevelSubsystem)
-    {
-        LevelSubsystem->NotifyLevelUnloaded(ChapterNumber, StageNumber);
-
-        UE_LOG(LogTemp, Log, TEXT("Level unloaded notification received via GameState: C%d_S%d"),
-            ChapterNumber, StageNumber);
-    }
-    else
-    {
-        UE_LOG(LogTemp, Error, TEXT("Failed to get LevelStreamingSubsystem on client"));
-    }
-}
-
 // === 플레이어 관련 멀티캐스트 이벤트 구현 ===
 void ACSGameState::MulticastOnPlayerDied_Implementation(APawn* DeadPlayer)
 {
@@ -395,14 +306,4 @@ void ACSGameState::TriggerAllPlayersRespawn()
             DeathState.DeathTime = 0.0f;
         }
     }
-}
-
-UCSLevelStreamingSubsystem* ACSGameState::GetLevelStreamingSubsystem() const
-{
-    UWorld* World = GetWorld();
-    if (World && World->GetGameInstance())
-    {
-        return World->GetGameInstance()->GetSubsystem<UCSLevelStreamingSubsystem>();
-    }
-    return nullptr;
 }

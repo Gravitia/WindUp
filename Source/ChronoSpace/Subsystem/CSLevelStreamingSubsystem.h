@@ -94,20 +94,14 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Level Streaming")
     void SetStageDataTable(UDataTable* InStageDataTable);
 
-    // === Universal Functions (GameState를 통한 네트워크 처리) ===
-    UFUNCTION(BlueprintCallable, Category = "Level Streaming Universal")
+    // === Simple Request Functions ===
+    UFUNCTION(BlueprintCallable, Category = "Level Streaming")
     void RequestStreamLevel(int32 ChapterNumber, int32 StageNumber);
 
-    UFUNCTION(BlueprintCallable, Category = "Level Streaming Universal")
+    UFUNCTION(BlueprintCallable, Category = "Level Streaming")
     void RequestUnloadCurrentLevel();
 
-    // === Internal Functions (GameState에서 호출) ===
-    // GameState에서 호출할 내부 함수들
-    void SetCurrentStage(int32 ChapterNumber, int32 StageNumber, const FVector& SpawnPosition);
-    void NotifyLevelStreamed(int32 ChapterNumber, int32 StageNumber);
-    void NotifyLevelUnloaded(int32 ChapterNumber, int32 StageNumber);
-
-    // === Data Table Functions (C++ Only) ===
+    // === Data Table Functions ===
     FStageData* GetStageDataFromTable(int32 ChapterNumber, int32 StageNumber) const;
     FString GetActualLevelPath(const FStageData* StageData) const;
 
@@ -133,7 +127,5 @@ public:
     FOnLevelUnloaded OnLevelUnloaded;
 
 private:
-    bool IsMultiplayerClient() const;
     class UCSGameProgressSubsystem* GetProgressSubsystem() const;
-    class ACSGameState* GetCSGameState() const;
 };

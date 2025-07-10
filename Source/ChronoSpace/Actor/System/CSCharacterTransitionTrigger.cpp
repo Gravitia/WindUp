@@ -116,11 +116,11 @@ void ACSCharacterTransitionTrigger::MulticastTransitionToNextStage_Implementatio
     UE_LOG(LogTemp, Log, TEXT("MulticastTransitionToNextStage called on %s"),
         HasAuthority() ? TEXT("Server") : TEXT("Client"));
 
-    // 모든 클라이언트에서 레벨 스트리밍 요청
+    //  간단하게 수정 - 복잡한 분기 제거
     UCSLevelStreamingSubsystem* LevelSubsystem = GetLevelStreamingSubsystem();
     if (LevelSubsystem)
     {
-        // RequestStreamLevel은 자동으로 서버/클라이언트를 판단하여 처리
+        // 모든 머신에서 동일하게 RequestStreamLevel 호출
         LevelSubsystem->RequestStreamLevel(NextChapterNumber, NextStageNumber);
         UE_LOG(LogTemp, Log, TEXT("Requested level streaming for C%d_S%d on %s"),
             NextChapterNumber, NextStageNumber, HasAuthority() ? TEXT("Server") : TEXT("Client"));
@@ -132,7 +132,6 @@ void ACSCharacterTransitionTrigger::MulticastTransitionToNextStage_Implementatio
         }
     }
 }
-
 void ACSCharacterTransitionTrigger::MulticastMoveCharactersToNewPosition_Implementation()
 {
     UE_LOG(LogTemp, Log, TEXT("MulticastMoveCharactersToNewPosition called on %s"),

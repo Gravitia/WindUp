@@ -2,14 +2,12 @@
 
 #include "Subsystem/CSLevelStreamingSubsystem.h"
 #include "Subsystem/CSGameProgressSubsystem.h"
-#include "Game/CSGameState.h"
 #include "Engine/World.h"
 #include "Engine/LevelStreamingDynamic.h"
 #include "Engine/DataTable.h"
 
 UCSLevelStreamingSubsystem::UCSLevelStreamingSubsystem()
 {
-    // /Script/Engine.DataTable'/Game/20_Data/DTCS_StageTable.DTCS_StageTable'
     static ConstructorHelpers::FObjectFinder<UDataTable> StageDataObj(
         TEXT("DataTable'/Game/20_Data/DTCS_StageTable.DTCS_StageTable'")
     );
@@ -48,6 +46,15 @@ void UCSLevelStreamingSubsystem::Deinitialize()
 
 bool UCSLevelStreamingSubsystem::StreamLevel(int32 ChapterNumber, int32 StageNumber)
 {
+    //  클라이언트 제한 제거 - 모든 머신에서 레벨 스트리밍 허용
+    /*
+    if (IsMultiplayerClient())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Clients cannot stream levels directly - use RequestStreamLevel instead"));
+        return false;
+    }
+    */
+
     // 현재 레벨이 있다면 언로드
     if (CurrentStreamingLevel)
     {
@@ -106,6 +113,9 @@ bool UCSLevelStreamingSubsystem::StreamLevel(int32 ChapterNumber, int32 StageNum
             ProgressSubsystem->SetLastPlayedStage(ChapterNumber, StageNumber);
         }
 
+        // 이벤트 브로드캐스트
+        OnLevelStreamed.Broadcast(ChapterNumber, StageNumber);
+
         UE_LOG(LogTemp, Log, TEXT("Level streamed successfully: %s for C%d_S%d at position %s"),
             *ActualLevelPath, ChapterNumber, StageNumber, *StageData->WorldSpawnPosition.ToString());
 
@@ -121,6 +131,15 @@ bool UCSLevelStreamingSubsystem::StreamLevel(int32 ChapterNumber, int32 StageNum
 
 bool UCSLevelStreamingSubsystem::UnloadCurrentLevel()
 {
+    // 클라이언트 제한 제거 - 모든 머신에서 언로드 허용
+    /*
+    if (IsMultiplayerClient())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Clients cannot unload levels directly - use RequestUnloadCurrentLevel instead"));
+        return false;
+    }
+    */
+
     if (!CurrentStreamingLevel)
     {
         UE_LOG(LogTemp, Warning, TEXT("No current level to unload"));
@@ -134,99 +153,28 @@ bool UCSLevelStreamingSubsystem::UnloadCurrentLevel()
     CurrentStreamingLevel->SetShouldBeVisible(false);
     CurrentStreamingLevel = nullptr;
 
+    // 이벤트 브로드캐스트
+    OnLevelUnloaded.Broadcast(UnloadedChapter, UnloadedStage);
+
     UE_LOG(LogTemp, Log, TEXT("Level unloaded successfully: C%d_S%d"), UnloadedChapter, UnloadedStage);
 
     return true;
 }
 
-// === Universal Functions (GameState를 통한 네트워크 처리) ===
+// === Simple Request Functions ===
 
 void UCSLevelStreamingSubsystem::RequestStreamLevel(int32 ChapterNumber, int32 StageNumber)
 {
-    if (IsMultiplayerClient())
-    {
-        // 클라이언트: GameState를 통해 서버에 요청
-        ACSGameState* GameState = GetCSGameState();
-        if (GameState)
-        {
-            UE_LOG(LogTemp, Log, TEXT("Client requesting server to stream level C%d_S%d via GameState"), ChapterNumber, StageNumber);
-            GameState->ServerStreamLevel(ChapterNumber, StageNumber);
-        }
-        else
-        {
-            UE_LOG(LogTemp, Error, TEXT("Failed to get GameState for level streaming request"));
-        }
-    }
-    else
-    {
-        // 서버: 직접 실행 후 클라이언트들에게 알림
-        UE_LOG(LogTemp, Log, TEXT("Server directly streaming level C%d_S%d"), ChapterNumber, StageNumber);
-        bool bSuccess = StreamLevel(ChapterNumber, StageNumber);
-
-        if (bSuccess)
-        {
-            // 성공하면 모든 클라이언트에 알림
-            ACSGameState* GameState = GetCSGameState();
-            if (GameState)
-            {
-                GameState->MulticastOnLevelStreamed(ChapterNumber, StageNumber, CurrentSpawnPosition);
-            }
-        }
-    }
+    //  복잡한 분기 제거 - 그냥 바로 실행
+    UE_LOG(LogTemp, Log, TEXT("Requesting to stream level C%d_S%d"), ChapterNumber, StageNumber);
+    StreamLevel(ChapterNumber, StageNumber);
 }
 
 void UCSLevelStreamingSubsystem::RequestUnloadCurrentLevel()
 {
-    if (IsMultiplayerClient())
-    {
-        // 클라이언트: GameState를 통해 서버에 요청
-        ACSGameState* GameState = GetCSGameState();
-        if (GameState)
-        {
-            UE_LOG(LogTemp, Log, TEXT("Client requesting server to unload current level via GameState"));
-            GameState->ServerUnloadCurrentLevel();
-        }
-    }
-    else
-    {
-        // 서버: 직접 실행 후 클라이언트들에게 알림
-        UE_LOG(LogTemp, Log, TEXT("Server directly unloading current level"));
-        int32 UnloadedChapter = CurrentChapter;
-        int32 UnloadedStage = CurrentStage;
-
-        bool bSuccess = UnloadCurrentLevel();
-
-        if (bSuccess)
-        {
-            // 성공하면 모든 클라이언트에 알림
-            ACSGameState* GameState = GetCSGameState();
-            if (GameState)
-            {
-                GameState->MulticastOnLevelUnloaded(UnloadedChapter, UnloadedStage);
-            }
-        }
-    }
-}
-
-// === Internal Functions (GameState에서 호출) ===
-
-void UCSLevelStreamingSubsystem::SetCurrentStage(int32 ChapterNumber, int32 StageNumber, const FVector& SpawnPosition)
-{
-    CurrentChapter = ChapterNumber;
-    CurrentStage = StageNumber;
-    CurrentSpawnPosition = SpawnPosition;
-}
-
-void UCSLevelStreamingSubsystem::NotifyLevelStreamed(int32 ChapterNumber, int32 StageNumber)
-{
-    OnLevelStreamed.Broadcast(ChapterNumber, StageNumber);
-    UE_LOG(LogTemp, Log, TEXT("Level streamed notification received: C%d_S%d"), ChapterNumber, StageNumber);
-}
-
-void UCSLevelStreamingSubsystem::NotifyLevelUnloaded(int32 ChapterNumber, int32 StageNumber)
-{
-    OnLevelUnloaded.Broadcast(ChapterNumber, StageNumber);
-    UE_LOG(LogTemp, Log, TEXT("Level unloaded notification received: C%d_S%d"), ChapterNumber, StageNumber);
+    //  복잡한 분기 제거 - 그냥 바로 실행
+    UE_LOG(LogTemp, Log, TEXT("Requesting to unload current level"));
+    UnloadCurrentLevel();
 }
 
 // === Other Functions ===
@@ -315,12 +263,6 @@ FString UCSLevelStreamingSubsystem::GetActualLevelPath(const FStageData* StageDa
 
 void UCSLevelStreamingSubsystem::CompleteCurrentStage()
 {
-    if (IsMultiplayerClient())
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Clients cannot complete stages"));
-        return;
-    }
-
     UCSGameProgressSubsystem* ProgressSubsystem = GetProgressSubsystem();
     if (ProgressSubsystem)
     {
@@ -340,27 +282,7 @@ bool UCSLevelStreamingSubsystem::IsLevelStreaming() const
     return CurrentStreamingLevel != nullptr;
 }
 
-bool UCSLevelStreamingSubsystem::IsMultiplayerClient() const
-{
-    UWorld* World = GetWorld();
-    if (World)
-    {
-        return World->GetNetMode() == NM_Client;
-    }
-    return false;
-}
-
 UCSGameProgressSubsystem* UCSLevelStreamingSubsystem::GetProgressSubsystem() const
 {
     return GetGameInstance()->GetSubsystem<UCSGameProgressSubsystem>();
-}
-
-ACSGameState* UCSLevelStreamingSubsystem::GetCSGameState() const
-{
-    UWorld* World = GetWorld();
-    if (World)
-    {
-        return Cast<ACSGameState>(World->GetGameState());
-    }
-    return nullptr;
 }
