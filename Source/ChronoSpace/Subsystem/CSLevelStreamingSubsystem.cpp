@@ -8,6 +8,7 @@
 
 UCSLevelStreamingSubsystem::UCSLevelStreamingSubsystem()
 {
+    // /Script/Engine.DataTable'/Game/20_Data/DTCS_StageTable.DTCS_StageTable'
     static ConstructorHelpers::FObjectFinder<UDataTable> StageDataObj(
         TEXT("DataTable'/Game/20_Data/DTCS_StageTable.DTCS_StageTable'")
     );
@@ -23,6 +24,7 @@ UCSLevelStreamingSubsystem::UCSLevelStreamingSubsystem()
     CurrentChapter = 1;
     CurrentStage = 1;
     CurrentSpawnPosition = FVector::ZeroVector;
+    CurrentCharacterSpawnPosition = FVector::ZeroVector;
 }
 
 void UCSLevelStreamingSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -104,7 +106,8 @@ bool UCSLevelStreamingSubsystem::StreamLevel(int32 ChapterNumber, int32 StageNum
         // 스트리밍 성공
         CurrentChapter = ChapterNumber;
         CurrentStage = StageNumber;
-        CurrentSpawnPosition = StageData->WorldSpawnPosition;
+        CurrentSpawnPosition = StageData->WorldSpawnPosition;         // 레벨 스트리밍용 위치
+        CurrentCharacterSpawnPosition = StageData->CharacterSpawnPosition; // 캐릭터 이동용 위치
 
         // Progress subsystem 업데이트
         UCSGameProgressSubsystem* ProgressSubsystem = GetProgressSubsystem();
@@ -116,8 +119,9 @@ bool UCSLevelStreamingSubsystem::StreamLevel(int32 ChapterNumber, int32 StageNum
         // 이벤트 브로드캐스트
         OnLevelStreamed.Broadcast(ChapterNumber, StageNumber);
 
-        UE_LOG(LogTemp, Log, TEXT("Level streamed successfully: %s for C%d_S%d at position %s"),
-            *ActualLevelPath, ChapterNumber, StageNumber, *StageData->WorldSpawnPosition.ToString());
+        UE_LOG(LogTemp, Log, TEXT("Level streamed successfully: %s for C%d_S%d at WorldSpawn:%s, CharacterSpawn:%s"),
+            *ActualLevelPath, ChapterNumber, StageNumber,
+            *StageData->WorldSpawnPosition.ToString(), *StageData->CharacterSpawnPosition.ToString());
 
         return true;
     }
@@ -131,7 +135,7 @@ bool UCSLevelStreamingSubsystem::StreamLevel(int32 ChapterNumber, int32 StageNum
 
 bool UCSLevelStreamingSubsystem::UnloadCurrentLevel()
 {
-    // 클라이언트 제한 제거 - 모든 머신에서 언로드 허용
+    //  클라이언트 제한 제거 - 모든 머신에서 언로드 허용
     /*
     if (IsMultiplayerClient())
     {
@@ -165,7 +169,7 @@ bool UCSLevelStreamingSubsystem::UnloadCurrentLevel()
 
 void UCSLevelStreamingSubsystem::RequestStreamLevel(int32 ChapterNumber, int32 StageNumber)
 {
-    //  복잡한 분기 제거 - 그냥 바로 실행
+    // 복잡한 분기 제거 - 그냥 바로 실행
     UE_LOG(LogTemp, Log, TEXT("Requesting to stream level C%d_S%d"), ChapterNumber, StageNumber);
     StreamLevel(ChapterNumber, StageNumber);
 }
@@ -182,6 +186,11 @@ void UCSLevelStreamingSubsystem::RequestUnloadCurrentLevel()
 FVector UCSLevelStreamingSubsystem::GetSpawnPosition() const
 {
     return CurrentSpawnPosition;
+}
+
+FVector UCSLevelStreamingSubsystem::GetCharacterSpawnPosition() const
+{
+    return CurrentCharacterSpawnPosition;
 }
 
 void UCSLevelStreamingSubsystem::SetStageDataTable(UDataTable* InStageDataTable)

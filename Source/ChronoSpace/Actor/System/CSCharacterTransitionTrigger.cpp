@@ -211,7 +211,8 @@ void ACSCharacterTransitionTrigger::MoveLocalCharacterToNewPosition()
         return;
     }
 
-    FVector NewPosition = LevelSubsystem->GetSpawnPosition();
+    // 캐릭터 스폰 위치 사용 (WorldSpawnPosition 대신)
+    FVector NewPosition = LevelSubsystem->GetCharacterSpawnPosition();
 
     // 모든 머신에서 캐릭터 이동 처리
     UWorld* World = GetWorld();
@@ -230,7 +231,7 @@ void ACSCharacterTransitionTrigger::MoveLocalCharacterToNewPosition()
                 if (PlayerCharacter)
                 {
                     PlayerCharacter->SetActorLocation(NewPosition);
-                    UE_LOG(LogTemp, Log, TEXT("Server moved character to position: %s"), *NewPosition.ToString());
+                    UE_LOG(LogTemp, Log, TEXT("Server moved character to CharacterSpawnPosition: %s"), *NewPosition.ToString());
                 }
             }
         }
@@ -249,7 +250,7 @@ void ACSCharacterTransitionTrigger::MoveLocalCharacterToNewPosition()
             if (PlayerCharacter)
             {
                 PlayerCharacter->SetActorLocation(NewPosition);
-                UE_LOG(LogTemp, Log, TEXT("Client moved local character to position: %s"), *NewPosition.ToString());
+                UE_LOG(LogTemp, Log, TEXT("Client moved local character to CharacterSpawnPosition: %s"), *NewPosition.ToString());
             }
         }
     }

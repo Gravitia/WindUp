@@ -72,9 +72,12 @@ protected:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Level Streaming")
     UDataTable* StageDataTable;
 
-    // 현재 스폰 위치
+    // 현재 스폰 위치들
     UPROPERTY(BlueprintReadOnly, Category = "Level Streaming")
-    FVector CurrentSpawnPosition;
+    FVector CurrentSpawnPosition;          // 월드 스폰 위치 (레벨 스트리밍용)
+
+    UPROPERTY(BlueprintReadOnly, Category = "Level Streaming")
+    FVector CurrentCharacterSpawnPosition; // 캐릭터 스폰 위치 (캐릭터 이동용)
 
     // 현재 챕터와 스테이지
     int32 CurrentChapter;
@@ -90,6 +93,9 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "Level Streaming")
     FVector GetSpawnPosition() const;
+
+    UFUNCTION(BlueprintCallable, Category = "Level Streaming")
+    FVector GetCharacterSpawnPosition() const;
 
     UFUNCTION(BlueprintCallable, Category = "Level Streaming")
     void SetStageDataTable(UDataTable* InStageDataTable);
