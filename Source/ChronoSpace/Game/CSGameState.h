@@ -54,11 +54,10 @@ protected:
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
     virtual void BeginPlay() override;
 
-    // === 수정: 배열 자체만 Replicated ===
+    // === 플레이어 죽음 상태 관리 ===
     UPROPERTY(Replicated, BlueprintReadOnly, Category = "Player Death")
     TArray<FPlayerDeathState> PlayerDeathStates;
 
-    // 나머지 코드는 동일...
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Respawn Settings")
     float AllDeadRespawnDelay = 2.0f;
 
@@ -104,6 +103,23 @@ public:
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Player State")
     TArray<APawn*> GetDeadPlayers() const;
 
+    // === 추가: Level Streaming RPC Functions ===
+    // 클라이언트에서 서버로 레벨 스트리밍 요청
+    UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Level Streaming RPC")
+    void ServerStreamLevel(int32 ChapterNumber, int32 StageNumber);
+
+    // 클라이언트에서 서버로 레벨 언로드 요청
+    UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Level Streaming RPC")
+    void ServerUnloadCurrentLevel();
+
+    // 서버에서 모든 클라이언트로 레벨 스트리밍 완료 알림
+    UFUNCTION(NetMulticast, Reliable, Category = "Level Streaming RPC")
+    void MulticastOnLevelStreamed(int32 ChapterNumber, int32 StageNumber, const FVector& SpawnPosition);
+
+    // 서버에서 모든 클라이언트로 레벨 언로드 완료 알림
+    UFUNCTION(NetMulticast, Reliable, Category = "Level Streaming RPC")
+    void MulticastOnLevelUnloaded(int32 ChapterNumber, int32 StageNumber);
+
     // === 델리게이트 ===
     UPROPERTY(BlueprintAssignable, Category = "Players")
     FOnPlayersUpdated OnPlayersUpdated;
@@ -130,7 +146,7 @@ protected:
     virtual void AddPlayerState(APlayerState* PlayerState) override;
     virtual void RemovePlayerState(APlayerState* PlayerState) override;
 
-    // === 멀티캐스트 이벤트 ===
+    // === 플레이어 관련 멀티캐스트 이벤트 ===
     UFUNCTION(NetMulticast, Reliable)
     void MulticastOnPlayerDied(APawn* DeadPlayer);
 
@@ -143,10 +159,19 @@ protected:
     UFUNCTION(NetMulticast, Reliable)
     void MulticastOnAllPlayersAboutToRespawn(float DelayTime);
 
+    // === Level Streaming RPC 구현 함수들 ===
+    void ServerStreamLevel_Implementation(int32 ChapterNumber, int32 StageNumber);
+    void ServerUnloadCurrentLevel_Implementation();
+    void MulticastOnLevelStreamed_Implementation(int32 ChapterNumber, int32 StageNumber, const FVector& SpawnPosition);
+    void MulticastOnLevelUnloaded_Implementation(int32 ChapterNumber, int32 StageNumber);
+
 private:
     void BroadcastPlayersUpdated();
     FPlayerDeathState* FindPlayerDeathState(APawn* Player);
     const FPlayerDeathState* FindPlayerDeathState(APawn* Player) const;
     void CheckAllPlayersDeath();
     void TriggerAllPlayersRespawn();
+
+    // Level Streaming Subsystem 참조 헬퍼
+    class UCSLevelStreamingSubsystem* GetLevelStreamingSubsystem() const;
 };

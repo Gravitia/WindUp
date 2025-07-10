@@ -39,6 +39,8 @@ void ACSCharacterTransitionTrigger::GetLifetimeReplicatedProps(TArray<FLifetimeP
     DOREPLIFETIME(ACSCharacterTransitionTrigger, PlayersInTrigger);
     DOREPLIFETIME(ACSCharacterTransitionTrigger, bLevelStreamingStarted);
     DOREPLIFETIME(ACSCharacterTransitionTrigger, bCharacterMoveCompleted);
+    DOREPLIFETIME(ACSCharacterTransitionTrigger, NextChapterNumber);
+    DOREPLIFETIME(ACSCharacterTransitionTrigger, NextStageNumber);
 }
 
 void ACSCharacterTransitionTrigger::BeginPlay()
@@ -113,6 +115,22 @@ void ACSCharacterTransitionTrigger::MulticastTransitionToNextStage_Implementatio
 {
     UE_LOG(LogTemp, Log, TEXT("MulticastTransitionToNextStage called on %s"),
         HasAuthority() ? TEXT("Server") : TEXT("Client"));
+
+    // 모든 클라이언트에서 레벨 스트리밍 요청
+    UCSLevelStreamingSubsystem* LevelSubsystem = GetLevelStreamingSubsystem();
+    if (LevelSubsystem)
+    {
+        // RequestStreamLevel은 자동으로 서버/클라이언트를 판단하여 처리
+        LevelSubsystem->RequestStreamLevel(NextChapterNumber, NextStageNumber);
+        UE_LOG(LogTemp, Log, TEXT("Requested level streaming for C%d_S%d on %s"),
+            NextChapterNumber, NextStageNumber, HasAuthority() ? TEXT("Server") : TEXT("Client"));
+
+        // 스테이지 완료 처리 (서버에서만)
+        if (HasAuthority() && bCompleteStageOnTransition)
+        {
+            LevelSubsystem->CompleteCurrentStage();
+        }
+    }
 }
 
 void ACSCharacterTransitionTrigger::MulticastMoveCharactersToNewPosition_Implementation()
@@ -155,40 +173,19 @@ void ACSCharacterTransitionTrigger::CheckTriggerConditions()
 
 void ACSCharacterTransitionTrigger::ServerStartLevelStreaming()
 {
-    if (!HasAuthority() || bLevelStreamingStarted)
+    if (bLevelStreamingStarted)
     {
         return;
     }
 
-    UCSLevelStreamingSubsystem* LevelSubsystem = GetLevelStreamingSubsystem();
-    if (!LevelSubsystem)
-    {
-        UE_LOG(LogTemp, Error, TEXT("Failed to get CSLevelStreamingSubsystem on server"));
-        return;
-    }
+    // 레벨 스트리밍 상태 업데이트
+    bLevelStreamingStarted = true;
 
-    // 레벨 스트리밍 시작
-    bool bStreamSuccess = LevelSubsystem->StreamLevel(NextChapterNumber, NextStageNumber);
-    if (bStreamSuccess)
-    {
-        bLevelStreamingStarted = true;
-        UE_LOG(LogTemp, Log, TEXT("Level streaming started successfully for C%d_S%d"),
-            NextChapterNumber, NextStageNumber);
+    UE_LOG(LogTemp, Log, TEXT("Starting level streaming process for C%d_S%d"),
+        NextChapterNumber, NextStageNumber);
 
-        // 스테이지 완료 처리
-        if (bCompleteStageOnTransition)
-        {
-            LevelSubsystem->CompleteCurrentStage();
-        }
-
-        // 모든 클라이언트에 레벨 전환 알림
-        MulticastTransitionToNextStage();
-    }
-    else
-    {
-        UE_LOG(LogTemp, Error, TEXT("Failed to start level streaming for C%d_S%d"),
-            NextChapterNumber, NextStageNumber);
-    }
+    // 모든 클라이언트에서 레벨 스트리밍 실행
+    MulticastTransitionToNextStage();
 }
 
 void ACSCharacterTransitionTrigger::ServerMoveCharacters()
@@ -217,35 +214,45 @@ void ACSCharacterTransitionTrigger::MoveLocalCharacterToNewPosition()
 
     FVector NewPosition = LevelSubsystem->GetSpawnPosition();
 
-    // 각 클라이언트에서 자신이 소유한 캐릭터만 이동
+    // 모든 머신에서 캐릭터 이동 처리
     UWorld* World = GetWorld();
     if (!World) return;
 
-    APlayerController* PC = World->GetFirstPlayerController();
-    if (!PC) return;
-
-    APawn* PlayerPawn = PC->GetPawn();
-    ACharacter* PlayerCharacter = Cast<ACharacter>(PlayerPawn);
-
-    if (PlayerCharacter)
-    {
-        PlayerCharacter->SetActorLocation(NewPosition);
-        UE_LOG(LogTemp, Log, TEXT("Local character moved to position: %s on %s"),
-            *NewPosition.ToString(), HasAuthority() ? TEXT("Server") : TEXT("Client"));
-    }
-
-    // 서버에서만 정리 작업
+    // 서버와 클라이언트 모두에서 처리
     if (HasAuthority())
     {
+        // 서버: 모든 플레이어 캐릭터 이동
+        for (FConstPlayerControllerIterator Iterator = World->GetPlayerControllerIterator(); Iterator; ++Iterator)
+        {
+            APlayerController* PC = Iterator->Get();
+            if (PC && PC->GetPawn())
+            {
+                ACharacter* PlayerCharacter = Cast<ACharacter>(PC->GetPawn());
+                if (PlayerCharacter)
+                {
+                    PlayerCharacter->SetActorLocation(NewPosition);
+                    UE_LOG(LogTemp, Log, TEXT("Server moved character to position: %s"), *NewPosition.ToString());
+                }
+            }
+        }
+
+        // 서버 정리 작업
         PlayersInTrigger.Empty();
         UE_LOG(LogTemp, Log, TEXT("Character transition completed on server"));
-
-        // 필요시 일정 시간 후 트리거 재활성화
-        // FTimerHandle ResetHandle;
-        // GetWorld()->GetTimerManager().SetTimer(ResetHandle, [this]() { 
-        //     bLevelStreamingStarted = false; 
-        //     bCharacterMoveCompleted = false; 
-        // }, 10.0f, false);
+    }
+    else
+    {
+        // 클라이언트: 자신의 캐릭터만 이동 (추가 보장)
+        APlayerController* PC = World->GetFirstPlayerController();
+        if (PC && PC->GetPawn())
+        {
+            ACharacter* PlayerCharacter = Cast<ACharacter>(PC->GetPawn());
+            if (PlayerCharacter)
+            {
+                PlayerCharacter->SetActorLocation(NewPosition);
+                UE_LOG(LogTemp, Log, TEXT("Client moved local character to position: %s"), *NewPosition.ToString());
+            }
+        }
     }
 }
 

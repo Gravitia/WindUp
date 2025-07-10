@@ -30,7 +30,10 @@ struct CHRONOSPACE_API FStageData : public FTableRowBase
     FString LevelPath;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stage")
-    FVector SpawnPosition;
+    FVector WorldSpawnPosition;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stage")
+    FVector CharacterSpawnPosition;
 
     FStageData()
     {
@@ -38,7 +41,8 @@ struct CHRONOSPACE_API FStageData : public FTableRowBase
         StageNumber = 1;
         LevelName = TEXT("");
         LevelPath = TEXT("");
-        SpawnPosition = FVector::ZeroVector;
+        WorldSpawnPosition = FVector::ZeroVector;
+        CharacterSpawnPosition = FVector::ZeroVector;
     }
 };
 
@@ -90,15 +94,21 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Level Streaming")
     void SetStageDataTable(UDataTable* InStageDataTable);
 
-    // 레벨 이름으로 직접 스트리밍 (헬퍼 함수)
-    UFUNCTION(BlueprintCallable, Category = "Level Streaming")
-    bool StreamLevelByName(const FString& LevelName, const FVector& SpawnPosition = FVector::ZeroVector);
+    // === Universal Functions (GameState를 통한 네트워크 처리) ===
+    UFUNCTION(BlueprintCallable, Category = "Level Streaming Universal")
+    void RequestStreamLevel(int32 ChapterNumber, int32 StageNumber);
+
+    UFUNCTION(BlueprintCallable, Category = "Level Streaming Universal")
+    void RequestUnloadCurrentLevel();
+
+    // === Internal Functions (GameState에서 호출) ===
+    // GameState에서 호출할 내부 함수들
+    void SetCurrentStage(int32 ChapterNumber, int32 StageNumber, const FVector& SpawnPosition);
+    void NotifyLevelStreamed(int32 ChapterNumber, int32 StageNumber);
+    void NotifyLevelUnloaded(int32 ChapterNumber, int32 StageNumber);
 
     // === Data Table Functions (C++ Only) ===
-    // C++에서만 사용하는 함수 (UFUNCTION 제거)
     FStageData* GetStageDataFromTable(int32 ChapterNumber, int32 StageNumber) const;
-
-    // C++에서만 사용하는 함수 (UFUNCTION 제거)
     FString GetActualLevelPath(const FStageData* StageData) const;
 
     // === Stage Integration ===

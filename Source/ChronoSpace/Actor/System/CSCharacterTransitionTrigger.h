@@ -30,11 +30,11 @@ protected:
     int32 RequiredPlayerCount;
 
     // 다음 챕터 번호
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Transition")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Transition", Replicated)
     int32 NextChapterNumber;
 
     // 다음 스테이지 번호
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Transition")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Transition", Replicated)
     int32 NextStageNumber;
 
     // 전환 대기 시간 (레벨 로딩 후 캐릭터 이동까지의 시간)

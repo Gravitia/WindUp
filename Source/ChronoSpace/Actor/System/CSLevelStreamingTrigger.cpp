@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "Actor/System/CSLevelStreamingTrigger.h"
 #include "Subsystem/CSLevelStreamingSubsystem.h"
 #include "GameFramework/Character.h"
@@ -28,7 +27,8 @@ void ACSLevelStreamingTrigger::OnOverlapBegin(UPrimitiveComponent* OverlappedCom
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
     bool bFromSweep, const FHitResult& SweepResult)
 {
-    if (!IsServerPlayer(OtherActor))
+    // 로컬 플레이어만 트리거 가능 (서버/클라이언트 구분 없이)
+    if (!IsValidPlayer(OtherActor))
     {
         return;
     }
@@ -40,11 +40,11 @@ void ACSLevelStreamingTrigger::OnOverlapBegin(UPrimitiveComponent* OverlappedCom
         return;
     }
 
-    // Always use chapter/stage based streaming
+    // 새로운 RequestStreamLevel 함수 사용 (자동으로 서버/클라이언트 처리)
     if (ChapterNumber > 0 && StageNumber > 0)
     {
-        LevelSubsystem->StreamLevel(ChapterNumber, StageNumber);
-        UE_LOG(LogTemp, Log, TEXT("Streaming level for stage: C%d_S%d"), ChapterNumber, StageNumber);
+        UE_LOG(LogTemp, Log, TEXT("Requesting level streaming for stage: C%d_S%d"), ChapterNumber, StageNumber);
+        LevelSubsystem->RequestStreamLevel(ChapterNumber, StageNumber);
     }
     else
     {
@@ -52,7 +52,7 @@ void ACSLevelStreamingTrigger::OnOverlapBegin(UPrimitiveComponent* OverlappedCom
     }
 }
 
-bool ACSLevelStreamingTrigger::IsServerPlayer(AActor* Actor)
+bool ACSLevelStreamingTrigger::IsValidPlayer(AActor* Actor)
 {
     ACharacter* Character = Cast<ACharacter>(Actor);
     if (!Character)
@@ -66,8 +66,8 @@ bool ACSLevelStreamingTrigger::IsServerPlayer(AActor* Actor)
         return false;
     }
 
-    // Only server/host players can trigger level streaming
-    return HasAuthority() && PC->IsLocalPlayerController();
+    // 로컬 플레이어만 트리거 가능 (서버/클라이언트 모두 허용)
+    return PC->IsLocalPlayerController();
 }
 
 UCSLevelStreamingSubsystem* ACSLevelStreamingTrigger::GetLevelStreamingSubsystem() const

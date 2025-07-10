@@ -1,12 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "Game/CSGameState.h"
 #include "Player/CSPlayerState.h"
 #include "Game/CSGameMode.h"
+#include "Subsystem/CSLevelStreamingSubsystem.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/World.h"
-
 
 ACSGameState::ACSGameState()
 {
@@ -18,7 +17,7 @@ void ACSGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLife
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    // 추가: 플레이어 죽음 상태 복제
+    // 플레이어 죽음 상태 복제
     DOREPLIFETIME(ACSGameState, PlayerDeathStates);
 }
 
@@ -62,7 +61,7 @@ void ACSGameState::AddPlayerState(APlayerState* PlayerState)
     Super::AddPlayerState(PlayerState);
     BroadcastPlayersUpdated();
 
-    // 추가: 플레이어를 죽음 추적에 추가
+    // 플레이어를 죽음 추적에 추가
     if (HasAuthority())
     {
         if (APlayerController* PC = Cast<APlayerController>(PlayerState->GetOwner()))
@@ -77,7 +76,7 @@ void ACSGameState::AddPlayerState(APlayerState* PlayerState)
 
 void ACSGameState::RemovePlayerState(APlayerState* PlayerState)
 {
-    // 추가: 플레이어를 죽음 추적에서 제거
+    // 플레이어를 죽음 추적에서 제거
     if (HasAuthority())
     {
         if (APlayerController* PC = Cast<APlayerController>(PlayerState->GetOwner()))
@@ -98,7 +97,7 @@ void ACSGameState::BroadcastPlayersUpdated()
     OnPlayersUpdated.Broadcast(GetAllMyPlayerStates());
 }
 
-// === 추가: 플레이어 죽음 관리 ===
+// === 플레이어 죽음 관리 ===
 void ACSGameState::HandlePlayerDeath(APawn* DeadPlayer)
 {
     if (!HasAuthority() || !DeadPlayer)
@@ -110,12 +109,9 @@ void ACSGameState::HandlePlayerDeath(APawn* DeadPlayer)
         DeathState->bIsDead = true;
         DeathState->DeathTime = GetWorld()->GetTimeSeconds();
 
-        // 모든 클라이언트에 알림
         MulticastOnPlayerDied(DeadPlayer);
-
         UE_LOG(LogTemp, Log, TEXT("Player died: %s"), *DeadPlayer->GetName());
 
-        // 모든 플레이어가 죽었는지 확인
         CheckAllPlayersDeath();
     }
 }
@@ -131,10 +127,7 @@ void ACSGameState::HandlePlayerRevive(APawn* RevivedPlayer)
         DeathState->bIsDead = false;
         DeathState->DeathTime = 0.0f;
 
-        // 리스폰 타이머 클리어
         GetWorld()->GetTimerManager().ClearTimer(AllDeadRespawnTimer);
-
-        // 모든 클라이언트에 알림
         MulticastOnPlayerRevived(RevivedPlayer);
 
         UE_LOG(LogTemp, Log, TEXT("Player revived: %s"), *RevivedPlayer->GetName());
@@ -146,7 +139,6 @@ void ACSGameState::AddPlayerToDeathTracking(APawn* Player)
     if (!HasAuthority() || !Player)
         return;
 
-    // 이미 추가되어 있는지 확인
     if (!FindPlayerDeathState(Player))
     {
         PlayerDeathStates.Add(FPlayerDeathState(Player));
@@ -175,11 +167,11 @@ bool ACSGameState::AreAllPlayersDead() const
     {
         if (DeathState.Player && !DeathState.bIsDead)
         {
-            return false; // 최소 한 명은 살아있음
+            return false;
         }
     }
 
-    return true; // 모든 플레이어가 죽음
+    return true;
 }
 
 int32 ACSGameState::GetAlivePlayerCount() const
@@ -240,7 +232,95 @@ TArray<APawn*> ACSGameState::GetDeadPlayers() const
     return DeadPlayers;
 }
 
-// === 추가: 멀티캐스트 이벤트 구현 ===
+// === 추가: Level Streaming RPC 구현 ===
+
+void ACSGameState::ServerStreamLevel_Implementation(int32 ChapterNumber, int32 StageNumber)
+{
+    UE_LOG(LogTemp, Log, TEXT("Server received StreamLevel request for C%d_S%d via GameState"), ChapterNumber, StageNumber);
+
+    UCSLevelStreamingSubsystem* LevelSubsystem = GetLevelStreamingSubsystem();
+    if (LevelSubsystem)
+    {
+        bool bSuccess = LevelSubsystem->StreamLevel(ChapterNumber, StageNumber);
+        if (bSuccess)
+        {
+            // 성공하면 모든 클라이언트에 알림
+            FVector SpawnPos = LevelSubsystem->GetSpawnPosition();
+            MulticastOnLevelStreamed(ChapterNumber, StageNumber, SpawnPos);
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("Failed to stream level C%d_S%d on server"), ChapterNumber, StageNumber);
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("Failed to get LevelStreamingSubsystem on server"));
+    }
+}
+
+void ACSGameState::ServerUnloadCurrentLevel_Implementation()
+{
+    UE_LOG(LogTemp, Log, TEXT("Server received UnloadCurrentLevel request via GameState"));
+
+    UCSLevelStreamingSubsystem* LevelSubsystem = GetLevelStreamingSubsystem();
+    if (LevelSubsystem)
+    {
+        int32 CurrentChapter, CurrentStage;
+        LevelSubsystem->GetCurrentStage(CurrentChapter, CurrentStage);
+
+        bool bSuccess = LevelSubsystem->UnloadCurrentLevel();
+        if (bSuccess)
+        {
+            // 성공하면 모든 클라이언트에 알림
+            MulticastOnLevelUnloaded(CurrentChapter, CurrentStage);
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("Failed to unload current level on server"));
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("Failed to get LevelStreamingSubsystem on server"));
+    }
+}
+
+void ACSGameState::MulticastOnLevelStreamed_Implementation(int32 ChapterNumber, int32 StageNumber, const FVector& SpawnPosition)
+{
+    UCSLevelStreamingSubsystem* LevelSubsystem = GetLevelStreamingSubsystem();
+    if (LevelSubsystem)
+    {
+        // 클라이언트에서 상태 동기화
+        LevelSubsystem->SetCurrentStage(ChapterNumber, StageNumber, SpawnPosition);
+        LevelSubsystem->NotifyLevelStreamed(ChapterNumber, StageNumber);
+
+        UE_LOG(LogTemp, Log, TEXT("Level streamed notification received via GameState: C%d_S%d at %s"),
+            ChapterNumber, StageNumber, *SpawnPosition.ToString());
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("Failed to get LevelStreamingSubsystem on client"));
+    }
+}
+
+void ACSGameState::MulticastOnLevelUnloaded_Implementation(int32 ChapterNumber, int32 StageNumber)
+{
+    UCSLevelStreamingSubsystem* LevelSubsystem = GetLevelStreamingSubsystem();
+    if (LevelSubsystem)
+    {
+        LevelSubsystem->NotifyLevelUnloaded(ChapterNumber, StageNumber);
+
+        UE_LOG(LogTemp, Log, TEXT("Level unloaded notification received via GameState: C%d_S%d"),
+            ChapterNumber, StageNumber);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("Failed to get LevelStreamingSubsystem on client"));
+    }
+}
+
+// === 플레이어 관련 멀티캐스트 이벤트 구현 ===
 void ACSGameState::MulticastOnPlayerDied_Implementation(APawn* DeadPlayer)
 {
     OnPlayerDied.Broadcast(DeadPlayer);
@@ -261,7 +341,7 @@ void ACSGameState::MulticastOnAllPlayersAboutToRespawn_Implementation(float Dela
     OnAllPlayersAboutToRespawn.Broadcast(DelayTime);
 }
 
-// === 추가: 내부 헬퍼 함수 ===
+// === 내부 헬퍼 함수 ===
 FPlayerDeathState* ACSGameState::FindPlayerDeathState(APawn* Player)
 {
     for (FPlayerDeathState& DeathState : PlayerDeathStates)
@@ -290,11 +370,9 @@ void ACSGameState::CheckAllPlayersDeath()
 {
     if (AreAllPlayersDead())
     {
-        // 모든 클라이언트에 알림
         MulticastOnAllPlayersDead();
         MulticastOnAllPlayersAboutToRespawn(AllDeadRespawnDelay);
 
-        // 리스폰 타이머 시작
         GetWorld()->GetTimerManager().SetTimer(AllDeadRespawnTimer,
             this,
             &ACSGameState::TriggerAllPlayersRespawn,
@@ -307,12 +385,10 @@ void ACSGameState::CheckAllPlayersDeath()
 
 void ACSGameState::TriggerAllPlayersRespawn()
 {
-    // GameMode에게 리스폰 실행 요청
     if (ACSGameMode* GameMode = Cast<ACSGameMode>(GetWorld()->GetAuthGameMode()))
     {
         GameMode->RespawnAllPlayersAtCurrentPoint();
 
-        // 모든 플레이어 상태를 살아있음으로 리셋
         for (FPlayerDeathState& DeathState : PlayerDeathStates)
         {
             DeathState.bIsDead = false;
@@ -321,3 +397,12 @@ void ACSGameState::TriggerAllPlayersRespawn()
     }
 }
 
+UCSLevelStreamingSubsystem* ACSGameState::GetLevelStreamingSubsystem() const
+{
+    UWorld* World = GetWorld();
+    if (World && World->GetGameInstance())
+    {
+        return World->GetGameInstance()->GetSubsystem<UCSLevelStreamingSubsystem>();
+    }
+    return nullptr;
+}
