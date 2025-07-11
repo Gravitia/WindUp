@@ -21,6 +21,9 @@ UCSCharacterScaleComponent::UCSCharacterScaleComponent()
     // 기본값 설정
     CurrentScaleType = ECharacterScaleType::Normal;
     CurrentScaleValue = 1.0f;
+   /* NormalScale = 1.0f;
+    LargeScale = 1.5f;
+    SmallScale = 0.5f;*/
     ScaleTransitionSpeed = 2.0f;
 
     // 트랜지션 관련 초기화
@@ -31,14 +34,13 @@ UCSCharacterScaleComponent::UCSCharacterScaleComponent()
     bIsTransitioning = false;
 }
 
+// Called when the game starts
 void UCSCharacterScaleComponent::BeginPlay()
 {
     Super::BeginPlay();
 
-    if ( ScaleData )
-    {
-        ApplyInterpolatedScale(ScaleData->ScaleNormal, ScaleData->RadiusNormal, ScaleData->HalfHeightNormal);
-    }
+    // 초기 스케일 적용
+    ApplyScaleToCharacter(CurrentScaleValue);
 }
 
 void UCSCharacterScaleComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -46,10 +48,10 @@ void UCSCharacterScaleComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProp
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
     DOREPLIFETIME(UCSCharacterScaleComponent, CurrentScaleType);
-    DOREPLIFETIME(UCSCharacterScaleComponent, CurrentRadiusValue);
-    DOREPLIFETIME(UCSCharacterScaleComponent, CurrentHalfHeightValue);
+    DOREPLIFETIME(UCSCharacterScaleComponent, CurrentScaleValue);
 }
 
+// Called every frame
 void UCSCharacterScaleComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
@@ -120,23 +122,9 @@ void UCSCharacterScaleComponent::MulticastApplyScale_Implementation(ECharacterSc
     // 트랜지션 설정
     StartScale = GetOwner() ? Cast<ACharacter>(GetOwner())->GetActorScale3D().X : 1.0f;
     TargetScale = NewScale;
-
-    if ( ACharacter* Character = Cast<ACharacter>(GetOwner()))
-    {
-        if ( UCapsuleComponent* CapsuleComp = Character->GetCapsuleComponent() )
-        {
-            StartCapsuleRadius = CapsuleComp->GetScaledCapsuleRadius();
-            StartCapsuleHalfHeight = CapsuleComp->GetScaledCapsuleHalfHeight();
-        }
-    }
-
-    TargetCapsuleRadius = GetCapsuleRadiusFromType(NewScaleType);
-    TargetCapsuleHalfHeight = GetCapsuleHalfHeightFromType(NewScaleType);
-
     ElapsedTime = 0.0f;
     TransitionTime = FMath::Abs(TargetScale - StartScale) / ScaleTransitionSpeed;
     bIsTransitioning = true;
-
 
     // 타이머 시작
     if (GetWorld())
@@ -160,11 +148,10 @@ void UCSCharacterScaleComponent::OnRep_CurrentScaleType(ECharacterScaleType OldS
 void UCSCharacterScaleComponent::OnRep_CurrentScaleValue()
 {
     // 스케일 값이 변경되었을 때 캐릭터에 적용
-    ApplyInterpolatedScale(CurrentScaleValue, CurrentRadiusValue, CurrentHalfHeightValue);
+    ApplyScaleToCharacter(CurrentScaleValue);
 }
 
-
-void UCSCharacterScaleComponent::ApplyInterpolatedScale(float NewScale, float NewCapsuleRadius, float NewCapsuleHalfHeight)
+void UCSCharacterScaleComponent::ApplyScaleToCharacter(float NewScale)
 {
     ACharacter* Character = Cast<ACharacter>(GetOwner());
     if (!Character)
@@ -175,9 +162,20 @@ void UCSCharacterScaleComponent::ApplyInterpolatedScale(float NewScale, float Ne
     FVector NewScaleVector(NewScale, NewScale, NewScale);
     Character->SetActorScale3D(NewScaleVector);
 
+    // 선택적으로 캡슐 컴포넌트 크기 조정
     if (UCapsuleComponent* CapsuleComp = Character->GetCapsuleComponent())
     {
-        CapsuleComp->SetCapsuleSize(NewCapsuleRadius, NewCapsuleHalfHeight);
+        float BaseRadius = 34.0f;
+        float BaseHalfHeight = 88.0f;
+
+        // CSCharacterPlayer로부터 기본 캡슐 크기를 가져오기
+        if (ACSCharacterPlayer* CSPlayer = Cast<ACSCharacterPlayer>(Character))
+        {
+            BaseRadius = CSPlayer->BaseCapsuleRadius;
+            BaseHalfHeight = CSPlayer->BaseCapsuleHalfHeight;
+        }
+
+        CapsuleComp->SetCapsuleSize(BaseRadius * NewScale, BaseHalfHeight * NewScale);
     }
 
     // 디버그 로그
@@ -219,36 +217,6 @@ float UCSCharacterScaleComponent::GetScaleValueFromType(ECharacterScaleType Scal
     }
 }
 
-float UCSCharacterScaleComponent::GetCapsuleRadiusFromType(ECharacterScaleType ScaleType) const
-{
-    switch (ScaleType)
-    {
-    case ECharacterScaleType::Normal:
-        return ScaleData->RadiusNormal;
-    case ECharacterScaleType::Large:
-        return ScaleData->RadiusLarge;
-    case ECharacterScaleType::Small:
-        return ScaleData->RadiusSmall;
-    default:
-        return ScaleData->RadiusNormal;
-    }
-}
-
-float UCSCharacterScaleComponent::GetCapsuleHalfHeightFromType(ECharacterScaleType ScaleType) const
-{
-    switch (ScaleType)
-    {
-    case ECharacterScaleType::Normal:
-        return ScaleData->HalfHeightNormal;
-    case ECharacterScaleType::Large:
-        return ScaleData->HalfHeightLarge;
-    case ECharacterScaleType::Small:
-        return ScaleData->HalfHeightSmall;
-    default:
-        return ScaleData->HalfHeightNormal;
-    }
-}
-
 void UCSCharacterScaleComponent::UpdateScaleTransition()
 {
     if (!bIsTransitioning)
@@ -263,11 +231,8 @@ void UCSCharacterScaleComponent::UpdateScaleTransition()
     // Smooth interpolation
     Alpha = FMath::SmoothStep(0.0f, 1.0f, Alpha);
 
-    CurrentScaleValue = FMath::Lerp(StartScale, TargetScale, Alpha);
-    float CurrentRadiusInterp = FMath::Lerp(StartCapsuleRadius, TargetCapsuleRadius, Alpha);
-    float CurrentHalfHeightInterp = FMath::Lerp(StartCapsuleHalfHeight, TargetCapsuleHalfHeight, Alpha);
-
-    ApplyInterpolatedScale(CurrentScaleValue, CurrentRadiusInterp, CurrentHalfHeightInterp);
+    float CurrentScale = FMath::Lerp(StartScale, TargetScale, Alpha);
+    ApplyScaleToCharacter(CurrentScale);
 
     // 보간 완료 확인
     if (Alpha >= 1.0f)
