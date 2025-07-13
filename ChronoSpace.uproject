@@ -44,11 +44,6 @@
 		{
 			"Name": "AdvancedSteamSessions",
 			"Enabled": false
-		},
-		{
-			"Name": "BlockoutToolsPlugin",
-			"Enabled": true,
-			"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/d337b97aca8947a893526964e179acfd"
 		}
 	]
 }
