@@ -27,6 +27,13 @@ private:
 	UFUNCTION()
 	void StopActivateTask();
 
-	UPROPERTY(EditAnywhere, Category = "Duration")
+	// 블랙홀 지속 시간
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duration",
+		meta = (AllowPrivateAccess = "true", ClampMin = "0.1", ClampMax = "60.0"))
 	float DurationTime = 10.0f;
+
+	// 플레이어로부터 블랙홀까지의 오프셋 (상대적 위치)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BlackHole Settings",
+		meta = (AllowPrivateAccess = "true"))
+	FVector BlackHoleOffset = FVector(600.0f, 0.0f, 200.0f);
 };
