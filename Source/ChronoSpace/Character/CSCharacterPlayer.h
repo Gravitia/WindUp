@@ -192,15 +192,15 @@ private:
 		uint8 PrevCustomMode = 0) override;
 
 
-// Gravity Core RPC
-//public:
-//	UFUNCTION(NetMulticast, Reliable)
-//	void NetMulticastMakeGravityCoreSphere(float SphereRaduis, float SphereScale);
-//
-//	UFUNCTION(NetMulticast, Reliable)
-//	void NetMulticastDestroyGravityCoreSphere();
-//
-//protected:
-//	UPROPERTY(Transient)
-//	TObjectPtr<class USphereComponent> GravityCoreSphere;
+// Gravity Core
+public:
+	UFUNCTION(NetMulticast, Reliable)
+	void NetMulticastMakeGravityCoreSphere(float SphereRaduis, float SphereScale);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void NetMulticastDestroyGravityCoreSphere();
+
+protected:
+	UPROPERTY(Transient)
+	TObjectPtr<class USphereComponent> GravityCoreSphere;
 };

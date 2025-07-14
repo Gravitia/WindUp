@@ -10,6 +10,7 @@
 #include "Components/SphereComponent.h"
 #include "Physics/CSCollision.h"
 #include "ChronoSpace.h"
+#include "Character/CSCharacterPlayer.h"
 
 UCSGA_GravityCore::UCSGA_GravityCore()
 {
@@ -24,7 +25,7 @@ void UCSGA_GravityCore::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 
 	check(GravityCoreClass);
 
-	UE_LOG(LogCS, Log, TEXT("UCSGA_GravityCore - ActivateAbility"));
+	UE_LOG(LogCS, Log, TEXT("[NetMode: %d] UCSGA_GravityCore - ActivateAbility"), GetWorld()->GetNetMode());
 
 	OwnerCharacter = Cast<ACharacter>(ActorInfo->AvatarActor.Get());
 
@@ -44,13 +45,18 @@ void UCSGA_GravityCore::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 			UGameplayStatics::FinishSpawningActor(GravityCore, SpawnTransform);
 			GravityCore->AttachToActor(ActorInfo->AvatarActor.Get(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 
-			Sphere = NewObject<USphereComponent>(OwnerCharacter);
+			/*Sphere = NewObject<USphereComponent>(OwnerCharacter);
 			Sphere->SetSphereRadius(GravityCore->GetMeshRadius() * GravityCore->GetActorScale3D().X);
 			Sphere->SetCollisionProfileName(CPROFILE_CSCAPSULE);
 			Sphere->SetIsReplicated(true);
 			Sphere->AttachToComponent(OwnerCharacter->GetRootComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 			Sphere->RegisterComponent();
-			OwnerCharacter->AddInstanceComponent(Sphere);
+			OwnerCharacter->AddInstanceComponent(Sphere);*/
+		}
+
+		if ( ACSCharacterPlayer* CSCharacter = Cast<ACSCharacterPlayer>(OwnerCharacter) )
+		{
+			CSCharacter->NetMulticastMakeGravityCoreSphere(GravityCore->GetMeshRadius(), GravityCore->GetActorScale3D().X);
 		}
 	}
 
@@ -64,6 +70,11 @@ void UCSGA_GravityCore::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 
 void UCSGA_GravityCore::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
+	if (ACSCharacterPlayer* CSCharacter = Cast<ACSCharacterPlayer>(OwnerCharacter))
+	{
+		CSCharacter->NetMulticastDestroyGravityCoreSphere();
+	}
+
 	if ( Sphere )
 	{
 		Sphere->DestroyComponent();

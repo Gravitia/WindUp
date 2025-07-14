@@ -63,6 +63,13 @@ ACSCharacterPlayer::ACSCharacterPlayer()
 	GASManagerComponent = CreateDefaultSubobject<UCSGASManagerComponent>(TEXT("GASManagerComponent"));
 
 	TransformRecordComponent = CreateDefaultSubobject<UCSTransformRecordComponent>(TEXT("TransformRecordComponent"));
+
+	GravityCoreSphere = CreateDefaultSubobject<USphereComponent>(TEXT("GravityCoreSphere"));
+	GravityCoreSphere->SetIsReplicated(true);
+	GravityCoreSphere->SetCollisionProfileName(CPROFILE_CSCAPSULE);
+	GravityCoreSphere->SetupAttachment(RootComponent);
+	GravityCoreSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	//GravityCoreSphere->AttachToComponent(RootComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 }
 
 UAbilitySystemComponent* ACSCharacterPlayer::GetAbilitySystemComponent() const
@@ -317,21 +324,16 @@ void ACSCharacterPlayer::OnMovementModeChanged(
 	}
 }
 
-//void ACSCharacterPlayer::NetMulticastMakeGravityCoreSphere_Implementation(float SphereRaduis, float SphereScale)
-//{
-//	GravityCoreSphere = NewObject<USphereComponent>(this);
-//	GravityCoreSphere->SetSphereRadius(SphereRaduis * SphereScale);
-//	GravityCoreSphere->SetCollisionProfileName(CPROFILE_CSCAPSULE);
-//	GravityCoreSphere->AttachToComponent(RootComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-//	GravityCoreSphere->RegisterComponent();
-//	AddInstanceComponent(GravityCoreSphere);
-//}
-//
-//void ACSCharacterPlayer::NetMulticastDestroyGravityCoreSphere_Implementation()
-//{
-//	if (GravityCoreSphere)
-//	{
-//		GravityCoreSphere->DestroyComponent();
-//		GravityCoreSphere = nullptr;
-//	}
-//}
+void ACSCharacterPlayer::NetMulticastMakeGravityCoreSphere_Implementation(float SphereRaduis, float SphereScale)
+{
+	GravityCoreSphere->SetSphereRadius(SphereRaduis * SphereScale);
+	GravityCoreSphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+}
+
+void ACSCharacterPlayer::NetMulticastDestroyGravityCoreSphere_Implementation()
+{
+	if (GravityCoreSphere)
+	{
+		GravityCoreSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+}
