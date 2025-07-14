@@ -41,10 +41,10 @@ void UCSAT_BlackHoleSphere::OnDestroy(bool AbilityEnded)
 void UCSAT_BlackHoleSphere::SpawnAndInitializeTargetActor()
 {
 	SpawnedTargetActor = Cast<ACSTA_BlackHoleSphere>(GetWorld()->SpawnActorDeferred<ACSTA_BlackHoleSphere>(TargetActorClass, FTransform::Identity, nullptr, nullptr, ESpawnActorCollisionHandlingMethod::AlwaysSpawn));
-	
+
 	if (SpawnedTargetActor)
 	{
-		SpawnedTargetActor->SetOwner(GetOwnerActor()); 
+		SpawnedTargetActor->SetOwner(GetOwnerActor());
 		SpawnedTargetActor->OnComplete.AddDynamic(this, &UCSAT_BlackHoleSphere::OnTargetActorReadyCallback);
 	}
 }

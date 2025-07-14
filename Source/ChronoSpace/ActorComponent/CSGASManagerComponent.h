@@ -14,6 +14,7 @@ enum class EAbilityIndex : int32
 	WhiteHole = 3,
 	WeakenGravity10P = 4,
 	WeakenGravity50P = 5,
+	GravityCore = 6,
 
 	Sprint = 50,
 
@@ -114,6 +115,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UInputAction> WindUpAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UInputAction> GravityCoreAction;
 
 protected:
 
