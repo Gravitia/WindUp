@@ -28,7 +28,7 @@
 #include "ActorComponent/CSTransformRecordComponent.h"
 #include "Player/CSPlayerController.h"
 #include "DataAsset/CSCharacterPlayerData.h"
-
+#include "Components/SphereComponent.h"
 
 ACSCharacterPlayer::ACSCharacterPlayer()
 {
@@ -316,3 +316,22 @@ void ACSCharacterPlayer::OnMovementModeChanged(
 		bCanCoyoteJump = false;    // 착지 시 안전하게 종료
 	}
 }
+
+//void ACSCharacterPlayer::NetMulticastMakeGravityCoreSphere_Implementation(float SphereRaduis, float SphereScale)
+//{
+//	GravityCoreSphere = NewObject<USphereComponent>(this);
+//	GravityCoreSphere->SetSphereRadius(SphereRaduis * SphereScale);
+//	GravityCoreSphere->SetCollisionProfileName(CPROFILE_CSCAPSULE);
+//	GravityCoreSphere->AttachToComponent(RootComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+//	GravityCoreSphere->RegisterComponent();
+//	AddInstanceComponent(GravityCoreSphere);
+//}
+//
+//void ACSCharacterPlayer::NetMulticastDestroyGravityCoreSphere_Implementation()
+//{
+//	if (GravityCoreSphere)
+//	{
+//		GravityCoreSphere->DestroyComponent();
+//		GravityCoreSphere = nullptr;
+//	}
+//}

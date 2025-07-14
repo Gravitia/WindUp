@@ -34,12 +34,6 @@ protected:
 	UPROPERTY()
 	TObjectPtr<class ACSGravityCoreSphere> GravityCore;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Offset")
-	float ForwardOffset = 300.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Offset")
-	float ZOffset = 300.0f;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale")
 	float CoreScale = 1.0f;
 
@@ -48,4 +42,7 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<ACharacter> OwnerCharacter;
+
+	UPROPERTY(Transient)
+	TObjectPtr<class USphereComponent> Sphere;
 };

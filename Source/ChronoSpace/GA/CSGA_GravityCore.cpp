@@ -7,6 +7,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
+#include "Components/SphereComponent.h"
+#include "Physics/CSCollision.h"
 #include "ChronoSpace.h"
 
 UCSGA_GravityCore::UCSGA_GravityCore()
@@ -28,13 +30,7 @@ void UCSGA_GravityCore::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 
 	if (OwnerCharacter && OwnerCharacter->GetCharacterMovement())
 	{
-		FVector CharacterLocation = OwnerCharacter->GetActorLocation();
-		FVector GravityDir = -OwnerCharacter->GetCharacterMovement()->GetGravityDirection().GetSafeNormal();
-		FVector CharacterForward = OwnerCharacter->GetActorForwardVector();
-
-		FVector SpawnLocation = CharacterLocation
-			+ (CharacterForward * ForwardOffset)
-			+ (GravityDir * ZOffset);
+		FVector SpawnLocation = OwnerCharacter->GetActorLocation();
 
 		FTransform SpawnTransform;
 		SpawnTransform.SetLocation(SpawnLocation);
@@ -46,6 +42,15 @@ void UCSGA_GravityCore::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 		if ( GravityCore )
 		{
 			UGameplayStatics::FinishSpawningActor(GravityCore, SpawnTransform);
+			GravityCore->AttachToActor(ActorInfo->AvatarActor.Get(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+
+			Sphere = NewObject<USphereComponent>(OwnerCharacter);
+			Sphere->SetSphereRadius(GravityCore->GetMeshRadius() * GravityCore->GetActorScale3D().X);
+			Sphere->SetCollisionProfileName(CPROFILE_CSCAPSULE);
+			Sphere->SetIsReplicated(true);
+			Sphere->AttachToComponent(OwnerCharacter->GetRootComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+			Sphere->RegisterComponent();
+			OwnerCharacter->AddInstanceComponent(Sphere);
 		}
 	}
 
@@ -59,6 +64,12 @@ void UCSGA_GravityCore::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 
 void UCSGA_GravityCore::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
+	if ( Sphere )
+	{
+		Sphere->DestroyComponent();
+		Sphere = nullptr;
+	}
+
 	if ( DelayTask )
 	{
 		DelayTask->EndTask();

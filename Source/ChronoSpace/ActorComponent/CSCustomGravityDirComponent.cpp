@@ -99,6 +99,7 @@ void UCSCustomGravityDirComponent::OnActorBeginOverlapCallback(AActor* Overlappe
 
 	if ( Core )
 	{
+		UE_LOG(LogCS, Log, TEXT("OnActorBeginOverlapCallback: %s, %s"), *Core->Owner.GetName(), *GetOwner()->GetName());
 		if (Core->Owner == GetOwner()) return;
 
 		UE_LOG(LogCS, Log, TEXT("[Netmode %d] UCSCustomGravityDirComponent OnActorBeginOverlapCallback"), GetWorld()->GetNetMode());
