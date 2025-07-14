@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Character/CSCharacterPlayer.h"
@@ -51,7 +51,7 @@ ACSCharacterPlayer::ACSCharacterPlayer()
 	Trigger->SetCollisionProfileName( CPROFILE_OVERLAPALL );
 	Trigger->SetupAttachment(GetCapsuleComponent());
 
-	// Ä³ï¿½ï¿½ï¿½Í¿ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ß°ï¿½
+	// ìºå ì™ì˜™å ì‹¶ìš¸ì˜™ å ì™ì˜™å ì™ì˜™å ì™ì˜™íŠ¸ å ìŒ©ê³¤ì˜™
 	PushingCharacterComponent = CreateDefaultSubobject<UCSPushingCharacterComponent>(TEXT("PushingCharacterComponent"));
 	PushingCharacterComponent->SetTrigger(Trigger);
 
@@ -141,19 +141,19 @@ void ACSCharacterPlayer::AlwaysClockUnwind()
 {
 	if (HasAuthority())
 	{
-		// ¼­¹ö¿¡¼­ Multicast·Î ¸ğµç Å¬¶óÀÌ¾ğÆ®¿¡ Àû¿ë
+		// ì„œë²„ì—ì„œ Multicastë¡œ ëª¨ë“  í´ë¼ì´ì–¸íŠ¸ì— ì ìš©
 		Multicast_ApplyClockUnwind();
 	}
 	else
 	{
-		// Å¬¶óÀÌ¾ğÆ®¿¡¼­ ¼­¹ö¿¡ ¿äÃ»
+		// í´ë¼ì´ì–¸íŠ¸ì—ì„œ ì„œë²„ì— ìš”ì²­
 		Server_ApplyClockUnwind();
 	}
 }
 
 void ACSCharacterPlayer::Server_ApplyClockUnwind_Implementation()
 {
-	// ¼­¹ö¿¡¼­ Multicast È£Ãâ
+	// ì„œë²„ì—ì„œ Multicast í˜¸ì¶œ
 	Multicast_ApplyClockUnwind();
 }
 
@@ -162,7 +162,7 @@ void ACSCharacterPlayer::Multicast_ApplyClockUnwind_Implementation()
 	ApplyClockUnwind_Internal();
 }
 
-// ½ÇÁ¦ GE Àû¿ë ÇÔ¼ö (º¯°æ ¾øÀ½)
+// ì‹¤ì œ GE ì ìš© í•¨ìˆ˜ (ë³€ê²½ ì—†ìŒ)
 void ACSCharacterPlayer::ApplyClockUnwind_Internal()
 {
 	if (ClockUnwindEffect && ASC)
@@ -231,23 +231,33 @@ void ACSCharacterPlayer::SetData()
 
 void ACSCharacterPlayer::ShoulderMove(const FInputActionValue& Value)
 {
-	// 1) ÀÔ·Â Ãà
-	const FVector2D MoveAxis = Value.Get<FVector2D>();      // X = Forward, Y = Right
-	if (MoveAxis.IsNearlyZero()) return;                    // ÀÔ·Â ¾øÀ¸¸é ÆĞ½º
+	// 1) ì…ë ¥ ì¶• (X = Forward, Y = Right)
+	const FVector2D MoveAxis = Value.Get<FVector2D>();
+	if (MoveAxis.IsNearlyZero()) return;
 
-	// 2) ÄÁÆ®·Ñ·¯ È¸Àü¿¡¼­ Yaw ¸¸ ÃßÃâ
+	// 2) ì»¨íŠ¸ë¡¤ëŸ¬ì˜ Yawë§Œ ì¶”ì¶œ
 	const FRotator ControlRot = Controller ? Controller->GetControlRotation()
 		: FRotator::ZeroRotator;
-	const FRotator YawOnlyRot(0.f, ControlRot.Yaw, 0.f);    // Pitch¡¤Roll ¡æ 0
+	const FRotator YawOnlyRot(0.f, ControlRot.Yaw, 0.f);
 
-	// 3) Æò¸é ´ÜÀ§ º¤ÅÍ °è»ê
-	const FVector ForwardDir = FRotationMatrix(YawOnlyRot).GetUnitAxis(EAxis::X);
-	const FVector RightDir = FRotationMatrix(YawOnlyRot).GetUnitAxis(EAxis::Y);
+	// 3) í˜„ì¬ ì¤‘ë ¥ â†“ êµ¬í•˜ê¸°
+	const UCharacterMovementComponent* MoveComp = GetCharacterMovement();
+	const FVector GravityDir = MoveComp
+		? -MoveComp->GetGravityDirection() 
+		: FVector(0, 0, -1);               
 
-	// 4) ÀÌµ¿ ÀÔ·Â?Ç×»ó ÀÏÁ¤ÇÑ ¼Óµµ
+	FVector ForwardDir = FRotationMatrix(YawOnlyRot).GetUnitAxis(EAxis::X);
+	FVector RightDir = FRotationMatrix(YawOnlyRot).GetUnitAxis(EAxis::Y);
+
+	ForwardDir = FVector::VectorPlaneProject(ForwardDir, GravityDir).GetSafeNormal();
+	RightDir = FVector::VectorPlaneProject(RightDir, GravityDir).GetSafeNormal();
+
+	RightDir = FVector::CrossProduct(GravityDir, ForwardDir).GetSafeNormal();
+
 	AddMovementInput(ForwardDir, MoveAxis.X);
 	AddMovementInput(RightDir, MoveAxis.Y);
 }
+
 
 void ACSCharacterPlayer::ShoulderLook(const FInputActionValue& Value)
 {
@@ -276,13 +286,13 @@ void ACSCharacterPlayer::RequestUIRefresh()
 }
 
 
-// 1. Á¡ÇÁ °¡´É Á¶°Ç¿¡ ÄÚ¿äÅ× bool OR ¿¬»ê
+// 1. ì í”„ ê°€ëŠ¥ ì¡°ê±´ì— ì½”ìš”í…Œ bool OR ì—°ì‚°
 bool ACSCharacterPlayer::CanJumpInternal_Implementation() const
 {
 	return Super::CanJumpInternal_Implementation() || bCanCoyoteJump;
 }
 
-// 2. Å¸ÀÌ¸Ó ½ÃÀÛ / Á¾·á
+// 2. íƒ€ì´ë¨¸ ì‹œì‘ / ì¢…ë£Œ
 void ACSCharacterPlayer::StartCoyoteTimer()
 {
 	bCanCoyoteJump = true;
@@ -299,14 +309,14 @@ void ACSCharacterPlayer::DisableCoyoteTime()
 	bCanCoyoteJump = false;
 }
 
-// 3. °øÁßÀ¸·Î µé¾î°¡¸é Å¸ÀÌ¸Ó ½ÃÀÛ
+// 3. ê³µì¤‘ìœ¼ë¡œ ë“¤ì–´ê°€ë©´ íƒ€ì´ë¨¸ ì‹œì‘
 void ACSCharacterPlayer::Falling()
 {
 	Super::Falling();
 	StartCoyoteTimer();
 }
 
-// 4. ½ÇÁ¦ Á¡ÇÁ°¡ ¹ß»ıÇÏ°Å³ª ÂøÁöÇÏ¸é bool ¸®¼Â
+// 4. ì‹¤ì œ ì í”„ê°€ ë°œìƒí•˜ê±°ë‚˜ ì°©ì§€í•˜ë©´ bool ë¦¬ì…‹
 void ACSCharacterPlayer::OnJumped_Implementation()
 {
 	Super::OnJumped_Implementation();
@@ -320,7 +330,7 @@ void ACSCharacterPlayer::OnMovementModeChanged(
 
 	if (!bPressedJump && !GetCharacterMovement()->IsFalling())
 	{
-		bCanCoyoteJump = false;    // ÂøÁö ½Ã ¾ÈÀüÇÏ°Ô Á¾·á
+		bCanCoyoteJump = false;    // ì°©ì§€ ì‹œ ì•ˆì „í•˜ê²Œ ì¢…ë£Œ
 	}
 }
 

@@ -44,14 +44,6 @@ void UCSGA_GravityCore::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 		{
 			UGameplayStatics::FinishSpawningActor(GravityCore, SpawnTransform);
 			GravityCore->AttachToActor(ActorInfo->AvatarActor.Get(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-
-			/*Sphere = NewObject<USphereComponent>(OwnerCharacter);
-			Sphere->SetSphereRadius(GravityCore->GetMeshRadius() * GravityCore->GetActorScale3D().X);
-			Sphere->SetCollisionProfileName(CPROFILE_CSCAPSULE);
-			Sphere->SetIsReplicated(true);
-			Sphere->AttachToComponent(OwnerCharacter->GetRootComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-			Sphere->RegisterComponent();
-			OwnerCharacter->AddInstanceComponent(Sphere);*/
 		}
 
 		if ( ACSCharacterPlayer* CSCharacter = Cast<ACSCharacterPlayer>(OwnerCharacter) )
@@ -73,12 +65,6 @@ void UCSGA_GravityCore::EndAbility(const FGameplayAbilitySpecHandle Handle, cons
 	if (ACSCharacterPlayer* CSCharacter = Cast<ACSCharacterPlayer>(OwnerCharacter))
 	{
 		CSCharacter->NetMulticastDestroyGravityCoreSphere();
-	}
-
-	if ( Sphere )
-	{
-		Sphere->DestroyComponent();
-		Sphere = nullptr;
 	}
 
 	if ( DelayTask )

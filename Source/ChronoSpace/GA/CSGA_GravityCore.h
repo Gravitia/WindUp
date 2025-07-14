@@ -42,7 +42,4 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<ACharacter> OwnerCharacter;
-
-	UPROPERTY(Transient)
-	TObjectPtr<class USphereComponent> Sphere;
 };
