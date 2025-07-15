@@ -14,7 +14,7 @@ UCSAT_BlackHoleSphere* UCSAT_BlackHoleSphere::CreateTask(UGameplayAbility* Ownin
 {
 	UCSAT_BlackHoleSphere* NewTask = NewAbilityTask<UCSAT_BlackHoleSphere>(OwningAbility);
 	NewTask->TargetActorClass = InTargetActorClass;
-	
+
 	return NewTask;
 }
 
@@ -66,7 +66,6 @@ void UCSAT_BlackHoleSphere::FinalizeTargetActor()
 		ASC->SpawnedTargetActors.Add(SpawnedTargetActor);
 		SpawnedTargetActor->StartTargeting(Ability);
 
-		// 몇 초 후 종료
 		GetWorld()->GetTimerManager().SetTimer(EndTimer, this, &UCSAT_BlackHoleSphere::EndTargetActor, DurationTime, false);
 	}
 }
