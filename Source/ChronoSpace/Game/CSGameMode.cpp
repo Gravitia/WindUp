@@ -22,9 +22,9 @@ ACSGameMode::ACSGameMode()
 void ACSGameMode::BeginPlay()
 {
     Super::BeginPlay();
-    
+
     UE_LOG(LogTemp, Log, TEXT("CSLog: CSGameMode BeginPlay"));
-    
+
     UE_LOG(LogTemp, Log, TEXT("CSGameMode: Simple respawn system initialized"));
 }
 
@@ -42,8 +42,6 @@ void ACSGameMode::PostLogin(APlayerController* NewPlayer)
         }
 
         UE_LOG(LogTemp, Log, TEXT("Player logged in: %s"), *NewPlayer->GetName());
-
-        OnPlayerLogin.Broadcast();
     }
 }
 

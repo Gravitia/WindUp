@@ -7,8 +7,6 @@
 #include "Actor/System/CSRespawnPoint.h"
 #include "CSGameMode.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerLogin);
-
 /**
  * 
  */
@@ -19,7 +17,6 @@ class CHRONOSPACE_API ACSGameMode : public AGameModeBase
 
 public:
     ACSGameMode();
-    FOnPlayerLogin OnPlayerLogin;
 
 protected:
     virtual void BeginPlay() override;

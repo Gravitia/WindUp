@@ -2,15 +2,11 @@
 
 
 #include "Player/CSPlayerController.h"
+#include "ChronoSpace.h"
 #include "UI/CSGameUIWidget.h"
 #include "Engine/Engine.h"
 #include "Engine/World.h"
-#include "Game/CSGameMode.h"
 #include "TimerManager.h"
-#include "ChronoSpace.h"
-#include "Engine/TextureRenderTarget2D.h"
-#include "Engine/SceneCapture2D.h"
-
 
 ACSPlayerController::ACSPlayerController()
 {
@@ -24,30 +20,12 @@ void ACSPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	check(CameraShake && RenderTargetP0 && RenderTargetP1);
+	check(CameraShake);
 
 	SetupInputMode();
 
 	// UI 생성을 약간 지연 (PlayerState 초기화 대기)
 	GetWorldTimerManager().SetTimer(UICreationTimerHandle, this, &ACSPlayerController::InitializeUI, 0.2f, false);
-
-	if ( IsLocalController() )
-	{
-		RenderTargetP0->ResizeTarget(960, 1080);
-		RenderTargetP1->ResizeTarget(960, 1080);
-		RenderTargetP0->UpdateResourceImmediate(true);
-		RenderTargetP1->UpdateResourceImmediate(true);
-
-		if (HasAuthority())
-		{
-			ACSGameMode* GameMode = Cast<ACSGameMode>(GetWorld()->GetAuthGameMode());
-			GameMode->OnPlayerLogin.AddDynamic(this, &ACSPlayerController::UpdateRenderTarget);
-		}
-		else
-		{
-			UpdateRenderTarget();
-		}
-	}
 }
 
 void ACSPlayerController::ShakeCamera()
@@ -113,29 +91,6 @@ void ACSPlayerController::InitializeUI()
 				TEXT("Game UI Initialized for Local Player"));
 		}
 	}
-}
-
-void ACSPlayerController::UpdateRenderTarget()
-{
-	
-}
-
-ASceneCapture2D* ACSPlayerController::SpawnCaptureAndAttach(UCameraComponent* TargetCam, UTextureRenderTarget2D* TargetRT)
-{
-	if (!TargetCam || !TargetRT) return;
-
-	FActorSpawnParameters Params;
-	Params.Owner = this;
-
-	ASceneCapture2D* CaptureActor = GetWorld()->SpawnActor<ASceneCapture2D>(
-		ASceneCapture2D::StaticClass(),
-		FTransform::Identity,
-		Params
-	);
-
-	if (!CaptureActor) return;
-
-
 }
 
 void ACSPlayerController::CreateGameUI()

@@ -73,21 +73,4 @@ private:
 	// UI 생성 지연 타이머
 	FTimerHandle UICreationTimerHandle;
 
-protected:
-	UFUNCTION()
-	void UpdateRenderTarget();
-
-	ASceneCapture2D* SpawnCaptureAndAttach(class UCameraComponent* TargetCam, UTextureRenderTarget2D* TargetRT);
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Render")
-	TObjectPtr<UTextureRenderTarget2D> RenderTargetP0;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Render")
-	TObjectPtr<UTextureRenderTarget2D> RenderTargetP1;
-
-	UPROPERTY()
-	TObjectPtr<class ASceneCapture2D> CaptureP0;
-
-	UPROPERTY()
-	TObjectPtr<class ASceneCapture2D> CaptureP1;
 };

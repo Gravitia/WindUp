@@ -17,7 +17,7 @@ ACSGameState::ACSGameState()
 void ACSGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-    
+
     // 추가: 플레이어 죽음 상태 복제
     DOREPLIFETIME(ACSGameState, PlayerDeathStates);
 }
