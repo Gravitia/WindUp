@@ -59,6 +59,7 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	virtual void SetupInputComponent() override;
 
 	// PlayerState 변화 감지
 	virtual void OnRep_PlayerState() override;
@@ -73,11 +74,14 @@ private:
 	// UI 생성 지연 타이머
 	FTimerHandle UICreationTimerHandle;
 
+// Dual Mode
 protected:
 	UFUNCTION()
 	void UpdateRenderTarget();
 
-	ASceneCapture2D* SpawnCaptureAndAttach(class UCameraComponent* TargetCam, UTextureRenderTarget2D* TargetRT);
+	class ACSCharacterPlayer* FindFirstOtherPawn();
+
+	class ASceneCapture2D* SpawnCaptureAndAttach(class UCameraComponent* TargetCam, UTextureRenderTarget2D* TargetRT);
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Render")
 	TObjectPtr<UTextureRenderTarget2D> RenderTargetP0;
@@ -90,4 +94,18 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<class ASceneCapture2D> CaptureP1;
+
+// Dual Mode UI
+protected:
+	void ToggleDualMode();
+	void OpenDualMode();
+	void CloseDualMode();
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dual Mode UI")
+	TSubclassOf<class UUserWidget> DualModeUIClass;
+
+	UPROPERTY()
+	TObjectPtr<class UUserWidget> DualModeUI;
+
+	bool bIsDualMode;
 };

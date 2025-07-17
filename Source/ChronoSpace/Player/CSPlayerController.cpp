@@ -10,14 +10,17 @@
 #include "ChronoSpace.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Engine/SceneCapture2D.h"
-
+#include "Components/SceneCaptureComponent2D.h"
+#include "Character/CSCharacterPlayer.h"
+#include "Camera/CameraComponent.h"
+#include "EngineUtils.h"
+#include "ChronoSpace.h"
 
 ACSPlayerController::ACSPlayerController()
 {
 	bShowMouseCursor = false;
 	bEnableClickEvents = false;
 	bEnableMouseOverEvents = false;
-
 }
 
 void ACSPlayerController::BeginPlay()
@@ -33,8 +36,20 @@ void ACSPlayerController::BeginPlay()
 
 	if ( IsLocalController() )
 	{
-		RenderTargetP0->ResizeTarget(960, 1080);
-		RenderTargetP1->ResizeTarget(960, 1080);
+		int32 Width = 960;
+		int32 Height = 1080;
+
+		FVector2D ScreenResolution;
+
+		if (GEngine && GEngine->GameViewport)
+		{
+			GEngine->GameViewport->GetViewportSize(ScreenResolution);
+			Width = FMath::Max( Width, ScreenResolution.X / 2 );
+			Height = FMath::Max( Height, ScreenResolution.Y / 2 );
+		}
+
+		RenderTargetP0->ResizeTarget(Width, Height);
+		RenderTargetP1->ResizeTarget(Width, Height);
 		RenderTargetP0->UpdateResourceImmediate(true);
 		RenderTargetP1->UpdateResourceImmediate(true);
 
@@ -43,10 +58,8 @@ void ACSPlayerController::BeginPlay()
 			ACSGameMode* GameMode = Cast<ACSGameMode>(GetWorld()->GetAuthGameMode());
 			GameMode->OnPlayerLogin.AddDynamic(this, &ACSPlayerController::UpdateRenderTarget);
 		}
-		else
-		{
-			UpdateRenderTarget();
-		}
+		
+		UpdateRenderTarget();
 	}
 }
 
@@ -93,6 +106,13 @@ void ACSPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 }
 
+void ACSPlayerController::SetupInputComponent() 
+{
+	Super::SetupInputComponent();
+
+	InputComponent->BindAction("DualMode", IE_Pressed, this, &ACSPlayerController::ToggleDualMode);
+}
+
 void ACSPlayerController::SetupInputMode()
 {
 	// 게임 전용 입력 모드 설정
@@ -117,12 +137,59 @@ void ACSPlayerController::InitializeUI()
 
 void ACSPlayerController::UpdateRenderTarget()
 {
-	
+	ACSCharacterPlayer* LeftCharacter;
+	ACSCharacterPlayer* RightCharacter;
+
+	if ( HasAuthority() )	// Server
+	{
+		LeftCharacter = Cast<ACSCharacterPlayer>(GetPawn());
+		RightCharacter = FindFirstOtherPawn();
+	}
+	else					// Client
+	{
+		LeftCharacter = FindFirstOtherPawn();
+		RightCharacter = Cast<ACSCharacterPlayer>(GetPawn());
+	}
+
+	if (!LeftCharacter) return;
+
+	ASceneCapture2D* CapLeft = SpawnCaptureAndAttach(LeftCharacter->GetFollowCamera(), RenderTargetP0);
+
+	if ( CapLeft )
+	{
+		UE_LOG(LogCS, Log, TEXT("[NetMode: %d] UpdateRenderTarget - CapLeft Success"), GetWorld()->GetNetMode());
+	}
+
+	if (!RightCharacter) return;
+
+	ASceneCapture2D* CapRight = SpawnCaptureAndAttach(RightCharacter->GetFollowCamera(), RenderTargetP1);
+
+	if (CapRight)
+	{
+		UE_LOG(LogCS, Log, TEXT("[NetMode: %d] UpdateRenderTarget - CapRight Success"), GetWorld()->GetNetMode());
+	}
+}
+
+ACSCharacterPlayer* ACSPlayerController::FindFirstOtherPawn()
+{
+	APawn* MyPawn = GetPawn();
+	if (!MyPawn) return nullptr;
+
+	for( TActorIterator<ACSCharacterPlayer> It(GetWorld()) ; It; ++It)
+	{
+		ACSCharacterPlayer* Candidate = *It;
+		if (Candidate != MyPawn)
+		{
+			return Candidate;
+		}
+	}
+
+	return nullptr;
 }
 
 ASceneCapture2D* ACSPlayerController::SpawnCaptureAndAttach(UCameraComponent* TargetCam, UTextureRenderTarget2D* TargetRT)
 {
-	if (!TargetCam || !TargetRT) return;
+	if (!TargetCam || !TargetRT) return nullptr;
 
 	FActorSpawnParameters Params;
 	Params.Owner = this;
@@ -133,9 +200,46 @@ ASceneCapture2D* ACSPlayerController::SpawnCaptureAndAttach(UCameraComponent* Ta
 		Params
 	);
 
-	if (!CaptureActor) return;
+	if (!CaptureActor) return nullptr;
 
+	USceneCaptureComponent2D* CaptureComp = CaptureActor->GetCaptureComponent2D();
+	CaptureComp->TextureTarget = TargetRT;
+	CaptureComp->CaptureSource = SCS_FinalColorLDR;
+	CaptureComp->bCaptureEveryFrame = true;
 
+	CaptureActor->AttachToComponent( Cast<USceneComponent>(TargetCam), FAttachmentTransformRules::SnapToTargetIncludingScale);
+
+	return CaptureActor;
+}
+
+void ACSPlayerController::ToggleDualMode()
+{
+	if (bIsDualMode) CloseDualMode();
+	else OpenDualMode();
+}
+
+void ACSPlayerController::OpenDualMode()
+{
+	check(DualModeUIClass);
+
+	if ( !DualModeUI )
+	{
+		DualModeUI = CreateWidget(this, DualModeUIClass);
+	}
+
+	DualModeUI->AddToViewport(-100);
+
+	bIsDualMode = true;
+}
+
+void ACSPlayerController::CloseDualMode()
+{
+	if ( DualModeUI )
+	{
+		DualModeUI->RemoveFromParent();
+	}
+
+	bIsDualMode = false;
 }
 
 void ACSPlayerController::CreateGameUI()
