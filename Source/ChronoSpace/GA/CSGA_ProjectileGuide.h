@@ -34,12 +34,16 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile Guide")
 	float UpdateRate = 0.02f;
 
+	// 마우스 Y축 민감도
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile Guide")
+	float MouseYSensitivity = 1.5f;
+
 private:
 	FTimerHandle UpdateTimerHandle;
 	FTimerHandle DurationTimerHandle;
 
 	void UpdateGuideLine();
 	void OnGuideDurationEnd();
-	FVector GetPlayerForwardDirection() const;
+	FVector GetScreenCenterDirection() const;
 	FVector GetStartLocation() const;
 };

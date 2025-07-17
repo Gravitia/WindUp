@@ -13,6 +13,7 @@ UCSGA_ProjectileGuide::UCSGA_ProjectileGuide()
 	GuideDuration = 5.0f;
 	MaxGuideDistance = 2000.0f;
 	UpdateRate = 0.02f;
+	MouseYSensitivity = 3.0f; // 민감도 초기화
 }
 
 void UCSGA_ProjectileGuide::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
@@ -66,15 +67,15 @@ void UCSGA_ProjectileGuide::EndAbility(const FGameplayAbilitySpecHandle Handle, 
 void UCSGA_ProjectileGuide::UpdateGuideLine()
 {
 	FVector StartLocation = GetStartLocation();
-	FVector PlayerDirection = GetPlayerForwardDirection();
+	FVector ScreenCenterDirection = GetScreenCenterDirection();
 
-	if (PlayerDirection.IsNearlyZero())
+	if (ScreenCenterDirection.IsNearlyZero())
 	{
-		PlayerDirection = FVector::ForwardVector;
+		ScreenCenterDirection = FVector::ForwardVector;
 	}
 
-	// 라인 트레이스
-	FVector EndLocation = StartLocation + PlayerDirection * MaxGuideDistance;
+	// 화면 중앙 방향으로 라인 트레이스
+	FVector EndLocation = StartLocation + ScreenCenterDirection * MaxGuideDistance;
 
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(GetAvatarActorFromActorInfo());
@@ -95,20 +96,56 @@ void UCSGA_ProjectileGuide::OnGuideDurationEnd()
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
-FVector UCSGA_ProjectileGuide::GetPlayerForwardDirection() const
+FVector UCSGA_ProjectileGuide::GetScreenCenterDirection() const
 {
 	if (ACharacter* Character = Cast<ACharacter>(GetAvatarActorFromActorInfo()))
 	{
-		// 플레이어 컨트롤러의 회전값 사용 (마우스 시점 반영)
 		if (APlayerController* PC = Cast<APlayerController>(Character->GetController()))
 		{
-			return PC->GetControlRotation().Vector();
-		}
+			// 화면 해상도 구하기
+			int32 ViewportSizeX, ViewportSizeY;
+			PC->GetViewportSize(ViewportSizeX, ViewportSizeY);
 
-		// Fallback: 캐릭터의 Forward 방향
-		return Character->GetActorForwardVector();
+			// 현재 마우스 위치 구하기
+			float CurrentMouseX, CurrentMouseY;
+			if (PC->GetMousePosition(CurrentMouseX, CurrentMouseY))
+			{
+				// 화면 중앙 좌표 계산
+				float ScreenCenterX = ViewportSizeX * 0.5f;
+				float ScreenCenterY = ViewportSizeY * 0.5f;
+
+				// 마우스 Y축 중앙에서 차이 계산
+				float MouseYOffset = CurrentMouseY - ScreenCenterY;
+
+				// 민감도 적용하여 차이 증폭
+				float AmplifiedYOffset = MouseYOffset * MouseYSensitivity;
+
+				// 최종 Y 좌표 계산
+				float FinalY = ScreenCenterY + AmplifiedYOffset;
+
+				// 화면 중앙을 월드 방향으로 변환
+				FVector WorldLocation, WorldDirection;
+				if (PC->DeprojectScreenPositionToWorld(ScreenCenterX, FinalY, WorldLocation, WorldDirection))
+				{
+					return WorldDirection;
+				}
+			}
+			else
+			{
+				// 마우스 위치를 가져올 수 없으면 기본 중앙에서 약간 위로
+				float ScreenCenterX = ViewportSizeX * 0.5f;
+				float ScreenCenterY = -100.0f + ViewportSizeY * 0.5f;
+
+				FVector WorldLocation, WorldDirection;
+				if (PC->DeprojectScreenPositionToWorld(ScreenCenterX, ScreenCenterY, WorldLocation, WorldDirection))
+				{
+					return WorldDirection;
+				}
+			}
+		}
 	}
 
+	// Fallback: 플레이어가 바라보는 방향
 	return FVector::ForwardVector;
 }
 
@@ -116,8 +153,7 @@ FVector UCSGA_ProjectileGuide::GetStartLocation() const
 {
 	if (ACharacter* Character = Cast<ACharacter>(GetAvatarActorFromActorInfo()))
 	{
-		// 플레이어 눈 높이에서 시작
-		return Character->GetActorLocation() + FVector(0, 0, Character->BaseEyeHeight);
+		return Character->GetActorLocation() + FVector(0.0f, 0.0f, Character->BaseEyeHeight);
 	}
 
 	return FVector::ZeroVector;
