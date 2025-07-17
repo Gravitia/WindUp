@@ -229,6 +229,15 @@ void ACSPlayerController::OpenDualMode()
 
 	DualModeUI->AddToViewport(-100);
 
+	if (CaptureP0)
+	{
+		CaptureP0->GetCaptureComponent2D()->SetComponentTickEnabled(true);
+	}
+	if (CaptureP1)
+	{
+		CaptureP1->GetCaptureComponent2D()->SetComponentTickEnabled(true);
+	}
+
 	bIsDualMode = true;
 }
 
@@ -237,6 +246,15 @@ void ACSPlayerController::CloseDualMode()
 	if ( DualModeUI )
 	{
 		DualModeUI->RemoveFromParent();
+	}
+
+	if ( CaptureP0 )
+	{
+		CaptureP0->GetCaptureComponent2D()->SetComponentTickEnabled(false);
+	}
+	if (CaptureP1)
+	{
+		CaptureP1->GetCaptureComponent2D()->SetComponentTickEnabled(false);
 	}
 
 	bIsDualMode = false;
