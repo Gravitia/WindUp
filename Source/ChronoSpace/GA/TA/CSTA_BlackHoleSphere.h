@@ -55,6 +55,9 @@ protected:
 	float GravityInfluenceRange = 500.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Sphere")
+	float PullStrength = 50.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Sphere")
 	float EventHorizonRadius = 50.0f;	//
 
 	bool bShowDebug = true;

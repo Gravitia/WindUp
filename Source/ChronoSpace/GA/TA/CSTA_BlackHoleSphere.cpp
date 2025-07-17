@@ -100,7 +100,7 @@ void ACSTA_BlackHoleSphere::Tick(float DeltaSeconds)
 			FVector Direction = Distance.GetSafeNormal();
 
 			//Char.Value()->GetCharacterMovement()->AddForce(Power * Direction);
-			float PullStrength = 50.0f;
+			PullStrength = 50.0f;
 			FVector LaunchVelocity = Direction * PullStrength;
 			Char.Value()->GetCharacterMovement()->AddImpulse(Direction * Power * DeltaSeconds, /*bVelocityChange=*/true);
 		}

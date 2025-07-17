@@ -6,8 +6,6 @@
 #include "Abilities/GameplayAbility.h"
 #include "CSGA_BlackHole.generated.h"
 
-class ACSTA_BlackHoleSphere;
-
 /**
  * 
  */
@@ -33,7 +31,6 @@ private:
 	float DurationTime = 10.0f;
 
 protected:
-	// 방법 2: 에디터에서 설정 가능한 클래스 레퍼런스 (권장)
-	UPROPERTY(EditDefaultsOnly, Category = "Target Actor", meta = (AllowPrivateAccess = "true"))
-	TSoftClassPtr<ACSTA_BlackHoleSphere> TargetActorClass;
-};
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Target Actor")
+	TSubclassOf<class ACSTA_BlackHoleSphere> TargetActorClass;
+}; 
