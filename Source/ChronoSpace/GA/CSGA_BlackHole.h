@@ -17,23 +17,28 @@ class CHRONOSPACE_API UCSGA_BlackHole : public UGameplayAbility
 public:
 	UCSGA_BlackHole();
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
-	
+
 	FORCEINLINE const float GetDurationTime() const { return DurationTime; }
 	FORCEINLINE void SetDurationTime(float InDuarionTime) { DurationTime = InDuarionTime; }
 
 private:
-	void ActivateTask();
+	void ActivateTask(const FVector& TargetLocation = FVector::ZeroVector, bool bHasValidLocation = false);
 
 	UFUNCTION()
 	void StopActivateTask();
 
-	// 블랙홀 지속 시간
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duration",
-		meta = (AllowPrivateAccess = "true", ClampMin = "0.1", ClampMax = "60.0"))
+	UPROPERTY(EditAnywhere, Category = "Duration")
 	float DurationTime = 10.0f;
 
-	// 플레이어로부터 블랙홀까지의 오프셋 (상대적 위치)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BlackHole Settings",
-		meta = (AllowPrivateAccess = "true"))
-	FVector BlackHoleOffset = FVector(600.0f, 0.0f, 200.0f);
-};
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Target Actor")
+	TSubclassOf<class ACSTA_BlackHoleSphere> TargetActorClass;
+
+public:
+	// 정적 변수로 위치 정보 전달
+	static FVector PendingTargetLocation;
+	static bool bHasPendingTargetLocation;
+
+	// 위치 설정 함수
+	static void SetPendingTargetLocation(const FVector& Location);
+}; 

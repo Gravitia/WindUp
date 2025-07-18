@@ -91,6 +91,9 @@ void UCSGASManagerComponent::SetupGASInputComponent(UEnhancedInputComponent* Inp
 	InputComponent->BindAction(GravityCoreAction, ETriggerEvent::Triggered, this, &UCSGASManagerComponent::GASInputPressed, static_cast<int32>(EAbilityIndex::GravityCore));
 	InputComponent->BindAction(GravityCoreAction, ETriggerEvent::Completed, this, &UCSGASManagerComponent::GASInputReleased, static_cast<int32>(EAbilityIndex::GravityCore));
 
+	InputComponent->BindAction(ProjectileGuideAction, ETriggerEvent::Triggered, this, &UCSGASManagerComponent::GASInputPressed, static_cast<int32>(EAbilityIndex::ProjectileGuide));
+	InputComponent->BindAction(ProjectileGuideAction, ETriggerEvent::Completed, this, &UCSGASManagerComponent::GASInputReleased, static_cast<int32>(EAbilityIndex::ProjectileGuide));
+
 	if ( ASC )
 	{
 		ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Ability.Movement")));
