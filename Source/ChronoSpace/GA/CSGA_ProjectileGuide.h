@@ -6,6 +6,7 @@
 #include "Abilities/GameplayAbility.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/SplineComponent.h"
+#include "ActorComponent/CSGASManagerComponent.h"
 #include "CSGA_ProjectileGuide.generated.h"
 
 class UCameraComponent;
@@ -24,7 +25,6 @@ public:
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 
 protected:
-	FVector FixedStartLocation = FVector::ZeroVector;
 	// 가이드라인 설정
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile Guide")
 	float GuideDuration = 5.0f;
@@ -52,6 +52,20 @@ private:
 	FVector GetScreenCenterDirection() const;
 	FVector GetStartLocation() const;
 
+private:
+	// 마우스 조준 상태 관리
+	bool bUsingMouseAiming = false;
+	FVector2D LastMousePosition = FVector2D::ZeroVector;
+	float MouseMovementThreshold = 1.0f; // 마우스 이동 감지 임계값
+
+private:
+	// 초기 조준 방향 저장 (플레이어 회전에 영향받지 않음)
+	FVector InitialAimDirection = FVector::ZeroVector;
+	bool bInitialDirectionSet = false;
+
+private:
+	void CheckMouseMovement();
+
 // Black Hole 
 protected:
 
@@ -65,5 +79,12 @@ protected:
 	// 새로운 함수들
 	void CheckMouseInput();
 	void CreateBlackHoleAtLocation(const FVector& Location);
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ability")
+	EAbilityIndex Ability;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ability")
+	TSubclassOf<class UGameplayAbility> AbilityClass;
 
 };

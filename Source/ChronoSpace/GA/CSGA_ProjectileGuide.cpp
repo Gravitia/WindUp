@@ -11,7 +11,7 @@
 
 UCSGA_ProjectileGuide::UCSGA_ProjectileGuide()
 {
-	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::LocalPredicted;
+	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::LocalOnly;
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 
 	GuideDuration = 5.0f;
@@ -35,6 +35,29 @@ void UCSGA_ProjectileGuide::ActivateAbility(const FGameplayAbilitySpecHandle Han
 		return;
 	}
 
+	// 초기 상태 설정
+	bUsingMouseAiming = false;
+	LastMousePosition = FVector2D::ZeroVector;
+	bInitialDirectionSet = false;
+
+	// ★ 초기 조준 방향 저장 (한 번만 설정)
+	if (ACharacter* Character = Cast<ACharacter>(GetAvatarActorFromActorInfo()))
+	{
+		InitialAimDirection = Character->GetActorForwardVector();
+		bInitialDirectionSet = true;
+		UE_LOG(LogCS, Log, TEXT("Initial aim direction set: %s"), *InitialAimDirection.ToString());
+
+		// 초기 마우스 위치 저장
+		if (APlayerController* PC = Cast<APlayerController>(Character->GetController()))
+		{
+			float MouseX, MouseY;
+			if (PC->GetMousePosition(MouseX, MouseY))
+			{
+				LastMousePosition = FVector2D(MouseX, MouseY);
+			}
+		}
+	}
+
 	// 업데이트 타이머 시작
 	GetWorld()->GetTimerManager().SetTimer(
 		UpdateTimerHandle,
@@ -53,9 +76,55 @@ void UCSGA_ProjectileGuide::ActivateAbility(const FGameplayAbilitySpecHandle Han
 		false
 	);
 
-	FixedStartLocation = GetStartLocation();
-
 	UE_LOG(LogCS, Log, TEXT("ProjectileGuide Activated"));
+}
+
+FVector UCSGA_ProjectileGuide::GetScreenCenterDirection() const
+{
+	if (ACharacter* Character = Cast<ACharacter>(GetAvatarActorFromActorInfo()))
+	{
+		if (APlayerController* PC = Cast<APlayerController>(Character->GetController()))
+		{
+			// ★ 마우스 조준 모드가 아니면 저장된 초기 방향 사용 (플레이어 회전에 영향받지 않음)
+			if (!bUsingMouseAiming)
+			{
+				if (bInitialDirectionSet)
+				{
+					return InitialAimDirection;
+				}
+				else
+				{
+					// 백업: 현재 방향 사용
+					return Character->GetActorForwardVector();
+				}
+			}
+
+			// 마우스 조준 모드일 때만 마우스 위치 사용
+			int32 ViewportSizeX, ViewportSizeY;
+			PC->GetViewportSize(ViewportSizeX, ViewportSizeY);
+
+			float CurrentMouseX, CurrentMouseY;
+			if (PC->GetMousePosition(CurrentMouseX, CurrentMouseY))
+			{
+				float ScreenCenterX = ViewportSizeX * 0.5f;
+				float ScreenCenterY = ViewportSizeY * 0.5f;
+
+				// 마우스 Y축 중앙에서 차이 계산
+				float MouseYOffset = CurrentMouseY - ScreenCenterY;
+				float AmplifiedYOffset = MouseYOffset * MouseYSensitivity;
+				float FinalY = ScreenCenterY + AmplifiedYOffset;
+
+				FVector WorldLocation, WorldDirection;
+				if (PC->DeprojectScreenPositionToWorld(ScreenCenterX, FinalY, WorldLocation, WorldDirection))
+				{
+					return WorldDirection;
+				}
+			}
+		}
+	}
+
+	// Fallback: 저장된 초기 방향 또는 ForwardVector
+	return bInitialDirectionSet ? InitialAimDirection : FVector::ForwardVector;
 }
 
 void UCSGA_ProjectileGuide::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
@@ -77,6 +146,9 @@ void UCSGA_ProjectileGuide::EndAbility(const FGameplayAbilitySpecHandle Handle, 
 
 void UCSGA_ProjectileGuide::UpdateGuideLine()
 {
+	// 마우스 이동 감지
+	CheckMouseMovement();
+
 	FVector StartLocation = GetStartLocation();
 	FVector ScreenCenterDirection = GetScreenCenterDirection();
 
@@ -99,9 +171,9 @@ void UCSGA_ProjectileGuide::UpdateGuideLine()
 
 	CurrentEndLocation = EndLocation;
 
-	// 간단한 디버그 라인으로 가이드 표시
-	//DrawDebugLine(GetWorld(), StartLocation, EndLocation, FColor::Red, false, UpdateRate + 0.01f, 0, 3.0f);
-	DrawDebugSphere(GetWorld(), EndLocation, 45.0f, 8, FColor::Orange, false, UpdateRate + 0.01f);
+	// 조준 모드에 따라 다른 색상으로 표시
+	FColor SphereColor = bUsingMouseAiming ? FColor::Red : FColor::Orange;
+	DrawDebugSphere(GetWorld(), EndLocation, 45.0f, 8, SphereColor, false, UpdateRate + 0.01f);
 
 	CheckMouseInput();
 }
@@ -111,58 +183,6 @@ void UCSGA_ProjectileGuide::OnGuideDurationEnd()
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
-FVector UCSGA_ProjectileGuide::GetScreenCenterDirection() const
-{
-	if (ACharacter* Character = Cast<ACharacter>(GetAvatarActorFromActorInfo()))
-	{
-		if (APlayerController* PC = Cast<APlayerController>(Character->GetController()))
-		{
-			// 화면 해상도 구하기
-			int32 ViewportSizeX, ViewportSizeY;
-			PC->GetViewportSize(ViewportSizeX, ViewportSizeY);
-
-			// 현재 마우스 위치 구하기
-			float CurrentMouseX, CurrentMouseY;
-			if (PC->GetMousePosition(CurrentMouseX, CurrentMouseY))
-			{
-				// 화면 중앙 좌표 계산
-				float ScreenCenterX = ViewportSizeX * 0.5f;
-				float ScreenCenterY = ViewportSizeY * 0.5f;
-
-				// 마우스 Y축 중앙에서 차이 계산
-				float MouseYOffset = CurrentMouseY - ScreenCenterY;
-
-				// 민감도 적용하여 차이 증폭
-				float AmplifiedYOffset = MouseYOffset * MouseYSensitivity;
-
-				// 최종 Y 좌표 계산
-				float FinalY = ScreenCenterY + AmplifiedYOffset;
-
-				// 화면 중앙을 월드 방향으로 변환
-				FVector WorldLocation, WorldDirection;
-				if (PC->DeprojectScreenPositionToWorld(ScreenCenterX, FinalY, WorldLocation, WorldDirection))
-				{
-					return WorldDirection;
-				}
-			}
-			else
-			{
-				// 마우스 위치를 가져올 수 없으면 기본 중앙에서 약간 위로
-				float ScreenCenterX = ViewportSizeX * 0.5f;
-				float ScreenCenterY = -100.0f + ViewportSizeY * 0.5f;
-
-				FVector WorldLocation, WorldDirection;
-				if (PC->DeprojectScreenPositionToWorld(ScreenCenterX, ScreenCenterY, WorldLocation, WorldDirection))
-				{
-					return WorldDirection;
-				}
-			}
-		}
-	}
-
-	// Fallback: 플레이어가 바라보는 방향
-	return FVector::ForwardVector;
-}
 
 void UCSGA_ProjectileGuide::CheckMouseInput()
 {
@@ -185,36 +205,44 @@ void UCSGA_ProjectileGuide::CheckMouseInput()
 
 void UCSGA_ProjectileGuide::CreateBlackHoleAtLocation(const FVector& Location)
 {
-	if (!BlackHoleAbilityClass)
+	// AbilityClass 또는 BlackHoleAbilityClass 사용
+	TSubclassOf<UGameplayAbility> TargetAbilityClass = AbilityClass ? AbilityClass : BlackHoleAbilityClass;
+
+	if (!TargetAbilityClass)
 	{
-		UE_LOG(LogCS, Warning, TEXT("BlackHoleAbilityClass is not set!"));
+		UE_LOG(LogCS, Warning, TEXT("No ability class is set!"));
 		return;
 	}
 
-	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
-	if (!ASC)
+	// 블랙홀 어빌리티에 위치 정보 설정 (BlackHole인 경우만)
+	if (TargetAbilityClass == BlackHoleAbilityClass)
 	{
-		UE_LOG(LogCS, Warning, TEXT("AbilitySystemComponent not found via ActorInfo!"));
-		return;
+		UCSGA_BlackHole::SetPendingTargetLocation(Location);
 	}
 
-	// 블랙홀 어빌리티에 위치 정보 설정
-	UCSGA_BlackHole::SetPendingTargetLocation(Location);
-
-	// 블랙홀 어빌리티 스펙 생성 및 활성화
-	FGameplayAbilitySpec BlackHoleSpec(BlackHoleAbilityClass, 1, -1, this);
-	FGameplayAbilitySpecHandle SpecHandle = ASC->GiveAbility(BlackHoleSpec);
-
-	if (ASC->TryActivateAbility(SpecHandle, true))
+	// AbilityPreviewBox와 동일한 방식
+	if (CurrentActorInfo->AbilitySystemComponent.IsValid())
 	{
-		UE_LOG(LogCS, Log, TEXT("BlackHole ability activated at location: %s"), *Location.ToString());
-	}
-	else
-	{
-		UE_LOG(LogCS, Warning, TEXT("Failed to activate BlackHole ability"));
+		UAbilitySystemComponent* ASC = CurrentActorInfo->AbilitySystemComponent.Get();S
+		FGameplayAbilitySpec* ExistingAbilitySpec = ASC->FindAbilitySpecFromClass(TargetAbilityClass);
+
+		if (ExistingAbilitySpec)
+		{
+			if (ASC->TryActivateAbility(ExistingAbilitySpec->Handle))
+			{
+				UE_LOG(LogCS, Log, TEXT("Ability activated from existing spec at location: %s"), *Location.ToString());
+			}
+			else
+			{
+				UE_LOG(LogCS, Warning, TEXT("Failed to activate existing ability"));
+			}
+		}
+		else
+		{
+			UE_LOG(LogCS, Warning, TEXT("Ability not found in ASC! Make sure it's granted first."));
+		}
 	}
 }
-
 
 
 FVector UCSGA_ProjectileGuide::GetStartLocation() const
@@ -225,4 +253,32 @@ FVector UCSGA_ProjectileGuide::GetStartLocation() const
 	}
 
 	return FVector::ZeroVector;
+}
+
+void UCSGA_ProjectileGuide::CheckMouseMovement()
+{
+	if (bUsingMouseAiming) return; // 이미 마우스 모드면 체크하지 않음
+
+	if (ACharacter* Character = Cast<ACharacter>(GetAvatarActorFromActorInfo()))
+	{
+		if (APlayerController* PC = Cast<APlayerController>(Character->GetController()))
+		{
+			float CurrentMouseX, CurrentMouseY;
+			if (PC->GetMousePosition(CurrentMouseX, CurrentMouseY))
+			{
+				FVector2D CurrentMousePosition(CurrentMouseX, CurrentMouseY);
+
+				// 마우스가 임계값 이상 움직였는지 확인
+				float MouseDistance = FVector2D::Distance(LastMousePosition, CurrentMousePosition);
+
+				if (MouseDistance > MouseMovementThreshold)
+				{
+					bUsingMouseAiming = true;
+					UE_LOG(LogCS, Log, TEXT("Switched to mouse aiming mode (Distance: %f)"), MouseDistance);
+				}
+
+				LastMousePosition = CurrentMousePosition;
+			}
+		}
+	}
 }
