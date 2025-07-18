@@ -1,8 +1,12 @@
 #include "GA/CSGA_ProjectileGuide.h"
+#include "GA/CSGA_BlackHole.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/Character.h"
 #include "Engine/World.h"
 #include "DrawDebugHelpers.h"
+#include "Abilities/GameplayAbilityTypes.h"
+#include "AbilitySystemComponent.h"
+#include "Abilities/GameplayAbilityTargetTypes.h"
 #include "ChronoSpace.h"
 
 UCSGA_ProjectileGuide::UCSGA_ProjectileGuide()
@@ -13,7 +17,12 @@ UCSGA_ProjectileGuide::UCSGA_ProjectileGuide()
 	GuideDuration = 5.0f;
 	MaxGuideDistance = 2000.0f;
 	UpdateRate = 0.02f;
-	MouseYSensitivity = 3.0f; // 민감도 초기화
+	MouseYSensitivity = 3.0f;
+
+	// 블랙홀 어빌리티 클래스 기본값 설정 (에디터에서 설정 가능)
+	BlackHoleAbilityClass = UCSGA_BlackHole::StaticClass();
+
+	CurrentEndLocation = FVector::ZeroVector;
 }
 
 void UCSGA_ProjectileGuide::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
@@ -43,6 +52,8 @@ void UCSGA_ProjectileGuide::ActivateAbility(const FGameplayAbilitySpecHandle Han
 		GuideDuration,
 		false
 	);
+
+	FixedStartLocation = GetStartLocation();
 
 	UE_LOG(LogCS, Log, TEXT("ProjectileGuide Activated"));
 }
@@ -86,9 +97,13 @@ void UCSGA_ProjectileGuide::UpdateGuideLine()
 		EndLocation = HitResult.Location;
 	}
 
+	CurrentEndLocation = EndLocation;
+
 	// 간단한 디버그 라인으로 가이드 표시
-	DrawDebugLine(GetWorld(), StartLocation, EndLocation, FColor::Red, false, UpdateRate + 0.01f, 0, 3.0f);
-	DrawDebugSphere(GetWorld(), EndLocation, 15.0f, 8, FColor::Orange, false, UpdateRate + 0.01f);
+	//DrawDebugLine(GetWorld(), StartLocation, EndLocation, FColor::Red, false, UpdateRate + 0.01f, 0, 3.0f);
+	DrawDebugSphere(GetWorld(), EndLocation, 45.0f, 8, FColor::Orange, false, UpdateRate + 0.01f);
+
+	CheckMouseInput();
 }
 
 void UCSGA_ProjectileGuide::OnGuideDurationEnd()
@@ -148,6 +163,59 @@ FVector UCSGA_ProjectileGuide::GetScreenCenterDirection() const
 	// Fallback: 플레이어가 바라보는 방향
 	return FVector::ForwardVector;
 }
+
+void UCSGA_ProjectileGuide::CheckMouseInput()
+{
+	if (ACharacter* Character = Cast<ACharacter>(GetAvatarActorFromActorInfo()))
+	{
+		if (APlayerController* PC = Cast<APlayerController>(Character->GetController()))
+		{
+			// 왼쪽 마우스 버튼 클릭 감지
+			if (PC->IsInputKeyDown(EKeys::LeftMouseButton))
+			{
+				UE_LOG(LogCS, Log, TEXT("Left mouse clicked! Creating BlackHole at: %s"), *CurrentEndLocation.ToString());
+				CreateBlackHoleAtLocation(CurrentEndLocation);
+
+				// 블랙홀 생성 후 가이드 어빌리티 종료
+				EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+			}
+		}
+	}
+}
+
+void UCSGA_ProjectileGuide::CreateBlackHoleAtLocation(const FVector& Location)
+{
+	if (!BlackHoleAbilityClass)
+	{
+		UE_LOG(LogCS, Warning, TEXT("BlackHoleAbilityClass is not set!"));
+		return;
+	}
+
+	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
+	if (!ASC)
+	{
+		UE_LOG(LogCS, Warning, TEXT("AbilitySystemComponent not found via ActorInfo!"));
+		return;
+	}
+
+	// 블랙홀 어빌리티에 위치 정보 설정
+	UCSGA_BlackHole::SetPendingTargetLocation(Location);
+
+	// 블랙홀 어빌리티 스펙 생성 및 활성화
+	FGameplayAbilitySpec BlackHoleSpec(BlackHoleAbilityClass, 1, -1, this);
+	FGameplayAbilitySpecHandle SpecHandle = ASC->GiveAbility(BlackHoleSpec);
+
+	if (ASC->TryActivateAbility(SpecHandle, true))
+	{
+		UE_LOG(LogCS, Log, TEXT("BlackHole ability activated at location: %s"), *Location.ToString());
+	}
+	else
+	{
+		UE_LOG(LogCS, Warning, TEXT("Failed to activate BlackHole ability"));
+	}
+}
+
+
 
 FVector UCSGA_ProjectileGuide::GetStartLocation() const
 {

@@ -8,6 +8,7 @@
 #include "Components/SplineComponent.h"
 #include "CSProjectileGuideActor.generated.h"
 
+
 UCLASS()
 class CHRONOSPACE_API ACSProjectileGuideActor : public AActor
 {
@@ -58,5 +59,7 @@ protected:
 private:
 	void CreateGuideMeshes(float Distance);
 	void ClearGuideMeshes();
+
+
 
 };

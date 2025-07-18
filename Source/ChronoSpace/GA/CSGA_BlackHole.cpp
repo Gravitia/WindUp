@@ -7,6 +7,9 @@
 #include "Components/CapsuleComponent.h"
 #include "ChronoSpace.h"
 
+FVector UCSGA_BlackHole::PendingTargetLocation = FVector::ZeroVector;
+bool UCSGA_BlackHole::bHasPendingTargetLocation = false;
+
 UCSGA_BlackHole::UCSGA_BlackHole()
 {
 	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::ServerOnly;
@@ -16,46 +19,62 @@ UCSGA_BlackHole::UCSGA_BlackHole()
 	{
 		UE_LOG(LogCS, Log, TEXT("TargetActorClass CDO Null "));
 	}
+}
 
-	/*
-	if (!TargetActorClass) // 에디터에서 설정되지 않은 경우만
-	{
-		static ConstructorHelpers::FClassFinder<ACSTA_BlackHoleSphere> DefaultClass(
-			TEXT("/Game/01_Blueprint/GA/TA/BPTA_BlackHoleSphere.BPTA_BlackHoleSphere_C")
-		);
-		if (DefaultClass.Succeeded())
-		{
-			TargetActorClass = DefaultClass.Class;
-			UE_LOG(LogCS, Log, TEXT("Using default TargetActorClass"));
-		}
-	}
-	else
-	{
-		UE_LOG(LogCS, Log, TEXT("Using editor-configured TargetActorClass"));
-	}
-	*/
+
+void UCSGA_BlackHole::SetPendingTargetLocation(const FVector& Location)
+{
+    PendingTargetLocation = Location;
+    bHasPendingTargetLocation = true;
+    UE_LOG(LogCS, Log, TEXT("BlackHole pending target location set to: %s"), *Location.ToString());
 }
 
 void UCSGA_BlackHole::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
-	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
-	UE_LOG(LogCS, Log, TEXT("UCSGA_BlackHole ActivateAbility"));
-	ActivateTask();
+    Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+    UE_LOG(LogCS, Log, TEXT("UCSGA_BlackHole ActivateAbility"));
+
+    // 대기 중인 위치 정보 확인
+    FVector TargetLocation = FVector::ZeroVector;
+    bool bHasValidLocation = bHasPendingTargetLocation;
+
+    if (bHasPendingTargetLocation)
+    {
+        TargetLocation = PendingTargetLocation;
+        UE_LOG(LogCS, Log, TEXT("BlackHole using pending target location: %s"), *TargetLocation.ToString());
+
+        // 사용 후 리셋
+        bHasPendingTargetLocation = false;
+        PendingTargetLocation = FVector::ZeroVector;
+    }
+    else
+    {
+        UE_LOG(LogCS, Warning, TEXT("No pending target location, using player location"));
+    }
+
+    ActivateTask(TargetLocation, bHasValidLocation);
 }
 
-void UCSGA_BlackHole::ActivateTask()
+void UCSGA_BlackHole::ActivateTask(const FVector& TargetLocation, bool bHasValidLocation)
 {
-	if (!TargetActorClass)
-	{
-		UE_LOG(LogCS, Log, TEXT("TargetActorClass ActivateTask Null "));
-	}
+    if (!TargetActorClass)
+    {
+        UE_LOG(LogCS, Log, TEXT("TargetActorClass ActivateTask Null "));
+        return;
+    }
 
-	UE_LOG(LogCS, Log, TEXT("Using Target Actor Class"));
+    UE_LOG(LogCS, Log, TEXT("Using Target Actor Class"));
+    UCSAT_BlackHoleSphere* SphereTask = UCSAT_BlackHoleSphere::CreateTask(this, TargetActorClass);
 
-	UCSAT_BlackHoleSphere* SphereTask = UCSAT_BlackHoleSphere::CreateTask(this, TargetActorClass);
-	SphereTask->SetDurtionTime(DurationTime);
-	SphereTask->OnComplete.AddDynamic(this, &UCSGA_BlackHole::StopActivateTask);
-	SphereTask->ReadyForActivation();
+    // 유효한 위치가 있으면 설정
+    if (bHasValidLocation)
+    {
+        SphereTask->SetTargetLocation(TargetLocation);
+    }
+
+    SphereTask->SetDurtionTime(DurationTime);
+    SphereTask->OnComplete.AddDynamic(this, &UCSGA_BlackHole::StopActivateTask);
+    SphereTask->ReadyForActivation();
 }
 
 void UCSGA_BlackHole::StopActivateTask()

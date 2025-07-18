@@ -22,7 +22,7 @@ public:
 	FORCEINLINE void SetDurationTime(float InDuarionTime) { DurationTime = InDuarionTime; }
 
 private:
-	void ActivateTask();
+	void ActivateTask(const FVector& TargetLocation = FVector::ZeroVector, bool bHasValidLocation = false);
 
 	UFUNCTION()
 	void StopActivateTask();
@@ -33,4 +33,12 @@ private:
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Target Actor")
 	TSubclassOf<class ACSTA_BlackHoleSphere> TargetActorClass;
+
+public:
+	// 정적 변수로 위치 정보 전달
+	static FVector PendingTargetLocation;
+	static bool bHasPendingTargetLocation;
+
+	// 위치 설정 함수
+	static void SetPendingTargetLocation(const FVector& Location);
 }; 

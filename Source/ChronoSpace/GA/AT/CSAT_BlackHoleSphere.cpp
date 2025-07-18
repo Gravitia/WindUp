@@ -49,28 +49,47 @@ void UCSAT_BlackHoleSphere::SpawnAndInitializeTargetActor()
 	}
 }
 
+
+void UCSAT_BlackHoleSphere::SetTargetLocation(const FVector& InTargetLocation)
+{
+    TargetLocation = InTargetLocation;
+    bHasTargetLocation = true;
+    UE_LOG(LogCS, Log, TEXT("BlackHole target location set to: %s"), *TargetLocation.ToString());
+}
+
 void UCSAT_BlackHoleSphere::FinalizeTargetActor()
 {
-	UAbilitySystemComponent* ASC = AbilitySystemComponent.Get();
+    UAbilitySystemComponent* ASC = AbilitySystemComponent.Get();
+    if (ASC)
+    {
+        // 목표 위치가 설정되어 있으면 해당 위치에, 아니면 플레이어 위치에 스폰
+        FTransform SpawnTransform;
+        if (bHasTargetLocation)
+        {
+            SpawnTransform = FTransform(TargetLocation);
+            UE_LOG(LogCS, Log, TEXT("Spawning BlackHole at target location: %s"), *TargetLocation.ToString());
+        }
+        else
+        {
+            SpawnTransform = ASC->GetAvatarActor()->GetTransform();
+            UE_LOG(LogCS, Log, TEXT("Spawning BlackHole at player location (no target set)"));
+        }
 
-	if (ASC)
-	{
-		const FTransform SpawnTransform = ASC->GetAvatarActor()->GetTransform();
-		if (SpawnedTargetActor == nullptr)
-		{
-			UE_LOG(LogCS, Log, TEXT("SpawnedTargetActor Not Found"));
-			return;
-		}
-		SpawnedTargetActor->FinishSpawning(SpawnTransform);
+        if (SpawnedTargetActor == nullptr)
+        {
+            UE_LOG(LogCS, Log, TEXT("SpawnedTargetActor Not Found"));
+            return;
+        }
 
-		ASC->SpawnedTargetActors.Add(SpawnedTargetActor);
-		SpawnedTargetActor->StartTargeting(Ability);
-
-		GetWorld()->GetTimerManager().SetTimer(EndTimer, this, &UCSAT_BlackHoleSphere::EndTargetActor, DurationTime, false);
-	}
+        SpawnedTargetActor->FinishSpawning(SpawnTransform);
+        ASC->SpawnedTargetActors.Add(SpawnedTargetActor);
+        SpawnedTargetActor->StartTargeting(Ability);
+        GetWorld()->GetTimerManager().SetTimer(EndTimer, this, &UCSAT_BlackHoleSphere::EndTargetActor, DurationTime, false);
+    }
 }
 
 void UCSAT_BlackHoleSphere::EndTargetActor()
 {
 	SpawnedTargetActor->ConfirmTargeting();
 }
+

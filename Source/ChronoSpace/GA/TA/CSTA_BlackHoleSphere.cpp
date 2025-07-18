@@ -24,7 +24,7 @@ ACSTA_BlackHoleSphere::ACSTA_BlackHoleSphere()
 	GravitySphereTrigger = CreateDefaultSubobject<USphereComponent>(TEXT("GravitySphereTrigger"));
 	RootComponent = GravitySphereTrigger;
 	GravitySphereTrigger->SetSphereRadius(GravityInfluenceRange, true);
-	GravitySphereTrigger->SetRelativeLocation(FVector(600.0f, 0.0f, 200.0f));
+	GravitySphereTrigger->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
 	GravitySphereTrigger->SetCollisionProfileName(CPROFILE_CSTRIGGER);
 	GravitySphereTrigger->SetIsReplicated(true);
 
@@ -77,7 +77,7 @@ void ACSTA_BlackHoleSphere::BeginPlay()
 			12,          // 세그먼트 수 (구의 매끄러움)
 			FColor::Green,
 			false,       // 지속 표시
-			10,           // 지속 시간
+			DurationTime,           // 지속 시간
 			0,           // 디버그 선 우선순위
 			2.0f         // 선 두께
 		);

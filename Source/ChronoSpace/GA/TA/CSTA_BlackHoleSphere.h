@@ -60,5 +60,8 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Sphere")
 	float EventHorizonRadius = 50.0f;	//
 
+	UPROPERTY(EditAnywhere, Category = "Duration")
+	float DurationTime = 10.0f;
+
 	bool bShowDebug = true;
 };
