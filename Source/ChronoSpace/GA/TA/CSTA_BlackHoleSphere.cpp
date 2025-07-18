@@ -63,6 +63,8 @@ void ACSTA_BlackHoleSphere::BeginPlay()
 {
 	Super::BeginPlay();
 
+	GravitySphereTrigger->SetSphereRadius(GravityInfluenceRange, true);
+
 	if (!bShowDebug) return;
 
 	if (GravitySphereTrigger)
@@ -99,10 +101,9 @@ void ACSTA_BlackHoleSphere::Tick(float DeltaSeconds)
 			FVector Distance = BlackHoleLocation - TargetLocation;
 			FVector Direction = Distance.GetSafeNormal();
 
-			//Char.Value()->GetCharacterMovement()->AddForce(Power * Direction);
-			PullStrength = 50.0f;
-			FVector LaunchVelocity = Direction * PullStrength;
-			Char.Value()->GetCharacterMovement()->AddImpulse(Direction * Power * DeltaSeconds, /*bVelocityChange=*/true);
+			// Char.Value()->GetCharacterMovement()->AddForce(Power * Direction);
+			// FVector LaunchVelocity = Direction * PullStrength;
+			Char.Value()->GetCharacterMovement()->AddImpulse(Direction * Power * PullStrength * DeltaSeconds, /*bVelocityChange=*/true);
 		}
 	}
 }

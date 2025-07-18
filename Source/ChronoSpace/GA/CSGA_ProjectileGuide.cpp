@@ -223,7 +223,7 @@ void UCSGA_ProjectileGuide::CreateBlackHoleAtLocation(const FVector& Location)
 	// AbilityPreviewBox와 동일한 방식
 	if (CurrentActorInfo->AbilitySystemComponent.IsValid())
 	{
-		UAbilitySystemComponent* ASC = CurrentActorInfo->AbilitySystemComponent.Get();S
+		UAbilitySystemComponent* ASC = CurrentActorInfo->AbilitySystemComponent.Get();
 		FGameplayAbilitySpec* ExistingAbilitySpec = ASC->FindAbilitySpecFromClass(TargetAbilityClass);
 
 		if (ExistingAbilitySpec)
