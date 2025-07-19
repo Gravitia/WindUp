@@ -125,6 +125,10 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Level Streaming")
     UDataTable* GetStageDataTable() const { return StageDataTable; }
 
+    // 비동기 스트리밍 상태 확인
+    UFUNCTION(BlueprintCallable, Category = "Level Streaming")
+    bool IsAsyncStreamingInProgress() const;
+
     // === Events ===
     UPROPERTY(BlueprintAssignable, Category = "Level Events")
     FOnLevelStreamed OnLevelStreamed;
@@ -133,5 +137,25 @@ public:
     FOnLevelUnloaded OnLevelUnloaded;
 
 private:
+    // 비동기 스트리밍을 위한 추가 변수들
+    UPROPERTY()
+    bool bIsAsyncStreaming = false;
+
+    UPROPERTY()
+    int32 PendingChapterNumber = -1;
+
+    UPROPERTY()
+    int32 PendingStageNumber = -1;
+
+    FStageData* PendingStageData = nullptr;
+
+    // 비동기 콜백 함수
+    UFUNCTION()
+    void OnAsyncLevelLoaded();
+    UFUNCTION()
+    void SetFrameLimitedLoading();
+    UFUNCTION()
+    void RestoreNormalLoading();
+
     class UCSGameProgressSubsystem* GetProgressSubsystem() const;
 };
