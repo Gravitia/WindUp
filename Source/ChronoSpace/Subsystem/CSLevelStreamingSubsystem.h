@@ -48,13 +48,13 @@ struct CHRONOSPACE_API FStageData : public FTableRowBase
 
 
 /**
- * 
+ *
  */
 UCLASS()
 class CHRONOSPACE_API UCSLevelStreamingSubsystem : public UGameInstanceSubsystem
 {
-	GENERATED_BODY()
-	
+    GENERATED_BODY()
+
 public:
     UCSLevelStreamingSubsystem();
 
@@ -62,35 +62,23 @@ protected:
     virtual void Initialize(FSubsystemCollectionBase& Collection) override;
     virtual void Deinitialize() override;
 
-    UPROPERTY(BlueprintReadOnly, Category = "Level Streaming")
-    int32 CurrentLevelIndex;
-
-    UPROPERTY()
-    ULevelStreamingDynamic* CurrentStreamingLevel;
-
     // 데이터 테이블 참조
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Level Streaming")
     UDataTable* StageDataTable;
 
-    // 현재 스폰 위치들
+    // 현재 스폰 위치들 (정보 제공용)
     UPROPERTY(BlueprintReadOnly, Category = "Level Streaming")
-    FVector CurrentSpawnPosition;          // 월드 스폰 위치 (레벨 스트리밍용)
+    FVector CurrentSpawnPosition;
 
     UPROPERTY(BlueprintReadOnly, Category = "Level Streaming")
-    FVector CurrentCharacterSpawnPosition; // 캐릭터 스폰 위치 (캐릭터 이동용)
+    FVector CurrentCharacterSpawnPosition;
 
     // 현재 챕터와 스테이지
     int32 CurrentChapter;
     int32 CurrentStage;
 
 public:
-    // === Core Level Streaming Functions ===
-    UFUNCTION(BlueprintCallable, Category = "Level Streaming")
-    bool StreamLevel(int32 ChapterNumber, int32 StageNumber);
-
-    UFUNCTION(BlueprintCallable, Category = "Level Streaming")
-    bool UnloadCurrentLevel();
-
+    // === 데이터 제공 함수들 ===
     UFUNCTION(BlueprintCallable, Category = "Level Streaming")
     FVector GetSpawnPosition() const;
 
@@ -100,12 +88,8 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Level Streaming")
     void SetStageDataTable(UDataTable* InStageDataTable);
 
-    // === Simple Request Functions ===
     UFUNCTION(BlueprintCallable, Category = "Level Streaming")
-    void RequestStreamLevel(int32 ChapterNumber, int32 StageNumber);
-
-    UFUNCTION(BlueprintCallable, Category = "Level Streaming")
-    void RequestUnloadCurrentLevel();
+    UDataTable* GetStageDataTable() const { return StageDataTable; }
 
     // === Data Table Functions ===
     FStageData* GetStageDataFromTable(int32 ChapterNumber, int32 StageNumber) const;
@@ -115,21 +99,27 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Stage Integration")
     void CompleteCurrentStage();
 
-    // === Getters ===
     UFUNCTION(BlueprintCallable, Category = "Level Streaming")
     void GetCurrentStage(int32& OutChapter, int32& OutStage) const;
 
-    UFUNCTION(BlueprintCallable, Category = "Level Streaming")
+    // === 상태 업데이트 (Trigger에서 호출됨) ===
+    void UpdateCurrentStage(int32 ChapterNumber, int32 StageNumber,
+        FVector WorldSpawn, FVector CharacterSpawn);
+
+    // === 레거시 호환성 상태 확인 함수들 ===
+    UFUNCTION(BlueprintCallable, Category = "Level Streaming", meta = (DeprecatedFunction))
     bool IsLevelStreaming() const;
 
-    UFUNCTION(BlueprintCallable, Category = "Level Streaming")
-    UDataTable* GetStageDataTable() const { return StageDataTable; }
-
-    // 비동기 스트리밍 상태 확인
-    UFUNCTION(BlueprintCallable, Category = "Level Streaming")
+    UFUNCTION(BlueprintCallable, Category = "Level Streaming", meta = (DeprecatedFunction))
     bool IsAsyncStreamingInProgress() const;
 
-    // === Events ===
+    UFUNCTION(BlueprintCallable, Category = "Level Streaming")
+    bool IsCurrentStage(int32 ChapterNumber, int32 StageNumber) const;
+
+    UFUNCTION(BlueprintCallable, Category = "Level Streaming")
+    bool IsLevelActuallyLoaded() const;
+
+    // === Events (UI 업데이트용) ===
     UPROPERTY(BlueprintAssignable, Category = "Level Events")
     FOnLevelStreamed OnLevelStreamed;
 
@@ -137,25 +127,5 @@ public:
     FOnLevelUnloaded OnLevelUnloaded;
 
 private:
-    // 비동기 스트리밍을 위한 추가 변수들
-    UPROPERTY()
-    bool bIsAsyncStreaming = false;
-
-    UPROPERTY()
-    int32 PendingChapterNumber = -1;
-
-    UPROPERTY()
-    int32 PendingStageNumber = -1;
-
-    FStageData* PendingStageData = nullptr;
-
-    // 비동기 콜백 함수
-    UFUNCTION()
-    void OnAsyncLevelLoaded();
-    UFUNCTION()
-    void SetFrameLimitedLoading();
-    UFUNCTION()
-    void RestoreNormalLoading();
-
     class UCSGameProgressSubsystem* GetProgressSubsystem() const;
 };

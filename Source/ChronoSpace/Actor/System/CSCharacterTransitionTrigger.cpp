@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// ACSCharacterTransitionTrigger.cpp
 
 #include "Actor/System/CSCharacterTransitionTrigger.h"
 #include "Subsystem/CSLevelStreamingSubsystem.h"
@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/PlayerController.h"
 #include "Engine/World.h"
+#include "Engine/LevelStreamingDynamic.h"
 #include "TimerManager.h"
 #include "Net/UnrealNetwork.h"
 
@@ -13,40 +14,44 @@ ACSCharacterTransitionTrigger::ACSCharacterTransitionTrigger()
 {
     PrimaryActorTick.bCanEverTick = false;
 
-    // 기본 설정
     bCompleteStageOnTransition = true;
-    RequiredPlayerCount = 2;            // 기본 2명
+    RequiredPlayerCount = 2;
     NextChapterNumber = 1;
     NextStageNumber = 1;
-    TransitionDelay = 0.5f;             // 0.5초 대기
+    TransitionDelay = 0.5f;
     bLevelStreamingStarted = false;
     bCharacterMoveCompleted = false;
 
-    // 오버랩 이벤트 바인딩
+    CurrentStreamingLevel = nullptr;
+    bIsAsyncStreaming = false;
+    PendingChapterNumber = -1;
+    PendingStageNumber = -1;
+    PendingStageData = nullptr;
+
     GetCollisionComponent()->OnComponentBeginOverlap.AddDynamic(this, &ACSCharacterTransitionTrigger::OnOverlapBegin);
     GetCollisionComponent()->OnComponentEndOverlap.AddDynamic(this, &ACSCharacterTransitionTrigger::OnOverlapEnd);
 
-    // 네트워킹 설정
     bReplicates = true;
-    SetReplicateMovement(false);  // 트리거는 이동하지 않으므로
+    SetReplicateMovement(false);
 }
 
 void ACSCharacterTransitionTrigger::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    // Replicated 변수들 등록
-    DOREPLIFETIME(ACSCharacterTransitionTrigger, PlayersInTrigger);
-    DOREPLIFETIME(ACSCharacterTransitionTrigger, bLevelStreamingStarted);
-    DOREPLIFETIME(ACSCharacterTransitionTrigger, bCharacterMoveCompleted);
     DOREPLIFETIME(ACSCharacterTransitionTrigger, NextChapterNumber);
     DOREPLIFETIME(ACSCharacterTransitionTrigger, NextStageNumber);
+    DOREPLIFETIME(ACSCharacterTransitionTrigger, bLevelStreamingStarted);
+    DOREPLIFETIME(ACSCharacterTransitionTrigger, bCharacterMoveCompleted);
+    DOREPLIFETIME(ACSCharacterTransitionTrigger, CurrentChapter);
+    DOREPLIFETIME(ACSCharacterTransitionTrigger, CurrentStage);
+    DOREPLIFETIME(ACSCharacterTransitionTrigger, CurrentSpawnPosition);
+    DOREPLIFETIME(ACSCharacterTransitionTrigger, CurrentCharacterSpawnPosition);
 }
 
 void ACSCharacterTransitionTrigger::BeginPlay()
 {
     Super::BeginPlay();
-
     UE_LOG(LogTemp, Log, TEXT("CSCharacterTransitionTrigger initialized - Next Stage: C%d_S%d, Required Players: %d"),
         NextChapterNumber, NextStageNumber, RequiredPlayerCount);
 }
@@ -55,49 +60,23 @@ void ACSCharacterTransitionTrigger::OnOverlapBegin(UPrimitiveComponent* Overlapp
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
     bool bFromSweep, const FHitResult& SweepResult)
 {
-    // 서버에서만 트리거 로직 실행
-    if (!HasAuthority())
-    {
-        return;
-    }
-
-    // 이미 캐릭터 이동이 완료되었으면 무시
-    if (bCharacterMoveCompleted)
-    {
-        return;
-    }
+    if (!HasAuthority() || bCharacterMoveCompleted) return;
 
     ACharacter* Character = Cast<ACharacter>(OtherActor);
-    if (!Character || PlayersInTrigger.Contains(Character))
-    {
-        return;
-    }
+    if (!Character || PlayersInTrigger.Contains(Character)) return;
 
     PlayersInTrigger.Add(Character);
     UE_LOG(LogTemp, Log, TEXT("Character entered trigger. Current count: %d/%d"),
         PlayersInTrigger.Num(), RequiredPlayerCount);
 
-    // 모든 클라이언트에 상태 업데이트
     MulticastUpdateTriggerState(PlayersInTrigger.Num(), bLevelStreamingStarted, bCharacterMoveCompleted);
-
-    // 트리거 조건 확인
     CheckTriggerConditions();
 }
 
 void ACSCharacterTransitionTrigger::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-    // 서버에서만 트리거 로직 실행
-    if (!HasAuthority())
-    {
-        return;
-    }
-
-    // 이미 캐릭터 이동이 완료되었으면 무시
-    if (bCharacterMoveCompleted)
-    {
-        return;
-    }
+    if (!HasAuthority() || bCharacterMoveCompleted) return;
 
     ACharacter* Character = Cast<ACharacter>(OtherActor);
     if (Character)
@@ -106,54 +85,12 @@ void ACSCharacterTransitionTrigger::OnOverlapEnd(UPrimitiveComponent* Overlapped
         UE_LOG(LogTemp, Log, TEXT("Character left trigger. Current count: %d/%d"),
             PlayersInTrigger.Num(), RequiredPlayerCount);
 
-        // 모든 클라이언트에 상태 업데이트
         MulticastUpdateTriggerState(PlayersInTrigger.Num(), bLevelStreamingStarted, bCharacterMoveCompleted);
     }
 }
 
-void ACSCharacterTransitionTrigger::MulticastTransitionToNextStage_Implementation()
-{
-    UE_LOG(LogTemp, Log, TEXT("MulticastTransitionToNextStage called on %s"),
-        HasAuthority() ? TEXT("Server") : TEXT("Client"));
-
-    //  간단하게 수정 - 복잡한 분기 제거
-    UCSLevelStreamingSubsystem* LevelSubsystem = GetLevelStreamingSubsystem();
-    if (LevelSubsystem)
-    {
-        // 모든 머신에서 동일하게 RequestStreamLevel 호출
-        LevelSubsystem->RequestStreamLevel(NextChapterNumber, NextStageNumber);
-        UE_LOG(LogTemp, Log, TEXT("Requested level streaming for C%d_S%d on %s"),
-            NextChapterNumber, NextStageNumber, HasAuthority() ? TEXT("Server") : TEXT("Client"));
-
-        // 스테이지 완료 처리 (서버에서만)
-        if (HasAuthority() && bCompleteStageOnTransition)
-        {
-            LevelSubsystem->CompleteCurrentStage();
-        }
-    }
-}
-void ACSCharacterTransitionTrigger::MulticastMoveCharactersToNewPosition_Implementation()
-{
-    UE_LOG(LogTemp, Log, TEXT("MulticastMoveCharactersToNewPosition called on %s"),
-        HasAuthority() ? TEXT("Server") : TEXT("Client"));
-
-    // 각 클라이언트에서 지연 후 캐릭터 이동 실행
-    FTimerHandle MoveTimerHandle;
-    GetWorld()->GetTimerManager().SetTimer(MoveTimerHandle, this,
-        &ACSCharacterTransitionTrigger::MoveLocalCharacterToNewPosition, TransitionDelay, false);
-}
-
-void ACSCharacterTransitionTrigger::MulticastUpdateTriggerState_Implementation(int32 PlayerCount, bool bStreamingStarted, bool bMoveCompleted)
-{
-    // 클라이언트에서 UI 업데이트 등에 사용할 수 있는 함수
-    UE_LOG(LogTemp, Log, TEXT("Trigger state updated - Players: %d, Streaming: %s, Move: %s"),
-        PlayerCount, bStreamingStarted ? TEXT("Started") : TEXT("Not Started"),
-        bMoveCompleted ? TEXT("Completed") : TEXT("Not Completed"));
-}
-
 void ACSCharacterTransitionTrigger::CheckTriggerConditions()
 {
-    // 조건 1: 첫 번째 캐릭터가 들어왔을 때 레벨 스트리밍 시작
     if (!bLevelStreamingStarted && PlayersInTrigger.Num() >= 1)
     {
         UE_LOG(LogTemp, Log, TEXT("First player entered - starting level streaming for C%d_S%d"),
@@ -161,7 +98,6 @@ void ACSCharacterTransitionTrigger::CheckTriggerConditions()
         ServerStartLevelStreaming();
     }
 
-    // 조건 2: 모든 플레이어가 들어왔을 때 캐릭터 이동
     if (bLevelStreamingStarted && !bCharacterMoveCompleted && PlayersInTrigger.Num() >= RequiredPlayerCount)
     {
         UE_LOG(LogTemp, Log, TEXT("All %d players in trigger - starting character movement"),
@@ -170,103 +106,234 @@ void ACSCharacterTransitionTrigger::CheckTriggerConditions()
     }
 }
 
-void ACSCharacterTransitionTrigger::ServerStartLevelStreaming()
+void ACSCharacterTransitionTrigger::ServerStartLevelStreaming_Implementation()
 {
-    if (bLevelStreamingStarted)
-    {
-        return;
-    }
+    if (bLevelStreamingStarted) return;
 
-    // 레벨 스트리밍 상태 업데이트
     bLevelStreamingStarted = true;
 
-    UE_LOG(LogTemp, Log, TEXT("Starting level streaming process for C%d_S%d"),
+    UE_LOG(LogTemp, Log, TEXT("SERVER: Starting level streaming process for C%d_S%d"),
         NextChapterNumber, NextStageNumber);
+    MulticastUpdateTriggerState(PlayersInTrigger.Num(), bLevelStreamingStarted, bCharacterMoveCompleted);
+    // 먼저 클라이언트에게도 스트리밍 시작 호출
+    MulticastStartLevelStreaming(NextChapterNumber, NextStageNumber);
 
-    // 모든 클라이언트에서 레벨 스트리밍 실행
-    MulticastTransitionToNextStage();
+    // 서버 자체 스트리밍
+    bool bSuccess = PerformLevelStreaming(NextChapterNumber, NextStageNumber);
+    if (bSuccess && bCompleteStageOnTransition)
+    {
+        if (auto* LevelSubsystem = GetLevelStreamingSubsystem())
+            LevelSubsystem->CompleteCurrentStage();
+    }
+    else if (!bSuccess)
+    {
+        UE_LOG(LogTemp, Error, TEXT("Failed to start level streaming for C%d_S%d"), NextChapterNumber, NextStageNumber);
+        bLevelStreamingStarted = false;
+    }
 }
 
-void ACSCharacterTransitionTrigger::ServerMoveCharacters()
+void ACSCharacterTransitionTrigger::MulticastStartLevelStreaming_Implementation(int32 ChapterNumber, int32 StageNumber)
 {
-    if (!HasAuthority() || bCharacterMoveCompleted)
+    // 클라이언트도 로딩 로직을 그대로 실행
+    if (!HasAuthority())  // 서버는 이미 실행했으므로 중복 방지
     {
-        return;
+        PerformLevelStreaming(ChapterNumber, StageNumber);
+    }
+}
+bool ACSCharacterTransitionTrigger::PerformLevelStreaming(int32 ChapterNumber, int32 StageNumber)
+{
+    if (bIsAsyncStreaming)
+        return false;
+
+    UWorld* World = GetWorld();
+    if (!World)
+    {
+        UE_LOG(LogTemp, Error, TEXT("No valid world"));
+        return false;
     }
 
-    UE_LOG(LogTemp, Log, TEXT("All players ready - starting character movement"));
+    auto* LevelSubsystem = GetLevelStreamingSubsystem();
+    if (!LevelSubsystem)
+    {
+        UE_LOG(LogTemp, Error, TEXT("No LevelSubsystem"));
+        return false;
+    }
+
+    FStageData* StageData = LevelSubsystem->GetStageDataFromTable(ChapterNumber, StageNumber);
+    if (!StageData)
+    {
+        UE_LOG(LogTemp, Error, TEXT("Invalid stage data"));
+        return false;
+    }
+
+    const FString& LevelToLoad = LevelSubsystem->GetActualLevelPath(StageData);
+
+    // Tune async loading so each frame spends at most 1ms
+    if (IConsoleVariable* CVar = IConsoleManager::Get().FindConsoleVariable(TEXT("s.AsyncLoadingTimeLimit")))
+    {
+        CVar->Set(1.0f);
+        UE_LOG(LogTemp, Log, TEXT("Set s.AsyncLoadingTimeLimit to 1ms"));
+    }
+    // Enable CPU throttling for streaming
+    if (IConsoleVariable* CVar2 = IConsoleManager::Get().FindConsoleVariable(TEXT("r.Streaming.ThrottleCPU")))
+    {
+        CVar2->Set(1);
+        UE_LOG(LogTemp, Log, TEXT("Enabled r.Streaming.ThrottleCPU"));
+    }
+    // Add extra time to priority async loading
+    if (IConsoleVariable* CVar3 = IConsoleManager::Get().FindConsoleVariable(TEXT("s.PriorityAsyncLoadingExtraTime")))
+    {
+        CVar3->Set(0.5f);
+        UE_LOG(LogTemp, Log, TEXT("Set s.PriorityAsyncLoadingExtraTime to 0.5ms"));
+    }
+    // Limit streaming pool size
+    if (IConsoleVariable* CVar4 = IConsoleManager::Get().FindConsoleVariable(TEXT("r.Streaming.LimitPoolSize")))
+    {
+        CVar4->Set(1);
+        UE_LOG(LogTemp, Log, TEXT("Enabled r.Streaming.LimitPoolSize"));
+    }
+
+    bool bOutSuccess = false;
+    ULevelStreamingDynamic* StreamLevel = ULevelStreamingDynamic::LoadLevelInstance(
+        World,
+        LevelToLoad,
+        StageData->WorldSpawnPosition,
+        FRotator::ZeroRotator,
+        bOutSuccess
+    );
+
+    if (!bOutSuccess || !StreamLevel)
+    {
+        UE_LOG(LogTemp, Error, TEXT("LoadLevelInstance failed: %s"), *LevelToLoad);
+        return false;
+    }
+
+    StreamLevel->OnLevelLoaded.AddDynamic(this, &ACSCharacterTransitionTrigger::OnAsyncLevelLoaded);
+
+    bIsAsyncStreaming = true;
+    PendingChapterNumber = ChapterNumber;
+    PendingStageNumber = StageNumber;
+    PendingStageData = StageData;
+
+    UE_LOG(LogTemp, Log, TEXT("Started async streaming via LoadLevelInstance: %s"), *LevelToLoad);
+    return true;
+}
+
+
+void ACSCharacterTransitionTrigger::OnAsyncLevelLoaded()
+{
+    if (!CurrentStreamingLevel || !bIsAsyncStreaming || !PendingStageData) return;
+
+    CurrentStreamingLevel->OnLevelLoaded.RemoveDynamic(this, &ACSCharacterTransitionTrigger::OnAsyncLevelLoaded);
+    CurrentStreamingLevel->SetShouldBeVisible(true);
+
+    CurrentChapter = PendingChapterNumber;
+    CurrentStage = PendingStageNumber;
+    CurrentSpawnPosition = PendingStageData->WorldSpawnPosition;
+    CurrentCharacterSpawnPosition = PendingStageData->CharacterSpawnPosition;
+
+    if (auto* ProgressSubsystem = GetProgressSubsystem())
+        ProgressSubsystem->SetLastPlayedStage(PendingChapterNumber, PendingStageNumber);
+
+    ClientOnLevelStreamingCompleted(PendingChapterNumber, PendingStageNumber,
+        PendingStageData->WorldSpawnPosition, PendingStageData->CharacterSpawnPosition);
+
+    // 
+    if (IConsoleVariable* CVar = IConsoleManager::Get().FindConsoleVariable(TEXT("s.AsyncLoadingTimeLimit")))
+        CVar->Set(5.0f);  // 
+
+    if (IConsoleVariable* CVar2 = IConsoleManager::Get().FindConsoleVariable(TEXT("r.Streaming.ThrottleCPU")))
+        CVar2->Set(0);    // 
+
+    if (IConsoleVariable* CVar3 = IConsoleManager::Get().FindConsoleVariable(TEXT("s.PriorityAsyncLoadingExtraTime")))
+        CVar3->Set(0.0f);
+
+    if (IConsoleVariable* CVar4 = IConsoleManager::Get().FindConsoleVariable(TEXT("r.Streaming.LimitPoolSize")))
+        CVar4->Set(0);
+    // 
+
+    bIsAsyncStreaming = false;
+    PendingChapterNumber = -1;
+    PendingStageNumber = -1;
+    PendingStageData = nullptr;
+}
+
+void ACSCharacterTransitionTrigger::ClientOnLevelStreamingCompleted_Implementation(int32 ChapterNumber, int32 StageNumber,
+    FVector WorldSpawn, FVector CharacterSpawn)
+{
+    UE_LOG(LogTemp, Log, TEXT("CLIENT: Level streaming completed C%d_S%d"), ChapterNumber, StageNumber);
+
+    CurrentChapter = ChapterNumber;
+    CurrentStage = StageNumber;
+    CurrentSpawnPosition = WorldSpawn;
+    CurrentCharacterSpawnPosition = CharacterSpawn;
+
+    if (auto* LevelSubsystem = GetLevelStreamingSubsystem())
+        LevelSubsystem->OnLevelStreamed.Broadcast(ChapterNumber, StageNumber);
+}
+
+void ACSCharacterTransitionTrigger::ServerMoveCharacters_Implementation()
+{
+    if (bCharacterMoveCompleted) return;
 
     bCharacterMoveCompleted = true;
-
-    // 모든 클라이언트에서 캐릭터 이동 실행
     MulticastMoveCharactersToNewPosition();
+}
+
+void ACSCharacterTransitionTrigger::MulticastMoveCharactersToNewPosition_Implementation()
+{
+    FTimerHandle MoveTimerHandle;
+    GetWorld()->GetTimerManager().SetTimer(MoveTimerHandle, this,
+        &ACSCharacterTransitionTrigger::MoveLocalCharacterToNewPosition, TransitionDelay, false);
+}
+
+void ACSCharacterTransitionTrigger::MulticastUpdateTriggerState_Implementation(int32 PlayerCount, bool bStreamingStarted, bool bMoveCompleted)
+{
+    UE_LOG(LogTemp, Log, TEXT("Trigger state - Players:%d, Streaming:%s, Move:%s"),
+        PlayerCount,
+        bStreamingStarted ? TEXT("Started") : TEXT("Not"),
+        bMoveCompleted ? TEXT("Done") : TEXT("Not"));
 }
 
 void ACSCharacterTransitionTrigger::MoveLocalCharacterToNewPosition()
 {
-    UCSLevelStreamingSubsystem* LevelSubsystem = GetLevelStreamingSubsystem();
-    if (!LevelSubsystem)
-    {
-        UE_LOG(LogTemp, Error, TEXT("Failed to get LevelStreamingSubsystem during character movement"));
-        return;
-    }
-
-    // 캐릭터 스폰 위치 사용 (WorldSpawnPosition 대신)
-    FVector NewPosition = LevelSubsystem->GetCharacterSpawnPosition();
-
-    // 모든 머신에서 캐릭터 이동 처리
+    FVector NewPos = CurrentCharacterSpawnPosition;
     UWorld* World = GetWorld();
     if (!World) return;
 
-    // 서버와 클라이언트 모두에서 처리
     if (HasAuthority())
     {
-        // 서버: 모든 플레이어 캐릭터 이동
-        for (FConstPlayerControllerIterator Iterator = World->GetPlayerControllerIterator(); Iterator; ++Iterator)
+        for (auto It = World->GetPlayerControllerIterator(); It; ++It)
         {
-            APlayerController* PC = Iterator->Get();
-            if (PC && PC->GetPawn())
+            if (auto* PC = It->Get(); PC && PC->GetPawn())
             {
-                ACharacter* PlayerCharacter = Cast<ACharacter>(PC->GetPawn());
-                if (PlayerCharacter)
-                {
-                    PlayerCharacter->SetActorLocation(NewPosition);
-                    UE_LOG(LogTemp, Log, TEXT("Server moved character to CharacterSpawnPosition: %s"), *NewPosition.ToString());
-                }
+                PC->GetPawn()->SetActorLocation(NewPos);
             }
         }
-
-        // 서버 정리 작업
         PlayersInTrigger.Empty();
-        UE_LOG(LogTemp, Log, TEXT("Character transition completed on server"));
+        UE_LOG(LogTemp, Log, TEXT("Server moved all characters"));
     }
     else
     {
-        // 클라이언트: 자신의 캐릭터만 이동 (추가 보장)
-        APlayerController* PC = World->GetFirstPlayerController();
-        if (PC && PC->GetPawn())
+        if (auto* PC = World->GetFirstPlayerController(); PC && PC->GetPawn())
         {
-            ACharacter* PlayerCharacter = Cast<ACharacter>(PC->GetPawn());
-            if (PlayerCharacter)
-            {
-                PlayerCharacter->SetActorLocation(NewPosition);
-                UE_LOG(LogTemp, Log, TEXT("Client moved local character to CharacterSpawnPosition: %s"), *NewPosition.ToString());
-            }
+            PC->GetPawn()->SetActorLocation(NewPos);
+            UE_LOG(LogTemp, Log, TEXT("Client moved local character"));
         }
     }
 }
 
+// --- Getter / Setter / Subsystem ---
 void ACSCharacterTransitionTrigger::SetNextStage(int32 ChapterNumber, int32 StageNumber)
 {
     NextChapterNumber = ChapterNumber;
     NextStageNumber = StageNumber;
-
-    UE_LOG(LogTemp, Log, TEXT("Next stage set to: C%d_S%d"), NextChapterNumber, NextStageNumber);
+    UE_LOG(LogTemp, Log, TEXT("Next stage set to: C%d_S%d"), ChapterNumber, StageNumber);
 }
 
 void ACSCharacterTransitionTrigger::SetRequiredPlayerCount(int32 Count)
 {
-    RequiredPlayerCount = FMath::Clamp(Count, 1, 4);  // 1~4명으로 제한
+    RequiredPlayerCount = FMath::Clamp(Count, 1, 4);
     UE_LOG(LogTemp, Log, TEXT("Required player count set to: %d"), RequiredPlayerCount);
 }
 
@@ -290,22 +357,32 @@ bool ACSCharacterTransitionTrigger::IsCharacterMoveCompleted() const
     return bCharacterMoveCompleted;
 }
 
+FVector ACSCharacterTransitionTrigger::GetCurrentSpawnPosition() const
+{
+    return CurrentSpawnPosition;
+}
+
+FVector ACSCharacterTransitionTrigger::GetCurrentCharacterSpawnPosition() const
+{
+    return CurrentCharacterSpawnPosition;
+}
+
+void ACSCharacterTransitionTrigger::GetCurrentStage(int32& OutChapter, int32& OutStage) const
+{
+    OutChapter = CurrentChapter;
+    OutStage = CurrentStage;
+}
+
 UCSLevelStreamingSubsystem* ACSCharacterTransitionTrigger::GetLevelStreamingSubsystem() const
 {
-    UWorld* World = GetWorld();
-    if (World && World->GetGameInstance())
-    {
-        return World->GetGameInstance()->GetSubsystem<UCSLevelStreamingSubsystem>();
-    }
+    if (auto* GI = GetWorld()->GetGameInstance())
+        return GI->GetSubsystem<UCSLevelStreamingSubsystem>();
     return nullptr;
 }
 
 UCSGameProgressSubsystem* ACSCharacterTransitionTrigger::GetProgressSubsystem() const
 {
-    UWorld* World = GetWorld();
-    if (World && World->GetGameInstance())
-    {
-        return World->GetGameInstance()->GetSubsystem<UCSGameProgressSubsystem>();
-    }
+    if (auto* GI = GetWorld()->GetGameInstance())
+        return GI->GetSubsystem<UCSGameProgressSubsystem>();
     return nullptr;
 }

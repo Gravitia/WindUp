@@ -5,7 +5,13 @@
 #include "CoreMinimal.h"
 #include "Engine/TriggerBox.h"
 #include "Components/ShapeComponent.h"
+#include "Engine/LevelStreamingDynamic.h"
 #include "CSCharacterTransitionTrigger.generated.h"
+
+// Forward declarations
+class UCSLevelStreamingSubsystem;
+class UCSGameProgressSubsystem;
+struct FStageData;
 
 /**
  * 
@@ -18,111 +24,116 @@ class CHRONOSPACE_API ACSCharacterTransitionTrigger : public ATriggerBox
 public:
     ACSCharacterTransitionTrigger();
 
+    // 서버에서 레벨 스트리밍 시작 요청
+    UFUNCTION(Server, Reliable)
+    void ServerStartLevelStreaming();
+
+    // 서버→모두(서버+클라이언트) 레벨 스트리밍 시작 RPC
+    UFUNCTION(NetMulticast, Reliable)
+    void MulticastStartLevelStreaming(int32 ChapterNumber, int32 StageNumber);
+
+    // 클라이언트에 스트리밍 완료 알림
+    UFUNCTION(Client, Reliable)
+    void ClientOnLevelStreamingCompleted(int32 ChapterNumber, int32 StageNumber,
+        FVector WorldSpawn, FVector CharacterSpawn);
+
 protected:
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
     virtual void BeginPlay() override;
 
-    // === 전환 설정 ===
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Transition")
-    bool bCompleteStageOnTransition;
-
-    // 필요한 플레이어 수 (기본 2명)
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Transition", meta = (ClampMin = "1", ClampMax = "4"))
-    int32 RequiredPlayerCount;
-
-    // 다음 챕터 번호
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Transition", Replicated)
-    int32 NextChapterNumber;
-
-    // 다음 스테이지 번호
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Transition", Replicated)
-    int32 NextStageNumber;
-
-    // 전환 대기 시간 (레벨 로딩 후 캐릭터 이동까지의 시간)
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Transition", meta = (ClampMin = "0.1", ClampMax = "5.0"))
-    float TransitionDelay;
-
-    // 현재 트리거 안에 있는 플레이어들 (Replicated)
-    UPROPERTY(BlueprintReadOnly, Category = "Transition", Replicated)
-    TArray<class ACharacter*> PlayersInTrigger;
-
-    // 레벨 스트리밍이 시작되었는지 여부 (Replicated)
-    UPROPERTY(BlueprintReadOnly, Category = "Transition", Replicated)
-    bool bLevelStreamingStarted;
-
-    // 캐릭터 이동이 완료되었는지 여부 (Replicated)
-    UPROPERTY(BlueprintReadOnly, Category = "Transition", Replicated)
-    bool bCharacterMoveCompleted;
-
+    // 오버랩 이벤트
     UFUNCTION()
-    void OnOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor,
-        class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
+    void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+        UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
         bool bFromSweep, const FHitResult& SweepResult);
 
     UFUNCTION()
-    void OnOverlapEnd(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor,
-        class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+    void OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+        UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
-    // === Multicast RPC Functions ===
+    // 조건 검사
+    void CheckTriggerConditions();
 
-    // 모든 클라이언트에서 레벨 전환 실행
-    UFUNCTION(NetMulticast, Reliable)
-    void MulticastTransitionToNextStage();
+    // 실제 스트리밍 로직 (클라이언트·서버 공통으로 호출)
+    bool PerformLevelStreaming(int32 ChapterNumber, int32 StageNumber);
 
-    // 모든 클라이언트에서 캐릭터 이동 실행
+    // 비동기 로딩 완료 콜백
+    UFUNCTION()
+    void OnAsyncLevelLoaded();
+
+    // 캐릭터 이동
+    UFUNCTION(Server, Reliable)
+    void ServerMoveCharacters();
+
     UFUNCTION(NetMulticast, Reliable)
     void MulticastMoveCharactersToNewPosition();
 
-    // 트리거 상태 업데이트 (모든 클라이언트 동기화)
+    // 상태 업데이트 RPC
     UFUNCTION(NetMulticast, Reliable)
     void MulticastUpdateTriggerState(int32 PlayerCount, bool bStreamingStarted, bool bMoveCompleted);
 
-private:
-    void CheckTriggerConditions();
-
-    // 서버에서만 실행되는 레벨 스트리밍 로직
-    void ServerStartLevelStreaming();
-
-    // 서버에서만 실행되는 캐릭터 이동 로직
-    void ServerMoveCharacters();
-
-    // 각 클라이언트에서 실행되는 캐릭터 이동
-    UFUNCTION()
     void MoveLocalCharacterToNewPosition();
 
-    // 타이머 핸들
-    FTimerHandle TransitionTimerHandle;
-
-    // Replication을 위한 함수
-    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
+    // Getter/Setter
 public:
-    // === 공개 함수 ===
-
-    // 다음 스테이지 설정
-    UFUNCTION(BlueprintCallable, Category = "Transition")
     void SetNextStage(int32 ChapterNumber, int32 StageNumber);
-
-    // 필요한 플레이어 수 설정
-    UFUNCTION(BlueprintCallable, Category = "Transition")
     void SetRequiredPlayerCount(int32 Count);
 
-    // 현재 트리거 상태 확인
-    UFUNCTION(BlueprintCallable, Category = "Transition")
     bool AreAllPlayersReady() const;
-
-    // 현재 트리거 안의 플레이어 수
-    UFUNCTION(BlueprintCallable, Category = "Transition")
     int32 GetCurrentPlayerCount() const;
-
-    // 레벨 스트리밍 시작 여부 확인
-    UFUNCTION(BlueprintCallable, Category = "Transition")
     bool IsLevelStreamingStarted() const;
-
-    // 캐릭터 이동 완료 여부 확인
-    UFUNCTION(BlueprintCallable, Category = "Transition")
     bool IsCharacterMoveCompleted() const;
+    FVector GetCurrentSpawnPosition() const;
+    FVector GetCurrentCharacterSpawnPosition() const;
+    void GetCurrentStage(int32& OutChapter, int32& OutStage) const;
+
+protected:
+    UCSLevelStreamingSubsystem* GetLevelStreamingSubsystem() const;
+    UCSGameProgressSubsystem* GetProgressSubsystem() const;
 
 private:
-    class UCSLevelStreamingSubsystem* GetLevelStreamingSubsystem() const;
-    class UCSGameProgressSubsystem* GetProgressSubsystem() const;
+    // 설정값
+    UPROPERTY(EditAnywhere, Category = "Transition")
+    bool bCompleteStageOnTransition;
+
+    UPROPERTY(EditAnywhere, Category = "Transition")
+    int32 RequiredPlayerCount;
+
+    UPROPERTY(EditAnywhere, Category = "Transition")
+    float TransitionDelay;
+
+    UPROPERTY(Replicated)
+    int32 NextChapterNumber;
+
+    UPROPERTY(Replicated)
+    int32 NextStageNumber;
+
+    // 런타임 상태
+    UPROPERTY(Replicated)
+    bool bLevelStreamingStarted;
+
+    UPROPERTY(Replicated)
+    bool bCharacterMoveCompleted;
+
+    UPROPERTY()
+    TArray<ACharacter*> PlayersInTrigger;
+
+    // 레벨 스트리밍 관련
+    UPROPERTY()
+    ULevelStreamingDynamic* CurrentStreamingLevel;
+
+    bool bIsAsyncStreaming;
+    int32 PendingChapterNumber;
+    int32 PendingStageNumber;
+    FStageData* PendingStageData;
+
+    // 완료된 스테이지 위치
+    UPROPERTY(Replicated)
+    int32 CurrentChapter;
+    UPROPERTY(Replicated)
+    int32 CurrentStage;
+    UPROPERTY(Replicated)
+    FVector CurrentSpawnPosition;
+    UPROPERTY(Replicated)
+    FVector CurrentCharacterSpawnPosition;
 };

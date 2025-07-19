@@ -3,12 +3,11 @@
 #include "Subsystem/CSLevelStreamingSubsystem.h"
 #include "Subsystem/CSGameProgressSubsystem.h"
 #include "Engine/World.h"
-#include "Engine/LevelStreamingDynamic.h"
 #include "Engine/DataTable.h"
 
 UCSLevelStreamingSubsystem::UCSLevelStreamingSubsystem()
 {
-    // /Script/Engine.DataTable'/Game/20_Data/DTCS_StageTable.DTCS_StageTable'
+    // 데이터 테이블 로드
     static ConstructorHelpers::FObjectFinder<UDataTable> StageDataObj(
         TEXT("DataTable'/Game/20_Data/DTCS_StageTable.DTCS_StageTable'")
     );
@@ -19,8 +18,7 @@ UCSLevelStreamingSubsystem::UCSLevelStreamingSubsystem()
         UE_LOG(LogTemp, Log, TEXT("StageDataObj.Succeeded"));
     }
 
-    CurrentLevelIndex = 0;
-    CurrentStreamingLevel = nullptr;
+    // 기본 값 초기화
     CurrentChapter = 1;
     CurrentStage = 1;
     CurrentSpawnPosition = FVector::ZeroVector;
@@ -30,223 +28,18 @@ UCSLevelStreamingSubsystem::UCSLevelStreamingSubsystem()
 void UCSLevelStreamingSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
     Super::Initialize(Collection);
-    UE_LOG(LogTemp, Log, TEXT("CSLevelStreamingSubsystem initialized"));
+    UE_LOG(LogTemp, Log, TEXT("CSLevelStreamingSubsystem initialized (Data Provider Mode)"));
 }
 
 void UCSLevelStreamingSubsystem::Deinitialize()
 {
-    // 비동기 상태 정리
-    if (bIsAsyncStreaming)
-    {
-        bIsAsyncStreaming = false;
-        PendingChapterNumber = -1;
-        PendingStageNumber = -1;
-        PendingStageData = nullptr;
-    }
-
-    // 현재 레벨 정리
-    if (CurrentStreamingLevel)
-    {
-        UE_LOG(LogTemp, Log, TEXT("Cleaning up current streaming level on deinitialize"));
-
-        // 델리게이트 정리
-        CurrentStreamingLevel->OnLevelLoaded.RemoveDynamic(this, &UCSLevelStreamingSubsystem::OnAsyncLevelLoaded);
-
-        // 기존 UnloadCurrentLevel 호출
-        UnloadCurrentLevel();
-    }
-
     Super::Deinitialize();
     UE_LOG(LogTemp, Log, TEXT("CSLevelStreamingSubsystem deinitialized"));
 }
 
-// === Core Level Streaming Functions ===
 
-bool UCSLevelStreamingSubsystem::StreamLevel(int32 ChapterNumber, int32 StageNumber)
-{
-    // 이미 비동기 스트리밍 중이면 대기
-    if (bIsAsyncStreaming)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Async level streaming already in progress. Please wait."));
-        return false;
-    }
 
-    UWorld* World = GetWorld();
-    if (!World)
-    {
-        UE_LOG(LogTemp, Error, TEXT("No valid world for level streaming"));
-        return false;
-    }
-
-    // 프레임 제한 설정 (한 프레임에 1ms만 로딩 허용)
-    SetFrameLimitedLoading();
-
-    // 현재 레벨이 있다면 안전하게 언로드
-    if (CurrentStreamingLevel)
-    {
-        UE_LOG(LogTemp, Log, TEXT("Safely unloading current level before streaming new one"));
-
-        // 델리게이트 정리
-        CurrentStreamingLevel->OnLevelLoaded.RemoveDynamic(this, &UCSLevelStreamingSubsystem::OnAsyncLevelLoaded);
-
-        // 레벨 언로드
-        CurrentStreamingLevel->SetShouldBeLoaded(false);
-        CurrentStreamingLevel->SetShouldBeVisible(false);
-        CurrentStreamingLevel = nullptr;
-
-        UE_LOG(LogTemp, Log, TEXT("Current level safely removed"));
-    }
-
-    // 데이터 테이블에서 스테이지 정보 가져오기
-    FStageData* StageData = GetStageDataFromTable(ChapterNumber, StageNumber);
-    if (!StageData)
-    {
-        UE_LOG(LogTemp, Error, TEXT("No stage data found for C%d_S%d in DataTable"), ChapterNumber, StageNumber);
-        return false;
-    }
-
-    // 레벨 경로 결정
-    FString ActualLevelPath = GetActualLevelPath(StageData);
-    if (ActualLevelPath.IsEmpty())
-    {
-        UE_LOG(LogTemp, Error, TEXT("Cannot determine level path for C%d_S%d"), ChapterNumber, StageNumber);
-        return false;
-    }
-
-    UE_LOG(LogTemp, Log, TEXT("Starting FRAME-LIMITED level streaming: %s for C%d_S%d"),
-        *ActualLevelPath, ChapterNumber, StageNumber);
-
-    // 비동기 스트리밍 상태 설정
-    bIsAsyncStreaming = true;
-    PendingChapterNumber = ChapterNumber;
-    PendingStageNumber = StageNumber;
-    PendingStageData = StageData;
-
-    // 비동기 레벨 스트리밍 생성 (FRAME-LIMITED)
-    CurrentStreamingLevel = NewObject<ULevelStreamingDynamic>(World, ULevelStreamingDynamic::StaticClass());
-    CurrentStreamingLevel->SetWorldAssetByPackageName(FName(*ActualLevelPath));
-    CurrentStreamingLevel->bShouldBlockOnLoad = false;  // 여러 프레임에 걸쳐 분산 처리
-    CurrentStreamingLevel->bInitiallyLoaded = true;
-    CurrentStreamingLevel->bInitiallyVisible = false;   // 로딩 완료 후 보이게 설정
-
-    // Transform 설정
-    CurrentStreamingLevel->LevelTransform = FTransform(FRotator::ZeroRotator, StageData->WorldSpawnPosition);
-
-    // World에 추가
-    World->AddStreamingLevel(CurrentStreamingLevel);
-
-    // 비동기 로딩 완료 콜백 바인딩
-    CurrentStreamingLevel->OnLevelLoaded.AddDynamic(this, &UCSLevelStreamingSubsystem::OnAsyncLevelLoaded);
-
-    // 비동기 로딩 시작
-    CurrentStreamingLevel->SetShouldBeLoaded(true);
-
-    UE_LOG(LogTemp, Log, TEXT("Frame-limited level streaming started (max 1ms per frame) at position: %s"),
-        *StageData->WorldSpawnPosition.ToString());
-
-    return true;
-}
-
-void UCSLevelStreamingSubsystem::OnAsyncLevelLoaded()
-{
-    if (!CurrentStreamingLevel || !bIsAsyncStreaming || !PendingStageData)
-    {
-        return;
-    }
-
-    UE_LOG(LogTemp, Log, TEXT("Async level loaded (frame-limited)! Making visible immediately"));
-
-    // 델리게이트 언바인딩
-    CurrentStreamingLevel->OnLevelLoaded.RemoveDynamic(this, &UCSLevelStreamingSubsystem::OnAsyncLevelLoaded);
-
-    // 레벨을 즉시 보이게 설정
-    CurrentStreamingLevel->SetShouldBeVisible(true);
-
-    // 기존 코드와 동일한 성공 처리
-    CurrentChapter = PendingChapterNumber;
-    CurrentStage = PendingStageNumber;
-    CurrentSpawnPosition = PendingStageData->WorldSpawnPosition;
-    CurrentCharacterSpawnPosition = PendingStageData->CharacterSpawnPosition;
-
-    // Progress subsystem 업데이트
-    UCSGameProgressSubsystem* ProgressSubsystem = GetProgressSubsystem();
-    if (ProgressSubsystem)
-    {
-        ProgressSubsystem->SetLastPlayedStage(PendingChapterNumber, PendingStageNumber);
-    }
-
-    // 로딩 설정을 일반 모드로 복원 (선택사항)
-    // RestoreNormalLoading();
-
-    // 이벤트 브로드캐스트 (기존과 동일)
-    OnLevelStreamed.Broadcast(PendingChapterNumber, PendingStageNumber);
-
-    UE_LOG(LogTemp, Log, TEXT("Level streamed successfully (FRAME-LIMITED): %s for C%d_S%d at WorldSpawn:%s, CharacterSpawn:%s"),
-        *GetActualLevelPath(PendingStageData), PendingChapterNumber, PendingStageNumber,
-        *PendingStageData->WorldSpawnPosition.ToString(), *PendingStageData->CharacterSpawnPosition.ToString());
-
-    // 비동기 상태 초기화
-    bIsAsyncStreaming = false;
-    PendingChapterNumber = -1;
-    PendingStageNumber = -1;
-    PendingStageData = nullptr;
-}
-
-bool UCSLevelStreamingSubsystem::UnloadCurrentLevel()
-{
-    if (!CurrentStreamingLevel)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("No current level to unload"));
-        return false;
-    }
-
-    int32 UnloadedChapter = CurrentChapter;
-    int32 UnloadedStage = CurrentStage;
-
-    UE_LOG(LogTemp, Log, TEXT("Safely unloading level C%d_S%d"), UnloadedChapter, UnloadedStage);
-
-    // 델리게이트 정리 (혹시 남아있을 수 있음)
-    CurrentStreamingLevel->OnLevelLoaded.RemoveDynamic(this, &UCSLevelStreamingSubsystem::OnAsyncLevelLoaded);
-
-    // 레벨 언로드 (기존 방식 유지)
-    CurrentStreamingLevel->SetShouldBeLoaded(false);
-    CurrentStreamingLevel->SetShouldBeVisible(false);
-    CurrentStreamingLevel = nullptr;
-
-    // 비동기 상태도 초기화
-    if (bIsAsyncStreaming)
-    {
-        bIsAsyncStreaming = false;
-        PendingChapterNumber = -1;
-        PendingStageNumber = -1;
-        PendingStageData = nullptr;
-    }
-
-    // 이벤트 브로드캐스트 (기존과 동일)
-    OnLevelUnloaded.Broadcast(UnloadedChapter, UnloadedStage);
-
-    UE_LOG(LogTemp, Log, TEXT("Level unloaded successfully: C%d_S%d"), UnloadedChapter, UnloadedStage);
-
-    return true;
-}
-
-// === Simple Request Functions ===
-
-void UCSLevelStreamingSubsystem::RequestStreamLevel(int32 ChapterNumber, int32 StageNumber)
-{
-    // 복잡한 분기 제거 - 그냥 바로 실행
-    UE_LOG(LogTemp, Log, TEXT("Requesting to stream level C%d_S%d"), ChapterNumber, StageNumber);
-    StreamLevel(ChapterNumber, StageNumber);
-}
-
-void UCSLevelStreamingSubsystem::RequestUnloadCurrentLevel()
-{
-    //  복잡한 분기 제거 - 그냥 바로 실행
-    UE_LOG(LogTemp, Log, TEXT("Requesting to unload current level"));
-    UnloadCurrentLevel();
-}
-
-// === Other Functions ===
+// === 데이터 제공 함수들 (계속 사용됨) ===
 
 FVector UCSLevelStreamingSubsystem::GetSpawnPosition() const
 {
@@ -272,7 +65,7 @@ void UCSLevelStreamingSubsystem::SetStageDataTable(UDataTable* InStageDataTable)
     }
 }
 
-// === Data Table Functions ===
+// === Data Table Functions (계속 사용됨) ===
 
 FStageData* UCSLevelStreamingSubsystem::GetStageDataFromTable(int32 ChapterNumber, int32 StageNumber) const
 {
@@ -335,6 +128,8 @@ FString UCSLevelStreamingSubsystem::GetActualLevelPath(const FStageData* StageDa
     return FString();
 }
 
+// === Progress Integration ===
+
 void UCSLevelStreamingSubsystem::CompleteCurrentStage()
 {
     UCSGameProgressSubsystem* ProgressSubsystem = GetProgressSubsystem();
@@ -351,63 +146,42 @@ void UCSLevelStreamingSubsystem::GetCurrentStage(int32& OutChapter, int32& OutSt
     OutStage = CurrentStage;
 }
 
+// === 상태 업데이트 함수 (Trigger에서 호출됨) ===
+
+void UCSLevelStreamingSubsystem::UpdateCurrentStage(int32 ChapterNumber, int32 StageNumber,
+    FVector WorldSpawn, FVector CharacterSpawn)
+{
+    CurrentChapter = ChapterNumber;
+    CurrentStage = StageNumber;
+    CurrentSpawnPosition = WorldSpawn;
+    CurrentCharacterSpawnPosition = CharacterSpawn;
+
+    UE_LOG(LogTemp, Log, TEXT("Subsystem stage updated: C%d_S%d"), ChapterNumber, StageNumber);
+}
+
+// === 레거시 호환성 함수들 ===
+
 bool UCSLevelStreamingSubsystem::IsLevelStreaming() const
 {
-    return CurrentStreamingLevel != nullptr;
+    // 이제 Trigger에서 관리하므로 항상 false 반환
+    return false;
 }
 
 bool UCSLevelStreamingSubsystem::IsAsyncStreamingInProgress() const
 {
-    return bIsAsyncStreaming;
+    // 이제 Trigger에서 관리하므로 항상 false 반환
+    return false;
 }
 
-// === 프레임 제한 설정 함수들 ===
-
-void UCSLevelStreamingSubsystem::SetFrameLimitedLoading()
+bool UCSLevelStreamingSubsystem::IsCurrentStage(int32 ChapterNumber, int32 StageNumber) const
 {
-    // 한 프레임에 최대 1ms만 로딩 허용
-    if (IConsoleVariable* AsyncLoadingTimeLimit = IConsoleManager::Get().FindConsoleVariable(TEXT("s.AsyncLoadingTimeLimit")))
-    {
-        AsyncLoadingTimeLimit->Set(1.0f); // 1ms
-        UE_LOG(LogTemp, Log, TEXT("Set AsyncLoadingTimeLimit to 1ms per frame"));
-    }
-
-    // 스트리밍 CPU 스로틀링 활성화
-    if (IConsoleVariable* ThrottleCPU = IConsoleManager::Get().FindConsoleVariable(TEXT("r.Streaming.ThrottleCPU")))
-    {
-        ThrottleCPU->Set(1); // 활성화
-        UE_LOG(LogTemp, Log, TEXT("Enabled CPU throttling for streaming"));
-    }
-
-    // 우선순위 로딩 추가 시간 제한
-    if (IConsoleVariable* PriorityTime = IConsoleManager::Get().FindConsoleVariable(TEXT("s.PriorityAsyncLoadingExtraTime")))
-    {
-        PriorityTime->Set(0.5f); // 0.5ms
-        UE_LOG(LogTemp, Log, TEXT("Set PriorityAsyncLoadingExtraTime to 0.5ms"));
-    }
-
-    // 스트리밍 풀 크기 제한
-    if (IConsoleVariable* LimitPoolSize = IConsoleManager::Get().FindConsoleVariable(TEXT("r.Streaming.LimitPoolSize")))
-    {
-        LimitPoolSize->Set(1); // 제한 활성화
-        UE_LOG(LogTemp, Log, TEXT("Enabled streaming pool size limitation"));
-    }
+    return CurrentChapter == ChapterNumber && CurrentStage == StageNumber;
 }
 
-void UCSLevelStreamingSubsystem::RestoreNormalLoading()
+bool UCSLevelStreamingSubsystem::IsLevelActuallyLoaded() const
 {
-    // 기본값으로 복원
-    if (IConsoleVariable* AsyncLoadingTimeLimit = IConsoleManager::Get().FindConsoleVariable(TEXT("s.AsyncLoadingTimeLimit")))
-    {
-        AsyncLoadingTimeLimit->Set(5.0f); // 기본값 5ms
-        UE_LOG(LogTemp, Log, TEXT("Restored AsyncLoadingTimeLimit to default 5ms"));
-    }
-
-    if (IConsoleVariable* ThrottleCPU = IConsoleManager::Get().FindConsoleVariable(TEXT("r.Streaming.ThrottleCPU")))
-    {
-        ThrottleCPU->Set(0); // 비활성화
-        UE_LOG(LogTemp, Log, TEXT("Disabled CPU throttling"));
-    }
+    // 이제 Trigger에서 관리하므로 기본적으로 true 반환
+    return true;
 }
 
 UCSGameProgressSubsystem* UCSLevelStreamingSubsystem::GetProgressSubsystem() const
