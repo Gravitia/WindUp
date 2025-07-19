@@ -109,7 +109,6 @@ void ACSCharacterTransitionTrigger::CheckTriggerConditions()
 void ACSCharacterTransitionTrigger::ServerStartLevelStreaming_Implementation()
 {
     if (bLevelStreamingStarted) return;
-
     bLevelStreamingStarted = true;
 
     UE_LOG(LogTemp, Log, TEXT("SERVER: Starting level streaming process for C%d_S%d"),
