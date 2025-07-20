@@ -39,6 +39,7 @@ void ACSCharacterTransitionTrigger::GetLifetimeReplicatedProps(TArray<FLifetimeP
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
+    // need not DOREPLIFETIME
     DOREPLIFETIME(ACSCharacterTransitionTrigger, NextChapterNumber);
     DOREPLIFETIME(ACSCharacterTransitionTrigger, NextStageNumber);
     DOREPLIFETIME(ACSCharacterTransitionTrigger, bLevelStreamingStarted);
@@ -139,6 +140,7 @@ void ACSCharacterTransitionTrigger::MulticastStartLevelStreaming_Implementation(
         PerformLevelStreaming(ChapterNumber, StageNumber);
     }
 }
+
 bool ACSCharacterTransitionTrigger::PerformLevelStreaming(int32 ChapterNumber, int32 StageNumber)
 {
     if (bIsAsyncStreaming)
@@ -170,8 +172,8 @@ bool ACSCharacterTransitionTrigger::PerformLevelStreaming(int32 ChapterNumber, i
     // Tune async loading so each frame spends at most 1ms
     if (IConsoleVariable* CVar = IConsoleManager::Get().FindConsoleVariable(TEXT("s.AsyncLoadingTimeLimit")))
     {
-        CVar->Set(1.0f);
-        UE_LOG(LogTemp, Log, TEXT("Set s.AsyncLoadingTimeLimit to 1ms"));
+        CVar->Set(0.1f);
+        UE_LOG(LogTemp, Log, TEXT("Set s.AsyncLoadingTimeLimit to 0.1ms"));
     }
     // Enable CPU throttling for streaming
     if (IConsoleVariable* CVar2 = IConsoleManager::Get().FindConsoleVariable(TEXT("r.Streaming.ThrottleCPU")))
