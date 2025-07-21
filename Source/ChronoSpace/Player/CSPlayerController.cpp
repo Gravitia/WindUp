@@ -11,7 +11,8 @@
 
 ACSPlayerController::ACSPlayerController()
 {
-	bShowMouseCursor = false;
+	// MouseCursor 
+	bShowMouseCursor = true;
 	bEnableClickEvents = false;
 	bEnableMouseOverEvents = false;
 

@@ -8,6 +8,8 @@ void ACSHUD::BeginPlay()
 {
 	Super::BeginPlay();
 
+    return;   // SCSServerTravelWidget 일단 사용안함. 
+
     if (GEngine && GEngine->GameViewport)
     {
         // Slate 위젯 생성
