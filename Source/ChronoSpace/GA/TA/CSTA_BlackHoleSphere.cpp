@@ -1,5 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+
 #include "GA/TA/CSTA_BlackHoleSphere.h"
 #include "AbilitySystemComponent.h"
 #include "Abilities/GameplayAbility.h"
@@ -19,16 +20,11 @@ ACSTA_BlackHoleSphere::ACSTA_BlackHoleSphere()
 	bReplicates = true;
 	PrimaryActorTick.bCanEverTick = true;
 
-	// 네트워크 복제 설정 추가
-	bAlwaysRelevant = true;
-	SetReplicateMovement(true);
-
 	// GravitySphereTrigger
 	GravitySphereTrigger = CreateDefaultSubobject<USphereComponent>(TEXT("GravitySphereTrigger"));
 	RootComponent = GravitySphereTrigger;
 	GravitySphereTrigger->SetSphereRadius(GravityInfluenceRange, true);
-	// 초기 위치는 0으로 설정 (BeginPlay에서 플레이어 위치로 이동)
-	GravitySphereTrigger->SetRelativeLocation(FVector::ZeroVector);
+	GravitySphereTrigger->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
 	GravitySphereTrigger->SetCollisionProfileName(CPROFILE_CSTRIGGER);
 	GravitySphereTrigger->SetIsReplicated(true);
 
@@ -67,22 +63,7 @@ void ACSTA_BlackHoleSphere::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// 플레이어 참조 설정
-	if (AActor* OwnerActor = GetOwner())
-	{
-		PlayerActor = OwnerActor;
-	}
-	else
-	{
-		PlayerActor = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
-	}
-
-	// 초기 위치 설정
-	if (PlayerActor.IsValid())
-	{
-		FVector InitialPosition = CalculateTargetPosition();
-		SetActorLocation(InitialPosition);
-	}
+	GravitySphereTrigger->SetSphereRadius(GravityInfluenceRange, true);
 
 	if (!bShowDebug) return;
 
@@ -98,7 +79,7 @@ void ACSTA_BlackHoleSphere::BeginPlay()
 			12,          // 세그먼트 수 (구의 매끄러움)
 			FColor::Green,
 			false,       // 지속 표시
-			10,           // 지속 시간
+			DurationTime,           // 지속 시간
 			0,           // 디버그 선 우선순위
 			2.0f         // 선 두께
 		);
@@ -109,13 +90,6 @@ void ACSTA_BlackHoleSphere::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	// 서버에서만 플레이어 따라다니기 업데이트
-	if (HasAuthority())
-	{
-		UpdateBlackHolePosition();
-	}
-
-	// 기존 중력 효과 로직
 	FVector BlackHoleLocation = GravitySphereTrigger->GetComponentLocation();
 
 	for (auto Char = CharactersInSphereTrigger.CreateIterator(); Char; ++Char)
@@ -127,53 +101,17 @@ void ACSTA_BlackHoleSphere::Tick(float DeltaSeconds)
 			FVector Distance = BlackHoleLocation - TargetLocation;
 			FVector Direction = Distance.GetSafeNormal();
 
-			//Char.Value()->GetCharacterMovement()->AddForce(Power * Direction);
-			float PullStrength = 50.0f;
-			FVector LaunchVelocity = Direction * PullStrength;
-			Char.Value()->GetCharacterMovement()->AddImpulse(Direction * Power * DeltaSeconds, /*bVelocityChange=*/true);
+			// Char.Value()->GetCharacterMovement()->AddForce(Power * Direction);
+			// FVector LaunchVelocity = Direction * PullStrength;
+			Char.Value()->GetCharacterMovement()->AddImpulse(Direction * Power * PullStrength * DeltaSeconds, /*bVelocityChange=*/true);
 		}
 	}
-}
-
-void ACSTA_BlackHoleSphere::UpdateBlackHolePosition()
-{
-	if (!PlayerActor.IsValid())
-	{
-		return;
-	}
-
-	// 플레이어와 같은 속도로 움직이기 위해 바로 타겟 위치로 이동
-	FVector TargetPosition = CalculateTargetPosition();
-	SetActorLocation(TargetPosition);
-}
-
-FVector ACSTA_BlackHoleSphere::CalculateTargetPosition() const
-{
-	if (!PlayerActor.IsValid())
-	{
-		return GetActorLocation();
-	}
-
-	// 플레이어의 월드 위치 + 오프셋
-	FVector PlayerLocation = PlayerActor->GetActorLocation();
-
-	// 플레이어의 Forward, Right, Up 벡터를 고려한 상대적 오프셋 계산
-	FRotator PlayerRotation = PlayerActor->GetActorRotation();
-	FVector WorldOffset = PlayerRotation.RotateVector(BlackHoleOffset);
-
-	return PlayerLocation + WorldOffset;
 }
 
 void ACSTA_BlackHoleSphere::StartTargeting(UGameplayAbility* Ability)
 {
 	Super::StartTargeting(Ability);
 	SourceActor = Ability->GetCurrentActorInfo()->AvatarActor.Get();
-
-	// 플레이어 참조 업데이트
-	if (SourceActor)
-	{
-		PlayerActor = SourceActor;
-	}
 }
 
 void ACSTA_BlackHoleSphere::ConfirmTargetingAndContinue()
@@ -214,6 +152,7 @@ void ACSTA_BlackHoleSphere::OnEventHorizonBeginOverlap(UPrimitiveComponent* Over
 
 	ACharacter* OverlapedCharacter = Cast<ACharacter>(OtherActor);
 	ACSCharacterPlayer* OverlapedCharacterPlayer = Cast<ACSCharacterPlayer>(OtherActor);
+
 
 	ACSCharacterPlayer* Player = Cast<ACSCharacterPlayer>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 

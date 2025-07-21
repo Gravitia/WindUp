@@ -2,23 +2,24 @@
 
 
 #include "Player/CSPlayerController.h"
+#include "ChronoSpace.h"
+#include "UI/SCSServerTravelWidget.h"
 #include "UI/CSGameUIWidget.h"
 #include "Engine/Engine.h"
 #include "Engine/World.h"
-#include "Game/CSGameMode.h"
 #include "TimerManager.h"
-#include "ChronoSpace.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Engine/SceneCapture2D.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Character/CSCharacterPlayer.h"
 #include "Camera/CameraComponent.h"
 #include "EngineUtils.h"
-#include "ChronoSpace.h"
+
 
 ACSPlayerController::ACSPlayerController()
 {
-	bShowMouseCursor = false;
+	// MouseCursor 
+	bShowMouseCursor = true;
 	bEnableClickEvents = false;
 	bEnableMouseOverEvents = false;
 }
@@ -27,11 +28,11 @@ void ACSPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	check(CameraShake && RenderTargetP0 && RenderTargetP1);
+	check(CameraShake);
 
 	SetupInputMode();
 
-	// UI »ý¼ºÀ» ¾à°£ Áö¿¬ (PlayerState ÃÊ±âÈ­ ´ë±â)
+	// UI ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½à°£ ï¿½ï¿½ï¿½ï¿½ (PlayerState ï¿½Ê±ï¿½È­ ï¿½ï¿½ï¿½)
 	GetWorldTimerManager().SetTimer(UICreationTimerHandle, this, &ACSPlayerController::InitializeUI, 0.2f, false);
 
 	if ( IsLocalController() )
@@ -61,6 +62,7 @@ void ACSPlayerController::BeginPlay()
 		
 		UpdateRenderTarget();
 	}
+
 }
 
 void ACSPlayerController::ShakeCamera()
@@ -73,7 +75,7 @@ void ACSPlayerController::OnPossess(APawn* InPawn)
 
 	SetupInputMode();
 
-	// PawnÀÌ º¯°æµÉ ¶§ UI »õ·Î°íÄ§
+	// Pawnï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ UI ï¿½ï¿½ï¿½Î°ï¿½Ä§
 	if (GameUIWidget)
 	{
 		RefreshGameUI();
@@ -84,7 +86,7 @@ void ACSPlayerController::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
 
-	// PlayerState°¡ º¹Á¦µÉ ¶§ UI »õ·Î°íÄ§
+	// PlayerStateï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ UI ï¿½ï¿½ï¿½Î°ï¿½Ä§
 	if (GameUIWidget)
 	{
 		RefreshGameUI();
@@ -93,14 +95,21 @@ void ACSPlayerController::OnRep_PlayerState()
 
 void ACSPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	// Å¸ÀÌ¸Ó Á¤¸®
+	// Å¸ï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ï¿½
 	GetWorldTimerManager().ClearTimer(UICreationTimerHandle);
 
-	// UI Á¤¸®
+	// UI ï¿½ï¿½ï¿½ï¿½
 	if (GameUIWidget)
 	{
 		GameUIWidget->RemoveFromParent();
 		GameUIWidget = nullptr;
+	}
+
+	// Slate UI ï¿½ï¿½ï¿½ï¿½
+	if (ServerTravelWidget.IsValid() && GEngine && GEngine->GameViewport)
+	{
+		GEngine->GameViewport->RemoveViewportWidgetContent(ServerTravelWidget.ToSharedRef());
+		ServerTravelWidget.Reset();
 	}
 
 	Super::EndPlay(EndPlayReason);
@@ -115,14 +124,14 @@ void ACSPlayerController::SetupInputComponent()
 
 void ACSPlayerController::SetupInputMode()
 {
-	// °ÔÀÓ Àü¿ë ÀÔ·Â ¸ðµå ¼³Á¤
+	// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ô·ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	FInputModeGameOnly InputMode;
 	SetInputMode(InputMode);
 }
 
 void ACSPlayerController::InitializeUI()
 {
-	// ·ÎÄÃ ÇÃ·¹ÀÌ¾î ÄÁÆ®·Ñ·¯¿¡¼­¸¸ UI »ý¼º
+	// ï¿½ï¿½ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ ï¿½ï¿½Æ®ï¿½Ñ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ UI ï¿½ï¿½ï¿½ï¿½
 	if (IsLocalPlayerController())
 	{
 		ShowGameUI();
@@ -134,6 +143,7 @@ void ACSPlayerController::InitializeUI()
 		}
 	}
 }
+
 
 void ACSPlayerController::UpdateRenderTarget()
 {
@@ -260,6 +270,7 @@ void ACSPlayerController::CloseDualMode()
 	bIsDualMode = false;
 }
 
+
 void ACSPlayerController::CreateGameUI()
 {
 	if (GameUIWidgetClass && !GameUIWidget && IsLocalPlayerController())
@@ -276,7 +287,7 @@ void ACSPlayerController::CreateGameUI()
 
 void ACSPlayerController::ShowGameUI()
 {
-	// ·ÎÄÃ ÇÃ·¹ÀÌ¾î¿¡¼­¸¸ UI Ç¥½Ã
+	// ï¿½ï¿½ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾î¿¡ï¿½ï¿½ï¿½ï¿½ UI Ç¥ï¿½ï¿½
 	if (!IsLocalPlayerController())
 	{
 		return;
@@ -299,7 +310,7 @@ void ACSPlayerController::ShowGameUI()
 
 		GameUIWidget->SetVisibility(ESlateVisibility::Visible);
 
-		// UI »õ·Î°íÄ§
+		// UI ï¿½ï¿½ï¿½Î°ï¿½Ä§
 		RefreshGameUI();
 	}
 }
@@ -337,4 +348,89 @@ bool ACSPlayerController::IsGameUIVisible() const
 	return GameUIWidget &&
 		GameUIWidget->IsInViewport() &&
 		GameUIWidget->GetVisibility() == ESlateVisibility::Visible;
+}
+
+
+void ACSPlayerController::CreateServerTravelWidget()
+{
+	// ï¿½ï¿½ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾î¿¡ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+	if (!IsLocalPlayerController())
+	{
+		return;
+	}
+
+	// ï¿½Ì¹ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ç¾ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ð½ï¿½
+	if (ServerTravelWidget.IsValid())
+	{
+		return;
+	}
+
+	// Slate ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+	ServerTravelWidget = SNew(SCSServerTravelWidget);
+
+	if (GEngine && ServerTravelWidget.IsValid())
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Cyan,
+			TEXT("Server Travel Widget Created"));
+	}
+}
+
+void ACSPlayerController::ShowServerTravelUI()
+{
+	// ï¿½ï¿½ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾î¿¡ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+	if (!IsLocalPlayerController())
+	{
+		return;
+	}
+
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+	CreateServerTravelWidget();
+
+	// GameViewportï¿½ï¿½ ï¿½ß°ï¿½
+	if (ServerTravelWidget.IsValid() && GEngine && GEngine->GameViewport)
+	{
+		GEngine->GameViewport->AddViewportWidgetContent(
+			ServerTravelWidget.ToSharedRef(),
+			1000  // Z-Order (ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Õ¿ï¿½ Ç¥ï¿½ï¿½)
+		);
+
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow,
+				TEXT("Server Travel UI Shown"));
+		}
+	}
+}
+
+void ACSPlayerController::HideServerTravelUI()
+{
+	if (ServerTravelWidget.IsValid() && GEngine && GEngine->GameViewport)
+	{
+		GEngine->GameViewport->RemoveViewportWidgetContent(ServerTravelWidget.ToSharedRef());
+
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Orange,
+				TEXT("Server Travel UI Hidden"));
+		}
+	}
+}
+
+void ACSPlayerController::ToggleServerTravelUI()
+{
+	if (IsServerTravelUIVisible())
+	{
+		HideServerTravelUI();
+	}
+	else
+	{
+		ShowServerTravelUI();
+	}
+}
+
+bool ACSPlayerController::IsServerTravelUIVisible() const
+{
+	// Slate ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ã¼ï¿½ï¿½ï¿½ GameViewportï¿½ï¿½ ï¿½ß°ï¿½ï¿½Ç¾ï¿½ ï¿½Ö´ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ç´ï¿½
+	// ï¿½ï¿½È®ï¿½ï¿½ Ã¼Å©ï¿½ï¿½ ï¿½ï¿½ï¿½Ø¼ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ bool ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+	return ServerTravelWidget.IsValid();
 }

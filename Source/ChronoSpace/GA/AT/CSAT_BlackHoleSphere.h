@@ -17,7 +17,7 @@ class CHRONOSPACE_API UCSAT_BlackHoleSphere : public UCSAT_DurationTask
 public:
 	UCSAT_BlackHoleSphere();
 
-	UFUNCTION(BlueprintCallable, Category = "Ability|Tasks", meta = (DisplayName = "BlackHoleSphere", HidePin = "OwningAbility", DefaultToSelf = "OwningAbility", BlueprintInternalUseOnly = "TRUE"))
+	UFUNCTION(BlueprintCallable, Category = "Ability|Tasks", meta = (DisplayName = "ReverseGravity", HidePin = "OwningAbility", DefaultToSelf = "OwningAbility", BlueprintInternalUseOnly = "TRUE"))
 	static UCSAT_BlackHoleSphere* CreateTask(UGameplayAbility* OwningAbility, TSubclassOf<class ACSTA_BlackHoleSphere> InTargetActorClass);
 
 	virtual void Activate() override;
@@ -30,4 +30,14 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr< class ACSTA_BlackHoleSphere > SpawnedTargetActor;
+
+	
+private:
+	FVector TargetLocation = FVector::ZeroVector;
+	bool bHasTargetLocation = false;
+
+public:
+	// 목표 위치 설정 함수
+	void SetTargetLocation(const FVector& InTargetLocation);
+
 };
