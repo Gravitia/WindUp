@@ -2,12 +2,12 @@
 
 
 #include "Player/CSPlayerController.h"
-#include "ChronoSpace.h"
-#include "UI/SCSServerTravelWidget.h"
 #include "UI/CSGameUIWidget.h"
 #include "Engine/Engine.h"
 #include "Engine/World.h"
+#include "Game/CSGameMode.h"
 #include "TimerManager.h"
+#include "ChronoSpace.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Engine/SceneCapture2D.h"
 #include "Components/SceneCaptureComponent2D.h"
@@ -16,10 +16,10 @@
 #include "EngineUtils.h"
 
 
+
 ACSPlayerController::ACSPlayerController()
 {
-	// MouseCursor 
-	bShowMouseCursor = true;
+	bShowMouseCursor = false;
 	bEnableClickEvents = false;
 	bEnableMouseOverEvents = false;
 }
@@ -28,14 +28,14 @@ void ACSPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	check(CameraShake);
+	check(CameraShake && RenderTargetP0 && RenderTargetP1);
 
 	SetupInputMode();
 
-	// UI ������ �ణ ���� (PlayerState �ʱ�ȭ ���)
+	// UI 생성을 약간 지연 (PlayerState 초기화 대기)
 	GetWorldTimerManager().SetTimer(UICreationTimerHandle, this, &ACSPlayerController::InitializeUI, 0.2f, false);
 
-	if ( IsLocalController() )
+	if (IsLocalController())
 	{
 		int32 Width = 960;
 		int32 Height = 1080;
@@ -45,8 +45,8 @@ void ACSPlayerController::BeginPlay()
 		if (GEngine && GEngine->GameViewport)
 		{
 			GEngine->GameViewport->GetViewportSize(ScreenResolution);
-			Width = FMath::Max( Width, ScreenResolution.X / 2 );
-			Height = FMath::Max( Height, ScreenResolution.Y / 2 );
+			Width = FMath::Max(Width, ScreenResolution.X / 2);
+			Height = FMath::Max(Height, ScreenResolution.Y / 2);
 		}
 
 		RenderTargetP0->ResizeTarget(Width, Height);
@@ -59,10 +59,9 @@ void ACSPlayerController::BeginPlay()
 			ACSGameMode* GameMode = Cast<ACSGameMode>(GetWorld()->GetAuthGameMode());
 			GameMode->OnPlayerLogin.AddDynamic(this, &ACSPlayerController::UpdateRenderTarget);
 		}
-		
+
 		UpdateRenderTarget();
 	}
-
 }
 
 void ACSPlayerController::ShakeCamera()
@@ -75,7 +74,7 @@ void ACSPlayerController::OnPossess(APawn* InPawn)
 
 	SetupInputMode();
 
-	// Pawn�� ����� �� UI ���ΰ�ħ
+	// Pawn이 변경될 때 UI 새로고침
 	if (GameUIWidget)
 	{
 		RefreshGameUI();
@@ -86,7 +85,7 @@ void ACSPlayerController::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
 
-	// PlayerState�� ������ �� UI ���ΰ�ħ
+	// PlayerState가 복제될 때 UI 새로고침
 	if (GameUIWidget)
 	{
 		RefreshGameUI();
@@ -95,27 +94,20 @@ void ACSPlayerController::OnRep_PlayerState()
 
 void ACSPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	// Ÿ�̸� ����
+	// 타이머 정리
 	GetWorldTimerManager().ClearTimer(UICreationTimerHandle);
 
-	// UI ����
+	// UI 정리
 	if (GameUIWidget)
 	{
 		GameUIWidget->RemoveFromParent();
 		GameUIWidget = nullptr;
 	}
 
-	// Slate UI ����
-	if (ServerTravelWidget.IsValid() && GEngine && GEngine->GameViewport)
-	{
-		GEngine->GameViewport->RemoveViewportWidgetContent(ServerTravelWidget.ToSharedRef());
-		ServerTravelWidget.Reset();
-	}
-
 	Super::EndPlay(EndPlayReason);
 }
 
-void ACSPlayerController::SetupInputComponent() 
+void ACSPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 
@@ -124,14 +116,14 @@ void ACSPlayerController::SetupInputComponent()
 
 void ACSPlayerController::SetupInputMode()
 {
-	// ���� ���� �Է� ��� ����
+	// 게임 전용 입력 모드 설정
 	FInputModeGameOnly InputMode;
 	SetInputMode(InputMode);
 }
 
 void ACSPlayerController::InitializeUI()
 {
-	// ���� �÷��̾� ��Ʈ�ѷ������� UI ����
+	// 로컬 플레이어 컨트롤러에서만 UI 생성
 	if (IsLocalPlayerController())
 	{
 		ShowGameUI();
@@ -144,13 +136,12 @@ void ACSPlayerController::InitializeUI()
 	}
 }
 
-
 void ACSPlayerController::UpdateRenderTarget()
 {
 	ACSCharacterPlayer* LeftCharacter;
 	ACSCharacterPlayer* RightCharacter;
 
-	if ( HasAuthority() )	// Server
+	if (HasAuthority())	// Server
 	{
 		LeftCharacter = Cast<ACSCharacterPlayer>(GetPawn());
 		RightCharacter = FindFirstOtherPawn();
@@ -165,7 +156,7 @@ void ACSPlayerController::UpdateRenderTarget()
 
 	ASceneCapture2D* CapLeft = SpawnCaptureAndAttach(LeftCharacter->GetFollowCamera(), RenderTargetP0);
 
-	if ( CapLeft )
+	if (CapLeft)
 	{
 		UE_LOG(LogCS, Log, TEXT("[NetMode: %d] UpdateRenderTarget - CapLeft Success"), GetWorld()->GetNetMode());
 	}
@@ -185,7 +176,7 @@ ACSCharacterPlayer* ACSPlayerController::FindFirstOtherPawn()
 	APawn* MyPawn = GetPawn();
 	if (!MyPawn) return nullptr;
 
-	for( TActorIterator<ACSCharacterPlayer> It(GetWorld()) ; It; ++It)
+	for (TActorIterator<ACSCharacterPlayer> It(GetWorld()); It; ++It)
 	{
 		ACSCharacterPlayer* Candidate = *It;
 		if (Candidate != MyPawn)
@@ -217,7 +208,7 @@ ASceneCapture2D* ACSPlayerController::SpawnCaptureAndAttach(UCameraComponent* Ta
 	CaptureComp->CaptureSource = SCS_FinalColorLDR;
 	CaptureComp->bCaptureEveryFrame = true;
 
-	CaptureActor->AttachToComponent( Cast<USceneComponent>(TargetCam), FAttachmentTransformRules::SnapToTargetIncludingScale);
+	CaptureActor->AttachToComponent(Cast<USceneComponent>(TargetCam), FAttachmentTransformRules::SnapToTargetIncludingScale);
 
 	return CaptureActor;
 }
@@ -232,7 +223,7 @@ void ACSPlayerController::OpenDualMode()
 {
 	check(DualModeUIClass);
 
-	if ( !DualModeUI )
+	if (!DualModeUI)
 	{
 		DualModeUI = CreateWidget(this, DualModeUIClass);
 	}
@@ -253,12 +244,12 @@ void ACSPlayerController::OpenDualMode()
 
 void ACSPlayerController::CloseDualMode()
 {
-	if ( DualModeUI )
+	if (DualModeUI)
 	{
 		DualModeUI->RemoveFromParent();
 	}
 
-	if ( CaptureP0 )
+	if (CaptureP0)
 	{
 		CaptureP0->GetCaptureComponent2D()->SetComponentTickEnabled(false);
 	}
@@ -269,7 +260,6 @@ void ACSPlayerController::CloseDualMode()
 
 	bIsDualMode = false;
 }
-
 
 void ACSPlayerController::CreateGameUI()
 {
@@ -287,7 +277,7 @@ void ACSPlayerController::CreateGameUI()
 
 void ACSPlayerController::ShowGameUI()
 {
-	// ���� �÷��̾���� UI ǥ��
+	// 로컬 플레이어에서만 UI 표시
 	if (!IsLocalPlayerController())
 	{
 		return;
@@ -310,7 +300,7 @@ void ACSPlayerController::ShowGameUI()
 
 		GameUIWidget->SetVisibility(ESlateVisibility::Visible);
 
-		// UI ���ΰ�ħ
+		// UI 새로고침
 		RefreshGameUI();
 	}
 }
@@ -348,89 +338,4 @@ bool ACSPlayerController::IsGameUIVisible() const
 	return GameUIWidget &&
 		GameUIWidget->IsInViewport() &&
 		GameUIWidget->GetVisibility() == ESlateVisibility::Visible;
-}
-
-
-void ACSPlayerController::CreateServerTravelWidget()
-{
-	// ���� �÷��̾���� ����
-	if (!IsLocalPlayerController())
-	{
-		return;
-	}
-
-	// �̹� �����Ǿ� ������ �н�
-	if (ServerTravelWidget.IsValid())
-	{
-		return;
-	}
-
-	// Slate ���� ����
-	ServerTravelWidget = SNew(SCSServerTravelWidget);
-
-	if (GEngine && ServerTravelWidget.IsValid())
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Cyan,
-			TEXT("Server Travel Widget Created"));
-	}
-}
-
-void ACSPlayerController::ShowServerTravelUI()
-{
-	// ���� �÷��̾���� ����
-	if (!IsLocalPlayerController())
-	{
-		return;
-	}
-
-	// ������ ������ ����
-	CreateServerTravelWidget();
-
-	// GameViewport�� �߰�
-	if (ServerTravelWidget.IsValid() && GEngine && GEngine->GameViewport)
-	{
-		GEngine->GameViewport->AddViewportWidgetContent(
-			ServerTravelWidget.ToSharedRef(),
-			1000  // Z-Order (�������� �տ� ǥ��)
-		);
-
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow,
-				TEXT("Server Travel UI Shown"));
-		}
-	}
-}
-
-void ACSPlayerController::HideServerTravelUI()
-{
-	if (ServerTravelWidget.IsValid() && GEngine && GEngine->GameViewport)
-	{
-		GEngine->GameViewport->RemoveViewportWidgetContent(ServerTravelWidget.ToSharedRef());
-
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Orange,
-				TEXT("Server Travel UI Hidden"));
-		}
-	}
-}
-
-void ACSPlayerController::ToggleServerTravelUI()
-{
-	if (IsServerTravelUIVisible())
-	{
-		HideServerTravelUI();
-	}
-	else
-	{
-		ShowServerTravelUI();
-	}
-}
-
-bool ACSPlayerController::IsServerTravelUIVisible() const
-{
-	// Slate ������ ���ü��� GameViewport�� �߰��Ǿ� �ִ����� �Ǵ�
-	// ��Ȯ�� üũ�� ���ؼ��� ������ bool ������ �����ϴ� ���� ����
-	return ServerTravelWidget.IsValid();
 }

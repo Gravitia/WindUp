@@ -50,25 +50,6 @@ public:
 	UFUNCTION(BlueprintPure, Category = "UI")
 	UCSGameUIWidget* GetGameUIWidget() const { return GameUIWidget; }
 	*/
-
-	// =========================
-	// Server Travel UI ���� �Լ���
-	// =========================
-
-	UFUNCTION(BlueprintCallable, Category = "Server Travel")
-	void ShowServerTravelUI();
-
-	UFUNCTION(BlueprintCallable, Category = "Server Travel")
-	void HideServerTravelUI();
-
-	UFUNCTION(BlueprintCallable, Category = "Server Travel")
-	void ToggleServerTravelUI();
-
-	UFUNCTION(BlueprintPure, Category = "Server Travel")
-	bool IsServerTravelUIVisible() const;
-
-
-
 	void ShakeCamera();
 
 protected:
@@ -84,16 +65,10 @@ protected:
 	virtual void OnRep_PlayerState() override;
 
 private:
-	
-
 	void SetupInputMode();
 	void CreateGameUI();
 	void InitializeUI();
-
-	// Server Travel Slate ���� ����
-	void CreateServerTravelWidget();
-
-	// UI ���� ���� Ÿ�̸�
+	// UI 
 	FTimerHandle UICreationTimerHandle;
 
 // Dual Mode
@@ -131,7 +106,23 @@ protected:
 
 	bool bIsDualMode;
 
-// Server Travel Slate UI ����
+	// =========================
+	// Server Travel UI ���� �Լ���
+	// =========================
+	/*
 	TSharedPtr<SCSServerTravelWidget> ServerTravelWidget;
+	void CreateServerTravelWidget();
 
+	UFUNCTION(BlueprintCallable, Category = "Server Travel")
+	void ShowServerTravelUI();
+
+	UFUNCTION(BlueprintCallable, Category = "Server Travel")
+	void HideServerTravelUI();
+
+	UFUNCTION(BlueprintCallable, Category = "Server Travel")
+	void ToggleServerTravelUI();
+
+	UFUNCTION(BlueprintPure, Category = "Server Travel")
+	bool IsServerTravelUIVisible() const;
+	*/
 };
