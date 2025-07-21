@@ -21,7 +21,7 @@ ACSTA_ChronoControl::ACSTA_ChronoControl()
     BoxTrigger->OnComponentBeginOverlap.AddDynamic(this, &ACSTA_ChronoControl::OnTriggerBeginOverlap);
     BoxTrigger->OnComponentEndOverlap.AddDynamic(this, &ACSTA_ChronoControl::OnTriggerEndOverlap);
 
-    static ConstructorHelpers::FObjectFinder<UMaterial> MaterialRef(TEXT("/Script/Engine.Material'/Game/Material/MAT_ChronoControl.MAT_ChronoControl'"));
+    static ConstructorHelpers::FObjectFinder<UMaterial> MaterialRef(TEXT("/Script/Engine.Material'/Game/31_Material/MAT_ChronoControl.MAT_ChronoControl'"));
 
     SetSteticMeshMaterial(MaterialRef.Object, MeshScale.X);
 }
@@ -52,6 +52,7 @@ void ACSTA_ChronoControl::StartTargeting(UGameplayAbility* Ability)
 {
     Super::StartTargeting(Ability);
     SourceActor = Ability->GetCurrentActorInfo()->AvatarActor.Get();
+    UE_LOG(LogCS, Log, TEXT("ACSTA_ChronoControl StartTargeting"));
 }
 
 void ACSTA_ChronoControl::ConfirmTargetingAndContinue()

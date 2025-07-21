@@ -14,6 +14,9 @@ UCSAT_AbilityPreviewBox::UCSAT_AbilityPreviewBox()
 {
     // TickTask 활성화
     bTickingTask = true;
+
+    Dist = 350.0f;
+    Vert = 100.0f;
 }
 
 UCSAT_AbilityPreviewBox* UCSAT_AbilityPreviewBox::CreateTask(UGameplayAbility* OwningAbility)
@@ -83,7 +86,7 @@ void UCSAT_AbilityPreviewBox::CreateStaticMesh()
 
         // 런타임에서 Static Mesh 로드
         UStaticMesh* StaticMeshRef = Cast<UStaticMesh>(
-            StaticLoadObject(UStaticMesh::StaticClass(), nullptr, TEXT("/Game/Mesh/StaticMesh/SM_Cube.SM_Cube"))
+            StaticLoadObject(UStaticMesh::StaticClass(), nullptr, TEXT("/Game/30_Mesh/StaticMesh/SM_Cube.SM_Cube"))
         );
         if (StaticMeshRef)
         {
@@ -102,7 +105,7 @@ void UCSAT_AbilityPreviewBox::CreateStaticMesh()
         if ( Cast<UCSGA_AbilityPreviewBox>(Ability)->Ability == EAbilityIndex::ChronoControl )
         {
             UMaterial* MaterialRef = Cast<UMaterial>(
-                StaticLoadObject(UMaterial::StaticClass(), nullptr, TEXT("/Game/Material/MAT_ChronoControlPreview.MAT_ChronoControlPreview"))
+                StaticLoadObject(UMaterial::StaticClass(), nullptr, TEXT("/Game/31_Material/MAT_ChronoControlPreview.MAT_ChronoControlPreview"))
             );
             if (MaterialRef)
             {
@@ -112,7 +115,7 @@ void UCSAT_AbilityPreviewBox::CreateStaticMesh()
         else if( Cast<UCSGA_AbilityPreviewBox>(Ability)->Ability == EAbilityIndex::ReverseGravity )
         {
             UMaterial* MaterialRef = Cast<UMaterial>(
-                StaticLoadObject(UMaterial::StaticClass(), nullptr, TEXT("/Game/Material/MAT_AntyGravityPreview.MAT_AntyGravityPreview"))
+                StaticLoadObject(UMaterial::StaticClass(), nullptr, TEXT("/Game/31_Material/MAT_AntyGravityPreview.MAT_AntyGravityPreview"))
             );
             if (MaterialRef)
             {
@@ -122,7 +125,7 @@ void UCSAT_AbilityPreviewBox::CreateStaticMesh()
         else if ( Cast<UCSGA_AbilityPreviewBox>(Ability)->Ability == EAbilityIndex::WeakenGravity50P )
         {
             UMaterial* MaterialRef = Cast<UMaterial>(
-                StaticLoadObject(UMaterial::StaticClass(), nullptr, TEXT("/Game/Material/MAT_WeakenGravityPreview50P.MAT_WeakenGravityPreview50P"))
+                StaticLoadObject(UMaterial::StaticClass(), nullptr, TEXT("/Game/31_Material/MAT_WeakenGravityPreview50P.MAT_WeakenGravityPreview50P"))
             );
             if (MaterialRef)
             {
@@ -132,7 +135,7 @@ void UCSAT_AbilityPreviewBox::CreateStaticMesh()
         else
         {
             UMaterial* MaterialRef = Cast<UMaterial>(
-                StaticLoadObject(UMaterial::StaticClass(), nullptr, TEXT("/Game/Material/MAT_WeakenGravityPreview10P.MAT_WeakenGravityPreview10P"))
+                StaticLoadObject(UMaterial::StaticClass(), nullptr, TEXT("/Game/31_Material/MAT_WeakenGravityPreview10P.MAT_WeakenGravityPreview10P"))
             );
             if (MaterialRef)
             {
@@ -175,25 +178,13 @@ void UCSAT_AbilityPreviewBox::PlayerFollowPreviewBox()
         YOffset = YOffsets[CurrentIndex];
     }
 
-    // 위치 계산
-    FVector ForwardVector = AvatarActor->GetActorForwardVector();
-    FVector RightVector = AvatarActor->GetActorRightVector(); // 플레이어의 오른쪽 방향 벡터
-    FVector ActorLocation = AvatarActor->GetActorLocation();
+    float CalcedVert = Vert + (CurrentSize - 200.0f);
 
-    // ForwardVector와 RightVector를 기반으로 PlayerOffset 계산
-    FVector ForwardOffset = ForwardVector * 350.0f; // 플레이어 앞 방향으로 350 단위
-    FVector UpOffset(0.0f, 0.0f, 100.0f + (CurrentSize - 200.0f));          // 위쪽으로 100 단위
-
-    FVector NewLocation = ActorLocation + ForwardOffset /*+ RightOffset*/ + UpOffset;
+    FVector LocalOffset(Dist, 0.0f, CalcedVert);
+    FVector WorldOffset = AvatarActor->GetActorTransform().TransformVectorNoScale(LocalOffset);
 
     // 박스 위치 업데이트
-    PreviewBox->SetWorldLocation(NewLocation);
-
-    // 디버그 로그
-    //UE_LOG(LogTemp, Log, TEXT("ActorLocation: X=%.2f, Y=%.2f, Z=%.2f"), ActorLocation.X, ActorLocation.Y, ActorLocation.Z);
-    //UE_LOG(LogTemp, Log, TEXT("ForwardOffset: X=%.2f, Y=%.2f, Z=%.2f"), ForwardOffset.X, ForwardOffset.Y, ForwardOffset.Z);
-    //UE_LOG(LogTemp, Log, TEXT("RightOffset: X=%.2f, Y=%.2f, Z=%.2f"), RightOffset.X, RightOffset.Y, RightOffset.Z);
-    //UE_LOG(LogTemp, Log, TEXT("NewLocation: X=%.2f, Y=%.2f, Z=%.2f, YOffset: %.2f"), NewLocation.X, NewLocation.Y, NewLocation.Z, YOffset);
+    PreviewBox->SetWorldLocation( AvatarActor->GetActorLocation() + WorldOffset );
 }
 
 void UCSAT_AbilityPreviewBox::TickTask(float DeltaTime)

@@ -9,7 +9,7 @@ UCSStageGameInstanceSubsystem::UCSStageGameInstanceSubsystem()
     if (!AbilityHUDClass)
     {
         // /Script/UMGEditor.WidgetBlueprint'/Game/Blueprint/UI/BP_AbilityHUD.BP_AbilityHUD'
-        static ConstructorHelpers::FClassFinder<UCSAbilityHUD> HUD_BP(TEXT("/Game/Blueprint/UI/BP_AbilityHUD"));
+        static ConstructorHelpers::FClassFinder<UCSAbilityHUD> HUD_BP(TEXT("/Game/01_Blueprint/UI/BP_AbilityHUD"));
         if (HUD_BP.Succeeded())
         {
             AbilityHUDClass = HUD_BP.Class;

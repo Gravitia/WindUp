@@ -20,7 +20,7 @@ ACSTA_WeakenGravityBox::ACSTA_WeakenGravityBox()
     BoxTrigger->OnComponentBeginOverlap.AddDynamic(this, &ACSTA_WeakenGravityBox::OnTriggerBeginOverlap);
     BoxTrigger->OnComponentEndOverlap.AddDynamic(this, &ACSTA_WeakenGravityBox::OnTriggerEndOverlap);
 
-    static ConstructorHelpers::FObjectFinder<UMaterial> MaterialRef(TEXT("/Script/Engine.Material'/Game/Material/MAT_AntyGravity.MAT_AntyGravity'"));
+    static ConstructorHelpers::FObjectFinder<UMaterial> MaterialRef(TEXT("/Script/Engine.Material'/Game/31_Material/MAT_AntyGravity.MAT_AntyGravity'"));
     SetSteticMeshMaterial(MaterialRef.Object, MeshScale.X);
 }
 

@@ -5,6 +5,7 @@
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Physics/CSCollision.h"
+#include "Components/SphereComponent.h"
 #include "ChronoSpace.h"
 
 
@@ -16,26 +17,18 @@ ACSGravityCoreSphere::ACSGravityCoreSphere()
 	SphereTrigger = CreateDefaultSubobject<USphereComponent>(TEXT("GravitySphereTrigger"));
 	SphereTrigger->SetSphereRadius(GravityInfluenceRange, true);
 	SphereTrigger->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
+	SphereTrigger->SetCollisionProfileName(CPROFILE_OVERLAPALL);
 	RootComponent = SphereTrigger;
 	SphereTrigger->SetIsReplicated(true);
 
 	// Static Mesh
 	StaticMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
 	StaticMeshComp->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
-	StaticMeshComp->SetupAttachment(SphereTrigger);
-	StaticMeshComp->SetCollisionProfileName(CPROFILE_CSCAPSULE);
+	StaticMeshComp->SetupAttachment(SphereTrigger); 
+	StaticMeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	StaticMeshComp->SetIsReplicated(true);
 
-	/*static ConstructorHelpers::FObjectFinder<UStaticMesh> StaticMeshRef(TEXT("/Script/Engine.StaticMesh'/Game/Mesh/StaticMesh/BlockSphere.BlockSphere'"));
-	if (StaticMeshRef.Object)
-	{
-		StaticMeshComp->SetStaticMesh(StaticMeshRef.Object);
-	}*/
-
-	float MeshRadius = 50.0f;
-	float MeshScale = (GravityInfluenceRange / MeshRadius) * 0.75f;
-	StaticMeshComp->SetRelativeScale3D(FVector(MeshScale, MeshScale, MeshScale));
-
+	MeshRadius = 50.0f;
 }
 
 void ACSGravityCoreSphere::BeginPlay()
@@ -55,4 +48,6 @@ void ACSGravityCoreSphere::BeginPlay()
 	{
 		UE_LOG(LogCS, Error, TEXT("StaticMesh failed to load in ACSGravityCoreSphere"));
 	}
+
+	UE_LOG(LogCS, Log, TEXT("ACSGravityCoreSphere BeginPlay: %s"), *Owner.GetName());
 }

@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Character/CSCharacterPlayer.h"
@@ -28,7 +28,7 @@
 #include "ActorComponent/CSTransformRecordComponent.h"
 #include "Player/CSPlayerController.h"
 #include "DataAsset/CSCharacterPlayerData.h"
-
+#include "Components/SphereComponent.h"
 
 ACSCharacterPlayer::ACSCharacterPlayer()
 {
@@ -43,31 +43,6 @@ ACSCharacterPlayer::ACSCharacterPlayer()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
 
-	/*
-	// UI 
-	EnergyBar = CreateDefaultSubobject<UCSGASWidgetComponent>(TEXT("Widget"));
-	EnergyBar->SetupAttachment(GetMesh());
-	EnergyBar->SetRelativeLocation(FVector(0.0f, 0.0f, 180.0f));
-	
-	//static ConstructorHelpers::FClassFinder<UUserWidget> EnergyBarWidgetRef(TEXT("/Game/ArenaBattle/UI/WBP_HpBar.WBP_HpBar_C"));
-	static ConstructorHelpers::FClassFinder<UUserWidget> EnergyBarWidgetRef(TEXT("/Game/Blueprint/UI/BP_EnergyBar.BP_EnergyBar_C"));
-	if (EnergyBarWidgetRef.Class)
-	{
-		EnergyBar->SetWidgetClass(EnergyBarWidgetRef.Class);
-		EnergyBar->SetWidgetSpace(EWidgetSpace::Screen);
-		EnergyBar->SetDrawSize(FVector2D(200.0f, 20.f));
-		EnergyBar->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		if (EnergyBar)
-		{
-			UE_LOG(LogTemp, Log, TEXT("EnergyBar is valid and configured."));
-		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("EnergyBar is not valid!"));
-		}
-	}
-	*/
-
 	// ASC
 	ASC = nullptr;
 
@@ -76,7 +51,6 @@ ACSCharacterPlayer::ACSCharacterPlayer()
 	Trigger->SetCollisionProfileName( CPROFILE_OVERLAPALL );
 	Trigger->SetupAttachment(GetCapsuleComponent());
 
-	// ĳ���Ϳ� ������Ʈ �߰�
 	PushingCharacterComponent = CreateDefaultSubobject<UCSPushingCharacterComponent>(TEXT("PushingCharacterComponent"));
 	PushingCharacterComponent->SetTrigger(Trigger);
 
@@ -88,6 +62,13 @@ ACSCharacterPlayer::ACSCharacterPlayer()
 	GASManagerComponent = CreateDefaultSubobject<UCSGASManagerComponent>(TEXT("GASManagerComponent"));
 
 	TransformRecordComponent = CreateDefaultSubobject<UCSTransformRecordComponent>(TEXT("TransformRecordComponent"));
+
+	GravityCoreSphere = CreateDefaultSubobject<USphereComponent>(TEXT("GravityCoreSphere"));
+	GravityCoreSphere->SetIsReplicated(true);
+	GravityCoreSphere->SetCollisionProfileName(CPROFILE_CSCAPSULE);
+	GravityCoreSphere->SetupAttachment(RootComponent);
+	GravityCoreSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	//GravityCoreSphere->AttachToComponent(RootComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 }
 
 UAbilitySystemComponent* ACSCharacterPlayer::GetAbilitySystemComponent() const
@@ -101,6 +82,8 @@ void ACSCharacterPlayer::PossessedBy(AController* NewController)
 
 	ACSPlayerState* CSPS = GetPlayerState<ACSPlayerState>();
 	
+	ASC = CSPS->GetAbilitySystemComponent();
+
 	GASManagerComponent->SetASC(CSPS->GetAbilitySystemComponent(), CSPS);
 	GASManagerComponent->SetGASAbilities();
 }
@@ -116,6 +99,7 @@ void ACSCharacterPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	EnhancedInputComponent->BindAction(ShoulderMoveAction, ETriggerEvent::Triggered, this, &ACSCharacterPlayer::ShoulderMove);
 	EnhancedInputComponent->BindAction(ShoulderLookAction, ETriggerEvent::Triggered, this, &ACSCharacterPlayer::ShoulderLook);
 
+
 	GASManagerComponent->SetupGASInputComponent(Cast<UEnhancedInputComponent>(PlayerInputComponent));
 	InteractionComponent->SetInteractionInputComponent(Cast<UEnhancedInputComponent>(PlayerInputComponent));
 }
@@ -123,10 +107,10 @@ void ACSCharacterPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 void ACSCharacterPlayer::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
-
 	ACSPlayerState* CSPS = GetPlayerState<ACSPlayerState>();
+	ASC = CSPS->GetAbilitySystemComponent();
 	GASManagerComponent->SetASC(ASC, CSPS);
-	// EnergyBar->ActivateGAS();
+	GASManagerComponent->SetupGASInputComponent(Cast<UEnhancedInputComponent>(InputComponent));
 }
 
 void ACSCharacterPlayer::BeginPlay()
@@ -134,11 +118,6 @@ void ACSCharacterPlayer::BeginPlay()
 	Super::BeginPlay();
 	//UE_LOG(LogCS, Log, TEXT("[NetMode: %d] BeginPlay"), GetWorld()->GetNetMode());
 
-	if ( HasAuthority() )
-	{
-		// EnergyBar->ActivateGAS();
-	}
-	
 	if (!IsLocallyControlled())
 	{
 		return;
@@ -151,6 +130,48 @@ void ACSCharacterPlayer::BeginPlay()
 	}
 
 	AttachWindUpKeyToSocket();
+	
+	/* AlwaysClockUnwind not using now 
+	AlwaysClockUnwind();
+	*/
+}
+
+void ACSCharacterPlayer::AlwaysClockUnwind()
+{
+	if (HasAuthority())
+	{
+		// 서버에서 Multicast로 모든 클라이언트에 적용
+		Multicast_ApplyClockUnwind();
+	}
+	else
+	{
+		// 클라이언트에서 서버에 요청
+		Server_ApplyClockUnwind();
+	}
+}
+
+void ACSCharacterPlayer::Server_ApplyClockUnwind_Implementation()
+{
+	// 서버에서 Multicast 호출
+	Multicast_ApplyClockUnwind();
+}
+
+void ACSCharacterPlayer::Multicast_ApplyClockUnwind_Implementation()
+{
+	ApplyClockUnwind_Internal();
+}
+
+// 실제 GE 적용 함수 (변경 없음)
+void ACSCharacterPlayer::ApplyClockUnwind_Internal()
+{
+	if (ClockUnwindEffect && ASC)
+	{
+		FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(ClockUnwindEffect, 1.f, ASC->MakeEffectContext());
+		if (SpecHandle.IsValid())
+		{
+			ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+		}
+	}
 }
 
 void ACSCharacterPlayer::PreInitializeComponents()
@@ -184,8 +205,20 @@ void ACSCharacterPlayer::SetData()
 	GetCharacterMovement()->MaxWalkSpeed = Data->MaxWalkSpeed;
 	GetCharacterMovement()->MinAnalogWalkSpeed = Data->MinAnalogWalkSpeed;
 	GetCharacterMovement()->BrakingDecelerationWalking = Data->BrakingDecelerationWalking;
+	GetCharacterMovement()->GravityScale = Data->GravityScale;
+	
+	WalkSpeed = Data->MaxWalkSpeed;
+	DashSpeed = Data->MaxDashSpeed;
+
+	BaseCapsuleRadius = Data->CapsuleRadius;
+	BaseCapsuleHalfHeight = Data->CapsuleHeight;
+
+	GravityScale = Data->GravityScale;
+	CoyoteTime = Data->CoyoteTime;
 
 	GetCapsuleComponent()->SetCapsuleSize(Data->CapsuleRadius, Data->CapsuleHeight); 
+
+	// SetCapsulSize vs InitCapsuleSize 
 
 	GetMesh()->SetSkeletalMesh(Data->Mesh);
 	GetMesh()->SetAnimInstanceClass(Data->AnimInstance);
@@ -197,11 +230,33 @@ void ACSCharacterPlayer::SetData()
 
 void ACSCharacterPlayer::ShoulderMove(const FInputActionValue& Value)
 {
-	FVector2D MovementVector = Value.Get<FVector2D>();
-	//UE_LOG(LogCS, Log, TEXT("[NetMode %d] ShoulderMove"), GetWorld()->GetNetMode());
-	AddMovementInput( FollowCamera->GetForwardVector(), MovementVector.X);
-	AddMovementInput( FollowCamera->GetRightVector(), MovementVector.Y);
+	// 1) 입력 축 (X = Forward, Y = Right)
+	const FVector2D MoveAxis = Value.Get<FVector2D>();
+	if (MoveAxis.IsNearlyZero()) return;
+
+	// 2) 컨트롤러의 Yaw만 추출
+	const FRotator ControlRot = Controller ? Controller->GetControlRotation()
+		: FRotator::ZeroRotator;
+	const FRotator YawOnlyRot(0.f, ControlRot.Yaw, 0.f);
+
+	// 3) 현재 중력 ↓ 구하기
+	const UCharacterMovementComponent* MoveComp = GetCharacterMovement();
+	const FVector GravityDir = MoveComp
+		? -MoveComp->GetGravityDirection() 
+		: FVector(0, 0, -1);               
+
+	FVector ForwardDir = FRotationMatrix(YawOnlyRot).GetUnitAxis(EAxis::X);
+	FVector RightDir = FRotationMatrix(YawOnlyRot).GetUnitAxis(EAxis::Y);
+
+	ForwardDir = FVector::VectorPlaneProject(ForwardDir, GravityDir).GetSafeNormal();
+	RightDir = FVector::VectorPlaneProject(RightDir, GravityDir).GetSafeNormal();
+
+	RightDir = FVector::CrossProduct(GravityDir, ForwardDir).GetSafeNormal();
+
+	AddMovementInput(ForwardDir, MoveAxis.X);
+	AddMovementInput(RightDir, MoveAxis.Y);
 }
+
 
 void ACSCharacterPlayer::ShoulderLook(const FInputActionValue& Value)
 {
@@ -226,5 +281,68 @@ void ACSCharacterPlayer::RequestUIRefresh()
 	if (ACSPlayerController* PC = Cast<ACSPlayerController>(GetController()))
 	{
 		PC->RefreshGameUI();
+	}
+}
+
+
+// 1. 점프 가능 조건에 코요테 bool OR 연산
+bool ACSCharacterPlayer::CanJumpInternal_Implementation() const
+{
+	return Super::CanJumpInternal_Implementation() || bCanCoyoteJump;
+}
+
+// 2. 타이머 시작 / 종료
+void ACSCharacterPlayer::StartCoyoteTimer()
+{
+	bCanCoyoteJump = true;
+	GetWorldTimerManager().SetTimer(
+		CoyoteTimerHandle,
+		this,
+		&ACSCharacterPlayer::DisableCoyoteTime,
+		CoyoteTime,
+		false);
+}
+
+void ACSCharacterPlayer::DisableCoyoteTime()
+{
+	bCanCoyoteJump = false;
+}
+
+// 3. 공중으로 들어가면 타이머 시작
+void ACSCharacterPlayer::Falling()
+{
+	Super::Falling();
+	StartCoyoteTimer();
+}
+
+// 4. 실제 점프가 발생하거나 착지하면 bool 리셋
+void ACSCharacterPlayer::OnJumped_Implementation()
+{
+	Super::OnJumped_Implementation();
+	bCanCoyoteJump = false;
+}
+
+void ACSCharacterPlayer::OnMovementModeChanged(
+	EMovementMode PrevMode, uint8 PrevCustomMode)
+{
+	Super::OnMovementModeChanged(PrevMode, PrevCustomMode);
+
+	if (!bPressedJump && !GetCharacterMovement()->IsFalling())
+	{
+		bCanCoyoteJump = false;    // 착지 시 안전하게 종료
+	}
+}
+
+void ACSCharacterPlayer::NetMulticastMakeGravityCoreSphere_Implementation(float SphereRaduis, float SphereScale)
+{
+	GravityCoreSphere->SetSphereRadius(SphereRaduis * SphereScale);
+	GravityCoreSphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+}
+
+void ACSCharacterPlayer::NetMulticastDestroyGravityCoreSphere_Implementation()
+{
+	if (GravityCoreSphere)
+	{
+		GravityCoreSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
 }

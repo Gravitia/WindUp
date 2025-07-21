@@ -26,10 +26,10 @@ public:
 	static const FName PatrolPosKey;
 	static const FName bShouldStopMoveKey;
 	
-private:
-	UPROPERTY()
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "BehaviorTree") 
 	TObjectPtr<class UBehaviorTree> BTAsset;
 
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "BehaviorTree")
 	TObjectPtr<class UBlackboardData> BBAsset;
 };

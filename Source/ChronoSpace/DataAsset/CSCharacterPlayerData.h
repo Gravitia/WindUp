@@ -36,6 +36,22 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float BrakingDecelerationWalking;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float MaxDashSpeed;
+
+	/* Mass No effect Jump (JumpZVelocity)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float Mass;
+	*/
+
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float GravityScale;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float CoyoteTime;
+	
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
 	float TargetArmLength;
 

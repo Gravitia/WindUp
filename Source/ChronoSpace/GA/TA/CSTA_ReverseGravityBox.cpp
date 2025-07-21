@@ -19,7 +19,7 @@ ACSTA_ReverseGravityBox::ACSTA_ReverseGravityBox()
 	BoxTrigger->OnComponentBeginOverlap.AddDynamic(this, &ACSTA_ReverseGravityBox::OnTriggerBeginOverlap);
     BoxTrigger->OnComponentEndOverlap.AddDynamic(this, &ACSTA_ReverseGravityBox::OnTriggerEndOverlap);
 
-    static ConstructorHelpers::FObjectFinder<UMaterial> MaterialRef(TEXT("/Script/Engine.Material'/Game/Material/MAT_AntyGravity.MAT_AntyGravity'"));
+    static ConstructorHelpers::FObjectFinder<UMaterial> MaterialRef(TEXT("/Script/Engine.Material'/Game/31_Material/MAT_AntyGravity.MAT_AntyGravity'"));
     
     SetSteticMeshMaterial(MaterialRef.Object, MeshScale.X);
 }

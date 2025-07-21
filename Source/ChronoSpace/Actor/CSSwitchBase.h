@@ -21,11 +21,19 @@ public:
 	virtual void Interact() override;
 
 protected:
+	virtual void BeginPlay() override;
+
+protected:
 	void SetMaterial();
 
 	UFUNCTION(NetMulticast, Reliable)
 	void NetMulticastSetMaterial(bool bInIsInteracted);
 
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Data")
+	TObjectPtr<class UCSSwitchBaseData> Data;
+
+protected:
 	UPROPERTY()
 	TObjectPtr<class UStaticMeshComponent> StaticMeshComp;
 
@@ -33,18 +41,6 @@ protected:
 	TObjectPtr<class USphereComponent> Trigger;
 
 	UPROPERTY()
-	TObjectPtr<class UMaterialInstance> MaterialGlowNonInteracted;
-
-	UPROPERTY()
-	TObjectPtr<class UMaterialInstance> MaterialGlowInteracted;
-
-	UPROPERTY()
-	TObjectPtr<class UMaterialInstance> MaterialSolidNonInteracted;
-
-	UPROPERTY()
-	TObjectPtr<class UMaterialInstance> MaterialSolidInteracted;
-
-	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UWidgetComponent> InteractionPromptComponent;
 
 	bool bIsInteracted;
