@@ -18,13 +18,13 @@
 ACSTA_BlackHoleSphere::ACSTA_BlackHoleSphere()
 {
 	bReplicates = true;
-	PrimaryActorTick.bCanEverTick = true; 
+	PrimaryActorTick.bCanEverTick = true;
 
 	// GravitySphereTrigger
 	GravitySphereTrigger = CreateDefaultSubobject<USphereComponent>(TEXT("GravitySphereTrigger"));
 	RootComponent = GravitySphereTrigger;
 	GravitySphereTrigger->SetSphereRadius(GravityInfluenceRange, true);
-	GravitySphereTrigger->SetRelativeLocation(FVector(600.0f, 0.0f, 200.0f));
+	GravitySphereTrigger->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
 	GravitySphereTrigger->SetCollisionProfileName(CPROFILE_CSTRIGGER);
 	GravitySphereTrigger->SetIsReplicated(true);
 
@@ -38,7 +38,7 @@ ACSTA_BlackHoleSphere::ACSTA_BlackHoleSphere()
 	EventHorizonSphereTrigger->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
 	EventHorizonSphereTrigger->SetCollisionProfileName(CPROFILE_CSTRIGGER);
 	EventHorizonSphereTrigger->SetIsReplicated(true);
-	EventHorizonSphereTrigger->OnComponentBeginOverlap.AddDynamic(this, &ACSTA_BlackHoleSphere::OnEventHorizonBeginOverlap); 
+	EventHorizonSphereTrigger->OnComponentBeginOverlap.AddDynamic(this, &ACSTA_BlackHoleSphere::OnEventHorizonBeginOverlap);
 
 	// Static Mesh
 	StaticMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComp"));
@@ -63,12 +63,14 @@ void ACSTA_BlackHoleSphere::BeginPlay()
 {
 	Super::BeginPlay();
 
+	GravitySphereTrigger->SetSphereRadius(GravityInfluenceRange, true);
+
 	if (!bShowDebug) return;
 
 	if (GravitySphereTrigger)
 	{
-		FVector SphereLocation = GravitySphereTrigger->GetComponentLocation(); 
-		float SphereRadius = GravitySphereTrigger->GetScaledSphereRadius();   
+		FVector SphereLocation = GravitySphereTrigger->GetComponentLocation();
+		float SphereRadius = GravitySphereTrigger->GetScaledSphereRadius();
 
 		DrawDebugSphere(
 			GetWorld(),
@@ -77,7 +79,7 @@ void ACSTA_BlackHoleSphere::BeginPlay()
 			12,          // 세그먼트 수 (구의 매끄러움)
 			FColor::Green,
 			false,       // 지속 표시
-			10,           // 지속 시간
+			DurationTime,           // 지속 시간
 			0,           // 디버그 선 우선순위
 			2.0f         // 선 두께
 		);
@@ -89,17 +91,19 @@ void ACSTA_BlackHoleSphere::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 
 	FVector BlackHoleLocation = GravitySphereTrigger->GetComponentLocation();
-	
+
 	for (auto Char = CharactersInSphereTrigger.CreateIterator(); Char; ++Char)
 	{
 		if (IsValid(Char.Value()))
 		{
-			FVector Power(230000.0f, 230000.0f, 230000.0f);
+			FVector Power(10000.0f, 10000.0f, 10000.0f);
 			FVector TargetLocation = Char.Value()->GetActorLocation();
 			FVector Distance = BlackHoleLocation - TargetLocation;
 			FVector Direction = Distance.GetSafeNormal();
-			
-			Char.Value()->GetCharacterMovement()->AddForce(Power * Direction);
+
+			// Char.Value()->GetCharacterMovement()->AddForce(Power * Direction);
+			// FVector LaunchVelocity = Direction * PullStrength;
+			Char.Value()->GetCharacterMovement()->AddImpulse(Direction * Power * PullStrength * DeltaSeconds, /*bVelocityChange=*/true);
 		}
 	}
 }
@@ -141,7 +145,7 @@ void ACSTA_BlackHoleSphere::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedC
 void ACSTA_BlackHoleSphere::OnEventHorizonBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepHitResult)
 {
 	// Patrol이 화이트홀에 휘말리면 NavMesh 꼬일 수 있음
-	if ( ACSCharacterPatrol* Patrol = Cast<ACSCharacterPatrol>(OtherActor) )
+	if (ACSCharacterPatrol* Patrol = Cast<ACSCharacterPatrol>(OtherActor))
 	{
 		return;
 	}
@@ -150,14 +154,14 @@ void ACSTA_BlackHoleSphere::OnEventHorizonBeginOverlap(UPrimitiveComponent* Over
 	ACSCharacterPlayer* OverlapedCharacterPlayer = Cast<ACSCharacterPlayer>(OtherActor);
 
 
-	ACSCharacterPlayer* Player = Cast<ACSCharacterPlayer>( UGameplayStatics::GetPlayerCharacter( GetWorld(), 0 ) );
+	ACSCharacterPlayer* Player = Cast<ACSCharacterPlayer>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 
-	if ( ACSWhiteHall* WhiteHall = Player->GetWhiteHall() )
+	if (ACSWhiteHall* WhiteHall = Player->GetWhiteHall())
 	{
 		FVector NewLocation = WhiteHall->GetActorLocation();
-		
+
 		OtherActor->SetActorLocation(NewLocation);
-		if ( (GravitySphereTrigger->GetComponentLocation() - NewLocation).Size() > GravityInfluenceRange )
+		if ((GravitySphereTrigger->GetComponentLocation() - NewLocation).Size() > GravityInfluenceRange)
 		{
 			CharactersInSphereTrigger.Remove(OverlapedCharacter->GetFName());
 		}
@@ -168,6 +172,5 @@ void ACSTA_BlackHoleSphere::OnEventHorizonBeginOverlap(UPrimitiveComponent* Over
 		{
 			OtherActor->Destroy();
 		}
-	} 
+	}
 }
-

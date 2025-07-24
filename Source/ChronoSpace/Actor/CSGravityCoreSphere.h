@@ -17,6 +17,8 @@ class CHRONOSPACE_API ACSGravityCoreSphere : public ACSGravityCore
 public:
 	ACSGravityCoreSphere();
 
+	FORCEINLINE float GetMeshRadius() { return MeshRadius; }
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -32,4 +34,7 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Sphere")
 	float GravityInfluenceRange = 400.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Sphere")
+	float MeshRadius;
 };

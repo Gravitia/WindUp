@@ -7,6 +7,7 @@
 #include "CSPlayerController.generated.h"
 
 class UCSGameUIWidget;
+class SCSServerTravelWidget;
 
 /**
  * 
@@ -19,15 +20,15 @@ class CHRONOSPACE_API ACSPlayerController : public APlayerController
 public:
 	ACSPlayerController();
 
-	// UI À§Á¬ Å¬·¡½º - Blueprint¿¡¼­ ¼³Á¤
+	// UI ï¿½ï¿½ï¿½ï¿½ Å¬ï¿½ï¿½ï¿½ï¿½ - Blueprintï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "UI")
 	TSubclassOf<UCSGameUIWidget> GameUIWidgetClass;
 
-	// °ÔÀÓ UI À§Á¬
+	// ï¿½ï¿½ï¿½ï¿½ UI ï¿½ï¿½ï¿½ï¿½
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "UI")
 	TObjectPtr<UCSGameUIWidget> GameUIWidget;
 
-	// UI °ü¸® ÇÔ¼öµé
+	// UI ï¿½ï¿½ï¿½ï¿½ ï¿½Ô¼ï¿½ï¿½ï¿½
 	UFUNCTION(BlueprintCallable, Category = "UI")
 	void ShowGameUI();
 
@@ -40,37 +41,88 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "UI")
 	void RefreshGameUI();
 
-	// ÇöÀç UI »óÅÂ È®ÀÎ
+	// ï¿½ï¿½ï¿½ï¿½ UI ï¿½ï¿½ï¿½ï¿½ È®ï¿½ï¿½
 	UFUNCTION(BlueprintPure, Category = "UI")
 	bool IsGameUIVisible() const;
 
 	/*
-	// UI À§Á¬ Á÷Á¢ Á¢±Ù (Blueprint¿ë)
+	// UI ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (Blueprintï¿½ï¿½)
 	UFUNCTION(BlueprintPure, Category = "UI")
 	UCSGameUIWidget* GetGameUIWidget() const { return GameUIWidget; }
 	*/
-
 	void ShakeCamera();
 
 protected:
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CameraShake")
 	TSubclassOf<class UCameraShakeBase> CameraShake;
 
 	virtual void BeginPlay() override;
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	virtual void SetupInputComponent() override;
 
-	// PlayerState º¯È­ °¨Áö
+	// PlayerState ï¿½ï¿½È­ ï¿½ï¿½ï¿½ï¿½
 	virtual void OnRep_PlayerState() override;
 
 private:
-	
-
 	void SetupInputMode();
 	void CreateGameUI();
 	void InitializeUI();
-
-	// UI »ý¼º Áö¿¬ Å¸ÀÌ¸Ó
+	// UI 
 	FTimerHandle UICreationTimerHandle;
 
+// Dual Mode
+protected:
+	UFUNCTION()
+	void UpdateRenderTarget();
+
+	class ACSCharacterPlayer* FindFirstOtherPawn();
+
+	class ASceneCapture2D* SpawnCaptureAndAttach(class UCameraComponent* TargetCam, UTextureRenderTarget2D* TargetRT);
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Render")
+	TObjectPtr<UTextureRenderTarget2D> RenderTargetP0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Render")
+	TObjectPtr<UTextureRenderTarget2D> RenderTargetP1;
+
+	UPROPERTY()
+	TObjectPtr<class ASceneCapture2D> CaptureP0;
+
+	UPROPERTY()
+	TObjectPtr<class ASceneCapture2D> CaptureP1;
+
+// Dual Mode UI
+protected:
+	void ToggleDualMode();
+	void OpenDualMode();
+	void CloseDualMode();
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dual Mode UI")
+	TSubclassOf<class UUserWidget> DualModeUIClass;
+
+	UPROPERTY()
+	TObjectPtr<class UUserWidget> DualModeUI;
+
+	bool bIsDualMode;
+
+	// =========================
+	// Server Travel UI ï¿½ï¿½ï¿½ï¿½ ï¿½Ô¼ï¿½ï¿½ï¿½
+	// =========================
+	/*
+	TSharedPtr<SCSServerTravelWidget> ServerTravelWidget;
+	void CreateServerTravelWidget();
+
+	UFUNCTION(BlueprintCallable, Category = "Server Travel")
+	void ShowServerTravelUI();
+
+	UFUNCTION(BlueprintCallable, Category = "Server Travel")
+	void HideServerTravelUI();
+
+	UFUNCTION(BlueprintCallable, Category = "Server Travel")
+	void ToggleServerTravelUI();
+
+	UFUNCTION(BlueprintPure, Category = "Server Travel")
+	bool IsServerTravelUIVisible() const;
+	*/
 };

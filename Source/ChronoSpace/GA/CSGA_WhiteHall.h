@@ -19,4 +19,7 @@ public:
 
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WhiteHall")
+	TSubclassOf<class ACSWhiteHall> WhiteHallClass;
 };
