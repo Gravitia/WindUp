@@ -29,6 +29,8 @@
 #include "Player/CSPlayerController.h"
 #include "DataAsset/CSCharacterPlayerData.h"
 #include "Components/SphereComponent.h"
+#include "Animation/AnimInstance.h"
+#include "Animation/CSAnimInstance.h"
 
 ACSCharacterPlayer::ACSCharacterPlayer()
 {
@@ -347,3 +349,5 @@ void ACSCharacterPlayer::NetMulticastDestroyGravityCoreSphere_Implementation()
 		GravityCoreSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
 }
+
+

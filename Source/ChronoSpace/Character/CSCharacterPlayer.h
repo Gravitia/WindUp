@@ -205,4 +205,8 @@ public:
 protected:
 	UPROPERTY(Transient)
 	TObjectPtr<class USphereComponent> GravityCoreSphere;
+
+
+
+
 };

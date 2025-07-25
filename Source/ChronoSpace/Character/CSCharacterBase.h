@@ -22,7 +22,17 @@ protected:
 	TObjectPtr<class UCSCustomGravityDirComponent> CustomGravityDirComponent;
 
 
-	// Wind Up Key
+// Wind Up Key
 protected:
 	void AttachWindUpKeyToSocket();
+
+
+// NetMulticast Montage 
+public:
+	UFUNCTION(NetMulticast, Reliable)
+	void NetMulticastPlayAnimMontage(UAnimMontage* Montage);
+
+	UFUNCTION(Server, Reliable)
+	void ServerPlayAnimMontage(UAnimMontage* Montage);
+
 };

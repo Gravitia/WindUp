@@ -44,4 +44,10 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Duration")
 	float DurationTime = 1.1f;
+
+// Animation 
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
+	UAnimMontage* PreviewMontage;
+
 };

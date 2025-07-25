@@ -86,3 +86,20 @@ void ACSCharacterBase::AttachWindUpKeyToSocket()
 
 	UE_LOG(LogTemp, Log, TEXT("Blueprint Actor attached to socket: %s"), *SocketName.ToString());
 }
+
+
+void ACSCharacterBase::NetMulticastPlayAnimMontage_Implementation(UAnimMontage* Montage)
+{
+	UE_LOG(LogTemp, Log, TEXT("ActivateAiblity Abiltiy Preview 4"));
+	if (GetMesh()->GetAnimInstance())
+	{
+		UE_LOG(LogTemp, Log, TEXT("ActivateAiblity Abiltiy Preview 5"));
+		GetMesh()->GetAnimInstance()->Montage_Play(Montage, 1.0f);
+	}
+}
+
+void ACSCharacterBase::ServerPlayAnimMontage_Implementation(UAnimMontage* Montage)
+{
+	NetMulticastPlayAnimMontage(Montage);
+}
+
