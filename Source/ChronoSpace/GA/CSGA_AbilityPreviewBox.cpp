@@ -26,26 +26,7 @@ void UCSGA_AbilityPreviewBox::ActivateAbility(const FGameplayAbilitySpecHandle H
 
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	ACSCharacterBase* Character = Cast<ACSCharacterBase>(ActorInfo->AvatarActor.Get());
-	if (Character && PreviewMontage)
-	{
-		UAbilitySystemComponent* ASC = CurrentActorInfo->AbilitySystemComponent.Get();
-		if (ASC)
-		{
-			FScopedPredictionWindow ScopedPrediction(ASC, !Character->HasAuthority());
-			UE_LOG(LogTemp, Log, TEXT("ActivateAiblity Abiltiy Preview 2"));
-			if (Character->HasAuthority())
-			{
-				UE_LOG(LogTemp, Log, TEXT("ActivateAiblity Abiltiy Preview 3-1"));
-				Character->NetMulticastPlayAnimMontage(PreviewMontage);  // 서버일 경우 Multicast 호출
-			}
-			else
-			{
-				UE_LOG(LogTemp, Log, TEXT("ActivateAiblity Abiltiy Preview 3-2"));
-				Character->ServerPlayAnimMontage(PreviewMontage);     // 클라 → 서버 요청
-			}
-		}
-	}
+	
 
 	ActivateTask();
 }

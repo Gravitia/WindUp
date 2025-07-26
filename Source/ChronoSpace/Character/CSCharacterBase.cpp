@@ -88,18 +88,12 @@ void ACSCharacterBase::AttachWindUpKeyToSocket()
 }
 
 
-void ACSCharacterBase::NetMulticastPlayAnimMontage_Implementation(UAnimMontage* Montage)
+void ACSCharacterBase::NetMulticastPlayOtherClientMontage_Implementation(UAnimMontage* Montage)
 {
-	UE_LOG(LogTemp, Log, TEXT("ActivateAiblity Abiltiy Preview 4"));
-	if (GetMesh()->GetAnimInstance())
+	// if (IsLocallyControlled()) return;
+
+	if (GetMesh() && GetMesh()->GetAnimInstance())
 	{
-		UE_LOG(LogTemp, Log, TEXT("ActivateAiblity Abiltiy Preview 5"));
 		GetMesh()->GetAnimInstance()->Montage_Play(Montage, 1.0f);
 	}
 }
-
-void ACSCharacterBase::ServerPlayAnimMontage_Implementation(UAnimMontage* Montage)
-{
-	NetMulticastPlayAnimMontage(Montage);
-}
-

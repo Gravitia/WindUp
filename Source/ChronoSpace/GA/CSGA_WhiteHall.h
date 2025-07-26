@@ -22,4 +22,17 @@ public:
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WhiteHall")
 	TSubclassOf<class ACSWhiteHall> WhiteHallClass;
+
+// Animation 
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
+	UAnimMontage* WhiteHallMontage;
+	UPROPERTY()
+	TObjectPtr< class UAbilityTask_PlayMontageAndWait > MontageTask;
+
+	UFUNCTION()
+	void OnMontageCompleted();
+
+	UFUNCTION()
+	void OnMontageInterrupted();
 };

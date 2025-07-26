@@ -30,9 +30,6 @@ protected:
 // NetMulticast Montage 
 public:
 	UFUNCTION(NetMulticast, Reliable)
-	void NetMulticastPlayAnimMontage(UAnimMontage* Montage);
-
-	UFUNCTION(Server, Reliable)
-	void ServerPlayAnimMontage(UAnimMontage* Montage);
+	void NetMulticastPlayOtherClientMontage(UAnimMontage* Montage);
 
 };
