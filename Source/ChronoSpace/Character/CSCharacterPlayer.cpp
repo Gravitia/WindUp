@@ -34,6 +34,8 @@ ACSCharacterPlayer::ACSCharacterPlayer()
 {
 	bReplicates = true;
 
+	bIsFirstLook = false;
+
 	// Camera
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
@@ -42,6 +44,13 @@ ACSCharacterPlayer::ACSCharacterPlayer()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
+
+	FirstPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
+	// 보통 플레이어 메쉬의 “head” 소켓(혹은 눈 위치)에 붙입니다.
+	FirstPersonCamera->SetupAttachment(GetMesh(), TEXT("head"));
+	FirstPersonCamera->bUsePawnControlRotation = true;
+	// 처음엔 1인칭 카메라 비활성화
+	FirstPersonCamera->SetActive(false);
 
 	// ASC
 	ASC = nullptr;
@@ -227,6 +236,29 @@ void ACSCharacterPlayer::SetData()
 	GetMesh()->SetRelativeRotation(Data->MeshRotation); 
 
 	Trigger->SetCapsuleSize(Data->TriggerRadius, Data->TriggerHeight); 
+}
+
+void ACSCharacterPlayer::SetShoulderLook(bool bIsShoulderLook)
+{
+	if (!bIsShoulderLook)
+	{
+		// 1인칭 모드로 전환
+		CameraBoom->SetActive(false);            // 스프링암(3인칭) 꺼주고
+		FollowCamera->SetActive(false);
+		FirstPersonCamera->SetActive(true);      // 1인칭 카메라 켜기
+
+		// 필요 시, 전체 메쉬는 안 보이게(arms만 따로 분리해 쓰면 더 좋음)
+		GetMesh()->SetOwnerNoSee(true);
+	}
+	else
+	{
+		// 3인칭 모드로 복귀
+		FirstPersonCamera->SetActive(false);
+		CameraBoom->SetActive(true);
+		FollowCamera->SetActive(true);
+
+		GetMesh()->SetOwnerNoSee(false);
+	}
 }
 
 void ACSCharacterPlayer::ShoulderMove(const FInputActionValue& Value)

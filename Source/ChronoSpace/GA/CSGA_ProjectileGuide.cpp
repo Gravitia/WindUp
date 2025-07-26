@@ -7,6 +7,7 @@
 #include "Abilities/GameplayAbilityTypes.h"
 #include "AbilitySystemComponent.h"
 #include "Abilities/GameplayAbilityTargetTypes.h"
+#include "Character/CSCharacterPlayer.h"
 #include "ChronoSpace.h"
 
 UCSGA_ProjectileGuide::UCSGA_ProjectileGuide()
@@ -55,6 +56,11 @@ void UCSGA_ProjectileGuide::ActivateAbility(const FGameplayAbilitySpecHandle Han
 			{
 				LastMousePosition = FVector2D(MouseX, MouseY);
 			}
+		}
+
+		if ( ACSCharacterPlayer* CSPlayer = Cast<ACSCharacterPlayer>(Character) )
+		{
+			CSPlayer->SetShoulderLook(false);
 		}
 	}
 
@@ -129,6 +135,11 @@ FVector UCSGA_ProjectileGuide::GetScreenCenterDirection() const
 
 void UCSGA_ProjectileGuide::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
+	if ( ACSCharacterPlayer* CSPlayer = Cast<ACSCharacterPlayer>( ActorInfo->AvatarActor ) )
+	{
+		CSPlayer->SetShoulderLook(true);
+	}
+
 	// 타이머 정리
 	if (UpdateTimerHandle.IsValid())
 	{
