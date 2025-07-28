@@ -30,4 +30,14 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr< class ACSTA_BlackHoleSphere > SpawnedTargetActor;
+
+	
+private:
+	FVector TargetLocation = FVector::ZeroVector;
+	bool bHasTargetLocation = false;
+
+public:
+	// 목표 위치 설정 함수
+	void SetTargetLocation(const FVector& InTargetLocation);
+
 };

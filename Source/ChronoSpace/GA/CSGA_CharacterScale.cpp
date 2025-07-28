@@ -24,9 +24,9 @@ UCSGA_CharacterScale::UCSGA_CharacterScale()
     ScaleTransitionSpeed = 2.0f;
 
     // Gameplay Tags √ ±‚»≠
-    ScaleNormalTag = FGameplayTag::RequestGameplayTag(FName("Character.Scale.Normal"));
-    ScaleLargeTag = FGameplayTag::RequestGameplayTag(FName("Character.Scale.Large"));
-    ScaleSmallTag = FGameplayTag::RequestGameplayTag(FName("Character.Scale.Small"));
+    ScaleNormalTag = FGameplayTag::RequestGameplayTag(FName("Ability.Scale.Normal"));
+    ScaleLargeTag = FGameplayTag::RequestGameplayTag(FName("Ability.Scale.Large"));
+    ScaleSmallTag = FGameplayTag::RequestGameplayTag(FName("Ability.Scale.Small"));
 }
 
 void UCSGA_CharacterScale::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
