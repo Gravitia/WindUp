@@ -28,6 +28,8 @@ public:
 
 	virtual void OnRep_PlayerState() override;
 
+	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GAS") 
 	TObjectPtr<class UCSGASManagerComponent> GASManagerComponent;
