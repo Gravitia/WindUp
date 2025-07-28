@@ -14,11 +14,16 @@ class CHRONOSPACE_API UCSCustomGravityDirComponent : public UActorComponent
 
 public:	
 	UCSCustomGravityDirComponent();
+
+	FORCEINLINE bool IsGravityCustomzied() { return bIsGravityCustomized; }
+
 	
 	static FVector OrgGravityDirection;
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	FVector GetDirection();
@@ -43,7 +48,15 @@ protected:
 	void OnActorEndOverlapCallback(AActor* OverlappedActor, AActor* OtherActor);
 
 protected:
-	FTimerHandle GravityCheckTimerHandle;
-	
 	void CheckGravity();
+
+protected:
+	UPROPERTY()
+	FVector TargetGravityDirection;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gravity")
+	float GravityInterpSpeed;
+
+	UPROPERTY(Replicated)
+	bool bIsGravityCustomized;
 };

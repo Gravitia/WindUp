@@ -16,7 +16,7 @@ UCSGA_AbilityPreviewBox::UCSGA_AbilityPreviewBox()
 {
 	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::LocalOnly;
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
-	Ability = EAbilityIndex::ChronoControl;
+	AbilityClass = nullptr;
 }
 
 void UCSGA_AbilityPreviewBox::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
@@ -41,6 +41,7 @@ void UCSGA_AbilityPreviewBox::ActivateTask()
 
 void UCSGA_AbilityPreviewBox::RunAbility(float BoxSize)
 {
+	check(AbilityClass)
 	// /Script/ChronoSpace.CSDA_BoxProperties'/Game/DataAssets/CSDA_BoxProperties.CSDA_BoxProperties'
 
 	// 데이터 에셋 경로
@@ -68,39 +69,10 @@ void UCSGA_AbilityPreviewBox::RunAbility(float BoxSize)
 		UAbilitySystemComponent* ASC = CurrentActorInfo->AbilitySystemComponent.Get();
 		FGameplayAbilitySpec* NewAbilitySpec;
 
-		if ( Ability == EAbilityIndex::ChronoControl )
+		NewAbilitySpec = ASC->FindAbilitySpecFromClass( AbilityClass );
+		if (NewAbilitySpec)
 		{
-			NewAbilitySpec = ASC->FindAbilitySpecFromClass(UCSGA_ChronoControl::StaticClass());
-			if (NewAbilitySpec)
-			{
-				ASC->TryActivateAbility(NewAbilitySpec->Handle); // 새로운 어빌리티 실행
-			}
-		}
-		else if ( Ability == EAbilityIndex::ReverseGravity )
-		{
-			UE_LOG(LogCS, Log, TEXT("Preview - ReverseGravity"));
-			NewAbilitySpec = ASC->FindAbilitySpecFromClass(UCSGA_ReverseGravity::StaticClass());
-			if (NewAbilitySpec)
-			{
-				UE_LOG(LogCS, Log, TEXT("Preview - ReverseGravity Activated"));
-				ASC->TryActivateAbility(NewAbilitySpec->Handle); 
-			}
-		}
-		else if ( Ability == EAbilityIndex::WeakenGravity10P )
-		{
-			NewAbilitySpec = ASC->FindAbilitySpecFromClass(WeakenGravity10P);
-			if (NewAbilitySpec)
-			{
-				ASC->TryActivateAbility(NewAbilitySpec->Handle);
-			}
-		}
-		else if (Ability == EAbilityIndex::WeakenGravity50P)
-		{
-			NewAbilitySpec = ASC->FindAbilitySpecFromClass(WeakenGravity50P);
-			if (NewAbilitySpec)
-			{
-				ASC->TryActivateAbility(NewAbilitySpec->Handle);
-			}
+			ASC->TryActivateAbility(NewAbilitySpec->Handle); // 새로운 어빌리티 실행
 		}
 	}
 
