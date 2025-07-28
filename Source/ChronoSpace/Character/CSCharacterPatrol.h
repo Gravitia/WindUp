@@ -69,9 +69,4 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<class UCSAttributeSet> AttributeSet;
-
-// Ability
-protected:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ability")
-	TSubclassOf<class UCSGA_GiveDamage> GiveDamageAbility;
 };

@@ -53,7 +53,7 @@ public:
 	void ShakeCamera();
 
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CameraShake")
+	UPROPERTY()
 	TSubclassOf<class UCameraShakeBase> CameraShake;
 
 	virtual void BeginPlay() override;

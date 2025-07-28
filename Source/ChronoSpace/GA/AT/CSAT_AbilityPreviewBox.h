@@ -43,10 +43,6 @@ protected:
     void PlayerFollowPreviewBox();
     void AdjustPreviewBoxScale(bool bIncrease);
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Value")
-    float Dist;
-    float Vert;
-
 private:
     UPROPERTY()
     TObjectPtr<class UBoxComponent> PreviewBox;

@@ -55,13 +55,7 @@ protected:
 	float GravityInfluenceRange = 500.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Sphere")
-	float PullStrength = 50.0f;
-
-	UPROPERTY(EditAnywhere, Category = "Sphere")
-	float EventHorizonRadius = 50.0f;	//
-
-	UPROPERTY(EditAnywhere, Category = "Duration")
-	float DurationTime = 10.0f;
+	float EventHorizonRadius = 50.0f;	// 구 사이즈가 100 * 100 * 100
 
 	bool bShowDebug = true;
 };

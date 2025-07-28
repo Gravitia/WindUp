@@ -11,8 +11,6 @@ UCSGA_WhiteHall::UCSGA_WhiteHall()
 {
 	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::ServerOnly;
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
-
-	WhiteHallClass = nullptr;
 }
 
 void UCSGA_WhiteHall::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
@@ -30,13 +28,10 @@ void UCSGA_WhiteHall::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 		return;
 	}
 
-	if (WhiteHallClass)
-	{
-		FVector SpawnLocation = Player->GetActorLocation();
+	const FVector SpawnLocation = Player->GetActorLocation();
 
-		ACSWhiteHall* WhiteHall = GetWorld()->SpawnActor<ACSWhiteHall>(WhiteHallClass, SpawnLocation, FRotator::ZeroRotator);
-		Player->SetWhiteHall(WhiteHall);
-	}
+	ACSWhiteHall* WhiteHall = GetWorld()->SpawnActor<ACSWhiteHall>(ACSWhiteHall::StaticClass(), SpawnLocation, FRotator::ZeroRotator);
+	Player->SetWhiteHall(WhiteHall);
 
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, bReplicatedEndAbility, bWasCancelled);
 }

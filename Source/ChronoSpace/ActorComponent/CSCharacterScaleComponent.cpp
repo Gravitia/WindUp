@@ -160,6 +160,22 @@ void UCSCharacterScaleComponent::ApplyScaleToCharacter(float NewScale)
     FVector NewScaleVector(NewScale, NewScale, NewScale);
     Character->SetActorScale3D(NewScaleVector);
 
+    // 선택적으로 캡슐 컴포넌트 크기 조정
+    if (UCapsuleComponent* CapsuleComp = Character->GetCapsuleComponent())
+    {
+        float BaseRadius = 34.0f;
+        float BaseHalfHeight = 88.0f;
+
+        // CSCharacterPlayer로부터 기본 캡슐 크기를 가져오기
+        if (ACSCharacterPlayer* CSPlayer = Cast<ACSCharacterPlayer>(Character))
+        {
+            BaseRadius = CSPlayer->BaseCapsuleRadius;
+            BaseHalfHeight = CSPlayer->BaseCapsuleHalfHeight;
+        }
+
+        CapsuleComp->SetCapsuleSize(BaseRadius * NewScale, BaseHalfHeight * NewScale);
+    }
+
     // 디버그 로그
     if (GEngine)
     {

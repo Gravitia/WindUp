@@ -151,6 +151,9 @@ public:
 	float BaseCapsuleHalfHeight = 88.0f;
 
 
+
+
+
 // UnwindUp RPC
 
 private:
@@ -190,17 +193,4 @@ private:
 	virtual void OnJumped_Implementation() override;
 	virtual void OnMovementModeChanged(EMovementMode PrevMode,
 		uint8 PrevCustomMode = 0) override;
-
-
-// Gravity Core
-public:
-	UFUNCTION(NetMulticast, Reliable)
-	void NetMulticastMakeGravityCoreSphere(float SphereRaduis, float SphereScale);
-
-	UFUNCTION(NetMulticast, Reliable)
-	void NetMulticastDestroyGravityCoreSphere();
-
-protected:
-	UPROPERTY(Transient)
-	TObjectPtr<class USphereComponent> GravityCoreSphere;
 };

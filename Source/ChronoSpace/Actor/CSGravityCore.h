@@ -13,11 +13,4 @@ class CHRONOSPACE_API ACSGravityCore : public AActor
 	
 public:	
 	ACSGravityCore();
-
-	/*FORCEINLINE AActor* GetOwner() { return Owner; }
-	FORCEINLINE void SetOwner(AActor* InOwner) { Owner = InOwner; }
-
-protected:
-	UPROPERTY()
-	TObjectPtr<AActor> Owner;*/
 };

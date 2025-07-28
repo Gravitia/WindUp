@@ -11,25 +11,16 @@
 
 FVector UCSCustomGravityDirComponent::OrgGravityDirection = FVector(0.0f, 0.0f, -1.0f);
 
-
 UCSCustomGravityDirComponent::UCSCustomGravityDirComponent()
 {
-	PrimaryComponentTick.bCanEverTick = true;
-
-	GravityInterpSpeed = 5.0f;
-
-	bIsGravityCustomized = false;
-
 	SetIsReplicatedByDefault(true);
 }
 
 
+// Called when the game starts
 void UCSCustomGravityDirComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-	//SetComponentTickEnabled(false);
-
 	UCSCustomGravityDirComponent::OrgGravityDirection = FVector(0.0f, 0.0f, -1.0f);
 
 	if ( GetOwner() )
@@ -42,29 +33,12 @@ void UCSCustomGravityDirComponent::BeginPlay()
 			OwnerCharacter->OnActorBeginOverlap.AddDynamic(this, &UCSCustomGravityDirComponent::OnActorBeginOverlapCallback);
 			OwnerCharacter->OnActorEndOverlap.AddDynamic(this, &UCSCustomGravityDirComponent::OnActorEndOverlapCallback);
 		}
-	}
-}
-
-void UCSCustomGravityDirComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	
-	if ( OwnerCharacter->HasAuthority() )
-	{
-		CheckGravity();
-	}
-	else
-	{
-		FVector CurrentDir = OwnerCharacter->GetCharacterMovement()->GetGravityDirection().GetSafeNormal();
-
-		FVector SmoothedDir = FMath::VInterpTo(CurrentDir, TargetGravityDirection, DeltaTime, GravityInterpSpeed).GetSafeNormal();
-
-		if ( !CurrentDir.Equals(SmoothedDir, KINDA_SMALL_NUMBER) )
+		
+		if ( OwnerCharacter->HasAuthority() )
 		{
-			OwnerCharacter->GetCharacterMovement()->SetGravityDirection(SmoothedDir);
+			GetWorld()->GetTimerManager().SetTimer(GravityCheckTimerHandle, this, &UCSCustomGravityDirComponent::CheckGravity, 0.1f, true);
 		}
 	}
-	
 }
 
 void UCSCustomGravityDirComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -72,7 +46,6 @@ void UCSCustomGravityDirComponent::GetLifetimeReplicatedProps(TArray<FLifetimePr
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(UCSCustomGravityDirComponent, CurrentGravityDirection);
-	DOREPLIFETIME(UCSCustomGravityDirComponent, bIsGravityCustomized);
 }
 
 FVector UCSCustomGravityDirComponent::GetDirection()
@@ -90,7 +63,16 @@ FVector UCSCustomGravityDirComponent::GetDirection()
 
 void UCSCustomGravityDirComponent::OnRep_CurrentGravityDirection()
 {
-	TargetGravityDirection = CurrentGravityDirection.GetSafeNormal();
+	//UE_LOG(LogCS, Log, TEXT("[NetMode : %d] OnRep_CurrentGravityDirection, (%f, %f, %f)"), GetNetMode(), CurrentGravityDirection.X, CurrentGravityDirection.Y, CurrentGravityDirection.Z);
+	if (OwnerCharacter)
+	{
+		FVector CurrentDirection = OwnerCharacter->GetCharacterMovement()->GetGravityDirection();
+		if ( !( (CurrentDirection - CurrentGravityDirection) / 1000.0f ).IsNearlyZero() )
+		{
+			OwnerCharacter->GetCharacterMovement()->MovementMode = EMovementMode::MOVE_Walking;
+			OwnerCharacter->GetCharacterMovement()->SetGravityDirection(CurrentGravityDirection);
+		}
+	}
 }
 
 void UCSCustomGravityDirComponent::OnActorBeginOverlapCallback(AActor* OverlappedActor, AActor* OtherActor)
@@ -99,14 +81,7 @@ void UCSCustomGravityDirComponent::OnActorBeginOverlapCallback(AActor* Overlappe
 
 	if ( Core )
 	{
-		UE_LOG(LogCS, Log, TEXT("OnActorBeginOverlapCallback: %s, %s"), *Core->Owner.GetName(), *GetOwner()->GetName());
-		if (Core->Owner == GetOwner()) return;
-
-		UE_LOG(LogCS, Log, TEXT("[Netmode %d] UCSCustomGravityDirComponent OnActorBeginOverlapCallback"), GetWorld()->GetNetMode());
 		CurrentGravityCore = Core;
-		
-		//SetComponentTickEnabled(true);
-		bIsGravityCustomized = true;
 	}
 }
 
@@ -117,14 +92,9 @@ void UCSCustomGravityDirComponent::OnActorEndOverlapCallback(AActor* OverlappedA
 
 	if (Core)
 	{
-		if (Core->Owner == GetOwner()) return;
-
 		CurrentGravityDirection = OrgGravityDirection;
 		Character->GetCharacterMovement()->SetGravityDirection(OrgGravityDirection);
 		CurrentGravityCore = nullptr;
-
-		//SetComponentTickEnabled(false);
-		bIsGravityCustomized = false;
 	}
 }
 
@@ -138,3 +108,4 @@ void UCSCustomGravityDirComponent::CheckGravity()
 		OwnerCharacter->GetCharacterMovement()->SetGravityDirection(CurrentGravityDirection);
 	}
 }
+
