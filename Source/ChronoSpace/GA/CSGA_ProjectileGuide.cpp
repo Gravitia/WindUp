@@ -91,19 +91,21 @@ FVector UCSGA_ProjectileGuide::GetScreenCenterDirection() const
 	{
 		if (APlayerController* PC = Cast<APlayerController>(Character->GetController()))
 		{
-			// ★ 마우스 조준 모드가 아니면 저장된 초기 방향 사용 (플레이어 회전에 영향받지 않음)
-			if (!bUsingMouseAiming)
+			if (bInitialDirectionSet)
 			{
-				if (bInitialDirectionSet)
-				{
-					return InitialAimDirection;
-				}
-				else
-				{
-					// 백업: 현재 방향 사용
-					return Character->GetActorForwardVector();
-				}
+				return InitialAimDirection;
 			}
+			else
+			{
+				// 백업: 현재 방향 사용
+				return Character->GetActorForwardVector();
+			}
+
+			//// ★ 마우스 조준 모드가 아니면 저장된 초기 방향 사용 (플레이어 회전에 영향받지 않음)
+			//if (!bUsingMouseAiming)
+			//{
+			//	
+			//}
 
 			// 마우스 조준 모드일 때만 마우스 위치 사용
 			int32 ViewportSizeX, ViewportSizeY;

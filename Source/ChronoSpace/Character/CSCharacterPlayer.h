@@ -215,4 +215,11 @@ public:
 protected:
 	UPROPERTY(Transient)
 	TObjectPtr<class USphereComponent> GravityCoreSphere;
+
+// Black Hole
+// GA가 RPC가 없는 것에 대한 우회..
+public:
+	UFUNCTION(Server, Reliable)
+	void ServerSpawnAndSetBlackHole(TSubclassOf<class ACSBlackHole> BlackHoleClass,
+		FVector Location, float Duration, float GravityInfluenceRange, float PullStrength, float StopRange);
 };

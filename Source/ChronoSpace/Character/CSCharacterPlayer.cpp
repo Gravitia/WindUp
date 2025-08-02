@@ -29,6 +29,9 @@
 #include "Player/CSPlayerController.h"
 #include "DataAsset/CSCharacterPlayerData.h"
 #include "Components/SphereComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "Actor/CSBlackHole.h"
+
 
 ACSCharacterPlayer::ACSCharacterPlayer()
 {
@@ -247,8 +250,17 @@ void ACSCharacterPlayer::SetShoulderLook(bool bIsShoulderLook)
 		FollowCamera->SetActive(false);
 		FirstPersonCamera->SetActive(true);      // 1인칭 카메라 켜기
 
-		// 필요 시, 전체 메쉬는 안 보이게(arms만 따로 분리해 쓰면 더 좋음)
 		GetMesh()->SetOwnerNoSee(true);
+
+		if (WindUpKeyActor)
+		{
+			UStaticMeshComponent* KeyMesh = WindUpKeyActor->GetComponentByClass<UStaticMeshComponent>();
+			if (KeyMesh)
+			{
+				KeyMesh->SetVisibility(false);
+			}
+		}
+		
 	}
 	else
 	{
@@ -257,7 +269,16 @@ void ACSCharacterPlayer::SetShoulderLook(bool bIsShoulderLook)
 		CameraBoom->SetActive(true);
 		FollowCamera->SetActive(true);
 
-		GetMesh()->SetOwnerNoSee(false);
+		if (WindUpKeyActor)
+		{
+			UStaticMeshComponent* KeyMesh = WindUpKeyActor->GetComponentByClass<UStaticMeshComponent>();
+			if (KeyMesh)
+			{
+				KeyMesh->SetVisibility(true);
+			}
+		}
+
+		GetMesh()->SetOwnerNoSee(false); 
 	}
 }
 
@@ -377,5 +398,27 @@ void ACSCharacterPlayer::NetMulticastDestroyGravityCoreSphere_Implementation()
 	if (GravityCoreSphere)
 	{
 		GravityCoreSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+}
+
+void ACSCharacterPlayer::ServerSpawnAndSetBlackHole_Implementation(TSubclassOf<class ACSBlackHole> BlackHoleClass,
+	FVector Location, float Duration, float GravityInfluenceRange, float PullStrength, float StopRange)
+{
+	if (UWorld* World = GetWorld())
+	{
+		FActorSpawnParameters Params;
+		Params.Owner = this;
+		Params.Instigator = this;
+
+		FRotator Rotation = FRotator::ZeroRotator;
+		ACSBlackHole* BlackHole = World->SpawnActor<ACSBlackHole>(BlackHoleClass, Location, Rotation, Params);
+
+		if (BlackHole)
+		{
+			BlackHole->SetDuration(Duration);
+			BlackHole->SetGravityInfluenceRange(GravityInfluenceRange);
+			BlackHole->SetPullStrength(PullStrength);
+			BlackHole->SetStopRange(StopRange);
+		}
 	}
 }

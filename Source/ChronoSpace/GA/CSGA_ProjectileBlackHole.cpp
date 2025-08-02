@@ -11,6 +11,8 @@
 #include "AbilitySystemComponent.h"
 #include "Abilities/GameplayAbilityTargetTypes.h"
 #include "Character/CSCharacterPlayer.h"
+#include "Actor/CSBlackHoleDummy.h"
+#include "Actor/CSBlackHole.h"
 #include "ChronoSpace.h"
 
 UCSGA_ProjectileBlackHole::UCSGA_ProjectileBlackHole()
@@ -23,19 +25,21 @@ UCSGA_ProjectileBlackHole::UCSGA_ProjectileBlackHole()
 	UpdateRate = 0.02f;
 	MouseYSensitivity = 3.0f;
 
-	// 블랙홀 어빌리티 클래스 기본값 설정 (에디터에서 설정 가능)
-	BlackHoleAbilityClass = UCSGA_BlackHole::StaticClass();
-
 	CurrentEndLocation = FVector::ZeroVector;
 
 	bIsSpawned = false;
+
+	Duration = 5.0f;
+	GravityInfluenceRange = 500.0f;
+	PullStrength = 10.0f;
+	StopRange = 100.0f;
 }
 
 void UCSGA_ProjectileBlackHole::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	check(BlackHoleDummy);
+	check(BlackHoleDummyClass);
 
 	bIsSpawned = false;
 
@@ -102,18 +106,18 @@ FVector UCSGA_ProjectileBlackHole::GetScreenCenterDirection() const
 		if (APlayerController* PC = Cast<APlayerController>(Character->GetController()))
 		{
 			// ★ 마우스 조준 모드가 아니면 저장된 초기 방향 사용 (플레이어 회전에 영향받지 않음)
-			if (!bUsingMouseAiming)
-			{
-				if (bInitialDirectionSet)
-				{
-					return InitialAimDirection;
-				}
-				else
-				{
-					// 백업: 현재 방향 사용
-					return Character->GetActorForwardVector();
-				}
-			}
+			//if (!bUsingMouseAiming)
+			//{
+			//	if (bInitialDirectionSet)
+			//	{
+			//		return InitialAimDirection;
+			//	}
+			//	else
+			//	{
+			//		// 백업: 현재 방향 사용
+			//		return Character->GetActorForwardVector();
+			//	}
+			//}
 
 			// 마우스 조준 모드일 때만 마우스 위치 사용
 			int32 ViewportSizeX, ViewportSizeY;
@@ -247,7 +251,12 @@ void UCSGA_ProjectileBlackHole::CheckMouseInput()
 
 void UCSGA_ProjectileBlackHole::CreateBlackHoleAtLocation(const FVector& Location)
 {
-	
+	ACSCharacterPlayer* CSPlayer = Cast<ACSCharacterPlayer>(GetAvatarActorFromActorInfo());
+
+	if ( CSPlayer )
+	{
+		CSPlayer->ServerSpawnAndSetBlackHole(BlackHoleClass, Location, Duration, GravityInfluenceRange, PullStrength, StopRange);
+	}
 }
 
 void UCSGA_ProjectileBlackHole::SpawnBlackHoleDummy(FVector SpawnLocation)
@@ -258,8 +267,12 @@ void UCSGA_ProjectileBlackHole::SpawnBlackHoleDummy(FVector SpawnLocation)
 	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 	BlackHoleDummyActor =
-		GetWorld()->SpawnActor<AActor>(BlackHoleDummy, SpawnLocation,
+		GetWorld()->SpawnActor<ACSBlackHoleDummy>(BlackHoleDummyClass, SpawnLocation,
 			FRotator::ZeroRotator, Params);
+	if (BlackHoleDummyActor)
+	{
+		BlackHoleDummyActor->SetGravityInfluenceRange( GravityInfluenceRange );
+	}
 }
 
 

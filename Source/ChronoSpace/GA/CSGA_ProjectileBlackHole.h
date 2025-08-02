@@ -40,6 +40,18 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile Guide")
 	float MouseYSensitivity = 1.5f;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Black Hole")
+	float Duration;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Black Hole")
+	float GravityInfluenceRange;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Black Hole")
+	float PullStrength;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Black Hole")
+	float StopRange;
+
 private:
 	FTimerHandle UpdateTimerHandle;
 	FTimerHandle DurationTimerHandle;
@@ -65,11 +77,6 @@ private:
 
 	// Black Hole 
 protected:
-
-	// 블랙홀 어빌리티 클래스 설정 (에디터에서 변경 가능)
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile Guide")
-	TSubclassOf<class UCSGA_BlackHole> BlackHoleAbilityClass;
-
 	// 현재 EndLocation 저장
 	FVector CurrentEndLocation;
 
@@ -77,24 +84,20 @@ protected:
 	void CheckMouseInput();
 	void CreateBlackHoleAtLocation(const FVector& Location);
 
-public:
-	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ability")
-	EAbilityIndex Ability;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ability")
-	TSubclassOf<class UGameplayAbility> AbilityClass;*/
-
 protected:
 	void SpawnBlackHoleDummy(FVector SpawnLocation);
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Black Hole Dummy")
-	TSubclassOf<AActor> BlackHoleDummy;
+	TSubclassOf<class ACSBlackHoleDummy> BlackHoleDummyClass;
 
 	UPROPERTY()
-	TObjectPtr<AActor> BlackHoleDummyActor;
+	TObjectPtr<class ACSBlackHoleDummy> BlackHoleDummyActor;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Black Hole")
-	TSubclassOf<AActor> BlackHole;
+	TSubclassOf<class ACSBlackHole> BlackHoleClass;
+
+	UPROPERTY()
+	TObjectPtr<class ACSBlackHole> BlackHoleActor;
 
 	bool bIsSpawned;
 };

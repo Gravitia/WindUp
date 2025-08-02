@@ -66,7 +66,7 @@ void ACSCharacterBase::AttachWindUpKeyToSocket()
 	SpawnParams.Owner = this;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	AActor* WindUpKeyActor = GetWorld()->SpawnActor<AActor>(WindUpKeyBPClass, SpawnParams);
+	WindUpKeyActor = GetWorld()->SpawnActor<AActor>(WindUpKeyBPClass, SpawnParams);
 	if (!WindUpKeyActor)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Failed to spawn WindUpKey BP Actor."));
