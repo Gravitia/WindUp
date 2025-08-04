@@ -25,4 +25,6 @@ protected:
 	// Wind Up Key
 protected:
 	void AttachWindUpKeyToSocket();
+
+	TObjectPtr<AActor> WindUpKeyActor;
 };

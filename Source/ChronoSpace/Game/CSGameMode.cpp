@@ -42,8 +42,11 @@ void ACSGameMode::PostLogin(APlayerController* NewPlayer)
         }
 
         UE_LOG(LogTemp, Log, TEXT("Player logged in: %s"), *NewPlayer->GetName());
+
+        OnPlayerLogin.Broadcast();
     }
 }
+
 
 void ACSGameMode::Logout(AController* Exiting)
 {

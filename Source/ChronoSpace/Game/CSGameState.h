@@ -54,18 +54,17 @@ protected:
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
     virtual void BeginPlay() override;
 
-    // === 수정: 배열 자체만 Replicated ===
+    // === 플레이어 죽음 상태 관리 ===
     UPROPERTY(Replicated, BlueprintReadOnly, Category = "Player Death")
     TArray<FPlayerDeathState> PlayerDeathStates;
 
-    // 나머지 코드는 동일...
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Respawn Settings")
     float AllDeadRespawnDelay = 2.0f;
 
     FTimerHandle AllDeadRespawnTimer;
 
 public:
-    // === 기존: 플레이어 상태 관리 ===
+    // === 플레이어 상태 관리 ===
     UFUNCTION(BlueprintCallable, Category = "Players")
     TArray<ACSPlayerState*> GetAllMyPlayerStates() const;
 
@@ -130,7 +129,7 @@ protected:
     virtual void AddPlayerState(APlayerState* PlayerState) override;
     virtual void RemovePlayerState(APlayerState* PlayerState) override;
 
-    // === 멀티캐스트 이벤트 ===
+    // === 플레이어 관련 멀티캐스트 이벤트 ===
     UFUNCTION(NetMulticast, Reliable)
     void MulticastOnPlayerDied(APawn* DeadPlayer);
 

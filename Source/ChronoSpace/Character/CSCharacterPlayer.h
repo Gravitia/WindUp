@@ -28,6 +28,8 @@ public:
 
 	virtual void OnRep_PlayerState() override;
 
+	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GAS") 
 	TObjectPtr<class UCSGASManagerComponent> GASManagerComponent;
@@ -55,11 +57,21 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UCameraComponent> FollowCamera;
 
-// Input Section
+// Move & Look
+public:
+	void SetShoulderLook(bool bIsShoulderLook);
+
 protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UCameraComponent> FirstPersonCamera;
+
 	void ShoulderMove(const FInputActionValue& Value);
 	void ShoulderLook(const FInputActionValue& Value);
 
+	bool bIsFirstLook;
+
+// Input Section
+protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UInputMappingContext> MappingContext;
 
@@ -203,4 +215,11 @@ public:
 protected:
 	UPROPERTY(Transient)
 	TObjectPtr<class USphereComponent> GravityCoreSphere;
+
+// Black Hole
+// GA가 RPC가 없는 것에 대한 우회..
+public:
+	UFUNCTION(Server, Reliable)
+	void ServerSpawnAndSetBlackHole(TSubclassOf<class ACSBlackHole> BlackHoleClass,
+		FVector Location, float Duration, float GravityInfluenceRange, float PullStrength, float StopRange);
 };
