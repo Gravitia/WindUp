@@ -105,31 +105,24 @@ FVector UCSGA_ProjectileBlackHole::GetScreenCenterDirection() const
 	{
 		if (APlayerController* PC = Cast<APlayerController>(Character->GetController()))
 		{
-			// ★ 마우스 조준 모드가 아니면 저장된 초기 방향 사용 (플레이어 회전에 영향받지 않음)
-			//if (!bUsingMouseAiming)
-			//{
-			//	if (bInitialDirectionSet)
-			//	{
-			//		return InitialAimDirection;
-			//	}
-			//	else
-			//	{
-			//		// 백업: 현재 방향 사용
-			//		return Character->GetActorForwardVector();
-			//	}
-			//}
-
-			// 마우스 조준 모드일 때만 마우스 위치 사용
 			int32 ViewportSizeX, ViewportSizeY;
 			PC->GetViewportSize(ViewportSizeX, ViewportSizeY);
+
+			// Determine which split-screen slot this player is in:
+			// 0 = left/top, 1 = right/bottom (for two players)
+			int32 ControllerId = PC->GetLocalPlayer()->GetControllerId();
+
+			// Left player uses 25% X, right player 75%
+			float ScreenCenterX = (ControllerId == 0)
+				? ViewportSizeX * 0.25f
+				: ViewportSizeX * 0.75f;
+
+			float ScreenCenterY = ViewportSizeY * 0.5f;
 
 			float CurrentMouseX, CurrentMouseY;
 			if (PC->GetMousePosition(CurrentMouseX, CurrentMouseY))
 			{
-				float ScreenCenterX = ViewportSizeX * 0.5f;
-				float ScreenCenterY = ViewportSizeY * 0.5f;
-
-				// 마우스 Y축 중앙에서 차이 계산
+				// apply Y-axis sensitivity as before
 				float MouseYOffset = CurrentMouseY - ScreenCenterY;
 				float AmplifiedYOffset = MouseYOffset * MouseYSensitivity;
 				float FinalY = ScreenCenterY + AmplifiedYOffset;
@@ -143,7 +136,6 @@ FVector UCSGA_ProjectileBlackHole::GetScreenCenterDirection() const
 		}
 	}
 
-	// Fallback: 저장된 초기 방향 또는 ForwardVector
 	return bInitialDirectionSet ? InitialAimDirection : FVector::ForwardVector;
 }
 
