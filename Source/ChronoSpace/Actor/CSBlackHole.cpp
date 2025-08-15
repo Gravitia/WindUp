@@ -9,6 +9,7 @@
 #include "Character/CSCharacterPlayer.h"
 #include "Physics/CSCollision.h"
 #include "Kismet/GameplayStatics.h"
+#include "ActorComponent/CSCharacterPulledByBlackhole.h"
 #include "ChronoSpace.h"
 
 // Sets default values
@@ -136,7 +137,7 @@ void ACSBlackHole::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComponen
 {
 	ACharacter* DetectedCharacter = Cast<ACharacter>(OtherActor);
 
-	if (DetectedCharacter)
+	if (DetectedCharacter && DetectedCharacter->GetComponentByClass<UCSCharacterPulledByBlackhole>())
 	{
 		CharactersInSphereTrigger.Emplace(DetectedCharacter->GetFName(), DetectedCharacter);
 	}
@@ -146,7 +147,7 @@ void ACSBlackHole::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedComponent,
 {
 	ACharacter* DetectedCharacter = Cast<ACharacter>(OtherActor);
 
-	if (DetectedCharacter)
+	if (DetectedCharacter && DetectedCharacter->GetComponentByClass<UCSCharacterPulledByBlackhole>())
 	{
 		CharactersInSphereTrigger.Remove(DetectedCharacter->GetFName());
 	}
