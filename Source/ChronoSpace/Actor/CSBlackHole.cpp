@@ -9,6 +9,7 @@
 #include "Character/CSCharacterPlayer.h"
 #include "Physics/CSCollision.h"
 #include "Kismet/GameplayStatics.h"
+#include "ActorComponent/CSCharacterPulledByBlackhole.h"
 #include "ChronoSpace.h"
 
 // Sets default values
@@ -22,7 +23,7 @@ ACSBlackHole::ACSBlackHole()
 	RootComponent = GravitySphereTrigger;
 	GravitySphereTrigger->SetSphereRadius(GravityInfluenceRange, true);
 	GravitySphereTrigger->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
-	GravitySphereTrigger->SetCollisionProfileName(CPROFILE_CSTRIGGER);
+	GravitySphereTrigger->SetCollisionProfileName(CPROFILE_OVERLAPALL);
 	GravitySphereTrigger->SetIsReplicated(true);
 
 	GravitySphereTrigger->OnComponentBeginOverlap.AddDynamic(this, &ACSBlackHole::OnTriggerBeginOverlap);
@@ -31,10 +32,13 @@ ACSBlackHole::ACSBlackHole()
 	// EventHorizonSphereTrigger
 	EventHorizonSphereTrigger = CreateDefaultSubobject<USphereComponent>(TEXT("EventHorizonSphereTrigger"));
 	EventHorizonSphereTrigger->SetupAttachment(GravitySphereTrigger);
-	EventHorizonSphereTrigger->SetSphereRadius(50.0f, true);
+	EventHorizonSphereTrigger->SetSphereRadius(StopRadius, true);
 	EventHorizonSphereTrigger->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
-	EventHorizonSphereTrigger->SetCollisionProfileName(CPROFILE_CSTRIGGER);
+	EventHorizonSphereTrigger->SetCollisionProfileName(CPROFILE_OVERLAPALL);
 	EventHorizonSphereTrigger->SetIsReplicated(true);
+
+	EventHorizonSphereTrigger->OnComponentBeginOverlap.AddDynamic(this, &ACSBlackHole::OnStopTriggerBeginOverlap);
+	EventHorizonSphereTrigger->OnComponentEndOverlap.AddDynamic(this, &ACSBlackHole::OnStopTriggerEndOverlap);
 
 	// Static Mesh
 	CoreMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CoreMesh"));
@@ -71,6 +75,12 @@ void ACSBlackHole::Tick(float DeltaTime)
 	for (auto Char = CharactersInSphereTrigger.CreateIterator(); Char; ++Char)
 	{
 		if (Char.Value() == Owner) continue;
+
+		if ( CharactersInEventHorizon.Contains(Char.Value()) )
+		{
+			Char.Value()->GetCharacterMovement()->StopMovementImmediately();
+			continue;
+		}
 
 		if (IsValid(Char.Value()))
 		{
@@ -136,7 +146,7 @@ void ACSBlackHole::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComponen
 {
 	ACharacter* DetectedCharacter = Cast<ACharacter>(OtherActor);
 
-	if (DetectedCharacter)
+	if (DetectedCharacter && DetectedCharacter->GetComponentByClass<UCSCharacterPulledByBlackhole>())
 	{
 		CharactersInSphereTrigger.Emplace(DetectedCharacter->GetFName(), DetectedCharacter);
 	}
@@ -146,9 +156,29 @@ void ACSBlackHole::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedComponent,
 {
 	ACharacter* DetectedCharacter = Cast<ACharacter>(OtherActor);
 
-	if (DetectedCharacter)
+	if (DetectedCharacter && DetectedCharacter->GetComponentByClass<UCSCharacterPulledByBlackhole>())
 	{
 		CharactersInSphereTrigger.Remove(DetectedCharacter->GetFName());
+	}
+}
+
+void ACSBlackHole::OnStopTriggerBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepHitResult)
+{
+	ACharacter* DetectedCharacter = Cast<ACharacter>(OtherActor);
+
+	if (DetectedCharacter && DetectedCharacter->GetComponentByClass<UCSCharacterPulledByBlackhole>())
+	{
+		CharactersInEventHorizon.Add(DetectedCharacter);
+	}
+}
+
+void ACSBlackHole::OnStopTriggerEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	ACharacter* DetectedCharacter = Cast<ACharacter>(OtherActor);
+
+	if (DetectedCharacter && DetectedCharacter->GetComponentByClass<UCSCharacterPulledByBlackhole>())
+	{
+		CharactersInEventHorizon.Remove(DetectedCharacter);
 	}
 }
 

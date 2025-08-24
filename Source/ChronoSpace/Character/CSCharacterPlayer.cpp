@@ -26,6 +26,8 @@
 #include "ActorComponent/CSCharacterScaleComponent.h"
 #include "ActorComponent/CSGASManagerComponent.h"
 #include "ActorComponent/CSTransformRecordComponent.h"
+#include "ActorComponent/CSCharacterPushedComponent.h"
+#include "ActorComponent/CSCharacterPulledByBlackhole.h"
 #include "Player/CSPlayerController.h"
 #include "DataAsset/CSCharacterPlayerData.h"
 #include "Components/SphereComponent.h"
@@ -75,6 +77,10 @@ ACSCharacterPlayer::ACSCharacterPlayer()
 	GASManagerComponent = CreateDefaultSubobject<UCSGASManagerComponent>(TEXT("GASManagerComponent"));
 
 	TransformRecordComponent = CreateDefaultSubobject<UCSTransformRecordComponent>(TEXT("TransformRecordComponent"));
+
+	PushedComponent = CreateDefaultSubobject<UCSCharacterPushedComponent>(TEXT("PushedComponent"));
+
+	PulledByBlackholeComponent = CreateDefaultSubobject<UCSCharacterPulledByBlackhole>(TEXT("PulledByBlackholeComponent"));
 
 	GravityCoreSphere = CreateDefaultSubobject<USphereComponent>(TEXT("GravityCoreSphere"));
 	GravityCoreSphere->SetIsReplicated(true);
