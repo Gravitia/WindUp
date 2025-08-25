@@ -7,6 +7,7 @@
 #include "Abilities/GameplayAbilityTypes.h"
 #include "AbilitySystemComponent.h"
 #include "Abilities/GameplayAbilityTargetTypes.h"
+#include "Character/CSCharacterPlayer.h"
 #include "ChronoSpace.h"
 
 UCSGA_ProjectileGuide::UCSGA_ProjectileGuide()
@@ -56,6 +57,11 @@ void UCSGA_ProjectileGuide::ActivateAbility(const FGameplayAbilitySpecHandle Han
 				LastMousePosition = FVector2D(MouseX, MouseY);
 			}
 		}
+
+		if ( ACSCharacterPlayer* CSPlayer = Cast<ACSCharacterPlayer>(Character) )
+		{
+			CSPlayer->SetShoulderLook(false);
+		}
 	}
 
 	// 업데이트 타이머 시작
@@ -85,19 +91,21 @@ FVector UCSGA_ProjectileGuide::GetScreenCenterDirection() const
 	{
 		if (APlayerController* PC = Cast<APlayerController>(Character->GetController()))
 		{
-			// ★ 마우스 조준 모드가 아니면 저장된 초기 방향 사용 (플레이어 회전에 영향받지 않음)
-			if (!bUsingMouseAiming)
+			if (bInitialDirectionSet)
 			{
-				if (bInitialDirectionSet)
-				{
-					return InitialAimDirection;
-				}
-				else
-				{
-					// 백업: 현재 방향 사용
-					return Character->GetActorForwardVector();
-				}
+				return InitialAimDirection;
 			}
+			else
+			{
+				// 백업: 현재 방향 사용
+				return Character->GetActorForwardVector();
+			}
+
+			//// ★ 마우스 조준 모드가 아니면 저장된 초기 방향 사용 (플레이어 회전에 영향받지 않음)
+			//if (!bUsingMouseAiming)
+			//{
+			//	
+			//}
 
 			// 마우스 조준 모드일 때만 마우스 위치 사용
 			int32 ViewportSizeX, ViewportSizeY;
@@ -129,6 +137,11 @@ FVector UCSGA_ProjectileGuide::GetScreenCenterDirection() const
 
 void UCSGA_ProjectileGuide::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
+	if ( ACSCharacterPlayer* CSPlayer = Cast<ACSCharacterPlayer>( ActorInfo->AvatarActor ) )
+	{
+		CSPlayer->SetShoulderLook(true);
+	}
+
 	// 타이머 정리
 	if (UpdateTimerHandle.IsValid())
 	{

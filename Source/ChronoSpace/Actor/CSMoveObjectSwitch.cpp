@@ -7,15 +7,14 @@
 #include "Net/UnrealNetwork.h"
 #include "ChronoSpace.h"
 
-
 ACSMoveObjectSwitch::ACSMoveObjectSwitch()
 {
 	// Tick 활성화
 	PrimaryActorTick.bCanEverTick = true;
 
 	// 기본값 설정
-	MoveSpeed = 200.0f;           // 200 유닛 / 초
-	RotationSpeed = 5.0f;        // 5도 / 초
+	MoveSpeed = 200.0f;           // 200 유닛/초
+	RotationSpeed = 90.0f;        // 90도/초
 	MoveTolerance = 5.0f;         // 5 유닛 허용 오차
 	RotationTolerance = 1.0f;     // 1도 허용 오차
 	bIsMoving = false;
@@ -34,6 +33,7 @@ void ACSMoveObjectSwitch::BeginPlay()
 	if (HasAuthority())
 	{
 		InitializeObjectPositions();
+		CalculateTargetTransforms();
 	}
 }
 
@@ -98,6 +98,7 @@ void ACSMoveObjectSwitch::InitializeObjectPositions()
 	{
 		if (IsValid(MoveData.TargetActor))
 		{
+			// 초기 위치와 회전 저장
 			MoveData.InitialLocation = MoveData.TargetActor->GetActorLocation();
 			MoveData.InitialRotation = MoveData.TargetActor->GetActorRotation();
 			MoveData.bIsAtTarget = false;
@@ -106,6 +107,59 @@ void ACSMoveObjectSwitch::InitializeObjectPositions()
 				*MoveData.TargetActor->GetName(),
 				*MoveData.InitialLocation.ToString(),
 				*MoveData.InitialRotation.ToString());
+		}
+	}
+}
+
+void ACSMoveObjectSwitch::CalculateTargetTransforms()
+{
+	for (FMoveObjectData& MoveData : MoveObjects)
+	{
+		if (IsValid(MoveData.TargetActor))
+		{
+			// 위치 계산
+			if (MoveData.bUseActorLocalSpace)
+			{
+				// 액터의 로컬 좌표계 기준으로 오프셋 적용
+				FTransform ActorTransform = MoveData.TargetActor->GetActorTransform();
+
+				if (MoveData.bIgnoreScale)
+				{
+					// 스케일을 무시하고 순수한 회전만 적용
+					FQuat ActorRotation = ActorTransform.GetRotation();
+					FVector WorldOffset = ActorRotation.RotateVector(MoveData.LocalMovementOffset);
+					MoveData.CalculatedTargetLocation = MoveData.InitialLocation + WorldOffset;
+				}
+				else
+				{
+					// 스케일 포함하여 변환
+					FVector WorldOffset = ActorTransform.TransformVector(MoveData.LocalMovementOffset);
+					MoveData.CalculatedTargetLocation = MoveData.InitialLocation + WorldOffset;
+				}
+			}
+			else
+			{
+				// 월드 좌표계 기준으로 오프셋 적용 (스케일 무관)
+				MoveData.CalculatedTargetLocation = MoveData.InitialLocation + MoveData.LocalMovementOffset;
+			}
+
+			// 회전 계산 (항상 상대적으로 적용)
+			MoveData.CalculatedTargetRotation = MoveData.InitialRotation + MoveData.LocalRotationOffset;
+
+			UE_LOG(LogCS, Log, TEXT("Calculated Target for %s:"),
+				*MoveData.TargetActor->GetName());
+			UE_LOG(LogCS, Log, TEXT("  - Actor Scale: %s"),
+				*MoveData.TargetActor->GetActorScale3D().ToString());
+			UE_LOG(LogCS, Log, TEXT("  - Movement Offset: %s (%s space, %s scale)"),
+				*MoveData.LocalMovementOffset.ToString(),
+				MoveData.bUseActorLocalSpace ? TEXT("Local") : TEXT("World"),
+				MoveData.bIgnoreScale ? TEXT("Ignore") : TEXT("Apply"));
+			UE_LOG(LogCS, Log, TEXT("  - Target Location: %s"),
+				*MoveData.CalculatedTargetLocation.ToString());
+			UE_LOG(LogCS, Log, TEXT("  - Rotation Offset: %s"),
+				*MoveData.LocalRotationOffset.ToString());
+			UE_LOG(LogCS, Log, TEXT("  - Target Rotation: %s"),
+				*MoveData.CalculatedTargetRotation.ToString());
 		}
 	}
 }
@@ -163,7 +217,7 @@ void ACSMoveObjectSwitch::UpdateMovement(float DeltaTime)
 
 		// === 위치 이동 처리 ===
 		FVector CurrentLocation = MoveData.TargetActor->GetActorLocation();
-		FVector TargetPosition = bMovingToTarget ? MoveData.TargetLocation : MoveData.InitialLocation;
+		FVector TargetPosition = bMovingToTarget ? MoveData.CalculatedTargetLocation : MoveData.InitialLocation;
 		FVector NewLocation = CurrentLocation;
 
 		bool bLocationReached = true;
@@ -172,8 +226,8 @@ void ACSMoveObjectSwitch::UpdateMovement(float DeltaTime)
 			float DistanceToTarget = FVector::Dist(CurrentLocation, TargetPosition);
 			if (DistanceToTarget > MoveTolerance)
 			{
-				// 부드럽게 위치 이동
-				NewLocation = FMath::VInterpTo(CurrentLocation, TargetPosition, DeltaTime, MoveSpeed / 100.0f);
+				// 일정한 속도로 위치 이동 (MoveSpeed 유닛/초)
+				NewLocation = FMath::VInterpConstantTo(CurrentLocation, TargetPosition, DeltaTime, MoveSpeed);
 				bLocationReached = false;
 			}
 			else
@@ -186,7 +240,7 @@ void ACSMoveObjectSwitch::UpdateMovement(float DeltaTime)
 
 		// === 회전 처리 ===
 		FRotator CurrentRotation = MoveData.TargetActor->GetActorRotation();
-		FRotator TargetRotationValue = bMovingToTarget ? MoveData.TargetRotation : MoveData.InitialRotation;
+		FRotator TargetRotationValue = bMovingToTarget ? MoveData.CalculatedTargetRotation : MoveData.InitialRotation;
 		FRotator NewRotation = CurrentRotation;
 
 		bool bRotationReached = true;
@@ -202,8 +256,8 @@ void ACSMoveObjectSwitch::UpdateMovement(float DeltaTime)
 
 			if (RotationDistance > RotationTolerance)
 			{
-				// 부드럽게 회전
-				NewRotation = FMath::RInterpTo(CurrentRotation, TargetRotationValue, DeltaTime, RotationSpeed);
+				// 일정한 속도로 회전 (RotationSpeed 도/초)
+				NewRotation = FMath::RInterpConstantTo(CurrentRotation, TargetRotationValue, DeltaTime, RotationSpeed);
 				bRotationReached = false;
 			}
 			else
@@ -244,7 +298,6 @@ void ACSMoveObjectSwitch::NetMulticastStartMovement_Implementation(bool bInMoveT
 	// 클라이언트에서는 이동 상태만 업데이트
 	bMovingToTarget = bInMoveToTarget;
 	bIsMoving = true;
-
 }
 
 void ACSMoveObjectSwitch::NetMulticastUpdateMovement_Implementation(const TArray<FVector>& NewLocations, const TArray<FRotator>& NewRotations)

@@ -170,7 +170,7 @@ void ACSTA_BlackHoleSphere::OnEventHorizonBeginOverlap(UPrimitiveComponent* Over
 	{
 		if (OverlapedCharacterPlayer == nullptr)
 		{
-			OtherActor->Destroy();
+			// OtherActor->Destroy();
 		}
 	}
 }
