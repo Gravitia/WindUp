@@ -8,6 +8,8 @@
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/Pawn.h"
+#include "Engine/LocalPlayer.h"
+
 
 ACSGameMode::ACSGameMode()
 {
@@ -66,6 +68,23 @@ void ACSGameMode::Logout(AController* Exiting)
     }
 
     Super::Logout(Exiting);
+}
+
+UClass* ACSGameMode::GetDefaultPawnClassForController_Implementation(AController* InController)
+{
+    if (const APlayerController* PC = Cast<APlayerController>(InController))
+    {
+        // 1) 로컬 스플릿스크린: ControllerId 기준(0,1,2…)
+        if (const ULocalPlayer* LP = PC->GetLocalPlayer())
+        {
+            const int32 Id = LP->GetControllerId();
+            if (Id == 1 && PawnClassPlayer1) return PawnClassPlayer1;
+            if (Id == 0 && PawnClassPlayer0) return PawnClassPlayer0;
+        }
+    }
+
+    // 설정이 없으면 기본(프로젝트의 DefaultPawnClass) 사용
+    return Super::GetDefaultPawnClassForController_Implementation(InController);
 }
 
 void ACSGameMode::SetCurrentRespawnPoint(ACSRespawnPoint* NewRespawnPoint)

@@ -30,6 +30,13 @@ protected:
 	UFUNCTION()
 	void OnTriggerEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
+	UFUNCTION()
+	void OnStopTriggerBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepHitResult);
+
+	UFUNCTION()
+	void OnStopTriggerEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+
 	UPROPERTY(VisibleAnywhere, Category = "Sphere", Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class USphereComponent> GravitySphereTrigger;
 
@@ -45,6 +52,9 @@ protected:
 	UPROPERTY()
 	TMap<FName, TObjectPtr<ACharacter> > CharactersInSphereTrigger;
 
+	UPROPERTY()
+	TSet< TObjectPtr<ACharacter> > CharactersInEventHorizon;
+
 	UPROPERTY(EditAnywhere, Category = "Sphere")
 	float GravityInfluenceRange = 500.0f;
 
@@ -52,7 +62,7 @@ protected:
 	float PullStrength = 4000.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Sphere")
-	float StopRadius = 100.0f;	
+	float StopRadius = 50.0f;	
 
 	float MeshRadius = 50.0f;
 };

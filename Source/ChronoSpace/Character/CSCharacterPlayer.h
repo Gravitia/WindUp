@@ -42,6 +42,14 @@ protected:
 	virtual void PreInitializeComponents() override; 
 	virtual void SetDead() override;
 
+
+protected:
+	UPROPERTY()
+	TObjectPtr<class UCSCharacterPushedComponent> PushedComponent;
+
+	UPROPERTY()
+	TObjectPtr<class UCSCharacterPulledByBlackhole> PulledByBlackholeComponent;
+
 // Data
 protected:
 	void SetData();

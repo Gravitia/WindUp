@@ -7,6 +7,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Character/CSCharacterPatrol.h"
 #include "Character/CSCharacterPlayer.h"
+#include "ActorComponent/CSCharacterPushedComponent.h"
 #include "ChronoSpace.h"
 
 UCSPushingCharacterComponent::UCSPushingCharacterComponent()
@@ -31,6 +32,10 @@ void UCSPushingCharacterComponent::BeginPlay()
 	{
 		Trigger->OnComponentBeginOverlap.AddDynamic(this, &UCSPushingCharacterComponent::OnComponentBeginOverlapCallback);
 		Trigger->OnComponentEndOverlap.AddDynamic(this, &UCSPushingCharacterComponent::OnComponentEndOverlapCallback);
+	}
+	else
+	{
+		UE_LOG(LogCS, Error, TEXT("No Trigger"));
 	}
 }
 
@@ -63,9 +68,10 @@ void UCSPushingCharacterComponent::OnComponentBeginOverlapCallback(UPrimitiveCom
 	if (nullptr == Cast<ACSCharacterPlayer>(OtherActor) &&
 		nullptr == Cast<ACSCharacterPatrol>(OtherActor))
 	{
+		UE_LOG(LogCS, Log, TEXT("OnComponentBeginOverlapCallback"));
 		ACharacter* OverlappedCharacter = Cast<ACharacter>(OtherActor);
 
-		if (OverlappedCharacter)
+		if ( OverlappedCharacter && OverlappedCharacter->FindComponentByClass<UCSCharacterPushedComponent>() )
 		{
 			CharsInPushing.Emplace(OverlappedCharacter->GetFName(), OverlappedCharacter);
 		}
@@ -78,7 +84,7 @@ void UCSPushingCharacterComponent::OnComponentEndOverlapCallback(UPrimitiveCompo
 	{
 		ACharacter* OverlappedCharacter = Cast<ACharacter>(OtherActor);
 
-		if (OverlappedCharacter)
+		if (OverlappedCharacter && OverlappedCharacter->FindComponentByClass<UCSCharacterPushedComponent>())
 		{
 			CharsInPushing.Remove(OverlappedCharacter->GetFName());
 		}

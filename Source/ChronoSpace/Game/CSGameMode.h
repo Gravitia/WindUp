@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameMode.h"
 #include "Actor/System/CSRespawnPoint.h"
+#include "GameFramework/GameModeBase.h"
+#include "GameFramework/PlayerController.h"
 #include "CSGameMode.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerLogin);
@@ -21,7 +23,15 @@ public:
     ACSGameMode();
     FOnPlayerLogin OnPlayerLogin;
 
+    UPROPERTY(EditDefaultsOnly, Category = "Pawn")
+    TSubclassOf<APawn> PawnClassPlayer0;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Pawn")
+    TSubclassOf<APawn> PawnClassPlayer1;
+
 protected:
+    virtual UClass* GetDefaultPawnClassForController_Implementation(AController* InController) override;
+
     virtual void BeginPlay() override;
     virtual void PostLogin(APlayerController* NewPlayer) override;
     virtual void Logout(AController* Exiting) override;
