@@ -205,10 +205,10 @@ void UCSGA_ProjectileBlackHole::UpdateGuideLine()
 
 	if ( BlackHoleDummyActor )
 	{
-		UE_LOG(LogCS, Log, TEXT("BlackHoleDummyActor: %f, %f, %f"), 
+		/*UE_LOG(LogCS, Log, TEXT("BlackHoleDummyActor: %f, %f, %f"), 
 			BlackHoleDummyActor->GetActorLocation().X,
 			BlackHoleDummyActor->GetActorLocation().Y,
-			BlackHoleDummyActor->GetActorLocation().Z);
+			BlackHoleDummyActor->GetActorLocation().Z);*/
 		BlackHoleDummyActor->SetActorLocation(CurrentEndLocation);
 	}
 	

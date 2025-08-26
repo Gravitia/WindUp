@@ -36,6 +36,8 @@ protected:
 	UFUNCTION()
 	void OnStopTriggerEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
+	void ProcessForCharacter(float DeltaTime);
+	void ProcessForStaticMesh(float DeltaTime);
 
 	UPROPERTY(VisibleAnywhere, Category = "Sphere", Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class USphereComponent> GravitySphereTrigger;
@@ -54,6 +56,12 @@ protected:
 
 	UPROPERTY()
 	TSet< TObjectPtr<ACharacter> > CharactersInEventHorizon;
+
+	UPROPERTY()
+	TMap<FName, TObjectPtr<UStaticMeshComponent> > StaticMeshesInSphereTrigger;
+
+	UPROPERTY()
+	TSet< TObjectPtr<UStaticMeshComponent> > StaticMeshesInEventHorizon;
 
 	UPROPERTY(EditAnywhere, Category = "Sphere")
 	float GravityInfluenceRange = 500.0f;
