@@ -52,16 +52,16 @@ protected:
 	TObjectPtr<class UStaticMeshComponent> FieldMesh;
 
 	UPROPERTY()
-	TMap<FName, TObjectPtr<ACharacter> > CharactersInSphereTrigger;
+	TSet< TWeakObjectPtr<ACharacter> > CharactersInSphereTrigger;
 
 	UPROPERTY()
-	TSet< TObjectPtr<ACharacter> > CharactersInEventHorizon;
+	TSet< TWeakObjectPtr<ACharacter> > CharactersInEventHorizon;
 
 	UPROPERTY()
-	TMap<FName, TObjectPtr<UStaticMeshComponent> > StaticMeshesInSphereTrigger;
+	TSet< TWeakObjectPtr<UStaticMeshComponent> > StaticMeshesInSphereTrigger;
 
 	UPROPERTY()
-	TSet< TObjectPtr<UStaticMeshComponent> > StaticMeshesInEventHorizon;
+	TSet< TWeakObjectPtr<UStaticMeshComponent> > StaticMeshesInEventHorizon;
 
 	UPROPERTY(EditAnywhere, Category = "Sphere")
 	float GravityInfluenceRange = 500.0f;

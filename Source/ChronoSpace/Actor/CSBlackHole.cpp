@@ -123,7 +123,7 @@ void ACSBlackHole::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComponen
 
 	if (DetectedCharacter && DetectedCharacter->GetComponentByClass<UCSCharacterPulledByBlackhole>())
 	{
-		CharactersInSphereTrigger.Emplace(DetectedCharacter->GetFName(), DetectedCharacter);
+		CharactersInSphereTrigger.Add(DetectedCharacter);
 		return;
 	}
 
@@ -132,7 +132,7 @@ void ACSBlackHole::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComponen
 	if ( StaticMeshComp )
 	{
 		StaticMeshComp->SetEnableGravity(false);
-		StaticMeshesInSphereTrigger.Emplace(StaticMeshComp->GetFName(), StaticMeshComp);
+		StaticMeshesInSphereTrigger.Add(StaticMeshComp);
 	}
 }
 
@@ -143,7 +143,7 @@ void ACSBlackHole::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedComponent,
 
 	if (DetectedCharacter && DetectedCharacter->GetComponentByClass<UCSCharacterPulledByBlackhole>())
 	{
-		CharactersInSphereTrigger.Remove(DetectedCharacter->GetFName());
+		CharactersInSphereTrigger.Remove(DetectedCharacter);
 	}
 
 	// For StaticMesh
@@ -151,7 +151,7 @@ void ACSBlackHole::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedComponent,
 	if (StaticMeshComp)
 	{
 		StaticMeshComp->SetEnableGravity(true);
-		StaticMeshesInSphereTrigger.Remove(StaticMeshComp->GetFName());
+		StaticMeshesInSphereTrigger.Remove(StaticMeshComp);
 	}
 }
 
@@ -197,29 +197,28 @@ void ACSBlackHole::ProcessForCharacter(float DeltaTime)
 
 	for (auto Char = CharactersInSphereTrigger.CreateIterator(); Char; ++Char)
 	{
-		if (Char.Value() == Owner) continue;
+		if (Char->Get() == nullptr) continue;
+		if (Char->Get() == Owner) continue;
 
-		if (CharactersInEventHorizon.Contains(Char.Value()))
+		if (CharactersInEventHorizon.Contains(Char->Get()))
 		{
-			Char.Value()->GetCharacterMovement()->StopMovementImmediately();
+			Char->Get()->GetCharacterMovement()->StopMovementImmediately();
 			continue;
 		}
 
-		if (IsValid(Char.Value()))
+		FVector Power(1000.0f, 1000.0f, 1000.0f);
+		FVector TargetLocation = Char->Get()->GetActorLocation();
+		FVector Distance = BlackHoleLocation - TargetLocation;
+		FVector Direction = Distance.GetSafeNormal();
+
+		if (Distance.Size() < StopRadius)
 		{
-			FVector Power(1000.0f, 1000.0f, 1000.0f);
-			FVector TargetLocation = Char.Value()->GetActorLocation();
-			FVector Distance = BlackHoleLocation - TargetLocation;
-			FVector Direction = Distance.GetSafeNormal();
-
-			if (Distance.Size() < StopRadius)
-			{
-				Char.Value()->GetCharacterMovement()->StopMovementImmediately();
-				continue;
-			}
-
-			Char.Value()->GetCharacterMovement()->AddImpulse(Direction * Power * PullStrength * DeltaTime, /*bVelocityChange=*/true);
+			Char->Get()->GetCharacterMovement()->StopMovementImmediately();
+			continue;
 		}
+
+		Char->Get()->GetCharacterMovement()->AddImpulse(Direction * Power * PullStrength * DeltaTime, /*bVelocityChange=*/true);	
+			
 	}
 }
 
@@ -229,7 +228,7 @@ void ACSBlackHole::ProcessForStaticMesh(float DeltaTime)
 
 	for (auto It = StaticMeshesInSphereTrigger.CreateIterator(); It; ++It)
 	{
-		UStaticMeshComponent* Mesh = It.Value();
+		UStaticMeshComponent* Mesh = It->Get();
 
 		if (!IsValid(Mesh))
 		{
@@ -254,6 +253,10 @@ void ACSBlackHole::ProcessForStaticMesh(float DeltaTime)
 		const FVector ToBH = BlackHoleLocation - MeshLocation;
 		const float Distance = ToBH.Size();
 
+		float MeshMass = FMath::Max( Mesh->GetMass(), 100.0f);
+
+		Power *= (MeshMass / 100);
+
 		if (Distance < StopRadius)
 		{
 			Mesh->SetPhysicsLinearVelocity(FVector::ZeroVector, false);
@@ -262,7 +265,6 @@ void ACSBlackHole::ProcessForStaticMesh(float DeltaTime)
 		}
 
 		const FVector Direction = ToBH.GetSafeNormal();
-		UE_LOG(LogCS, Log, TEXT("AddImpulse Mesh"));
 		Mesh->AddImpulse(Direction * Power * PullStrength * DeltaTime, NAME_None, true);
 	}
 }

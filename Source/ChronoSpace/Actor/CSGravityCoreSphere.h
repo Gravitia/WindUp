@@ -50,7 +50,7 @@ protected:
 	TMap<FName, TObjectPtr<ACharacter> > CharactersInSphereTrigger;
 
 	UPROPERTY()
-	TMap<FName, TObjectPtr<UStaticMeshComponent> > StaticMeshesInSphereTrigger;
+	TSet< TWeakObjectPtr<UStaticMeshComponent> > StaticMeshesInSphereTrigger;
 
 	UPROPERTY(EditAnywhere, Category = "Sphere")
 	float GravityInfluenceRange = 400.0f;

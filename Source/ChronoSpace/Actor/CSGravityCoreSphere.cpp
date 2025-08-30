@@ -64,7 +64,7 @@ void ACSGravityCoreSphere::Tick(float DeltaSeconds)
 		return;
 	}
 
-	//ProcessForCharacter(DeltaTime);
+	//ProcessForCharacter(DeltaSeconds);
 	ProcessForStaticMesh(DeltaSeconds);
 }
 
@@ -74,7 +74,7 @@ void ACSGravityCoreSphere::ProcessForStaticMesh(float DeltaTime)
 
 	for (auto It = StaticMeshesInSphereTrigger.CreateIterator(); It; ++It)
 	{
-		UStaticMeshComponent* Mesh = It.Value();
+		UStaticMeshComponent* Mesh = It->Get();
 
 		if (!IsValid(Mesh))
 		{
@@ -92,8 +92,11 @@ void ACSGravityCoreSphere::ProcessForStaticMesh(float DeltaTime)
 		const FVector ToBH = CoreLocation - MeshLocation;
 		const float Distance = ToBH.Size();
 
+		/*float MeshMass = FMath::Max(Mesh->GetMass(), 100.0f);
+
+		Power *= (MeshMass / 100);*/
+
 		const FVector Direction = ToBH.GetSafeNormal();
-		//UE_LOG(LogCS, Log, TEXT("AddImpulse Mesh"));
 		Mesh->AddImpulse(Direction * Power * 30 * DeltaTime, NAME_None, true);
 	}
 }
@@ -108,7 +111,7 @@ void ACSGravityCoreSphere::OnTriggerBeginOverlap(UPrimitiveComponent* Overlapped
 		TargetStaticMeshComp->SetAngularDamping(2.0f);
 
 		TargetStaticMeshComp->SetEnableGravity(false);
-		StaticMeshesInSphereTrigger.Emplace(TargetStaticMeshComp->GetFName(), TargetStaticMeshComp);
+		StaticMeshesInSphereTrigger.Add(TargetStaticMeshComp);
 	}
 }
 
@@ -119,7 +122,7 @@ void ACSGravityCoreSphere::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedCo
 	if (TargetStaticMeshComp)
 	{
 		TargetStaticMeshComp->SetEnableGravity(true);
-		StaticMeshesInSphereTrigger.Remove(TargetStaticMeshComp->GetFName());
+		StaticMeshesInSphereTrigger.Remove(TargetStaticMeshComp);
 	}
 }
 
