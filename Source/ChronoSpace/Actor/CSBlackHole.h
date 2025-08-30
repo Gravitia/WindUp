@@ -18,10 +18,11 @@ public:
 
 	virtual void Tick(float DeltaSeconds) override;
 
-	void SetDuration(float Duration);
-	void SetGravityInfluenceRange(float Range);
-	void SetStopRange(float Range);
-	void SetPullStrength(float Strength);
+	FORCEINLINE void SetDuration(float Duration);
+	FORCEINLINE void SetGravityInfluenceRange(float Range);
+	FORCEINLINE void SetStopRange(float Range);
+	FORCEINLINE void SetPullStrength(float Strength);
+	FORCEINLINE void SetCheckComponentInMesh(bool bCheckComponent);
 
 protected:
 	UFUNCTION()
@@ -73,4 +74,6 @@ protected:
 	float StopRadius = 50.0f;	
 
 	float MeshRadius = 50.0f;
+
+	bool bCheckMeshHaveComponent = false;
 };
