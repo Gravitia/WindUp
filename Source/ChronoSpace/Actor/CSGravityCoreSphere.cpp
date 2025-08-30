@@ -4,8 +4,8 @@
 #include "Actor/CSGravityCoreSphere.h"
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "ActorComponent/CSMeshAffectedByGravityCore.h"
 #include "Physics/CSCollision.h"
-#include "Components/SphereComponent.h"
 #include "ChronoSpace.h"
 
 
@@ -107,6 +107,8 @@ void ACSGravityCoreSphere::OnTriggerBeginOverlap(UPrimitiveComponent* Overlapped
 	UStaticMeshComponent* TargetStaticMeshComp = Cast<UStaticMeshComponent>(OtherComp);
 	if (TargetStaticMeshComp)
 	{
+		if ( bCheckMeshHaveComponent && OtherActor->FindComponentByClass<UCSMeshAffectedByGravityCore>() == nullptr ) return;
+
 		TargetStaticMeshComp->SetPhysicsMaxAngularVelocityInDegrees(180.f); 
 		TargetStaticMeshComp->SetAngularDamping(2.0f);
 
@@ -121,6 +123,8 @@ void ACSGravityCoreSphere::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedCo
 	UStaticMeshComponent* TargetStaticMeshComp = Cast<UStaticMeshComponent>(OtherComp);
 	if (TargetStaticMeshComp)
 	{
+		if (bCheckMeshHaveComponent && OtherActor->FindComponentByClass<UCSMeshAffectedByGravityCore>())
+
 		TargetStaticMeshComp->SetEnableGravity(true);
 		StaticMeshesInSphereTrigger.Remove(TargetStaticMeshComp);
 	}
