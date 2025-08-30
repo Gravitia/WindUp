@@ -25,6 +25,9 @@ protected:
 	void OffCore();
 
 protected:
+	/*UFUNCTION()
+	void OnDurationFinished();*/
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Gravity Core")
 	TSubclassOf<class ACSGravityCoreSphere> GravityCoreClass;
 
@@ -36,7 +39,4 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<ACharacter> OwnerCharacter;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Check Component")
-	bool bCheckMeshComponentAffectedByGravityCore = false;
 };

@@ -59,7 +59,6 @@ void UCSGA_GravityCore::OnCore()
 
 		if (GravityCore)
 		{
-			GravityCore->SetCheckComponentInMesh(bCheckMeshComponentAffectedByGravityCore);
 			UGameplayStatics::FinishSpawningActor(GravityCore, SpawnTransform);
 			GravityCore->AttachToActor(CurrentActorInfo->AvatarActor.Get(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 		}

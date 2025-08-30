@@ -10,7 +10,6 @@
 #include "Physics/CSCollision.h"
 #include "Kismet/GameplayStatics.h"
 #include "ActorComponent/CSCharacterPulledByBlackhole.h"
-#include "ActorComponent/CSMeshPulledByBlackhole.h"
 #include "Components/StaticMeshComponent.h"
 #include "ChronoSpace.h"
 
@@ -117,17 +116,12 @@ void ACSBlackHole::SetPullStrength(float Strength)
 	PullStrength = Strength;
 }
 
-void ACSBlackHole::SetCheckComponentInMesh(bool bCheckComponent)
-{
-	bCheckMeshHaveComponent = bCheckComponent;
-}
-
 void ACSBlackHole::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepHitResult)
 {
 	// For Character
 	ACharacter* DetectedCharacter = Cast<ACharacter>(OtherActor);
 
-	if ( DetectedCharacter && DetectedCharacter->GetComponentByClass<UCSCharacterPulledByBlackhole>() )
+	if (DetectedCharacter && DetectedCharacter->GetComponentByClass<UCSCharacterPulledByBlackhole>())
 	{
 		CharactersInSphereTrigger.Add(DetectedCharacter);
 		return;
@@ -224,6 +218,7 @@ void ACSBlackHole::ProcessForCharacter(float DeltaTime)
 		}
 
 		Char->Get()->GetCharacterMovement()->AddImpulse(Direction * Power * PullStrength * DeltaTime, /*bVelocityChange=*/true);	
+			
 	}
 }
 
@@ -240,14 +235,11 @@ void ACSBlackHole::ProcessForStaticMesh(float DeltaTime)
 			It.RemoveCurrent();
 			continue;
 		}
-		
-		if ( bCheckMeshHaveComponent && 
-			 Mesh->GetOwner() &&
-			 Mesh->GetOwner()->FindComponentByClass<UCSMeshPulledByBlackhole>() == nullptr ) 
-			continue;
 
 		if (!Mesh->IsSimulatingPhysics())
+		{
 			continue;
+		}
 
 		if (StaticMeshesInEventHorizon.Contains(Mesh))
 		{

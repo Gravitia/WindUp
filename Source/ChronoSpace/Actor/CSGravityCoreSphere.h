@@ -18,7 +18,6 @@ public:
 	ACSGravityCoreSphere();
 
 	FORCEINLINE float GetMeshRadius() { return MeshRadius; }
-	FORCEINLINE void SetCheckComponentInMesh(bool bInMeshHaveComponent) { bCheckMeshHaveComponent = bInMeshHaveComponent; }
 
 protected:
 	virtual void BeginPlay() override;
@@ -61,6 +60,4 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Sphere")
 	float PullStrength = 4000.0f;
-
-	bool bCheckMeshHaveComponent = false;
 };

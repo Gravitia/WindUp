@@ -247,7 +247,7 @@ void UCSGA_ProjectileBlackHole::CreateBlackHoleAtLocation(const FVector& Locatio
 
 	if ( CSPlayer )
 	{
-		CSPlayer->ServerSpawnAndSetBlackHole(BlackHoleClass, Location, Duration, GravityInfluenceRange, PullStrength, StopRange, bCheckMeshComponentPulledByBlackHole); 
+		CSPlayer->ServerSpawnAndSetBlackHole(BlackHoleClass, Location, Duration, GravityInfluenceRange, PullStrength, StopRange);
 	}
 }
 
