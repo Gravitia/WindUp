@@ -18,10 +18,11 @@ public:
 
 	virtual void Tick(float DeltaSeconds) override;
 
-	void SetDuration(float Duration);
-	void SetGravityInfluenceRange(float Range);
-	void SetStopRange(float Range);
-	void SetPullStrength(float Strength);
+	FORCEINLINE void SetDuration(float Duration);
+	FORCEINLINE void SetGravityInfluenceRange(float Range);
+	FORCEINLINE void SetStopRange(float Range);
+	FORCEINLINE void SetPullStrength(float Strength);
+	FORCEINLINE void SetCheckComponentInMesh(bool bCheckComponent);
 
 protected:
 	UFUNCTION()
@@ -36,6 +37,8 @@ protected:
 	UFUNCTION()
 	void OnStopTriggerEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
+	void ProcessForCharacter(float DeltaTime);
+	void ProcessForStaticMesh(float DeltaTime);
 
 	UPROPERTY(VisibleAnywhere, Category = "Sphere", Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class USphereComponent> GravitySphereTrigger;
@@ -50,10 +53,16 @@ protected:
 	TObjectPtr<class UStaticMeshComponent> FieldMesh;
 
 	UPROPERTY()
-	TMap<FName, TObjectPtr<ACharacter> > CharactersInSphereTrigger;
+	TSet< TWeakObjectPtr<ACharacter> > CharactersInSphereTrigger;
 
 	UPROPERTY()
-	TSet< TObjectPtr<ACharacter> > CharactersInEventHorizon;
+	TSet< TWeakObjectPtr<ACharacter> > CharactersInEventHorizon;
+
+	UPROPERTY()
+	TSet< TWeakObjectPtr<UStaticMeshComponent> > StaticMeshesInSphereTrigger;
+
+	UPROPERTY()
+	TSet< TWeakObjectPtr<UStaticMeshComponent> > StaticMeshesInEventHorizon;
 
 	UPROPERTY(EditAnywhere, Category = "Sphere")
 	float GravityInfluenceRange = 500.0f;
@@ -65,4 +74,6 @@ protected:
 	float StopRadius = 50.0f;	
 
 	float MeshRadius = 50.0f;
+
+	bool bCheckMeshHaveComponent = false;
 };

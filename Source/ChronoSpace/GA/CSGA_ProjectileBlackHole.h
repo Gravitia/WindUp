@@ -77,10 +77,8 @@ private:
 
 	// Black Hole 
 protected:
-	// 현재 EndLocation 저장
 	FVector CurrentEndLocation;
 
-	// 새로운 함수들
 	void CheckMouseInput();
 	void CreateBlackHoleAtLocation(const FVector& Location);
 
@@ -100,4 +98,8 @@ protected:
 	TObjectPtr<class ACSBlackHole> BlackHoleActor;
 
 	bool bIsSpawned;
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Check Component")
+	bool bCheckMeshComponentPulledByBlackHole = false;
 };
