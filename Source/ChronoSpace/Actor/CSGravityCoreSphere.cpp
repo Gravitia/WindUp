@@ -103,6 +103,8 @@ void ACSGravityCoreSphere::ProcessForStaticMesh(float DeltaTime)
 
 void ACSGravityCoreSphere::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepHitResult)
 {
+	if (!HasAuthority()) return;
+
 	// For StaticMesh
 	UStaticMeshComponent* TargetStaticMeshComp = Cast<UStaticMeshComponent>(OtherComp);
 	if (TargetStaticMeshComp)
@@ -119,6 +121,8 @@ void ACSGravityCoreSphere::OnTriggerBeginOverlap(UPrimitiveComponent* Overlapped
 
 void ACSGravityCoreSphere::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
+	if (!HasAuthority()) return;
+
 	// For StaticMesh
 	UStaticMeshComponent* TargetStaticMeshComp = Cast<UStaticMeshComponent>(OtherComp);
 	if (TargetStaticMeshComp)
