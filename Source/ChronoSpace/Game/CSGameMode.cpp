@@ -78,8 +78,28 @@ UClass* ACSGameMode::GetDefaultPawnClassForController_Implementation(AController
         if (const ULocalPlayer* LP = PC->GetLocalPlayer())
         {
             const int32 Id = LP->GetControllerId();
-            if (Id == 1 && PawnClassPlayer1) return PawnClassPlayer1;
             if (Id == 0 && PawnClassPlayer0) return PawnClassPlayer0;
+            if (Id == 1 && PawnClassPlayer1) return PawnClassPlayer1;
+        }
+
+    }
+
+    // 2) 온라인 멀티플레이어: 현재 플레이어 수 기준
+    if (HasAuthority())
+    {
+        int32 CurrentPlayerCount = GetNumPlayers();
+
+        // 첫 번째 플레이어 (PlayerCount = 1)
+        if (CurrentPlayerCount == 1 && PawnClassPlayer0)
+        {
+            UE_LOG(LogTemp, Log, TEXT("Using PawnClassPlayer0 for first online player"));
+            return PawnClassPlayer0;
+        }
+        // 두 번째 플레이어 (PlayerCount = 2)
+        else if (CurrentPlayerCount == 2 && PawnClassPlayer1)
+        {
+            UE_LOG(LogTemp, Log, TEXT("Using PawnClassPlayer1 for second online player"));
+            return PawnClassPlayer1;
         }
     }
 
