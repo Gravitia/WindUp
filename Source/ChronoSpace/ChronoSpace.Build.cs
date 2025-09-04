@@ -23,8 +23,9 @@ public class ChronoSpace : ModuleRules
 			"Slate", 
 			"SlateCore",
 			"OnlineSubsystem",
-			"OnlineSubsystemUtils"
-		});
+			"OnlineSubsystemUtils",
+            "RHI"
+        });
 
 		PrivateDependencyModuleNames.AddRange(new string[] 
 		{
