@@ -68,6 +68,7 @@ void ACSPlayerController::ShakeCamera()
 {
 	ClientStartCameraShake(CameraShake);
 }
+
 void ACSPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
@@ -90,6 +91,9 @@ void ACSPlayerController::OnRep_PlayerState()
 	{
 		RefreshGameUI();
 	}
+
+	// PlayerState 동기화 이후에도 다시 시도
+	UpdateRenderTarget();
 }
 
 void ACSPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -138,36 +142,27 @@ void ACSPlayerController::InitializeUI()
 
 void ACSPlayerController::UpdateRenderTarget()
 {
-	ACSCharacterPlayer* LeftCharacter;
-	ACSCharacterPlayer* RightCharacter;
+	ACSCharacterPlayer* MyCharacter = Cast<ACSCharacterPlayer>(GetPawn());
+	ACSCharacterPlayer* OtherCharacter = FindFirstOtherPawn();
 
-	if (HasAuthority())	// Server
+	if (!MyCharacter || !OtherCharacter)
 	{
-		LeftCharacter = Cast<ACSCharacterPlayer>(GetPawn());
-		RightCharacter = FindFirstOtherPawn();
-	}
-	else					// Client
-	{
-		LeftCharacter = FindFirstOtherPawn();
-		RightCharacter = Cast<ACSCharacterPlayer>(GetPawn());
+		// 다른 Pawn이 아직 없으면 0.5초 뒤에 재시도
+		GetWorldTimerManager().SetTimerForNextTick(this, &ACSPlayerController::UpdateRenderTarget);
+		return;
 	}
 
-	if (!LeftCharacter) return;
-
-	ASceneCapture2D* CapLeft = SpawnCaptureAndAttach(LeftCharacter->GetFollowCamera(), RenderTargetP0);
+	// 항상 내 캐릭터는 오른쪽, 상대는 왼쪽
+	ASceneCapture2D* CapLeft = SpawnCaptureAndAttach(OtherCharacter->GetFollowCamera(), RenderTargetP0);
+	ASceneCapture2D* CapRight = SpawnCaptureAndAttach(MyCharacter->GetFollowCamera(), RenderTargetP1);
 
 	if (CapLeft)
 	{
-		UE_LOG(LogCS, Log, TEXT("[NetMode: %d] UpdateRenderTarget - CapLeft Success"), GetWorld()->GetNetMode());
+		UE_LOG(LogCS, Log, TEXT("[NetMode: %d] UpdateRenderTarget - Left=Other"), GetWorld()->GetNetMode());
 	}
-
-	if (!RightCharacter) return;
-
-	ASceneCapture2D* CapRight = SpawnCaptureAndAttach(RightCharacter->GetFollowCamera(), RenderTargetP1);
-
 	if (CapRight)
 	{
-		UE_LOG(LogCS, Log, TEXT("[NetMode: %d] UpdateRenderTarget - CapRight Success"), GetWorld()->GetNetMode());
+		UE_LOG(LogCS, Log, TEXT("[NetMode: %d] UpdateRenderTarget - Right=Self"), GetWorld()->GetNetMode());
 	}
 }
 
@@ -200,6 +195,11 @@ ASceneCapture2D* ACSPlayerController::SpawnCaptureAndAttach(UCameraComponent* Ta
 		FTransform::Identity,
 		Params
 	);
+
+	if (CaptureActor)
+	{
+		CaptureActor->SetReplicates(false); // 로컬 전용
+	}
 
 	if (!CaptureActor) return nullptr;
 
