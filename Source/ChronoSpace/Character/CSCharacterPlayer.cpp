@@ -393,6 +393,14 @@ void ACSCharacterPlayer::OnMovementModeChanged(
 	}
 }
 
+void ACSCharacterPlayer::ServerDestoryBlackHole_Implementation()
+{
+	if ( BlackHole )
+	{
+		BlackHole->SetDuration(0.2f);
+	}
+}
+
 void ACSCharacterPlayer::NetMulticastMakeGravityCoreSphere_Implementation(float SphereRaduis, float SphereScale)
 {
 	GravityCoreSphere->SetSphereRadius(SphereRaduis * SphereScale);
@@ -417,7 +425,7 @@ void ACSCharacterPlayer::ServerSpawnAndSetBlackHole_Implementation(TSubclassOf<c
 		Params.Instigator = this;
 
 		FRotator Rotation = FRotator::ZeroRotator;
-		ACSBlackHole* BlackHole = World->SpawnActor<ACSBlackHole>(BlackHoleClass, Location, Rotation, Params);
+		BlackHole = World->SpawnActor<ACSBlackHole>(BlackHoleClass, Location, Rotation, Params);
 
 		if (BlackHole)
 		{

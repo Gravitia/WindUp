@@ -78,7 +78,10 @@ void ACSBlackHole::Tick(float DeltaTime)
 
 void ACSBlackHole::SetDuration(float Duration)
 {
-	SetLifeSpan(Duration);
+	if ( Duration > 0 )
+	{
+		SetLifeSpan(Duration);
+	}
 }
 
 void ACSBlackHole::SetGravityInfluenceRange(float Range)

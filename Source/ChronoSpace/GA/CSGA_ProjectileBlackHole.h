@@ -40,7 +40,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile Guide")
 	float MouseYSensitivity = 1.5f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Black Hole")
+	//UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Black Hole")
 	float Duration;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Black Hole")
@@ -94,10 +94,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Black Hole")
 	TSubclassOf<class ACSBlackHole> BlackHoleClass;
 
-	UPROPERTY()
-	TObjectPtr<class ACSBlackHole> BlackHoleActor;
-
-	bool bIsSpawned;
+	bool bIsDummySpawned;
+	bool bIsBlackHoleSpawned;
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Check Component")

@@ -27,10 +27,11 @@ UCSGA_ProjectileBlackHole::UCSGA_ProjectileBlackHole()
 
 	CurrentEndLocation = FVector::ZeroVector;
 
-	bIsSpawned = false;
+	bIsDummySpawned = false;
+	bIsBlackHoleSpawned = false;
 	bIsAming = false;
 
-	Duration = 5.0f;
+	Duration = -1.0f;	// 블랙홀 지속 시간을 주고 싶으면 양수로
 	GravityInfluenceRange = 500.0f;
 	PullStrength = 10.0f;
 	StopRange = 100.0f;
@@ -46,7 +47,7 @@ void UCSGA_ProjectileBlackHole::ActivateAbility(const FGameplayAbilitySpecHandle
 
 	// GAS 컴포넌트 구조 상 서버는 이미 눌렸을 때 ActivateAbility 발동 안함
 	// 클라 토글용 코드
-	if ( bIsAming )
+	if ( bIsAming && !bIsBlackHoleSpawned )
 	{
 		bIsAming = false;
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
@@ -54,7 +55,7 @@ void UCSGA_ProjectileBlackHole::ActivateAbility(const FGameplayAbilitySpecHandle
 	}
 	bIsAming = true;
 
-	bIsSpawned = false;
+	bIsDummySpawned = false;
 
 	if (!GetAvatarActorFromActorInfo())
 	{
@@ -207,24 +208,24 @@ void UCSGA_ProjectileBlackHole::UpdateGuideLine()
 	CurrentEndLocation = EndLocation;
 
 	// 조준 모드에 따라 다른 색상으로 표시
-	FColor SphereColor = bUsingMouseAiming ? FColor::Red : FColor::Orange;
-	DrawDebugSphere(GetWorld(), EndLocation, 45.0f, 8, SphereColor, false, UpdateRate + 0.01f);
+	/*FColor SphereColor = bUsingMouseAiming ? FColor::Red : FColor::Orange;
+	DrawDebugSphere(GetWorld(), EndLocation, 45.0f, 8, SphereColor, false, UpdateRate + 0.01f);*/
 
-	if( !bIsSpawned )
+	if( !bIsDummySpawned )
 	{
 		SpawnBlackHoleDummy(CurrentEndLocation);
-		bIsSpawned = true;
+		bIsDummySpawned = true;
 	}
 
 	if ( BlackHoleDummyActor )
 	{
-		/*UE_LOG(LogCS, Log, TEXT("BlackHoleDummyActor: %f, %f, %f"), 
-			BlackHoleDummyActor->GetActorLocation().X,
-			BlackHoleDummyActor->GetActorLocation().Y,
-			BlackHoleDummyActor->GetActorLocation().Z);*/
 		BlackHoleDummyActor->SetActorLocation(CurrentEndLocation);
+
+		if ( bIsBlackHoleSpawned )
+		{
+			BlackHoleDummyActor->Destroy(); 
+		}
 	}
-	
 
 	CheckMouseInput();
 }
@@ -237,17 +238,26 @@ void UCSGA_ProjectileBlackHole::OnGuideDurationEnd()
 
 void UCSGA_ProjectileBlackHole::CheckMouseInput()
 {
-	if (ACharacter* Character = Cast<ACharacter>(GetAvatarActorFromActorInfo()))
+	if (ACSCharacterPlayer* Character = Cast<ACSCharacterPlayer>(GetAvatarActorFromActorInfo()))
 	{
 		if (APlayerController* PC = Cast<APlayerController>(Character->GetController()))
 		{
 			// 왼쪽 마우스 버튼 클릭 감지
 			if (PC->IsInputKeyDown(EKeys::LeftMouseButton))
 			{
-				UE_LOG(LogCS, Log, TEXT("Left mouse clicked! Creating BlackHole at: %s"), *CurrentEndLocation.ToString());
-				CreateBlackHoleAtLocation(CurrentEndLocation);
+				if ( !bIsBlackHoleSpawned )
+				{
+					CreateBlackHoleAtLocation(CurrentEndLocation);
+					Character->SetShoulderLook(true);
+					bIsBlackHoleSpawned = true;
+				}
+			}
+			else if(bIsBlackHoleSpawned)
+			{
+				Character->ServerDestoryBlackHole();
+				bIsBlackHoleSpawned = false;
+				bIsAming = false;
 
-				// 블랙홀 생성 후 가이드 어빌리티 종료
 				EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 			}
 		}
@@ -261,6 +271,7 @@ void UCSGA_ProjectileBlackHole::CreateBlackHoleAtLocation(const FVector& Locatio
 	if ( CSPlayer )
 	{
 		CSPlayer->ServerSpawnAndSetBlackHole(BlackHoleClass, Location, Duration, GravityInfluenceRange, PullStrength, StopRange, bCheckMeshComponentPulledByBlackHole); 
+		bIsBlackHoleSpawned = true;
 	}
 }
 
@@ -282,10 +293,21 @@ void UCSGA_ProjectileBlackHole::SpawnBlackHoleDummy(FVector SpawnLocation)
 
 void UCSGA_ProjectileBlackHole::InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
 {
-	Super::InputPressed(Handle, ActorInfo, ActivationInfo);
 	// GAS 컴포넌트 구조상 서버에서만 불린다
-	bIsAming = false;
-	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+	Super::InputPressed(Handle, ActorInfo, ActivationInfo);
+
+	ACharacter* Character = Cast<ACharacter>(GetAvatarActorFromActorInfo());
+	if ( Character == nullptr ) return;
+
+	APlayerController* PC = Cast<APlayerController>(Character->GetController());
+	if ( PC == nullptr ) return;
+
+	// 이미 소환한 후에는 왼쪽 버튼 놔줄 때로 종료 체크
+	if ( !bIsBlackHoleSpawned )
+	{
+		bIsAming = false;
+		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+	}
 }
 
 

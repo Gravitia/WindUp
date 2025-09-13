@@ -231,4 +231,9 @@ public:
 	void ServerSpawnAndSetBlackHole(TSubclassOf<class ACSBlackHole> BlackHoleClass,
 		FVector Location, float Duration, float GravityInfluenceRange, float PullStrength, 
 		float StopRange, bool bCheckComponent);
+
+	UFUNCTION(Server, Reliable)
+	void ServerDestoryBlackHole();
+
+	TObjectPtr<class ACSBlackHole> BlackHole;
 };
