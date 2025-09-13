@@ -102,4 +102,10 @@ protected:
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Check Component")
 	bool bCheckMeshComponentPulledByBlackHole = false;
+
+public:
+	virtual void InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) override;
+
+protected:
+	bool bIsAming;
 };

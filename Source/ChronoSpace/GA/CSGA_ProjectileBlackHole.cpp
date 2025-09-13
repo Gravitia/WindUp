@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "GA/CSGA_ProjectileBlackHole.h"
@@ -28,11 +28,14 @@ UCSGA_ProjectileBlackHole::UCSGA_ProjectileBlackHole()
 	CurrentEndLocation = FVector::ZeroVector;
 
 	bIsSpawned = false;
+	bIsAming = false;
 
 	Duration = 5.0f;
 	GravityInfluenceRange = 500.0f;
 	PullStrength = 10.0f;
 	StopRange = 100.0f;
+
+	bRetriggerInstancedAbility = true;
 }
 
 void UCSGA_ProjectileBlackHole::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
@@ -40,6 +43,16 @@ void UCSGA_ProjectileBlackHole::ActivateAbility(const FGameplayAbilitySpecHandle
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
 	check(BlackHoleDummyClass);
+
+	// GAS ì»´í¬ë„ŒíŠ¸ êµ¬ì¡° ìƒ ì„œë²„ëŠ” ì´ë¯¸ ëˆŒë ¸ì„ ë•Œ ActivateAbility ë°œë™ ì•ˆí•¨
+	// í´ë¼ í† ê¸€ìš© ì½”ë“œ
+	if ( bIsAming )
+	{
+		bIsAming = false;
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
+	}
+	bIsAming = true;
 
 	bIsSpawned = false;
 
@@ -49,19 +62,19 @@ void UCSGA_ProjectileBlackHole::ActivateAbility(const FGameplayAbilitySpecHandle
 		return;
 	}
 
-	// ÃÊ±â »óÅÂ ¼³Á¤
+	// ì´ˆê¸° ìƒíƒœ ì„¤ì •
 	bUsingMouseAiming = false;
 	LastMousePosition = FVector2D::ZeroVector;
 	bInitialDirectionSet = false;
 
-	// ¡Ú ÃÊ±â Á¶ÁØ ¹æÇâ ÀúÀå (ÇÑ ¹ø¸¸ ¼³Á¤)
+	// â˜… ì´ˆê¸° ì¡°ì¤€ ë°©í–¥ ì €ì¥ (í•œ ë²ˆë§Œ ì„¤ì •)
 	if (ACharacter* Character = Cast<ACharacter>(GetAvatarActorFromActorInfo()))
 	{
 		InitialAimDirection = Character->GetActorForwardVector();
 		bInitialDirectionSet = true;
 		UE_LOG(LogCS, Log, TEXT("Initial aim direction set: %s"), *InitialAimDirection.ToString());
 
-		// ÃÊ±â ¸¶¿ì½º À§Ä¡ ÀúÀå
+		// ì´ˆê¸° ë§ˆìš°ìŠ¤ ìœ„ì¹˜ ì €ì¥
 		if (APlayerController* PC = Cast<APlayerController>(Character->GetController()))
 		{
 			float MouseX, MouseY;
@@ -77,7 +90,7 @@ void UCSGA_ProjectileBlackHole::ActivateAbility(const FGameplayAbilitySpecHandle
 		}
 	}
 
-	// ¾÷µ¥ÀÌÆ® Å¸ÀÌ¸Ó ½ÃÀÛ
+	// ì—…ë°ì´íŠ¸ íƒ€ì´ë¨¸ ì‹œì‘
 	GetWorld()->GetTimerManager().SetTimer(
 		UpdateTimerHandle,
 		this,
@@ -86,14 +99,14 @@ void UCSGA_ProjectileBlackHole::ActivateAbility(const FGameplayAbilitySpecHandle
 		true
 	);
 
-	// Áö¼Ó½Ã°£ Å¸ÀÌ¸Ó ½ÃÀÛ
-	GetWorld()->GetTimerManager().SetTimer(
+	// ì§€ì†ì‹œê°„ íƒ€ì´ë¨¸ ì‹œì‘
+	/*GetWorld()->GetTimerManager().SetTimer(
 		DurationTimerHandle,
 		this,
 		&UCSGA_ProjectileBlackHole::OnGuideDurationEnd,
 		GuideDuration,
 		false
-	);
+	);*/
 
 	UE_LOG(LogCS, Log, TEXT("ProjectileGuide Activated"));
 
@@ -151,7 +164,7 @@ void UCSGA_ProjectileBlackHole::EndAbility(const FGameplayAbilitySpecHandle Hand
 		CSPlayer->SetShoulderLook(true);
 	}
 
-	// Å¸ÀÌ¸Ó Á¤¸®
+	// íƒ€ì´ë¨¸ ì •ë¦¬
 	if (UpdateTimerHandle.IsValid())
 	{
 		GetWorld()->GetTimerManager().ClearTimer(UpdateTimerHandle);
@@ -168,7 +181,7 @@ void UCSGA_ProjectileBlackHole::EndAbility(const FGameplayAbilitySpecHandle Hand
 
 void UCSGA_ProjectileBlackHole::UpdateGuideLine()
 {
-	// ¸¶¿ì½º ÀÌµ¿ °¨Áö
+	// ë§ˆìš°ìŠ¤ ì´ë™ ê°ì§€
 	CheckMouseMovement();
 
 	FVector StartLocation = GetStartLocation();
@@ -179,7 +192,7 @@ void UCSGA_ProjectileBlackHole::UpdateGuideLine()
 		ScreenCenterDirection = FVector::ForwardVector;
 	}
 
-	// È­¸é Áß¾Ó ¹æÇâÀ¸·Î ¶óÀÎ Æ®·¹ÀÌ½º
+	// í™”ë©´ ì¤‘ì•™ ë°©í–¥ìœ¼ë¡œ ë¼ì¸ íŠ¸ë ˆì´ìŠ¤
 	FVector EndLocation = StartLocation + ScreenCenterDirection * MaxGuideDistance;
 
 	FCollisionQueryParams QueryParams;
@@ -193,7 +206,7 @@ void UCSGA_ProjectileBlackHole::UpdateGuideLine()
 
 	CurrentEndLocation = EndLocation;
 
-	// Á¶ÁØ ¸ğµå¿¡ µû¶ó ´Ù¸¥ »ö»óÀ¸·Î Ç¥½Ã
+	// ì¡°ì¤€ ëª¨ë“œì— ë”°ë¼ ë‹¤ë¥¸ ìƒ‰ìƒìœ¼ë¡œ í‘œì‹œ
 	FColor SphereColor = bUsingMouseAiming ? FColor::Red : FColor::Orange;
 	DrawDebugSphere(GetWorld(), EndLocation, 45.0f, 8, SphereColor, false, UpdateRate + 0.01f);
 
@@ -228,13 +241,13 @@ void UCSGA_ProjectileBlackHole::CheckMouseInput()
 	{
 		if (APlayerController* PC = Cast<APlayerController>(Character->GetController()))
 		{
-			// ¿ŞÂÊ ¸¶¿ì½º ¹öÆ° Å¬¸¯ °¨Áö
+			// ì™¼ìª½ ë§ˆìš°ìŠ¤ ë²„íŠ¼ í´ë¦­ ê°ì§€
 			if (PC->IsInputKeyDown(EKeys::LeftMouseButton))
 			{
 				UE_LOG(LogCS, Log, TEXT("Left mouse clicked! Creating BlackHole at: %s"), *CurrentEndLocation.ToString());
 				CreateBlackHoleAtLocation(CurrentEndLocation);
 
-				// ºí·¢È¦ »ı¼º ÈÄ °¡ÀÌµå ¾îºô¸®Æ¼ Á¾·á
+				// ë¸”ë™í™€ ìƒì„± í›„ ê°€ì´ë“œ ì–´ë¹Œë¦¬í‹° ì¢…ë£Œ
 				EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 			}
 		}
@@ -267,6 +280,14 @@ void UCSGA_ProjectileBlackHole::SpawnBlackHoleDummy(FVector SpawnLocation)
 	}
 }
 
+void UCSGA_ProjectileBlackHole::InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
+{
+	Super::InputPressed(Handle, ActorInfo, ActivationInfo);
+	// GAS ì»´í¬ë„ŒíŠ¸ êµ¬ì¡°ìƒ ì„œë²„ì—ì„œë§Œ ë¶ˆë¦°ë‹¤
+	bIsAming = false;
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+}
+
 
 FVector UCSGA_ProjectileBlackHole::GetStartLocation() const
 {
@@ -280,7 +301,7 @@ FVector UCSGA_ProjectileBlackHole::GetStartLocation() const
 
 void UCSGA_ProjectileBlackHole::CheckMouseMovement()
 {
-	if (bUsingMouseAiming) return; // ÀÌ¹Ì ¸¶¿ì½º ¸ğµå¸é Ã¼Å©ÇÏÁö ¾ÊÀ½
+	if (bUsingMouseAiming) return; // ì´ë¯¸ ë§ˆìš°ìŠ¤ ëª¨ë“œë©´ ì²´í¬í•˜ì§€ ì•ŠìŒ
 
 	if (ACharacter* Character = Cast<ACharacter>(GetAvatarActorFromActorInfo()))
 	{
@@ -291,7 +312,7 @@ void UCSGA_ProjectileBlackHole::CheckMouseMovement()
 			{
 				FVector2D CurrentMousePosition(CurrentMouseX, CurrentMouseY);
 
-				// ¸¶¿ì½º°¡ ÀÓ°è°ª ÀÌ»ó ¿òÁ÷¿´´ÂÁö È®ÀÎ
+				// ë§ˆìš°ìŠ¤ê°€ ì„ê³„ê°’ ì´ìƒ ì›€ì§ì˜€ëŠ”ì§€ í™•ì¸
 				float MouseDistance = FVector2D::Distance(LastMousePosition, CurrentMousePosition);
 
 				if (MouseDistance > MouseMovementThreshold)

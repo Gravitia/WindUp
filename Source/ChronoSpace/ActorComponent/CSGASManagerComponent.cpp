@@ -12,7 +12,7 @@ UCSGASManagerComponent::UCSGASManagerComponent()
 {
 	SetIsReplicatedByDefault(true);
 
-	ASC == nullptr;
+	ASC = nullptr;
 }
 
 void UCSGASManagerComponent::SetASC(UAbilitySystemComponent* InASC, class ACSPlayerState* PS)
