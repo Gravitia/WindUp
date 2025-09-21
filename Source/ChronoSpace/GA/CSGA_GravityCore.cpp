@@ -2,7 +2,6 @@
 
 
 #include "GA/CSGA_GravityCore.h"
-#include "Abilities/Tasks/AbilityTask_WaitDelay.h"
 #include "Actor/CSGravityCoreSphere.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Character.h"
@@ -27,7 +26,25 @@ void UCSGA_GravityCore::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 
 	UE_LOG(LogCS, Log, TEXT("[NetMode: %d] UCSGA_GravityCore - ActivateAbility"), GetWorld()->GetNetMode());
 
-	OwnerCharacter = Cast<ACharacter>(ActorInfo->AvatarActor.Get());
+	if (GravityCore == nullptr)
+	{
+		OnCore();
+	}
+	else
+	{
+		OffCore();
+	}
+}
+
+void UCSGA_GravityCore::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
+{
+
+	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
+}
+
+void UCSGA_GravityCore::OnCore()
+{
+	OwnerCharacter = Cast<ACharacter>(CurrentActorInfo->AvatarActor.Get());
 
 	if (OwnerCharacter && OwnerCharacter->GetCharacterMovement())
 	{
@@ -40,52 +57,33 @@ void UCSGA_GravityCore::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 
 		GravityCore = GetWorld()->SpawnActorDeferred<ACSGravityCoreSphere>(GravityCoreClass, SpawnTransform, OwnerCharacter, nullptr, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
 
-		if ( GravityCore )
+		if (GravityCore)
 		{
+			GravityCore->SetCheckComponentInMesh(bCheckMeshComponentAffectedByGravityCore);
 			UGameplayStatics::FinishSpawningActor(GravityCore, SpawnTransform);
-			GravityCore->AttachToActor(ActorInfo->AvatarActor.Get(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+			GravityCore->AttachToActor(CurrentActorInfo->AvatarActor.Get(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 		}
 
-		if ( ACSCharacterPlayer* CSCharacter = Cast<ACSCharacterPlayer>(OwnerCharacter) )
+		if (ACSCharacterPlayer* CSCharacter = Cast<ACSCharacterPlayer>(OwnerCharacter))
 		{
 			CSCharacter->NetMulticastMakeGravityCoreSphere(GravityCore->GetMeshRadius(), GravityCore->GetActorScale3D().X);
 		}
 	}
 
-	DelayTask = UAbilityTask_WaitDelay::WaitDelay(this, DurationTime);
-	if ( DelayTask )
-	{
-		DelayTask->OnFinish.AddDynamic(this, &UCSGA_GravityCore::OnDurationFinished);
-		DelayTask->ReadyForActivation();
-	}
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
-void UCSGA_GravityCore::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
+void UCSGA_GravityCore::OffCore()
 {
-	if (ACSCharacterPlayer* CSCharacter = Cast<ACSCharacterPlayer>(OwnerCharacter))
-	{
-		CSCharacter->NetMulticastDestroyGravityCoreSphere();
-	}
-
-	if ( DelayTask )
-	{
-		DelayTask->EndTask();
-	}
-
 	if (GravityCore)
-	{
-		GravityCore = nullptr;
-	}
-
-	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
-}
-
-void UCSGA_GravityCore::OnDurationFinished()
-{
-	if ( GravityCore )
 	{
 		GravityCore->Destroy();
 		GravityCore = nullptr;
+	}
+
+	if (ACSCharacterPlayer* CSCharacter = Cast<ACSCharacterPlayer>(OwnerCharacter))
+	{
+		CSCharacter->NetMulticastDestroyGravityCoreSphere();
 	}
 
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);

@@ -10,6 +10,11 @@
 #include "ChronoSpace.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Engine/SceneCapture2D.h"
+#include "Components/SceneCaptureComponent2D.h"
+#include "Character/CSCharacterPlayer.h"
+#include "Camera/CameraComponent.h"
+#include "EngineUtils.h"
+
 
 
 ACSPlayerController::ACSPlayerController()
@@ -17,7 +22,6 @@ ACSPlayerController::ACSPlayerController()
 	bShowMouseCursor = false;
 	bEnableClickEvents = false;
 	bEnableMouseOverEvents = false;
-
 }
 
 void ACSPlayerController::BeginPlay()
@@ -28,13 +32,25 @@ void ACSPlayerController::BeginPlay()
 
 	SetupInputMode();
 
-	// UI »ı¼ºÀ» ¾à°£ Áö¿¬ (PlayerState ÃÊ±âÈ­ ´ë±â)
+	// UI ìƒì„±ì„ ì•½ê°„ ì§€ì—° (PlayerState ì´ˆê¸°í™” ëŒ€ê¸°)
 	GetWorldTimerManager().SetTimer(UICreationTimerHandle, this, &ACSPlayerController::InitializeUI, 0.2f, false);
 
-	if ( IsLocalController() )
+	if (IsLocalController())
 	{
-		RenderTargetP0->ResizeTarget(960, 1080);
-		RenderTargetP1->ResizeTarget(960, 1080);
+		int32 Width = 960;
+		int32 Height = 1080;
+
+		FVector2D ScreenResolution;
+
+		if (GEngine && GEngine->GameViewport)
+		{
+			GEngine->GameViewport->GetViewportSize(ScreenResolution);
+			Width = FMath::Max(Width, ScreenResolution.X / 2);
+			Height = FMath::Max(Height, ScreenResolution.Y / 2);
+		}
+
+		RenderTargetP0->ResizeTarget(Width, Height);
+		RenderTargetP1->ResizeTarget(Width, Height);
 		RenderTargetP0->UpdateResourceImmediate(true);
 		RenderTargetP1->UpdateResourceImmediate(true);
 
@@ -43,10 +59,8 @@ void ACSPlayerController::BeginPlay()
 			ACSGameMode* GameMode = Cast<ACSGameMode>(GetWorld()->GetAuthGameMode());
 			GameMode->OnPlayerLogin.AddDynamic(this, &ACSPlayerController::UpdateRenderTarget);
 		}
-		else
-		{
-			UpdateRenderTarget();
-		}
+
+		UpdateRenderTarget();
 	}
 }
 
@@ -60,7 +74,7 @@ void ACSPlayerController::OnPossess(APawn* InPawn)
 
 	SetupInputMode();
 
-	// PawnÀÌ º¯°æµÉ ¶§ UI »õ·Î°íÄ§
+	// Pawnì´ ë³€ê²½ë  ë•Œ UI ìƒˆë¡œê³ ì¹¨
 	if (GameUIWidget)
 	{
 		RefreshGameUI();
@@ -71,7 +85,7 @@ void ACSPlayerController::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
 
-	// PlayerState°¡ º¹Á¦µÉ ¶§ UI »õ·Î°íÄ§
+	// PlayerStateê°€ ë³µì œë  ë•Œ UI ìƒˆë¡œê³ ì¹¨
 	if (GameUIWidget)
 	{
 		RefreshGameUI();
@@ -80,10 +94,10 @@ void ACSPlayerController::OnRep_PlayerState()
 
 void ACSPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	// Å¸ÀÌ¸Ó Á¤¸®
+	// íƒ€ì´ë¨¸ ì •ë¦¬
 	GetWorldTimerManager().ClearTimer(UICreationTimerHandle);
 
-	// UI Á¤¸®
+	// UI ì •ë¦¬
 	if (GameUIWidget)
 	{
 		GameUIWidget->RemoveFromParent();
@@ -93,16 +107,23 @@ void ACSPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 }
 
+void ACSPlayerController::SetupInputComponent()
+{
+	Super::SetupInputComponent();
+
+	InputComponent->BindAction("DualMode", IE_Pressed, this, &ACSPlayerController::ToggleDualMode);
+}
+
 void ACSPlayerController::SetupInputMode()
 {
-	// °ÔÀÓ Àü¿ë ÀÔ·Â ¸ğµå ¼³Á¤
+	// ê²Œì„ ì „ìš© ì…ë ¥ ëª¨ë“œ ì„¤ì •
 	FInputModeGameOnly InputMode;
 	SetInputMode(InputMode);
 }
 
 void ACSPlayerController::InitializeUI()
 {
-	// ·ÎÄÃ ÇÃ·¹ÀÌ¾î ÄÁÆ®·Ñ·¯¿¡¼­¸¸ UI »ı¼º
+	// ë¡œì»¬ í”Œë ˆì´ì–´ ì»¨íŠ¸ë¡¤ëŸ¬ì—ì„œë§Œ UI ìƒì„±
 	if (IsLocalPlayerController())
 	{
 		ShowGameUI();
@@ -117,12 +138,59 @@ void ACSPlayerController::InitializeUI()
 
 void ACSPlayerController::UpdateRenderTarget()
 {
-	
+	ACSCharacterPlayer* LeftCharacter;
+	ACSCharacterPlayer* RightCharacter;
+
+	if (HasAuthority())	// Server
+	{
+		LeftCharacter = Cast<ACSCharacterPlayer>(GetPawn());
+		RightCharacter = FindFirstOtherPawn();
+	}
+	else					// Client
+	{
+		LeftCharacter = FindFirstOtherPawn();
+		RightCharacter = Cast<ACSCharacterPlayer>(GetPawn());
+	}
+
+	if (!LeftCharacter) return;
+
+	ASceneCapture2D* CapLeft = SpawnCaptureAndAttach(LeftCharacter->GetFollowCamera(), RenderTargetP0);
+
+	if (CapLeft)
+	{
+		UE_LOG(LogCS, Log, TEXT("[NetMode: %d] UpdateRenderTarget - CapLeft Success"), GetWorld()->GetNetMode());
+	}
+
+	if (!RightCharacter) return;
+
+	ASceneCapture2D* CapRight = SpawnCaptureAndAttach(RightCharacter->GetFollowCamera(), RenderTargetP1);
+
+	if (CapRight)
+	{
+		UE_LOG(LogCS, Log, TEXT("[NetMode: %d] UpdateRenderTarget - CapRight Success"), GetWorld()->GetNetMode());
+	}
+}
+
+ACSCharacterPlayer* ACSPlayerController::FindFirstOtherPawn()
+{
+	APawn* MyPawn = GetPawn();
+	if (!MyPawn) return nullptr;
+
+	for (TActorIterator<ACSCharacterPlayer> It(GetWorld()); It; ++It)
+	{
+		ACSCharacterPlayer* Candidate = *It;
+		if (Candidate != MyPawn)
+		{
+			return Candidate;
+		}
+	}
+
+	return nullptr;
 }
 
 ASceneCapture2D* ACSPlayerController::SpawnCaptureAndAttach(UCameraComponent* TargetCam, UTextureRenderTarget2D* TargetRT)
 {
-	if (!TargetCam || !TargetRT) return;
+	if (!TargetCam || !TargetRT) return nullptr;
 
 	FActorSpawnParameters Params;
 	Params.Owner = this;
@@ -133,9 +201,64 @@ ASceneCapture2D* ACSPlayerController::SpawnCaptureAndAttach(UCameraComponent* Ta
 		Params
 	);
 
-	if (!CaptureActor) return;
+	if (!CaptureActor) return nullptr;
 
+	USceneCaptureComponent2D* CaptureComp = CaptureActor->GetCaptureComponent2D();
+	CaptureComp->TextureTarget = TargetRT;
+	CaptureComp->CaptureSource = SCS_FinalColorLDR;
+	CaptureComp->bCaptureEveryFrame = true;
 
+	CaptureActor->AttachToComponent(Cast<USceneComponent>(TargetCam), FAttachmentTransformRules::SnapToTargetIncludingScale);
+
+	return CaptureActor;
+}
+
+void ACSPlayerController::ToggleDualMode()
+{
+	if (bIsDualMode) CloseDualMode();
+	else OpenDualMode();
+}
+
+void ACSPlayerController::OpenDualMode()
+{
+	check(DualModeUIClass);
+
+	if (!DualModeUI)
+	{
+		DualModeUI = CreateWidget(this, DualModeUIClass);
+	}
+
+	DualModeUI->AddToViewport(-100);
+
+	if (CaptureP0)
+	{
+		CaptureP0->GetCaptureComponent2D()->SetComponentTickEnabled(true);
+	}
+	if (CaptureP1)
+	{
+		CaptureP1->GetCaptureComponent2D()->SetComponentTickEnabled(true);
+	}
+
+	bIsDualMode = true;
+}
+
+void ACSPlayerController::CloseDualMode()
+{
+	if (DualModeUI)
+	{
+		DualModeUI->RemoveFromParent();
+	}
+
+	if (CaptureP0)
+	{
+		CaptureP0->GetCaptureComponent2D()->SetComponentTickEnabled(false);
+	}
+	if (CaptureP1)
+	{
+		CaptureP1->GetCaptureComponent2D()->SetComponentTickEnabled(false);
+	}
+
+	bIsDualMode = false;
 }
 
 void ACSPlayerController::CreateGameUI()
@@ -154,7 +277,7 @@ void ACSPlayerController::CreateGameUI()
 
 void ACSPlayerController::ShowGameUI()
 {
-	// ·ÎÄÃ ÇÃ·¹ÀÌ¾î¿¡¼­¸¸ UI Ç¥½Ã
+	// ë¡œì»¬ í”Œë ˆì´ì–´ì—ì„œë§Œ UI í‘œì‹œ
 	if (!IsLocalPlayerController())
 	{
 		return;
@@ -177,7 +300,7 @@ void ACSPlayerController::ShowGameUI()
 
 		GameUIWidget->SetVisibility(ESlateVisibility::Visible);
 
-		// UI »õ·Î°íÄ§
+		// UI ìƒˆë¡œê³ ì¹¨
 		RefreshGameUI();
 	}
 }

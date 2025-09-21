@@ -8,6 +8,8 @@
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/Pawn.h"
+#include "Engine/LocalPlayer.h"
+
 
 ACSGameMode::ACSGameMode()
 {
@@ -22,9 +24,9 @@ ACSGameMode::ACSGameMode()
 void ACSGameMode::BeginPlay()
 {
     Super::BeginPlay();
-    
+
     UE_LOG(LogTemp, Log, TEXT("CSLog: CSGameMode BeginPlay"));
-    
+
     UE_LOG(LogTemp, Log, TEXT("CSGameMode: Simple respawn system initialized"));
 }
 
@@ -47,6 +49,7 @@ void ACSGameMode::PostLogin(APlayerController* NewPlayer)
     }
 }
 
+
 void ACSGameMode::Logout(AController* Exiting)
 {
     if (APlayerController* PC = Cast<APlayerController>(Exiting))
@@ -65,6 +68,43 @@ void ACSGameMode::Logout(AController* Exiting)
     }
 
     Super::Logout(Exiting);
+}
+
+UClass* ACSGameMode::GetDefaultPawnClassForController_Implementation(AController* InController)
+{
+    if (const APlayerController* PC = Cast<APlayerController>(InController))
+    {
+        // 1) 로컬 스플릿스크린: ControllerId 기준(0,1,2…)
+        if (const ULocalPlayer* LP = PC->GetLocalPlayer())
+        {
+            const int32 Id = LP->GetControllerId();
+            if (Id == 0 && PawnClassPlayer0) return PawnClassPlayer0;
+            if (Id == 1 && PawnClassPlayer1) return PawnClassPlayer1;
+        }
+
+    }
+
+    // 2) 온라인 멀티플레이어: 현재 플레이어 수 기준
+    if (HasAuthority())
+    {
+        int32 CurrentPlayerCount = GetNumPlayers();
+
+        // 첫 번째 플레이어 (PlayerCount = 1)
+        if (CurrentPlayerCount == 1 && PawnClassPlayer0)
+        {
+            UE_LOG(LogTemp, Log, TEXT("Using PawnClassPlayer0 for first online player"));
+            return PawnClassPlayer0;
+        }
+        // 두 번째 플레이어 (PlayerCount = 2)
+        else if (CurrentPlayerCount == 2 && PawnClassPlayer1)
+        {
+            UE_LOG(LogTemp, Log, TEXT("Using PawnClassPlayer1 for second online player"));
+            return PawnClassPlayer1;
+        }
+    }
+
+    // 설정이 없으면 기본(프로젝트의 DefaultPawnClass) 사용
+    return Super::GetDefaultPawnClassForController_Implementation(InController);
 }
 
 void ACSGameMode::SetCurrentRespawnPoint(ACSRespawnPoint* NewRespawnPoint)
