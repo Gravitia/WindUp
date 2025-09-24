@@ -55,6 +55,10 @@
 		{
 			"Name": "BlueprintFileUtils",
 			"Enabled": true
+		},
+		{
+			"Name": "Fab",
+			"Enabled": false
 		}
 	]
 }
