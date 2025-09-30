@@ -393,6 +393,14 @@ void ACSCharacterPlayer::OnMovementModeChanged(
 	}
 }
 
+void ACSCharacterPlayer::ServerDestoryBlackHole_Implementation()
+{
+	if ( BlackHole )
+	{
+		BlackHole->SetDuration(0.2f);
+	}
+}
+
 void ACSCharacterPlayer::NetMulticastMakeGravityCoreSphere_Implementation(float SphereRaduis, float SphereScale)
 {
 	GravityCoreSphere->SetSphereRadius(SphereRaduis * SphereScale);
@@ -408,7 +416,7 @@ void ACSCharacterPlayer::NetMulticastDestroyGravityCoreSphere_Implementation()
 }
 
 void ACSCharacterPlayer::ServerSpawnAndSetBlackHole_Implementation(TSubclassOf<class ACSBlackHole> BlackHoleClass,
-	FVector Location, float Duration, float GravityInfluenceRange, float PullStrength, float StopRange)
+	FVector Location, float Duration, float GravityInfluenceRange, float PullStrength, float StopRange, bool bCheckComponent)
 {
 	if (UWorld* World = GetWorld())
 	{
@@ -417,7 +425,7 @@ void ACSCharacterPlayer::ServerSpawnAndSetBlackHole_Implementation(TSubclassOf<c
 		Params.Instigator = this;
 
 		FRotator Rotation = FRotator::ZeroRotator;
-		ACSBlackHole* BlackHole = World->SpawnActor<ACSBlackHole>(BlackHoleClass, Location, Rotation, Params);
+		BlackHole = World->SpawnActor<ACSBlackHole>(BlackHoleClass, Location, Rotation, Params);
 
 		if (BlackHole)
 		{
@@ -425,6 +433,7 @@ void ACSCharacterPlayer::ServerSpawnAndSetBlackHole_Implementation(TSubclassOf<c
 			BlackHole->SetGravityInfluenceRange(GravityInfluenceRange);
 			BlackHole->SetPullStrength(PullStrength);
 			BlackHole->SetStopRange(StopRange);
+			BlackHole->SetCheckComponentInMesh(bCheckComponent);
 		}
 	}
 }

@@ -35,10 +35,6 @@
 			"Enabled": true
 		},
 		{
-			"Name": "Fab",
-			"Enabled": false
-		},
-		{
 			"Name": "EOSIntegrationKit",
 			"Enabled": true,
 			"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/product/dba0aa05bdd144e69405653a387ad63e"
@@ -49,8 +45,20 @@
 		},
 		{
 			"Name": "BlockoutToolsPlugin",
-			"Enabled": false,
+			"Enabled": true,
 			"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/d337b97aca8947a893526964e179acfd"
+		},
+		{
+			"Name": "JsonBlueprintUtilities",
+			"Enabled": true
+		},
+		{
+			"Name": "BlueprintFileUtils",
+			"Enabled": true
+		},
+		{
+			"Name": "Fab",
+			"Enabled": false
 		}
 	]
 }

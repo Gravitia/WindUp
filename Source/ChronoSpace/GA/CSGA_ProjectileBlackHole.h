@@ -40,7 +40,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile Guide")
 	float MouseYSensitivity = 1.5f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Black Hole")
+	//UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Black Hole")
 	float Duration;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Black Hole")
@@ -77,10 +77,8 @@ private:
 
 	// Black Hole 
 protected:
-	// 현재 EndLocation 저장
 	FVector CurrentEndLocation;
 
-	// 새로운 함수들
 	void CheckMouseInput();
 	void CreateBlackHoleAtLocation(const FVector& Location);
 
@@ -96,8 +94,16 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Black Hole")
 	TSubclassOf<class ACSBlackHole> BlackHoleClass;
 
-	UPROPERTY()
-	TObjectPtr<class ACSBlackHole> BlackHoleActor;
+	bool bIsDummySpawned;
+	bool bIsBlackHoleSpawned;
 
-	bool bIsSpawned;
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Check Component")
+	bool bCheckMeshComponentPulledByBlackHole = false;
+
+public:
+	virtual void InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) override;
+
+protected:
+	bool bIsAming;
 };
