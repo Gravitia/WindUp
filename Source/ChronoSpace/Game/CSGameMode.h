@@ -69,4 +69,31 @@ public:
 private:
     class ACSGameState* GetCSGameState() const;
     
+
+// Split Screen
+public:
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Split Screen")
+    bool bAutoEnableSplitScreen = true;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Split Screen")
+    TSubclassOf<APawn> DummySpectatorPawnClass;
+
+    UPROPERTY() // GC º¸È£
+    TObjectPtr< class ACSCameraViewProxy > ServerCamProxy = nullptr;
+
+    UPROPERTY()
+    TMap< TObjectPtr< APlayerController >, TObjectPtr< ACSCameraViewProxy > > ClientCamProxies;
+
+private:
+    TArray< TObjectPtr< APlayerController > > ConnectedPlayers;
+    TObjectPtr< class ACSSpectatorPawn > DummySpectatorPawn;
+    TObjectPtr< class ACSPlayerController > DummyPlayerController;
+
+    void CreateDummyLocalPlayer();
+    void AttachDummySpectatorToClient(APlayerController* RemoteClient);
+    void SyncDummyRotationWithProxy();
+    void SetupOnlineSplitScreen();
+
+    FTimerHandle SyncTimerHandle;
+    FTimerHandle RotationSyncTimerHandle;
 };
