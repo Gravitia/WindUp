@@ -10,6 +10,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "ChronoSpace.h"
 #include "Physics/CSCollision.h"
+#include "DataAsset/CSCharacterPlayerData.h"
 
 FVector SplitScreen::CalculateOffsetPosition(const FVector& TargetPos, const FRotator& TargetRot)
 {
@@ -64,6 +65,18 @@ ACSSpectatorPawn::ACSSpectatorPawn()
     CameraBoom->SetupAttachment(SkeletalMesh);
 
     CameraBoom->TargetArmLength = 400.f;
+    static ConstructorHelpers::FObjectFinder<UCSCharacterPlayerData> PlayerDataRef(TEXT("/Game/04_DataAssets/Character/BPDA_CharacterPlayerData.BPDA_CharacterPlayerData"));
+    if ( PlayerDataRef.Succeeded() )
+    {
+        UCSCharacterPlayerData* PlayerData = PlayerDataRef.Object;
+        CameraBoom->TargetArmLength = PlayerData->TargetArmLength;
+        CameraBoom->SetRelativeLocation( PlayerData->CameraOffset );
+        UE_LOG(LogCS, Log, TEXT("ACSSpectatorPawn - Success"));
+    }
+    else
+    {
+        UE_LOG(LogCS, Warning, TEXT("ACSSpectatorPawn - No Data"));
+    }
 
     CameraBoom->bUsePawnControlRotation = true;
     CameraBoom->ProbeChannel = CCHANNEL_CSSPECTATOR;  // 별도 카메라로 수정 필요
@@ -86,13 +99,6 @@ ACSSpectatorPawn::ACSSpectatorPawn()
     // Pawn 안보이게
     SetActorHiddenInGame(true);
     SetActorEnableCollision(false);
-}
-
-void ACSSpectatorPawn::BeginPlay()
-{
-    Super::BeginPlay();
-
-    CameraBoom->TargetArmLength = 400.f;
 }
 
 void ACSSpectatorPawn::Tick(float DeltaTime)

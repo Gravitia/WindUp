@@ -70,6 +70,7 @@ void ACSGameMode::PostLogin(APlayerController* NewPlayer)
     // 1) 클라이언트별 개별 Proxy 생성 (모든 원격 클라이언트용)
     if (!NewPlayer->IsLocalController()) // 원격 클라이언트
     {
+        UE_LOG(LogCS, Log, TEXT("ACSGameMode::PostLogin - %s"), *NewPlayer->GetName());
         FActorSpawnParameters ClientProxyParams;
         ClientProxyParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
         ClientProxyParams.Owner = NewPlayer; // 클라이언트를 Owner로 설정
@@ -85,6 +86,7 @@ void ACSGameMode::PostLogin(APlayerController* NewPlayer)
             // 중요: 클라이언트에도 복제되도록 설정
             ClientProxy->SetReplicates(true);
             ClientProxy->SetReplicateMovement(false); // 카메라 데이터만 복제
+            ClientProxy->SetIsServerProxy(false);
 
             // 클라이언트별 Proxy 맵에 추가
             ClientCamProxies.Add(NewPlayer, ClientProxy);
@@ -109,6 +111,7 @@ void ACSGameMode::PostLogin(APlayerController* NewPlayer)
             // 서버 Proxy도 복제되도록 설정
             ServerCamProxy->SetReplicates(true);
             ServerCamProxy->SetReplicateMovement(false);
+            ServerCamProxy->SetIsServerProxy(true);
 
             UE_LOG(LogCS, Warning, TEXT("CS Created ServerCamProxy (ListenServer POV, No Owner)"));
         }

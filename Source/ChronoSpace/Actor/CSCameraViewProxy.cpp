@@ -16,6 +16,8 @@ ACSCameraViewProxy::ACSCameraViewProxy()
     NetUpdateFrequency = 60.f;   // 필요 시 조정
     SetReplicateMovement(false); // 우리는 위치/회전을 액터 위치로 안 쓰고, RepCam만 복제
 
+    bIsServerProxy = false;
+
 #if WITH_EDITOR
     SetActorLabel(TEXT("ACSCameraViewProxy"));
 #endif
@@ -25,6 +27,7 @@ void ACSCameraViewProxy::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
+    DOREPLIFETIME(ACSCameraViewProxy, bIsServerProxy);
     DOREPLIFETIME(ACSCameraViewProxy, RepCam);
 }
 

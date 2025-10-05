@@ -57,4 +57,11 @@ public:
     UFUNCTION(Server, Reliable, WithValidation)
     void ServerUpdateClientCamera(const FRepCamInfo& NewCam);
 
+public:
+    FORCEINLINE bool IsServerProxy() { return bIsServerProxy; }
+    FORCEINLINE void SetIsServerProxy(bool bSeverProxy) { bIsServerProxy = bSeverProxy; }
+
+protected:
+    UPROPERTY(Replicated)
+    bool bIsServerProxy;
 };

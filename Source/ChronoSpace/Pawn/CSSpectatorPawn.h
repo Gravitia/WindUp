@@ -26,7 +26,6 @@ class CHRONOSPACE_API ACSSpectatorPawn : public ASpectatorPawn
 public:
     ACSSpectatorPawn();
 
-    virtual void BeginPlay() override;
     virtual void Tick(float DeltaTime) override;
 
     /** Skeletal Mesh - 카메라 스프링암을 Mesh에 붙여 네트워크 보간을 따라가게 함 */

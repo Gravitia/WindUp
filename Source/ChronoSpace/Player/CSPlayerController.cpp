@@ -448,7 +448,7 @@ void ACSPlayerController::SetupClientSplitScreen()
 
 void ACSPlayerController::CreateClientDummyPawn()
 {
-	UE_LOG(LogTemp, Warning, TEXT("SS Creating client dummy pawn"));
+	UE_LOG(LogCS, Log, TEXT("[NetMode : %d] ACSPlayerController::CreateClientDummyPawn"), GetWorld()->GetNetMode());
 
 	// 이미 더미 폰이 있다면 리턴
 	if (ClientDummyPawn && IsValid(ClientDummyPawn))
@@ -495,6 +495,7 @@ void ACSPlayerController::CreateClientDummyPawn()
 			if (GameInstance && GameInstance->GetNumLocalPlayers() >= 2)
 			{
 				ULocalPlayer* SecondLocalPlayer = GameInstance->GetLocalPlayerByIndex(1);
+				
 				if (SecondLocalPlayer && !SecondLocalPlayer->PlayerController)
 				{
 					// 두 번째 LocalPlayer에 컨트롤러가 없을 때만 생성
@@ -592,6 +593,7 @@ void ACSPlayerController::SyncClientDummyWithRemotePlayer(ACSSpectatorPawn* Dumm
 	{
 		for (TActorIterator<ACSCameraViewProxy> It(GetWorld()); It; ++It)
 		{
+			if ( !It->IsServerProxy() ) continue;
 			Proxy = *It;
 			break;
 		}
