@@ -10,17 +10,13 @@
 #include "Actor/CSCameraViewProxy.h"
 #include "Pawn/CSSpectatorPawn.h"
 #include "TimerManager.h"
-#include "ChronoSpace.h"
-#include "Engine/TextureRenderTarget2D.h"
-#include "Engine/SceneCapture2D.h"
-#include "Components/SceneCaptureComponent2D.h"
 #include "Character/CSCharacterPlayer.h"
 #include "Camera/CameraComponent.h"
 #include "EngineUtils.h"
 #include "HAL/PlatformMisc.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/Pawn.h"
-
+#include "ChronoSpace.h"
 
 
 ACSPlayerController::ACSPlayerController()
@@ -34,40 +30,10 @@ void ACSPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	//check(CameraShake && RenderTargetP0 && RenderTargetP1); 
-
 	SetupInputMode();
 
 	// UI 생성을 약간 지연 (PlayerState 초기화 대기)
 	GetWorldTimerManager().SetTimer(UICreationTimerHandle, this, &ACSPlayerController::InitializeUI, 0.2f, false);
-
-	/*if (IsLocalController())
-	{
-		int32 Width = 960;
-		int32 Height = 1080;
-
-		FVector2D ScreenResolution;
-
-		if (GEngine && GEngine->GameViewport)
-		{
-			GEngine->GameViewport->GetViewportSize(ScreenResolution);
-			Width = FMath::Max(Width, ScreenResolution.X / 2);
-			Height = FMath::Max(Height, ScreenResolution.Y / 2);
-		}
-
-		RenderTargetP0->ResizeTarget(Width, Height);
-		RenderTargetP1->ResizeTarget(Width, Height);
-		RenderTargetP0->UpdateResourceImmediate(true);
-		RenderTargetP1->UpdateResourceImmediate(true);
-
-		if (HasAuthority())
-		{
-			ACSGameMode* GameMode = Cast<ACSGameMode>(GetWorld()->GetAuthGameMode());
-			GameMode->OnPlayerLogin.AddDynamic(this, &ACSPlayerController::UpdateRenderTarget);
-		}
-
-		UpdateRenderTarget();
-	}*/
 
 	if (!bIsDummyController)
 	{
@@ -190,130 +156,6 @@ void ACSPlayerController::InitializeUI()
 	}
 }
 
-void ACSPlayerController::UpdateRenderTarget()
-{
-	ACSCharacterPlayer* LeftCharacter;
-	ACSCharacterPlayer* RightCharacter;
-
-	if (HasAuthority())	// Server
-	{
-		LeftCharacter = Cast<ACSCharacterPlayer>(GetPawn());
-		RightCharacter = FindFirstOtherPawn();
-	}
-	else					// Client
-	{
-		LeftCharacter = FindFirstOtherPawn();
-		RightCharacter = Cast<ACSCharacterPlayer>(GetPawn());
-	}
-
-	if (!LeftCharacter) return;
-
-	ASceneCapture2D* CapLeft = SpawnCaptureAndAttach(LeftCharacter->GetFollowCamera(), RenderTargetP0);
-
-	if (CapLeft)
-	{
-		UE_LOG(LogCS, Log, TEXT("[NetMode: %d] UpdateRenderTarget - CapLeft Success"), GetWorld()->GetNetMode());
-	}
-
-	if (!RightCharacter) return;
-
-	ASceneCapture2D* CapRight = SpawnCaptureAndAttach(RightCharacter->GetFollowCamera(), RenderTargetP1);
-
-	if (CapRight)
-	{
-		UE_LOG(LogCS, Log, TEXT("[NetMode: %d] UpdateRenderTarget - CapRight Success"), GetWorld()->GetNetMode());
-	}
-}
-
-ACSCharacterPlayer* ACSPlayerController::FindFirstOtherPawn()
-{
-	APawn* MyPawn = GetPawn();
-	if (!MyPawn) return nullptr;
-
-	for (TActorIterator<ACSCharacterPlayer> It(GetWorld()); It; ++It)
-	{
-		ACSCharacterPlayer* Candidate = *It;
-		if (Candidate != MyPawn)
-		{
-			return Candidate;
-		}
-	}
-
-	return nullptr;
-}
-
-ASceneCapture2D* ACSPlayerController::SpawnCaptureAndAttach(UCameraComponent* TargetCam, UTextureRenderTarget2D* TargetRT)
-{
-	if (!TargetCam || !TargetRT) return nullptr;
-
-	FActorSpawnParameters Params;
-	Params.Owner = this;
-
-	ASceneCapture2D* CaptureActor = GetWorld()->SpawnActor<ASceneCapture2D>(
-		ASceneCapture2D::StaticClass(),
-		FTransform::Identity,
-		Params
-	);
-
-	if (!CaptureActor) return nullptr;
-
-	USceneCaptureComponent2D* CaptureComp = CaptureActor->GetCaptureComponent2D();
-	CaptureComp->TextureTarget = TargetRT;
-	CaptureComp->CaptureSource = SCS_FinalColorLDR;
-	CaptureComp->bCaptureEveryFrame = true;
-
-	CaptureActor->AttachToComponent(Cast<USceneComponent>(TargetCam), FAttachmentTransformRules::SnapToTargetIncludingScale);
-
-	return CaptureActor;
-}
-
-void ACSPlayerController::ToggleDualMode()
-{
-	if (bIsDualMode) CloseDualMode();
-	else OpenDualMode();
-}
-
-void ACSPlayerController::OpenDualMode()
-{
-	check(DualModeUIClass);
-
-	if (!DualModeUI)
-	{
-		DualModeUI = CreateWidget(this, DualModeUIClass);
-	}
-
-	DualModeUI->AddToViewport(-100);
-
-	if (CaptureP0)
-	{
-		CaptureP0->GetCaptureComponent2D()->SetComponentTickEnabled(true);
-	}
-	if (CaptureP1)
-	{
-		CaptureP1->GetCaptureComponent2D()->SetComponentTickEnabled(true);
-	}
-
-	bIsDualMode = true;
-}
-
-void ACSPlayerController::CloseDualMode()
-{
-	if (DualModeUI)
-	{
-		DualModeUI->RemoveFromParent();
-	}
-
-	if (CaptureP0)
-	{
-		CaptureP0->GetCaptureComponent2D()->SetComponentTickEnabled(false);
-	}
-	if (CaptureP1)
-	{
-		CaptureP1->GetCaptureComponent2D()->SetComponentTickEnabled(false);
-	}
-
-	bIsDualMode = false;
-}
 
 void ACSPlayerController::CreateGameUI()
 {

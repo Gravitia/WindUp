@@ -109,41 +109,7 @@ private:
 	// UI 
 	FTimerHandle UICreationTimerHandle;
 
-// Dual Mode
 protected:
-	UFUNCTION()
-	void UpdateRenderTarget();
-
-	class ACSCharacterPlayer* FindFirstOtherPawn();
-
-	class ASceneCapture2D* SpawnCaptureAndAttach(class UCameraComponent* TargetCam, UTextureRenderTarget2D* TargetRT);
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Render")
-	TObjectPtr<UTextureRenderTarget2D> RenderTargetP0;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Render")
-	TObjectPtr<UTextureRenderTarget2D> RenderTargetP1;
-
-	UPROPERTY()
-	TObjectPtr<class ASceneCapture2D> CaptureP0;
-
-	UPROPERTY()
-	TObjectPtr<class ASceneCapture2D> CaptureP1;
-
-// Dual Mode UI
-protected:
-	void ToggleDualMode();
-	void OpenDualMode();
-	void CloseDualMode();
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dual Mode UI")
-	TSubclassOf<class UUserWidget> DualModeUIClass;
-
-	UPROPERTY()
-	TObjectPtr<class UUserWidget> DualModeUI;
-
-	bool bIsDualMode;
-
 	// =========================
 	// Server Travel UI ���� �Լ���
 	// =========================
