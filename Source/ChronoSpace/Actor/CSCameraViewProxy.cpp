@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Actor/CSCameraViewProxy.h"
@@ -12,9 +12,9 @@ ACSCameraViewProxy::ACSCameraViewProxy()
     PrimaryActorTick.bCanEverTick = true;
 
     bReplicates = true;
-    bAlwaysRelevant = true;   // ¾îµğ¼­³ª Ç×»ó °ü·Ã
-    NetUpdateFrequency = 60.f;   // ÇÊ¿ä ½Ã Á¶Á¤
-    SetReplicateMovement(false); // ¿ì¸®´Â À§Ä¡/È¸ÀüÀ» ¾×ÅÍ À§Ä¡·Î ¾È ¾²°í, RepCam¸¸ º¹Á¦
+    bAlwaysRelevant = true;   // ì–´ë””ì„œë‚˜ í•­ìƒ ê´€ë ¨
+    NetUpdateFrequency = 60.f;   // í•„ìš” ì‹œ ì¡°ì •
+    SetReplicateMovement(false); // ìš°ë¦¬ëŠ” ìœ„ì¹˜/íšŒì „ì„ ì•¡í„° ìœ„ì¹˜ë¡œ ì•ˆ ì“°ê³ , RepCamë§Œ ë³µì œ
 
     bIsServerProxy = false;
 
@@ -35,25 +35,11 @@ void ACSCameraViewProxy::SetSourcePC(APlayerController* InPC)
 {
     if (!HasAuthority())
     {
-        // ¼­¹ö¸¸ ¼Ò½º ¼³Á¤ °¡´É
+        // ì„œë²„ë§Œ ì†ŒìŠ¤ ì„¤ì • ê°€ëŠ¥
         return;
     }
 
     SourcePC = InPC;
-}
-
-void ACSCameraViewProxy::SetSourceFromPlayerIndex(int32 PlayerIndex /*=0*/)
-{
-    if (!HasAuthority())
-    {
-        return;
-    }
-
-    if (UWorld* World = GetWorld())
-    {
-        APlayerController* PC = UGameplayStatics::GetPlayerController(World, PlayerIndex);
-        SetSourcePC(PC);
-    }
 }
 
 void ACSCameraViewProxy::Tick(float DeltaSeconds)
@@ -62,20 +48,20 @@ void ACSCameraViewProxy::Tick(float DeltaSeconds)
 
     if (HasAuthority())
     {
-        // *** ¼­¹ö: Owner°¡ ¼³Á¤µÈ °æ¿ì (Å¬¶óÀÌ¾ğÆ® Àü¿ë Proxy) ***
+        // *** ì„œë²„: Ownerê°€ ì„¤ì •ëœ ê²½ìš° (í´ë¼ì´ì–¸íŠ¸ ì „ìš© Proxy) ***
         if (APlayerController* OwnerPC = Cast<APlayerController>(GetOwner()))
         {
-            // ÀÌ Proxy´Â Æ¯Á¤ Å¬¶óÀÌ¾ğÆ® Àü¿ëÀÌ¹Ç·Î 
-            // Å¬¶óÀÌ¾ğÆ®°¡ RPC·Î º¸³½ µ¥ÀÌÅÍ¸¸ º¹Á¦ÇÏ°í, ¼­¹ö¿¡¼­ ÀÓÀÇ·Î ¾÷µ¥ÀÌÆ®ÇÏÁö ¾ÊÀ½
-            // RepCamÀº ServerUpdateClientCamera¿¡¼­¸¸ ¾÷µ¥ÀÌÆ®µÊ
+            // ì´ ProxyëŠ” íŠ¹ì • í´ë¼ì´ì–¸íŠ¸ ì „ìš©ì´ë¯€ë¡œ 
+            // í´ë¼ì´ì–¸íŠ¸ê°€ RPCë¡œ ë³´ë‚¸ ë°ì´í„°ë§Œ ë³µì œí•˜ê³ , ì„œë²„ì—ì„œ ì„ì˜ë¡œ ì—…ë°ì´íŠ¸í•˜ì§€ ì•ŠìŒ
+            // RepCamì€ ServerUpdateClientCameraì—ì„œë§Œ ì—…ë°ì´íŠ¸ë¨
 
             UE_LOG(LogTemp, VeryVerbose, TEXT("SS Server: Client Proxy for %s - RepCam: %s"),
                 *OwnerPC->GetName(), *RepCam.Rotation.ToString());
         }
-        // *** ¼­¹ö: Owner°¡ ¾ø´Â °æ¿ì (¼­¹ö Àü¿ë Proxy) ***
+        // *** ì„œë²„: Ownerê°€ ì—†ëŠ” ê²½ìš° (ì„œë²„ ì „ìš© Proxy) ***
         else
         {
-            // ¼­¹ö Àü¿ë Proxy - ¸®½¼ ¼­¹ö(PlayerIndex 0)ÀÇ Ä«¸Ş¶ó POV¸¦ º¹Á¦
+            // ì„œë²„ ì „ìš© Proxy - ë¦¬ìŠ¨ ì„œë²„(PlayerIndex 0)ì˜ ì¹´ë©”ë¼ POVë¥¼ ë³µì œ
             APlayerController* PC = SourcePC.Get();
             if (!PC)
             {
@@ -100,7 +86,7 @@ void ACSCameraViewProxy::Tick(float DeltaSeconds)
     }
     else
     {
-        // *** Å¬¶óÀÌ¾ğÆ®: ÀÚ½ÅÀÇ ·ÎÄÃ ÄÁÆ®·Ñ·¯ POV¸¦ ¼­¹ö·Î Àü¼Û ***
+        // *** í´ë¼ì´ì–¸íŠ¸: ìì‹ ì˜ ë¡œì»¬ ì»¨íŠ¸ë¡¤ëŸ¬ POVë¥¼ ì„œë²„ë¡œ ì „ì†¡ ***
         if (APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0))
         {
             if (PC->IsLocalController() && PC->PlayerCameraManager)
@@ -110,8 +96,7 @@ void ACSCameraViewProxy::Tick(float DeltaSeconds)
                 LocalCam.Location = POV.Location;
                 LocalCam.Rotation = POV.Rotation;
                 LocalCam.FOV = POV.FOV;
-
-                // RPC ¡æ ¼­¹ö¿¡ Àü´Ş (ÀÌ Å¬¶óÀÌ¾ğÆ®ÀÇ Ä«¸Ş¶ó Á¤º¸)
+                // RPC â†’ ì„œë²„ì— ì „ë‹¬ (ì´ í´ë¼ì´ì–¸íŠ¸ì˜ ì¹´ë©”ë¼ ì •ë³´)
                 ServerUpdateClientCamera(LocalCam);
 
                 UE_LOG(LogTemp, VeryVerbose, TEXT("SS Client: Sending camera rotation: %s"),
@@ -124,10 +109,10 @@ void ACSCameraViewProxy::Tick(float DeltaSeconds)
 // client -> server 
 void ACSCameraViewProxy::ServerUpdateClientCamera_Implementation(const FRepCamInfo& NewCam)
 {
-    // Owner Ã¼Å©: ÀÌ ProxyÀÇ Owner Å¬¶óÀÌ¾ğÆ®¸¸ ¾÷µ¥ÀÌÆ® °¡´É
+    // Owner ì²´í¬: ì´ Proxyì˜ Owner í´ë¼ì´ì–¸íŠ¸ë§Œ ì—…ë°ì´íŠ¸ ê°€ëŠ¥
     if (APlayerController* OwningPC = Cast<APlayerController>(GetOwner()))
     {
-        // Owner°¡ RPC¸¦ º¸³½ Å¬¶óÀÌ¾ğÆ®¿Í ÀÏÄ¡ÇÏ´ÂÁö È®ÀÎ
+        // Ownerê°€ RPCë¥¼ ë³´ë‚¸ í´ë¼ì´ì–¸íŠ¸ì™€ ì¼ì¹˜í•˜ëŠ”ì§€ í™•ì¸
         if (OwningPC == GetNetConnection()->PlayerController)
         {
             RepCam = NewCam;
@@ -141,13 +126,14 @@ void ACSCameraViewProxy::ServerUpdateClientCamera_Implementation(const FRepCamIn
     }
     else
     {
-        // Owner°¡ ¾ø´Â ¼­¹ö Àü¿ë Proxy´Â Å¬¶óÀÌ¾ğÆ® RPC¸¦ ¹ŞÀ¸¸é ¾ÈµÊ
+        // Ownerê°€ ì—†ëŠ” ì„œë²„ ì „ìš© ProxyëŠ” í´ë¼ì´ì–¸íŠ¸ RPCë¥¼ ë°›ìœ¼ë©´ ì•ˆë¨
         UE_LOG(LogTemp, Warning, TEXT("SS Server: Received client camera update on server-only proxy!"));
     }
 }
 
 bool ACSCameraViewProxy::ServerUpdateClientCamera_Validate(const FRepCamInfo& NewCam)
 {
-    // ¿©±â¼­ µ¥ÀÌÅÍ À¯È¿¼º °ËÁõ °¡´É (À§Ä¡ °ªÀÌ NaNÀÎÁö, RotationÀÌ Á¤»óÀÎÁö µî)
-    return true; // ±âº»ÀûÀ¸·Î Ç×»ó Çã¿ë
+    if (!HasAuthority()) return false;
+    // ì—¬ê¸°ì„œ ë°ì´í„° ìœ íš¨ì„± ê²€ì¦ ê°€ëŠ¥ (ìœ„ì¹˜ ê°’ì´ NaNì¸ì§€, Rotationì´ ì •ìƒì¸ì§€ ë“±)
+    return true; // ê¸°ë³¸ì ìœ¼ë¡œ í•­ìƒ í—ˆìš©
 }

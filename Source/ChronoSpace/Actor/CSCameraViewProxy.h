@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -32,29 +32,25 @@ public:
     virtual void Tick(float DeltaSeconds) override;
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-    /** ¼­¹ö¿¡¼­ Ä«¸Ş¶ó ¼Ò½º°¡ µÉ PlayerController ÁöÁ¤ */
+    /** ì„œë²„ì—ì„œ ì¹´ë©”ë¼ ì†ŒìŠ¤ê°€ ë  PlayerController ì§€ì • */
     UFUNCTION(BlueprintCallable, Category = "SS|CameraProxy")
     void SetSourcePC(APlayerController* InPC);
 
-    /** ÆíÀÇ ÇÔ¼ö: ¼­¹ö¿¡¼­ ÇÃ·¹ÀÌ¾î ÀÎµ¦½º·Î ¼Ò½º ÁöÁ¤ (¿¹: 0 = ¸®½¼¼­¹ö ·ÎÄÃ) */
-    UFUNCTION(BlueprintCallable, Category = "SS|CameraProxy")
-    void SetSourceFromPlayerIndex(int32 PlayerIndex = 0);
-
-    /** Å¬¶ó¿¡¼­ ÀĞÀ» ¼ö ÀÖ´Â º¹Á¦µÈ Ä«¸Ş¶ó Á¤º¸ */
+    /** í´ë¼ì—ì„œ ì½ì„ ìˆ˜ ìˆëŠ” ë³µì œëœ ì¹´ë©”ë¼ ì •ë³´ */
     UFUNCTION(BlueprintPure, Category = "SS|CameraProxy")
     const FRepCamInfo& GetReplicatedCamera() const { return RepCam; }
 
 protected:
-    /** º¹Á¦µÇ´Â Ä«¸Ş¶ó Á¤º¸(¼­¹ö°¡ Ã¤¿ì°í Å¬¶ó°¡ ÀĞÀ½) */
+    /** ë³µì œë˜ëŠ” ì¹´ë©”ë¼ ì •ë³´(ì„œë²„ê°€ ì±„ìš°ê³  í´ë¼ê°€ ì½ìŒ) */
     UPROPERTY(Replicated)
     FRepCamInfo RepCam;
 
-    /** ¼­¹ö¿¡¼­¸¸ ÀÇ¹Ì ÀÖ´Â ¼Ò½º PC (Å¬¶ó¿¡ º¹Á¦µÇÁö ¾ÊÀ½) */
+    /** ì„œë²„ì—ì„œë§Œ ì˜ë¯¸ ìˆëŠ” ì†ŒìŠ¤ PC (í´ë¼ì— ë³µì œë˜ì§€ ì•ŠìŒ) */
     UPROPERTY(Transient)
     TWeakObjectPtr<APlayerController> SourcePC;
 
 public:
-    UFUNCTION(Server, Reliable, WithValidation)
+    UFUNCTION(NetMulticast, Reliable, WithValidation)   // í´ë¼ -> ì„œë²„ë§Œ ë˜ê²Œ í•  ê±´ë°, ì†Œìœ ê¶Œ ìš°íšŒì„
     void ServerUpdateClientCamera(const FRepCamInfo& NewCam);
 
 public:
