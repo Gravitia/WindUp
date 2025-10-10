@@ -50,7 +50,7 @@ protected:
     TWeakObjectPtr<APlayerController> SourcePC;
 
 public:
-    UFUNCTION(NetMulticast, Reliable, WithValidation)   // 클라 -> 서버만 되게 할 건데, 소유권 우회임
+    UFUNCTION(Server, Reliable, WithValidation)   
     void ServerUpdateClientCamera(const FRepCamInfo& NewCam);
 
 public:

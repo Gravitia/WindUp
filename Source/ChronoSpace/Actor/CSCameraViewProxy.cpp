@@ -133,7 +133,7 @@ void ACSCameraViewProxy::ServerUpdateClientCamera_Implementation(const FRepCamIn
 
 bool ACSCameraViewProxy::ServerUpdateClientCamera_Validate(const FRepCamInfo& NewCam)
 {
-    if (!HasAuthority()) return false;
+    //if (!HasAuthority()) return false;
     // 여기서 데이터 유효성 검증 가능 (위치 값이 NaN인지, Rotation이 정상인지 등)
     return true; // 기본적으로 항상 허용
 }
