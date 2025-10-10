@@ -132,7 +132,7 @@ FVector UCSGA_ProjectileGuide::GetScreenCenterDirection() const
 	}
 
 	// Fallback: 저장된 초기 방향 또는 ForwardVector
-	//return bInitialDirectionSet ? InitialAimDirection : FVector::ForwardVector;
+	return bInitialDirectionSet ? InitialAimDirection : FVector::ForwardVector;
 }
 
 void UCSGA_ProjectileGuide::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
