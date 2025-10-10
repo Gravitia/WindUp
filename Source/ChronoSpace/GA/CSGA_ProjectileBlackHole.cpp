@@ -115,6 +115,8 @@ void UCSGA_ProjectileBlackHole::ActivateAbility(const FGameplayAbilitySpecHandle
 
 FVector UCSGA_ProjectileBlackHole::GetScreenCenterDirection() const
 {
+	FVector Result = bInitialDirectionSet ? InitialAimDirection : FVector::ForwardVector;
+
 	if (ACharacter* Character = Cast<ACharacter>(GetAvatarActorFromActorInfo()))
 	{
 		if (APlayerController* PC = Cast<APlayerController>(Character->GetController()))
@@ -144,13 +146,13 @@ FVector UCSGA_ProjectileBlackHole::GetScreenCenterDirection() const
 				FVector WorldLocation, WorldDirection;
 				if (PC->DeprojectScreenPositionToWorld(ScreenCenterX, FinalY, WorldLocation, WorldDirection))
 				{
-					return WorldDirection;
+					Result = WorldDirection;
 				}
 			}
 		}
 	}
 
-	return bInitialDirectionSet ? InitialAimDirection : FVector::ForwardVector;
+	return Result;
 }
 
 void UCSGA_ProjectileBlackHole::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
