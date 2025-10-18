@@ -50,7 +50,7 @@ protected:
     TWeakObjectPtr<APlayerController> SourcePC;
 
 public:
-    UFUNCTION(Server, Reliable, WithValidation)   
+    UFUNCTION(Server, Unreliable, WithValidation)   
     void ServerUpdateClientCamera(const FRepCamInfo& NewCam);
 
 public:
