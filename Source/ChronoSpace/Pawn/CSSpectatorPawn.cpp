@@ -64,7 +64,7 @@ ACSSpectatorPawn::ACSSpectatorPawn()
     CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
     CameraBoom->SetupAttachment(SkeletalMesh);
 
-    CameraBoom->TargetArmLength = 400.f;
+    CameraBoom->TargetArmLength = 1200.f;
     static ConstructorHelpers::FObjectFinder<UCSCharacterPlayerData> PlayerDataRef(TEXT("/Game/04_DataAssets/Character/BPDA_CharacterPlayerData.BPDA_CharacterPlayerData"));
     if ( PlayerDataRef.Succeeded() )
     {

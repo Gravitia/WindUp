@@ -12,7 +12,7 @@ namespace SplitScreen
     FRotator CalculateLookAtRotation(const FVector& FromPos, const FVector& ToPos);
     UCameraComponent* FindCameraInPawn(APawn* Pawn);
 
-    const FVector CameraOffset = FVector(-300.0f, 0.0f, 100.0f);
+    const FVector CameraOffset = FVector(0.0f, 0.0f, 0.0f);
 }
 
 /**
@@ -59,7 +59,7 @@ public:
 
     // 카메라 오프셋 설정 (bSyncDirectlyToCamera가 false일 때 사용)
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Offset")
-    FVector CameraOffset = FVector(-300.0f, 0.0f, 100.0f);
+    FVector CameraOffset = FVector(0.0f, 0.0f, 10000.0f);
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Offset")
     bool bUseOffsetFromTarget = false;
