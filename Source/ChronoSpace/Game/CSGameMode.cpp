@@ -441,7 +441,7 @@ void ACSGameMode::SyncDummyRotationWithProxy()
 
     if (ClientPawn)
     {
-        // 3-1) 스켈레톤 "head" 소켓 기준
+        // 3-1) root에 offset 적용한 camera_socket 필요. 
         if (USkeletalMeshComponent* Mesh = ClientPawn->FindComponentByClass<USkeletalMeshComponent>())
         {
             if (Mesh->DoesSocketExist(TEXT("camera_socket")))
@@ -460,7 +460,7 @@ void ACSGameMode::SyncDummyRotationWithProxy()
         DummySpectatorPawn->GetActorLocation(),
         TargetLoc,
         GetWorld()->GetDeltaSeconds(),
-        35.f // 보간 속도
+        30.f // 보간 속도
     );
 
     DummySpectatorPawn->SetActorLocation(NewLoc);

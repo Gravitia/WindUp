@@ -109,40 +109,19 @@ private:
 	// UI 
 	FTimerHandle UICreationTimerHandle;
 
-protected:
-	// =========================
-	// Server Travel UI ���� �Լ���
-	// =========================
-	/*
-	TSharedPtr<SCSServerTravelWidget> ServerTravelWidget;
-	void CreateServerTravelWidget();
-
-	UFUNCTION(BlueprintCallable, Category = "Server Travel")
-	void ShowServerTravelUI();
-
-	UFUNCTION(BlueprintCallable, Category = "Server Travel")
-	void HideServerTravelUI();
-
-	UFUNCTION(BlueprintCallable, Category = "Server Travel")
-	void ToggleServerTravelUI();
-
-	UFUNCTION(BlueprintPure, Category = "Server Travel")
-	bool IsServerTravelUIVisible() const;
-	*/
-
 // Split Screen
-	public:
-		// 더미 컨트롤러 플래그
-		UPROPERTY(BlueprintReadOnly, Category = "Split Screen")
-		bool bIsDummyController = false;
+public:
+	// 더미 컨트롤러 플래그
+	UPROPERTY(BlueprintReadOnly, Category = "Split Screen")
+	bool bIsDummyController = false;
 
-		// 더미 컨트롤러로 설정
-		UFUNCTION(BlueprintCallable, Category = "Split Screen")
-		void SetAsDummyController(bool bDummy = true);
+	// 더미 컨트롤러로 설정
+	UFUNCTION(BlueprintCallable, Category = "Split Screen")
+	void SetAsDummyController(bool bDummy = true);
 
-		// 캐시된 프록시 참조
-		UPROPERTY()
-		TWeakObjectPtr<ACSCameraViewProxy> CachedProxy;
+	// 캐시된 프록시 참조
+	UPROPERTY()
+	TWeakObjectPtr<ACSCameraViewProxy> CachedProxy;
 
 
 private:

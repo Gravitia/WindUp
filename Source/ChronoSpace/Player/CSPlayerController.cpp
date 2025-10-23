@@ -429,13 +429,13 @@ void ACSPlayerController::SyncClientDummyWithRemotePlayer(ACSSpectatorPawn* Dumm
 {
 	if (!DummyPawn) return;
 
-	// 1) 프록시에서 최신 서버 카메라 데이터 가져오기
+	// 1) 서버 프록시 찾기
 	ACSCameraViewProxy* Proxy = CachedProxy.Get();
 	if (!Proxy)
 	{
 		for (TActorIterator<ACSCameraViewProxy> It(GetWorld()); It; ++It)
 		{
-			if ( !It->IsServerProxy() ) continue;
+			if (!It->IsServerProxy()) continue;
 			Proxy = *It;
 			break;
 		}
@@ -443,28 +443,56 @@ void ACSPlayerController::SyncClientDummyWithRemotePlayer(ACSSpectatorPawn* Dumm
 		CachedProxy = Proxy;
 	}
 
+	// 2) 최신 서버 카메라 데이터 가져오기
 	const FRepCamInfo& ServerCam = Proxy->GetReplicatedCamera();
 
-	// 2) 새로운 서버 데이터가 도착했는지 확인
-	bool bNewServerData = false;
+	// 3) 새 데이터 도착 시 바로 적용
 	if (!LastServerCamera.Location.Equals(ServerCam.Location, 1.0f) ||
-		!LastServerCamera.Rotation.Equals(ServerCam.Rotation, 1.0f))
+		!LastServerCamera.Rotation.Equals(ServerCam.Rotation, 0.1f))
 	{
-		bNewServerData = true;
-		UpdateCameraHistory(ServerCam);
+		// LastServerCamera = ServerCam; // 단순 복사도 가능
+
+		FCameraPredictionData CamData;
+		CamData.Location = ServerCam.Location;
+		CamData.Rotation = ServerCam.Rotation;
+		CamData.Velocity = FVector::ZeroVector;
+		CamData.AngularVelocity = FVector::ZeroVector;
+		CamData.FOV = ServerCam.FOV;
+		CamData.Timestamp = GetWorld()->GetTimeSeconds();
+
+		ApplyPredictedCamera(DummyPawn, CamData);
+	}
+}
+
+
+void ACSPlayerController::ApplyPredictedCamera(ACSSpectatorPawn* DummyPawn, const FCameraPredictionData& CameraData)
+{
+	// 오직 클라에서 서버 캐릭터 예측에만 쓰이니..
+	for (TActorIterator<ACSCharacterPlayer> It(GetWorld()); It; ++It)
+	{
+		ACSCharacterPlayer* TargetCharacter = *It;
+		if (!TargetCharacter || TargetCharacter->IsLocallyControlled())
+			continue;
+
+		// 피벗(더미 폰)을 타겟 위치로
+		const FVector Pivot = TargetCharacter->GetActorLocation(); // 필요시 머리 높이 보정
+		FVector NewLoc = FMath::VInterpTo(
+			DummyPawn->GetActorLocation(),
+			Pivot,
+			GetWorld()->GetDeltaSeconds(),
+			30.f // 보간 속도
+		);
+		DummyPawn->SetActorLocation(NewLoc);
+
+
+		// 컨트롤러 회전을 예측값으로 → 스프링암이 그 회전을 받아서 원궤도
+		if (APlayerController* DummyController = Cast<APlayerController>(DummyPawn->GetController()))
+		{
+			DummyController->SetControlRotation(CameraData.Rotation);
+		}
+		break;
 	}
 
-	// 3) 카메라 위치 예측 수행
-	FCameraPredictionData PredictedState = PredictCameraMovement();
-
-	// 4) 서버 데이터로 예측 보정 (새 데이터가 있을 때만)
-	if (bNewServerData)
-	{
-		PredictedState = CorrectPredictionWithServerData(PredictedState, ServerCam);
-	}
-
-	// 5) 더미 폰에 예측된 카메라 적용
-	ApplyPredictedCamera(DummyPawn, PredictedState);
 }
 
 void ACSPlayerController::UpdateCameraHistory(const FRepCamInfo& ServerCam)
@@ -591,34 +619,7 @@ FCameraPredictionData ACSPlayerController::CorrectPredictionWithServerData(
 	return Corrected;
 }
 
-void ACSPlayerController::ApplyPredictedCamera(ACSSpectatorPawn* DummyPawn, const FCameraPredictionData& CameraData)
-{
-	// 오직 클라에서 서버 캐릭터 예측에만 쓰이니..
-	for (TActorIterator<ACSCharacterPlayer> It(GetWorld()); It; ++It)
-	{
-		ACSCharacterPlayer* TargetCharacter = *It;
-		if (!TargetCharacter || TargetCharacter->IsLocallyControlled())
-			continue;
 
-		// 피벗(더미 폰)을 타겟 위치로
-		const FVector Pivot = TargetCharacter->GetActorLocation(); // 필요시 머리 높이 보정
-		DummyPawn->SetActorLocation(Pivot);
-		//UE_LOG(LogCS, Log, TEXT("%f %f %f"), Pivot.X, Pivot.Y, Pivot.Z);
-
-		// 컨트롤러 회전을 예측값으로 → 스프링암이 그 회전을 받아서 원궤도
-		if (APlayerController* DummyController = Cast<APlayerController>(DummyPawn->GetController()))
-		{
-			DummyController->SetControlRotation(CameraData.Rotation);
-		}
-		break;
-	}
-
-	// 카메라 FOV 적용
-	if (UCameraComponent* Camera = DummyPawn->FindComponentByClass<UCameraComponent>())
-	{
-		Camera->SetFieldOfView(CameraData.FOV);
-	}
-}
 
 // 디버그용 함수 (선택적으로 사용)
 void ACSPlayerController::DebugCameraPrediction()
