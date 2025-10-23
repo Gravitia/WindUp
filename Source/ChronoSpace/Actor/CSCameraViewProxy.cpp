@@ -86,34 +86,38 @@ void ACSCameraViewProxy::Tick(float DeltaSeconds)
     }
     else
     {
-        // --- 변경된 부분 시작 ---
         static float SendTimer = 0.0f;
         SendTimer += DeltaSeconds;
+        const float SendInterval = 1.f / 30.f;
 
-        const float SendInterval = 1.f / 30.f; // 초당 30회 (약 0.033초마다)
         if (SendTimer >= SendInterval)
         {
             SendTimer = 0.f;
 
-            if (APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0))
+            APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+            if (!PC || !PC->IsLocalController() || !PC->PlayerCameraManager)
+                return;
+
+            // 내 Proxy가 아닌 경우 호출 금지
+            if (GetOwner() != PC)
             {
-                if (PC->IsLocalController() && PC->PlayerCameraManager)
-                {
-                    const FMinimalViewInfo POV = PC->PlayerCameraManager->GetCameraCacheView();
-                    FRepCamInfo LocalCam;
-                    LocalCam.Location = POV.Location;
-                    LocalCam.Rotation = POV.Rotation;
-                    LocalCam.FOV = POV.FOV;
-
-                    // RPC 호출 (1초에 30회로 제한됨)
-                    ServerUpdateClientCamera(LocalCam);
-
-                    UE_LOG(LogTemp, VeryVerbose, TEXT("SS Client: Sending camera rotation (30Hz): %s"),
-                        *LocalCam.Rotation.ToString());
-                }
+                UE_LOG(LogTemp, VeryVerbose, TEXT("Skipping RPC: Proxy owner (%s) != Local PC (%s)"),
+                    *GetNameSafe(GetOwner()), *GetNameSafe(PC));
+                return;
             }
+
+            // 카메라 전송
+            const FMinimalViewInfo POV = PC->PlayerCameraManager->GetCameraCacheView();
+            FRepCamInfo LocalCam;
+            LocalCam.Location = POV.Location;
+            LocalCam.Rotation = POV.Rotation;
+            LocalCam.FOV = POV.FOV;
+
+            ServerUpdateClientCamera(LocalCam);
+
+            UE_LOG(LogTemp, VeryVerbose, TEXT("Client: Sending camera rotation (30Hz): %s"),
+                *LocalCam.Rotation.ToString());
         }
-        // --- 변경된 부분 끝 ---
     }
 }
 
