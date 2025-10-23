@@ -13,7 +13,7 @@ ACSCameraViewProxy::ACSCameraViewProxy()
 
     bReplicates = true;
     bAlwaysRelevant = true;   // 어디서나 항상 관련
-    NetUpdateFrequency = 10.f;   // 필요 시 조정
+    NetUpdateFrequency = 30.f;   // 필요 시 조정
     SetReplicateMovement(false); // 우리는 위치/회전을 액터 위치로 안 쓰고, RepCam만 복제
 
     bIsServerProxy = false;
@@ -86,23 +86,34 @@ void ACSCameraViewProxy::Tick(float DeltaSeconds)
     }
     else
     {
-        // *** 클라이언트: 자신의 로컬 컨트롤러 POV를 서버로 전송 ***
-        if (APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0))
-        {
-            if (PC->IsLocalController() && PC->PlayerCameraManager)
-            {
-                const FMinimalViewInfo POV = PC->PlayerCameraManager->GetCameraCacheView();
-                FRepCamInfo LocalCam;
-                LocalCam.Location = POV.Location;
-                LocalCam.Rotation = POV.Rotation;
-                LocalCam.FOV = POV.FOV;
-                // RPC → 서버에 전달 (이 클라이언트의 카메라 정보)
-                ServerUpdateClientCamera(LocalCam);
+        // --- 변경된 부분 시작 ---
+        static float SendTimer = 0.0f;
+        SendTimer += DeltaSeconds;
 
-                UE_LOG(LogTemp, VeryVerbose, TEXT("SS Client: Sending camera rotation: %s"),
-                    *LocalCam.Rotation.ToString());
+        const float SendInterval = 1.f / 30.f; // 초당 30회 (약 0.033초마다)
+        if (SendTimer >= SendInterval)
+        {
+            SendTimer = 0.f;
+
+            if (APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0))
+            {
+                if (PC->IsLocalController() && PC->PlayerCameraManager)
+                {
+                    const FMinimalViewInfo POV = PC->PlayerCameraManager->GetCameraCacheView();
+                    FRepCamInfo LocalCam;
+                    LocalCam.Location = POV.Location;
+                    LocalCam.Rotation = POV.Rotation;
+                    LocalCam.FOV = POV.FOV;
+
+                    // RPC 호출 (1초에 30회로 제한됨)
+                    ServerUpdateClientCamera(LocalCam);
+
+                    UE_LOG(LogTemp, VeryVerbose, TEXT("SS Client: Sending camera rotation (30Hz): %s"),
+                        *LocalCam.Rotation.ToString());
+                }
             }
         }
+        // --- 변경된 부분 끝 ---
     }
 }
 
