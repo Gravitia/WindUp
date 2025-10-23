@@ -460,13 +460,15 @@ void ACSPlayerController::SyncClientDummyWithRemotePlayer(ACSSpectatorPawn* Dumm
 		CamData.FOV = ServerCam.FOV;
 		CamData.Timestamp = GetWorld()->GetTimeSeconds();
 
-		ApplyPredictedCamera(DummyPawn, CamData);
+		ApplyCamera(DummyPawn, CamData);
 	}
 }
 
 
-void ACSPlayerController::ApplyPredictedCamera(ACSSpectatorPawn* DummyPawn, const FCameraPredictionData& CameraData)
+void ACSPlayerController::ApplyCamera(ACSSpectatorPawn* DummyPawn, const FCameraPredictionData& CameraData)
 {
+	if (!DummyPawn) return;
+
 	// 오직 클라에서 서버 캐릭터 예측에만 쓰이니..
 	for (TActorIterator<ACSCharacterPlayer> It(GetWorld()); It; ++It)
 	{
@@ -474,25 +476,26 @@ void ACSPlayerController::ApplyPredictedCamera(ACSSpectatorPawn* DummyPawn, cons
 		if (!TargetCharacter || TargetCharacter->IsLocallyControlled())
 			continue;
 
-		// 피벗(더미 폰)을 타겟 위치로
-		const FVector Pivot = TargetCharacter->GetActorLocation(); // 필요시 머리 높이 보정
-		FVector NewLoc = FMath::VInterpTo(
-			DummyPawn->GetActorLocation(),
-			Pivot,
-			GetWorld()->GetDeltaSeconds(),
-			30.f // 보간 속도
-		);
-		DummyPawn->SetActorLocation(NewLoc);
-
-
-		// 컨트롤러 회전을 예측값으로 → 스프링암이 그 회전을 받아서 원궤도
+		// 위치 보간 (서버 캐릭터를 따라감)
+		const FVector TargetLoc = TargetCharacter->GetActorLocation();
+		const FVector CurrentLoc = DummyPawn->GetActorLocation();
+		const float LocInterpSpeed = 30.f; // 이동 보간 속도
+		const FVector SmoothedLoc = FMath::VInterpTo(CurrentLoc, TargetLoc, GetWorld()->GetDeltaSeconds(), LocInterpSpeed);
+		DummyPawn->SetActorLocation(SmoothedLoc);
+		
+		// 회전 보간 (서버 카메라 회전 따라감)
 		if (APlayerController* DummyController = Cast<APlayerController>(DummyPawn->GetController()))
 		{
-			DummyController->SetControlRotation(CameraData.Rotation);
+			const FRotator CurrentRot = DummyController->GetControlRotation();
+			const FRotator TargetRot = CameraData.Rotation;
+			const float RotInterpSpeed = 45.f; // 회전 보간 속도
+			const FRotator SmoothedRot = FMath::RInterpTo(CurrentRot, TargetRot, GetWorld()->GetDeltaSeconds(), RotInterpSpeed);
+
+			DummyController->SetControlRotation(SmoothedRot);
 		}
+
 		break;
 	}
-
 }
 
 void ACSPlayerController::UpdateCameraHistory(const FRepCamInfo& ServerCam)

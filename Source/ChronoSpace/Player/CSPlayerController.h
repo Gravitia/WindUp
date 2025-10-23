@@ -178,7 +178,7 @@ private:
 	void UpdateCameraHistory(const struct FRepCamInfo& ServerCam);
 	FCameraPredictionData PredictCameraMovement();
 	FCameraPredictionData CorrectPredictionWithServerData(const FCameraPredictionData& Prediction, const struct FRepCamInfo& ServerData);
-	void ApplyPredictedCamera(ACSSpectatorPawn* DummyPawn, const FCameraPredictionData& CameraData);
+	void ApplyCamera(ACSSpectatorPawn* DummyPawn, const FCameraPredictionData& CameraData);
 
 	// 디버그용 함수
 	UFUNCTION(BlueprintCallable, Category = "Debug")
