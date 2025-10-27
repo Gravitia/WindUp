@@ -429,12 +429,16 @@ void ACSPlayerController::SyncClientDummyWithRemotePlayer(ACSSpectatorPawn* Dumm
 {
 	if (!DummyPawn) return;
 
+	UWorld* World = GetWorld();
+	if (!World || World->bIsTearingDown) return;
+
 	// 1) 서버 프록시 찾기
 	ACSCameraViewProxy* Proxy = CachedProxy.Get();
 	if (!Proxy)
 	{
 		for (TActorIterator<ACSCameraViewProxy> It(GetWorld()); It; ++It)
 		{
+			if (!IsValid(*It)) continue;
 			if (!It->IsServerProxy()) continue;
 			Proxy = *It;
 			break;
