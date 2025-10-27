@@ -58,15 +58,15 @@ class CHRONOSPACE_API ACSPlayerController : public APlayerController
 public:
 	ACSPlayerController();
 
-	// UI ���� Ŭ���� - Blueprint���� ����
+	// UI
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "UI")
 	TSubclassOf<UCSGameUIWidget> GameUIWidgetClass;
 
-	// ���� UI ����
+	// UI 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "UI")
 	TObjectPtr<UCSGameUIWidget> GameUIWidget;
 
-	// UI ���� �Լ���
+	// UI 
 	UFUNCTION(BlueprintCallable, Category = "UI")
 	void ShowGameUI();
 
@@ -79,12 +79,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "UI")
 	void RefreshGameUI();
 
-	// ���� UI ���� Ȯ��
+	// UI 
 	UFUNCTION(BlueprintPure, Category = "UI")
 	bool IsGameUIVisible() const;
 
 	/*
-	// UI ���� ���� ���� (Blueprint��)
+	// UI (Blueprint)
 	UFUNCTION(BlueprintPure, Category = "UI")
 	UCSGameUIWidget* GetGameUIWidget() const { return GameUIWidget; }
 	*/
@@ -99,7 +99,7 @@ protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void SetupInputComponent() override;
 
-	// PlayerState ��ȭ ����
+	// PlayerState 
 	virtual void OnRep_PlayerState() override;
 
 private:
@@ -174,17 +174,16 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Camera Prediction")
 	float ImmediateCorrectionRotationThreshold = 10.0f; // 즉시 보정할 회전 오차 임계값 (도)
 
-	// 카메라 예측 관련 함수들
-	void UpdateCameraHistory(const struct FRepCamInfo& ServerCam);
-	FCameraPredictionData PredictCameraMovement();
-	FCameraPredictionData CorrectPredictionWithServerData(const FCameraPredictionData& Prediction, const struct FRepCamInfo& ServerData);
 	void ApplyCamera(ACSSpectatorPawn* DummyPawn, const FCameraPredictionData& CameraData);
 
-	// 디버그용 함수
-	UFUNCTION(BlueprintCallable, Category = "Debug")
-	void DebugCameraPrediction();
+	
 
+#pragma region Server Travel
+// Server Travel 사용시 정리해야 되는 것들 
 public:
 	UFUNCTION(BlueprintCallable, Category = "Camera Sync")
 	void StopClientDummySync();
+	UFUNCTION(BlueprintCallable, Category = "SplitScreen")
+	void CleanupDummyLocalPlayer();
+#pragma endregion
 };

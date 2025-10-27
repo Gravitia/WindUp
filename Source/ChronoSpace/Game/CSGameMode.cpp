@@ -479,8 +479,7 @@ void ACSGameMode::SyncDummyRotationWithProxy()
 
     DummyPlayerController->SetControlRotation(NewRot);
 
-    UE_LOG(LogCS, Verbose, TEXT("CS Server: Synced dummy location=%s, rotation=%s"),
-        *NewLoc.ToString(), *NewRot.ToString());
+    //UE_LOG(LogCS, Warning, TEXT("CS Server: Synced dummy location=%s, rotation=%s"), *NewLoc.ToString(), *NewRot.ToString());
 }
 
 void ACSGameMode::SetupOnlineSplitScreen()
@@ -496,6 +495,7 @@ void ACSGameMode::SetupOnlineSplitScreen()
             break;
         }
     }
+
     AttachDummySpectatorToClient(RemoteClient);
 
     // === 회전 동기화 타이머 시작 ===
