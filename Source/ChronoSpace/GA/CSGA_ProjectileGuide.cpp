@@ -10,6 +10,11 @@
 #include "Character/CSCharacterPlayer.h"
 #include "ChronoSpace.h"
 
+/**
+* 레거시 코드, 삭제 예정
+* 사용 금지
+*/
+
 UCSGA_ProjectileGuide::UCSGA_ProjectileGuide()
 {
 	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::LocalOnly;
@@ -58,10 +63,10 @@ void UCSGA_ProjectileGuide::ActivateAbility(const FGameplayAbilitySpecHandle Han
 			}
 		}
 
-		if ( ACSCharacterPlayer* CSPlayer = Cast<ACSCharacterPlayer>(Character) )
+		/*if ( ACSCharacterPlayer* CSPlayer = Cast<ACSCharacterPlayer>(Character) )
 		{
-			CSPlayer->SetShoulderLook(false);
-		}
+			CSPlayer->ZoomCamera(false);
+		}*/
 	}
 
 	// 업데이트 타이머 시작
@@ -137,10 +142,10 @@ FVector UCSGA_ProjectileGuide::GetScreenCenterDirection() const
 
 void UCSGA_ProjectileGuide::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
-	if ( ACSCharacterPlayer* CSPlayer = Cast<ACSCharacterPlayer>( ActorInfo->AvatarActor ) )
+	/*if ( ACSCharacterPlayer* CSPlayer = Cast<ACSCharacterPlayer>( ActorInfo->AvatarActor ) )
 	{
-		CSPlayer->SetShoulderLook(true);
-	}
+		CSPlayer->ZoomCamera(true);
+	}*/
 
 	// 타이머 정리
 	if (UpdateTimerHandle.IsValid())
