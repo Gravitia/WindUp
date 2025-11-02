@@ -183,8 +183,4 @@ private:
 	// 디버그용 함수
 	UFUNCTION(BlueprintCallable, Category = "Debug")
 	void DebugCameraPrediction();
-
-public:
-	UFUNCTION(BlueprintCallable, Category = "Camera Sync")
-	void StopClientDummySync();
 };

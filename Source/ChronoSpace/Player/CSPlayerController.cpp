@@ -111,8 +111,6 @@ void ACSPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	// 타이머 정리
 	GetWorldTimerManager().ClearTimer(UICreationTimerHandle);
-	StopClientDummySync();
-
 
 	// UI 정리
 	if (GameUIWidget)
@@ -647,23 +645,3 @@ void ACSPlayerController::SetAsDummyController(bool bDummy)
 	UE_LOG(LogTemp, Log, TEXT("SS Controller %s set as dummy: %s"),
 		*GetName(), bDummy ? TEXT("Yes") : TEXT("No"));
 }
-
-void ACSPlayerController::StopClientDummySync()
-{
-	// World가 유효한지 확인
-	if (!GetWorld())
-		return;
-
-	// 등록된 타이머가 있으면 제거
-	if (GetWorldTimerManager().IsTimerActive(ClientSyncTimerHandle))
-	{
-		GetWorldTimerManager().ClearTimer(ClientSyncTimerHandle);
-
-		UE_LOG(LogTemp, Log, TEXT("[ClientDummySync] Sync timer stopped successfully."));
-	}
-
-	// 혹시 안전하게 DummyPawn 관련 동기화 중지 로직이 있다면 여기서 추가
-	// CachedProxy.Reset();
-}
-
-
