@@ -447,8 +447,8 @@ void ACSPlayerController::SyncClientDummyWithRemotePlayer(ACSSpectatorPawn* Dumm
 	const FRepCamInfo& ServerCam = Proxy->GetReplicatedCamera();
 
 	// 3) 새 데이터 도착 시 바로 적용
-	if (!LastServerCamera.Location.Equals(ServerCam.Location, 1.0f) ||
-		!LastServerCamera.Rotation.Equals(ServerCam.Rotation, 0.1f))
+	if (!LastServerCamera.Location.Equals(ServerCam.Location, 0.1f) ||
+		!LastServerCamera.Rotation.Equals(ServerCam.Rotation, 0.01f))
 	{
 		// LastServerCamera = ServerCam; // 단순 복사도 가능
 
