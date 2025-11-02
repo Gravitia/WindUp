@@ -175,12 +175,6 @@ private:
 	float ImmediateCorrectionRotationThreshold = 10.0f; // 즉시 보정할 회전 오차 임계값 (도)
 
 	// 카메라 예측 관련 함수들
-	void UpdateCameraHistory(const struct FRepCamInfo& ServerCam);
-	FCameraPredictionData PredictCameraMovement();
-	FCameraPredictionData CorrectPredictionWithServerData(const FCameraPredictionData& Prediction, const struct FRepCamInfo& ServerData);
 	void ApplyCamera(ACSSpectatorPawn* DummyPawn, const FCameraPredictionData& CameraData);
 
-	// 디버그용 함수
-	UFUNCTION(BlueprintCallable, Category = "Debug")
-	void DebugCameraPrediction();
 };
