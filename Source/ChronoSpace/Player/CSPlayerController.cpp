@@ -420,7 +420,7 @@ void ACSPlayerController::StartClientDummySync(ACSSpectatorPawn* DummyPawn)
 		{
 			SyncClientDummyWithRemotePlayer(DummyPawn);
 		},
-		0.016f,
+		0.008f,
 		true
 	);
 }
