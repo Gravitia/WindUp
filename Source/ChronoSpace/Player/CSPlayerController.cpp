@@ -66,7 +66,7 @@ void ACSPlayerController::BeginPlay()
 				{
 					if (!bClientSplitScreenSetupComplete) // 다시 한번 체크
 					{
-						// SetupClientSplitScreen();
+						SetupClientSplitScreen();
 					}
 				},
 				1.0f, // n초 지연
@@ -112,9 +112,6 @@ void ACSPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	// 타이머 정리
 	GetWorldTimerManager().ClearTimer(UICreationTimerHandle);
 	StopClientDummySync();
-	
-	// Player 정리. 
-	CleanupDummyLocalPlayer();
 
 
 	// UI 정리
@@ -123,7 +120,6 @@ void ACSPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		GameUIWidget->RemoveFromParent();
 		GameUIWidget = nullptr;
 	}
-
 
 	Super::EndPlay(EndPlayReason);
 }
@@ -281,7 +277,7 @@ void ACSPlayerController::SetupClientSplitScreen()
 
 	if (DummyLocalPlayer)
 	{
-		UE_LOG(LogCS, Warning, TEXT("SS Client dummy local player created successfully"));
+		UE_LOG(LogTemp, Warning, TEXT("SS Client dummy local player created successfully"));
 		// LocalPlayer 생성 성공 후 더미 폰 생성
 		CreateClientDummyPawn();
 
@@ -419,27 +415,6 @@ void ACSPlayerController::StartClientDummySync(ACSSpectatorPawn* DummyPawn)
 
 	UE_LOG(LogTemp, Warning, TEXT("SS Starting client dummy sync"));
 
-	ACharacter* RemoteChar = nullptr;
-	for (TActorIterator<ACharacter> It(GetWorld()); It; ++It)
-	{
-		if (!It->IsLocallyControlled())
-		{
-			RemoteChar = *It;
-			break;
-		}
-	}
-
-	if (RemoteChar)
-	{
-		if (USkeletalMeshComponent* Mesh = RemoteChar->FindComponentByClass<USkeletalMeshComponent>())
-		{
-			FAttachmentTransformRules AttachRules(EAttachmentRule::SnapToTarget, true);
-			ClientDummyPawn->AttachToComponent(Mesh, AttachRules, FName("camera_socket"));
-			ClientDummyPawn->SetActorHiddenInGame(true);
-			ClientDummyPawn->SetActorEnableCollision(false);
-		}
-	}
-
 	// 클라이언트에서 원격 플레이어와 동기화
 	GetWorldTimerManager().SetTimer(
 		ClientSyncTimerHandle,
@@ -508,8 +483,8 @@ void ACSPlayerController::ApplyCamera(ACSSpectatorPawn* DummyPawn, const FCamera
 			continue;
 
 		// 위치 보간 (서버 캐릭터를 따라감)
-		const FVector CurrentLoc = DummyPawn->GetActorLocation();
 		const FVector TargetLoc = TargetCharacter->GetActorLocation();
+		const FVector CurrentLoc = DummyPawn->GetActorLocation();
 		const float LocInterpSpeed = 30.f; // 이동 보간 속도
 		const FVector SmoothedLoc = FMath::VInterpTo(CurrentLoc, TargetLoc, GetWorld()->GetDeltaSeconds(), LocInterpSpeed);
 		DummyPawn->SetActorLocation(SmoothedLoc);
@@ -529,6 +504,142 @@ void ACSPlayerController::ApplyCamera(ACSSpectatorPawn* DummyPawn, const FCamera
 	}
 }
 
+void ACSPlayerController::UpdateCameraHistory(const FRepCamInfo& ServerCam)
+{
+	FCameraPredictionData NewData;
+	NewData.Location = ServerCam.Location;
+	NewData.Rotation = ServerCam.Rotation;
+	NewData.FOV = ServerCam.FOV;
+	NewData.Timestamp = GetWorld()->GetTimeSeconds();
+
+	// 속도 계산 (이전 데이터가 있는 경우)
+	if (CameraHistory.Num() > 0)
+	{
+		const FCameraPredictionData& LastData = CameraHistory.Last();
+		float DeltaTime = NewData.Timestamp - LastData.Timestamp;
+
+		if (DeltaTime > 0.0f)
+		{
+			// 선형 속도 계산
+			NewData.Velocity = (NewData.Location - LastData.Location) / DeltaTime;
+
+			// 각속도 계산 (단순화된 버전)
+			FRotator DeltaRotation = (NewData.Rotation - LastData.Rotation).GetNormalized();
+			NewData.AngularVelocity = FVector(DeltaRotation.Pitch, DeltaRotation.Yaw, DeltaRotation.Roll) / DeltaTime;
+		}
+	}
+
+	// 히스토리에 추가
+	CameraHistory.Add(NewData);
+
+	// 히스토리 크기 제한
+	if (CameraHistory.Num() > MaxHistorySize)
+	{
+		CameraHistory.RemoveAt(0);
+	}
+
+	// 마지막 서버 데이터 업데이트
+	LastServerCamera = NewData;
+}
+
+FCameraPredictionData ACSPlayerController::PredictCameraMovement()
+{
+	if (CameraHistory.Num() == 0)
+	{
+		return PredictedCamera; // 데이터가 없으면 이전 예측값 유지
+	}
+
+	const FCameraPredictionData& LatestData = CameraHistory.Last();
+	float CurrentTime = GetWorld()->GetTimeSeconds();
+	float PredictionDelta = FMath::Clamp(CurrentTime - LatestData.Timestamp, 0.0f, MaxPredictionTime);
+
+	FCameraPredictionData Predicted = LatestData;
+
+	if (PredictionDelta > 0.0f && CameraHistory.Num() >= 2)
+	{
+		// 위치는 기존처럼 '속도(+가속도)' 기반 예측
+		Predicted.Location = LatestData.Location + (LatestData.Velocity * PredictionDelta);
+
+		if (CameraHistory.Num() >= 3)
+		{
+			const FCameraPredictionData& PrevData = CameraHistory[CameraHistory.Num() - 2];
+			const float Den = FMath::Max(LatestData.Timestamp - PrevData.Timestamp, 0.001f);
+			const FVector Accel = (LatestData.Velocity - PrevData.Velocity) / Den;
+			Predicted.Location += 0.5f * Accel * PredictionDelta * PredictionDelta;
+		}
+
+		// [변경] 회전 예측 제거: 각속도 적용 안 함
+		//       → 항상 최신 서버 스냅샷의 회전을 그대로 사용
+		Predicted.Rotation = LatestData.Rotation;
+	}
+	else
+	{
+		// Δt가 0이거나 히스토리가 부족하면 그대로
+		Predicted.Location = LatestData.Location;
+		Predicted.Rotation = LatestData.Rotation; // [변경] 회전 예측 없음
+	}
+
+	Predicted.FOV = LatestData.FOV;
+	PredictedCamera = Predicted;
+	return Predicted;
+}
+
+FCameraPredictionData ACSPlayerController::CorrectPredictionWithServerData(
+	const FCameraPredictionData& Prediction,
+	const FRepCamInfo& ServerData)
+{
+	FCameraPredictionData Corrected = Prediction;
+
+	// 서버 데이터와 예측 사이의 오차 계산
+	FVector LocationError = ServerData.Location - Prediction.Location;
+	FRotator RotationError = (ServerData.Rotation - Prediction.Rotation).GetNormalized();
+
+	// 오차가 너무 크면 즉시 보정, 작으면 점진적 보정
+	float LocationErrorMagnitude = LocationError.Size();
+	float RotationErrorMagnitude = FMath::Abs(RotationError.Yaw) + FMath::Abs(RotationError.Pitch);
+
+	float DeltaTime = GetWorld()->GetDeltaSeconds();
+
+	if (LocationErrorMagnitude > 100.0f) // 1미터 이상 차이나면 즉시 보정
+	{
+		Corrected.Location = ServerData.Location;
+		UE_LOG(LogTemp, Warning, TEXT("Large location error detected: %.2f, immediate correction"), LocationErrorMagnitude);
+	}
+	else
+	{
+		// 점진적 보정
+		Corrected.Location = FMath::VInterpTo(Prediction.Location, ServerData.Location, DeltaTime, CorrectionSpeed);
+	}
+
+	if (RotationErrorMagnitude > 10.0f) // 10도 이상 차이나면 즉시 보정
+	{
+		Corrected.Rotation = ServerData.Rotation;
+		UE_LOG(LogTemp, Warning, TEXT("Large rotation error detected: %.2f, immediate correction"), RotationErrorMagnitude);
+	}
+	else
+	{
+		// 점진적 보정
+		Corrected.Rotation = FMath::RInterpTo(Prediction.Rotation, ServerData.Rotation, DeltaTime, CorrectionSpeed);
+	}
+
+	// FOV는 즉시 적용 (중요도 낮음)
+	Corrected.FOV = ServerData.FOV;
+
+	return Corrected;
+}
+
+
+
+// 디버그용 함수 (선택적으로 사용)
+void ACSPlayerController::DebugCameraPrediction()
+{
+	if (CameraHistory.Num() > 0)
+	{
+		const FCameraPredictionData& Latest = CameraHistory.Last();
+		UE_LOG(LogTemp, Log, TEXT("Camera Prediction - Velocity: %s, History Size: %d"),
+			*Latest.Velocity.ToString(), CameraHistory.Num());
+	}
+}
 
 void ACSPlayerController::SetAsDummyController(bool bDummy)
 {
@@ -556,44 +667,3 @@ void ACSPlayerController::StopClientDummySync()
 }
 
 
-void ACSPlayerController::CleanupDummyLocalPlayer()
-{
-	UGameInstance* GameInstance = GetGameInstance();
-	if (!GameInstance)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("CleanupDummyLocalPlayer: GameInstance is null"));
-		return;
-	}
-
-	// 로컬 플레이어가 2명 이상인 경우만 정리 시도
-	if (GameInstance->GetNumLocalPlayers() > 1)
-	{
-		ULocalPlayer* SecondLocalPlayer = GameInstance->GetLocalPlayerByIndex(1);
-
-		if (SecondLocalPlayer)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Cleaning up dummy local player: %s"), *SecondLocalPlayer->GetName());
-
-			// 1) 관련된 Pawn / Controller 정리
-			if (APlayerController* DummyPC = SecondLocalPlayer->PlayerController)
-			{
-				if (DummyPC->GetPawn())
-				{
-					DummyPC->GetPawn()->Destroy();
-				}
-				DummyPC->Destroy();
-			}
-
-			// 2) 실제 LocalPlayer 제거
-			GameInstance->RemoveLocalPlayer(SecondLocalPlayer);
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("CleanupDummyLocalPlayer: No dummy LocalPlayer found"));
-		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("CleanupDummyLocalPlayer: Only one LocalPlayer exists, skipping"));
-	}
-}
