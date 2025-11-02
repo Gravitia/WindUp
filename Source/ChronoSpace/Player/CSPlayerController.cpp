@@ -66,7 +66,7 @@ void ACSPlayerController::BeginPlay()
 				{
 					if (!bClientSplitScreenSetupComplete) // 다시 한번 체크
 					{
-						SetupClientSplitScreen();
+						// SetupClientSplitScreen();
 					}
 				},
 				1.0f, // n초 지연
