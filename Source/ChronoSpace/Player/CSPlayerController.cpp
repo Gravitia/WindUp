@@ -111,7 +111,10 @@ void ACSPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	// 타이머 정리
 	GetWorldTimerManager().ClearTimer(UICreationTimerHandle);
+	GetWorldTimerManager().ClearTimer(ClientSyncTimerHandle);
 
+	CleanupDummyLocalPlayer();
+	
 	// UI 정리
 	if (GameUIWidget)
 	{
@@ -429,6 +432,13 @@ void ACSPlayerController::SyncClientDummyWithRemotePlayer(ACSSpectatorPawn* Dumm
 {
 	if (!DummyPawn) return;
 
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("World is null in SyncClientDummyWithRemotePlayer"));
+		return;
+	}
+
 	// 1) 서버 프록시 찾기
 	ACSCameraViewProxy* Proxy = CachedProxy.Get();
 	if (!Proxy)
@@ -503,4 +513,46 @@ void ACSPlayerController::SetAsDummyController(bool bDummy)
 	bIsDummyController = bDummy;
 	UE_LOG(LogTemp, Log, TEXT("SS Controller %s set as dummy: %s"),
 		*GetName(), bDummy ? TEXT("Yes") : TEXT("No"));
+}
+
+void ACSPlayerController::CleanupDummyLocalPlayer()
+{
+	UGameInstance* GameInstance = GetGameInstance();
+	if (!GameInstance)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("CleanupDummyLocalPlayer: GameInstance is null"));
+		return;
+	}
+
+	// 로컬 플레이어가 2명 이상인 경우만 정리 시도
+	if (GameInstance->GetNumLocalPlayers() > 1)
+	{
+		ULocalPlayer* SecondLocalPlayer = GameInstance->GetLocalPlayerByIndex(1);
+
+		if (SecondLocalPlayer)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Cleaning up dummy local player: %s"), *SecondLocalPlayer->GetName());
+
+			// 1) 관련된 Pawn / Controller 정리
+			if (APlayerController* DummyPC = SecondLocalPlayer->PlayerController)
+			{
+				if (DummyPC->GetPawn())
+				{
+					DummyPC->GetPawn()->Destroy();
+				}
+				DummyPC->Destroy();
+			}
+
+			// 2) 실제 LocalPlayer 제거
+			GameInstance->RemoveLocalPlayer(SecondLocalPlayer);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("CleanupDummyLocalPlayer: No dummy LocalPlayer found"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("CleanupDummyLocalPlayer: Only one LocalPlayer exists, skipping"));
+	}
 }
