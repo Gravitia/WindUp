@@ -87,10 +87,10 @@ ACSSpectatorPawn::ACSSpectatorPawn()
     DummyCamera->bUsePawnControlRotation = false;
 
     // ·¢ Á¦°Å
-    CameraBoom->bEnableCameraLag = false;
-    CameraBoom->CameraLagSpeed = 0.f;
+    CameraBoom->bEnableCameraLag = true;
+    CameraBoom->CameraLagSpeed = 40.f;
     CameraBoom->bEnableCameraRotationLag = true;
-    CameraBoom->CameraRotationLagSpeed = 45.f;
+    CameraBoom->CameraRotationLagSpeed = 60.f;
 
     bUseControllerRotationYaw = false;
     bUseControllerRotationPitch = false;

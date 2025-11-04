@@ -474,7 +474,7 @@ void ACSGameMode::SyncDummyRotationWithProxy()
         CurrentRot,
         TargetRot,
         GetWorld()->GetDeltaSeconds(),
-        45.f // 보간 속도
+        20.f // 보간 속도
     );
 
     DummyPlayerController->SetControlRotation(NewRot);
@@ -503,7 +503,7 @@ void ACSGameMode::SetupOnlineSplitScreen()
         RotationSyncTimerHandle,   // FTimerHandle 멤버변수 선언 필요
         this,
         &ACSGameMode::SyncDummyRotationWithProxy,
-        0.016f,   // 60fps 주기 (16ms)
+        0.016f,   // fps 주기
         true      // 반복
     );
 }
