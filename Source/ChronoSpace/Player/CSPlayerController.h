@@ -177,5 +177,5 @@ private:
 	// 카메라 예측 관련 함수들
 	void ApplyCamera(ACSSpectatorPawn* DummyPawn, const FCameraPredictionData& CameraData);
 	void CleanupDummyLocalPlayer();
-
+	void AttachDummySpectatorToRemoteCharacter(ACSSpectatorPawn* DummyPawn);
 };

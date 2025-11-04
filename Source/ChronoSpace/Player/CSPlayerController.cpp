@@ -263,7 +263,7 @@ void ACSPlayerController::SetupClientSplitScreen()
 		// 이미 LocalPlayer가 있다면 더미 폰만 생성 (한 번만)
 		if (!ClientDummyPawn)
 		{
-			CreateClientDummyPawn();
+			// CreateClientDummyPawn();
 		}
 
 		// 설정 완료 플래그 설정
@@ -403,6 +403,8 @@ void ACSPlayerController::CreateClientDummyPawn()
 	{
 		UE_LOG(LogTemp, Error, TEXT("SS Failed to create client dummy pawn"));
 	}
+
+	AttachDummySpectatorToRemoteCharacter(ClientDummyPawn);
 }
 
 
@@ -457,8 +459,8 @@ void ACSPlayerController::SyncClientDummyWithRemotePlayer(ACSSpectatorPawn* Dumm
 	const FRepCamInfo& ServerCam = Proxy->GetReplicatedCamera();
 
 	// 3) 새 데이터 도착 시 바로 적용
-	if (!LastServerCamera.Location.Equals(ServerCam.Location, 0.1f) ||
-		!LastServerCamera.Rotation.Equals(ServerCam.Rotation, 0.01f))
+	if (!LastServerCamera.Location.Equals(ServerCam.Location, 0.001f) ||
+		!LastServerCamera.Rotation.Equals(ServerCam.Rotation, 0.001f))
 	{
 		// LastServerCamera = ServerCam; // 단순 복사도 가능
 
@@ -555,4 +557,57 @@ void ACSPlayerController::CleanupDummyLocalPlayer()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("CleanupDummyLocalPlayer: Only one LocalPlayer exists, skipping"));
 	}
+}
+
+
+void ACSPlayerController::AttachDummySpectatorToRemoteCharacter(ACSSpectatorPawn* DummyPawn)
+{
+	if (!DummyPawn)
+	{
+		UE_LOG(LogCS, Warning, TEXT("AttachDummySpectatorToRemoteCharacter: DummyPawn is null"));
+		return;
+	}
+
+	// 1) 원격 캐릭터 찾기 (자신이 아닌 캐릭터)
+	ACSCharacterPlayer* RemoteChar = nullptr;
+	for (TActorIterator<ACSCharacterPlayer> It(GetWorld()); It; ++It)
+	{
+		ACSCharacterPlayer* Char = *It;
+		if (!Char || Char->IsLocallyControlled()) continue;
+		RemoteChar = Char;
+		break;
+	}
+
+	if (!RemoteChar)
+	{
+		UE_LOG(LogCS, Warning, TEXT("AttachDummySpectatorToRemoteCharacter: No remote character found"));
+		return;
+	}
+
+	// 2) 스켈레탈 메시 찾기
+	USkeletalMeshComponent* Mesh = RemoteChar->FindComponentByClass<USkeletalMeshComponent>();
+	if (!Mesh)
+	{
+		UE_LOG(LogCS, Warning, TEXT("AttachDummySpectatorToRemoteCharacter: RemoteChar has no mesh"));
+		return;
+	}
+
+	// 3) 더미 스펙테이터를 캐릭터의 소켓(camera_socket 등)에 Attach
+	FName AttachSocketName = TEXT("camera_socket");
+	if (!Mesh->DoesSocketExist(AttachSocketName))
+	{
+		UE_LOG(LogCS, Warning, TEXT("AttachDummySpectatorToRemoteCharacter: Socket %s not found, using root"),
+			*AttachSocketName.ToString());
+		DummyPawn->AttachToActor(RemoteChar, FAttachmentTransformRules::KeepRelativeTransform);
+	}
+	else
+	{
+		FAttachmentTransformRules AttachRules(EAttachmentRule::SnapToTarget, true);
+		DummyPawn->AttachToComponent(Mesh, AttachRules, AttachSocketName);
+	}
+
+	DummyPawn->SetActorHiddenInGame(true);
+	DummyPawn->SetActorEnableCollision(false);
+
+	UE_LOG(LogCS, Warning, TEXT("Client: DummySpectator attached to %s"), *RemoteChar->GetName());
 }
