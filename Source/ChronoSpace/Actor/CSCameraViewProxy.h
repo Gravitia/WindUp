@@ -38,7 +38,7 @@ public:
 
     /** 클라에서 읽을 수 있는 복제된 카메라 정보 */
     UFUNCTION(BlueprintPure, Category = "SS|CameraProxy")
-    const FRepCamInfo& GetReplicatedCamera() const { return RepCam; }
+    FRepCamInfo& GetReplicatedCamera() { return RepCam; }
 
 protected:
     /** 복제되는 카메라 정보(서버가 채우고 클라가 읽음) */

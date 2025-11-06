@@ -509,7 +509,7 @@ void ACSGameMode::SyncDummyRotationWithProxy()
     ACSCameraViewProxy* ClientProxy = ClientCamProxies[RemoteClient];
     if ( ClientProxy == nullptr ) return;
 
-    const FRepCamInfo& RemoteClientCam = ClientProxy->GetReplicatedCamera();
+    FRepCamInfo& RemoteClientCam = ClientProxy->GetReplicatedCamera();
 
     if (!DummySpectatorPawn || !DummyPlayerController)
     {
@@ -549,6 +549,7 @@ void ACSGameMode::SyncDummyRotationWithProxy()
 
     // 4. 회전은 클라 입력값을 그대로 쓰거나 무시 (옵션)
     //    여기서는 클라 카메라 회전 그대로 반영
+    
     FRotator TargetRot = RemoteClientCam.Rotation;
     FRotator CurrentRot = DummyPlayerController->GetControlRotation();
 
@@ -594,4 +595,17 @@ void ACSGameMode::SetupOnlineSplitScreen()
         0.016f,   // 60FPS 주기
         true      // 반복
     );
+}
+
+void ACSGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    Super::EndPlay(EndPlayReason);
+
+    // 회전 동기화 타이머 종료
+    if (GetWorld())
+    {
+        GetWorldTimerManager().ClearTimer(RotationSyncTimerHandle);
+    }
+
+    UE_LOG(LogCS, Warning, TEXT("CSGameMode::EndPlay - cleared rotation sync timer"));
 }
