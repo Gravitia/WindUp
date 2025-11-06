@@ -55,4 +55,6 @@ protected:
     // 타이머 핸들들
     FTimerHandle SplitScreenTimerHandle;
     FTimerHandle DualModeToggleHandle;
+
+    void HandlePostWorldInit(UWorld* World, const UWorld::InitializationValues IVS);
 };

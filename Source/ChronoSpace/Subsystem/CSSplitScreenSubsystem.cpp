@@ -24,6 +24,19 @@ void UCSSplitScreenSubsystem::Initialize(FSubsystemCollectionBase& Collection)
     {
         SetupSplitScreenViewport();
     }
+
+    FWorldDelegates::OnPostWorldInitialization.AddUObject(this, &UCSSplitScreenSubsystem::HandlePostWorldInit);
+}
+
+void UCSSplitScreenSubsystem::HandlePostWorldInit(UWorld* World, const UWorld::InitializationValues IVS)
+{
+    if (!World || World->IsPreviewWorld()) return;
+
+    if (bEnableSplitScreen && bSplitScreenActive)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("SS Re-enabling SplitScreen after travel..."));
+        SetupSplitScreenViewport();
+    }
 }
 
 void UCSSplitScreenSubsystem::SetupSplitScreenViewport()
