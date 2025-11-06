@@ -305,19 +305,17 @@ void ACSPlayerController::CreateClientDummyPawn()
 	FVector DummySpawnLocation = FVector(0, 0, 200);
 	FRotator DummySpawnRotation = FRotator::ZeroRotator;
 
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.Name = FName(TEXT("ClientSpectatorPawn")); // 원하는 이름 지정
-
 	ClientDummyPawn = GetWorld()->SpawnActor<ACSSpectatorPawn>(
 		ACSSpectatorPawn::StaticClass(),
 		DummySpawnLocation,
-		DummySpawnRotation,
-		SpawnParams
+		DummySpawnRotation
 	);
 
 	if (ClientDummyPawn)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("SS Client dummy pawn created successfully"));
+
+		ClientDummyPawn->Rename(TEXT("ClientSpectatorPawn"));
 
 		// *** 중요: 더미 컨트롤러를 새로 생성하지 않고 기존 것 활용 ***
 
