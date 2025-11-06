@@ -10,6 +10,8 @@
 UCSCameraZoomComponent::UCSCameraZoomComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
+
+	SetIsReplicatedByDefault(true);
 }
 
 void UCSCameraZoomComponent::Init(USpringArmComponent* SpringArm, float InOrgLength)
@@ -41,10 +43,10 @@ void UCSCameraZoomComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 		return;
 	}
 
-	// Joom In
+	// Zoom In
 	if ( TargetZoom >= 0 && CameraBoom->TargetArmLength > OrgLength - TargetZoom ) 
 	{
-		UE_LOG(LogCS, Log, TEXT("Joom In"));
+		UE_LOG(LogCS, Log, TEXT("Zoom In"));
 		CameraBoom->TargetArmLength -= ZoomSpeed * SpeedCoef * DeltaTime;
 
 		if ( CameraBoom->TargetArmLength <= OrgLength - TargetZoom)
@@ -53,10 +55,10 @@ void UCSCameraZoomComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 		}
 	}
 
-	// Joom Out
+	// Zoom Out
 	if ( TargetZoom <= 0 && CameraBoom->TargetArmLength < OrgLength - TargetZoom)
 	{
-		UE_LOG(LogCS, Log, TEXT("Joom Out"));
+		UE_LOG(LogCS, Log, TEXT("Zoom Out"));
 		CameraBoom->TargetArmLength += ZoomSpeed * SpeedCoef * DeltaTime;
 
 		if (CameraBoom->TargetArmLength >= OrgLength - TargetZoom)

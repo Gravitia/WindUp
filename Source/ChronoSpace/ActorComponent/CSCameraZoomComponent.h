@@ -25,7 +25,6 @@ protected:
 	TObjectPtr<class USpringArmComponent> CameraBoom;
 	
 	float OrgLength{ 0 };
-
 	float TargetZoom{ 0 };
 	float ZoomSpeed{ 1 };
 
