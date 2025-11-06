@@ -305,10 +305,14 @@ void ACSPlayerController::CreateClientDummyPawn()
 	FVector DummySpawnLocation = FVector(0, 0, 200);
 	FRotator DummySpawnRotation = FRotator::ZeroRotator;
 
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Name = FName(TEXT("ClientSpectatorPawn")); // 원하는 이름 지정
+
 	ClientDummyPawn = GetWorld()->SpawnActor<ACSSpectatorPawn>(
 		ACSSpectatorPawn::StaticClass(),
 		DummySpawnLocation,
-		DummySpawnRotation
+		DummySpawnRotation,
+		SpawnParams
 	);
 
 	if (ClientDummyPawn)

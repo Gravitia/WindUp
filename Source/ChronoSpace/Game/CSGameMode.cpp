@@ -419,10 +419,14 @@ void ACSGameMode::CreateDummyLocalPlayer()
     FVector SpawnLocation = FVector(0, 0, 0);
     FRotator SpawnRotation = FRotator::ZeroRotator;
 
+    FActorSpawnParameters SpawnParams;
+    SpawnParams.Name = FName(TEXT("ServerSpectatorPawn")); // 원하는 이름 지정
+
     DummySpectatorPawn = GetWorld()->SpawnActor<ACSSpectatorPawn>(
         DummySpectatorPawnClass,
         SpawnLocation,
-        SpawnRotation
+        SpawnRotation,
+        SpawnParams
     );
 
     if (!DummySpectatorPawn)
