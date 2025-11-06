@@ -131,6 +131,88 @@ void ACSGameMode::PostLogin(APlayerController* NewPlayer)
     }
 }
 
+void ACSGameMode::HandleSeamlessTravelPlayer(AController*& C)
+{
+    Super::HandleSeamlessTravelPlayer(C);
+
+    APlayerController* NewPlayer = Cast<APlayerController>(C);
+    if (!NewPlayer)
+        return;
+
+    UE_LOG(LogCS, Warning, TEXT("HandleSeamlessTravelPlayer: %s"), *NewPlayer->GetName());
+
+    // === 기존 PostLogin 로직 일부 그대로 적용 ===
+    if (NewPlayer && NewPlayer->GetPawn())
+    {
+        ACSGameState* CSGameState = GetCSGameState();
+        if (CSGameState)
+        {
+            CSGameState->AddPlayerToDeathTracking(NewPlayer->GetPawn());
+        }
+
+        UE_LOG(LogCS, Log, TEXT("Player rejoined (seamless): %s"), *NewPlayer->GetName());
+        OnPlayerLogin.Broadcast();
+    }
+
+    ConnectedPlayers.AddUnique(NewPlayer);
+
+    // === Proxy 시스템 재생성 ===
+    if (!NewPlayer->IsLocalController()) // 원격 클라용 Proxy
+    {
+        FActorSpawnParameters ClientProxyParams;
+        ClientProxyParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+        ClientProxyParams.Owner = NewPlayer;
+
+        ACSCameraViewProxy* ClientProxy = GetWorld()->SpawnActor<ACSCameraViewProxy>(
+            ACSCameraViewProxy::StaticClass(),
+            FTransform::Identity,
+            ClientProxyParams
+        );
+
+        if (ClientProxy)
+        {
+            ClientProxy->SetReplicates(true);
+            ClientProxy->SetReplicateMovement(false);
+            ClientProxy->SetIsServerProxy(false);
+            ClientCamProxies.Add(NewPlayer, ClientProxy);
+        }
+    }
+
+    // 서버용 Proxy
+    if (NewPlayer->IsLocalController() && !ServerCamProxy)
+    {
+        FActorSpawnParameters ServerProxyParams;
+        ServerProxyParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+        ServerCamProxy = GetWorld()->SpawnActor<ACSCameraViewProxy>(
+            ACSCameraViewProxy::StaticClass(),
+            FTransform::Identity,
+            ServerProxyParams
+        );
+
+        if (ServerCamProxy)
+        {
+            ServerCamProxy->SetReplicates(true);
+            ServerCamProxy->SetReplicateMovement(false);
+            ServerCamProxy->SetIsServerProxy(true);
+            UE_LOG(LogCS, Warning, TEXT("SeamlessTravel: Created ServerCamProxy"));
+        }
+    }
+
+    // === SplitScreen 재세팅 ===
+    if (bAutoEnableSplitScreen)
+    {
+        if (GetWorld()->GetNetMode() == NM_ListenServer)
+        {
+            if (ConnectedPlayers.Num() == 2 && !DummyPlayerController)
+            {
+                UE_LOG(LogCS, Warning, TEXT("SeamlessTravel: Rebuilding split screen setup..."));
+                SetupOnlineSplitScreen();
+            }
+        }
+    }
+}
+
 
 void ACSGameMode::Logout(AController* Exiting)
 {

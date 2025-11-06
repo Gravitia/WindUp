@@ -31,6 +31,8 @@ public:
 
 protected:
     virtual UClass* GetDefaultPawnClassForController_Implementation(AController* InController) override;
+    /** SeamlessTravel 시, 기존 PlayerController가 옴겨질 때 호출됨 */
+    virtual void HandleSeamlessTravelPlayer(AController*& C) override;
 
     virtual void BeginPlay() override;
     virtual void PostLogin(APlayerController* NewPlayer) override;
