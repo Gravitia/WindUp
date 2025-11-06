@@ -421,10 +421,15 @@ void ACSPlayerController::StartClientDummySync(ACSSpectatorPawn* DummyPawn)
 	// 클라이언트에서 원격 플레이어와 동기화
 	GetWorldTimerManager().SetTimer(
 		ClientSyncTimerHandle,
-		[this, DummyPawn]()
-		{
-			SyncClientDummyWithRemotePlayer(DummyPawn);
-		},
+		FTimerDelegate::CreateWeakLambda(this, [this, DummyPawn]()
+			{
+				if (!IsValid(this) || !IsValid(DummyPawn))
+					return;
+				if (GetWorld()->bIsTearingDown)
+					return;
+
+				SyncClientDummyWithRemotePlayer(DummyPawn);
+			}),
 		0.008f,
 		true
 	);
