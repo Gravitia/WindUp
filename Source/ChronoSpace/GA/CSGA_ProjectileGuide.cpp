@@ -113,26 +113,26 @@ FVector UCSGA_ProjectileGuide::GetScreenCenterDirection() const
 			//}
 
 			// 마우스 조준 모드일 때만 마우스 위치 사용
-			int32 ViewportSizeX, ViewportSizeY;
-			PC->GetViewportSize(ViewportSizeX, ViewportSizeY);
+			//int32 ViewportSizeX, ViewportSizeY;
+			//PC->GetViewportSize(ViewportSizeX, ViewportSizeY);
 
-			float CurrentMouseX, CurrentMouseY;
-			if (PC->GetMousePosition(CurrentMouseX, CurrentMouseY))
-			{
-				float ScreenCenterX = ViewportSizeX * 0.5f;
-				float ScreenCenterY = ViewportSizeY * 0.5f;
+			//float CurrentMouseX, CurrentMouseY;
+			//if (PC->GetMousePosition(CurrentMouseX, CurrentMouseY))
+			//{
+			//	float ScreenCenterX = ViewportSizeX * 0.5f;
+			//	float ScreenCenterY = ViewportSizeY * 0.5f;
 
-				// 마우스 Y축 중앙에서 차이 계산
-				float MouseYOffset = CurrentMouseY - ScreenCenterY;
-				float AmplifiedYOffset = MouseYOffset * MouseYSensitivity;
-				float FinalY = ScreenCenterY + AmplifiedYOffset;
+			//	// 마우스 Y축 중앙에서 차이 계산
+			//	float MouseYOffset = CurrentMouseY - ScreenCenterY;
+			//	float AmplifiedYOffset = MouseYOffset * MouseYSensitivity;
+			//	float FinalY = ScreenCenterY + AmplifiedYOffset;
 
-				FVector WorldLocation, WorldDirection;
-				if (PC->DeprojectScreenPositionToWorld(ScreenCenterX, FinalY, WorldLocation, WorldDirection))
-				{
-					return WorldDirection;
-				}
-			}
+			//	FVector WorldLocation, WorldDirection;
+			//	if (PC->DeprojectScreenPositionToWorld(ScreenCenterX, FinalY, WorldLocation, WorldDirection))
+			//	{
+			//		return WorldDirection;
+			//	}
+			//}
 		}
 	}
 

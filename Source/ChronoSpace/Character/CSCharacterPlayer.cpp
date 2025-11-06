@@ -91,6 +91,9 @@ ACSCharacterPlayer::ACSCharacterPlayer()
 	GravityCoreSphere->SetupAttachment(RootComponent);
 	GravityCoreSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	//GravityCoreSphere->AttachToComponent(RootComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+
+	GetCapsuleComponent()->SetCollisionResponseToChannel(CCHANNEL_CSSPECTATOR, ECR_Ignore);
+	GetMesh()->SetCollisionResponseToChannel(CCHANNEL_CSSPECTATOR, ECR_Ignore);
 }
 
 UAbilitySystemComponent* ACSCharacterPlayer::GetAbilitySystemComponent() const
