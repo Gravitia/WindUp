@@ -581,11 +581,17 @@ void ACSGameMode::SetupOnlineSplitScreen()
     AttachDummySpectatorToClient(RemoteClient);
 
     // === 회전 동기화 타이머 시작 ===
+    // WeakLambda로 바꾸기. 
     GetWorldTimerManager().SetTimer(
-        RotationSyncTimerHandle,   // FTimerHandle 멤버변수 선언 필요
-        this,
-        &ACSGameMode::SyncDummyRotationWithProxy,
-        0.016f,   // fps 주기
+        RotationSyncTimerHandle,
+        FTimerDelegate::CreateWeakLambda(this, [this]()
+            {
+                if (!IsValid(this) || !IsValid(GetWorld()) || GetWorld()->bIsTearingDown)
+                    return;
+
+                SyncDummyRotationWithProxy();
+            }),
+        0.016f,   // 60FPS 주기
         true      // 반복
     );
 }
