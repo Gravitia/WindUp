@@ -6,6 +6,7 @@
 #include "Engine/World.h"
 #include "Engine/LocalPlayer.h"
 #include "TimerManager.h"
+#include "Game/CSGameMode.h"
 
 UCSSplitScreenSubsystem::UCSSplitScreenSubsystem()
 {
@@ -34,8 +35,15 @@ void UCSSplitScreenSubsystem::HandlePostWorldInit(UWorld* World, const UWorld::I
 
     if (bEnableSplitScreen && bSplitScreenActive)
     {
-        UE_LOG(LogTemp, Warning, TEXT("SS Re-enabling SplitScreen after travel..."));
-        SetupSplitScreenViewport();
+        UE_LOG(LogTemp, Warning, TEXT("SS Scheduling SplitScreen re-setup after travel..."));
+        World->GetTimerManager().SetTimerForNextTick([World]()
+            {
+                if (ACSGameMode* GM = Cast<ACSGameMode>(World->GetAuthGameMode()))
+                {
+                    UE_LOG(LogTemp, Warning, TEXT("SS Re-enabling SplitScreen after travel"));
+                    GM->SetupOnlineSplitScreen();
+                }
+            });
     }
 }
 

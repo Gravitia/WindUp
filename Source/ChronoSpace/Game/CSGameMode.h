@@ -83,6 +83,7 @@ public:
 
     UPROPERTY()
     TMap< TObjectPtr< APlayerController >, TObjectPtr< ACSCameraViewProxy > > ClientCamProxies;
+    void SetupOnlineSplitScreen();
 
 private:
     TArray< TObjectPtr< APlayerController > > ConnectedPlayers;
@@ -92,7 +93,7 @@ private:
     void CreateDummyLocalPlayer();
     void AttachDummySpectatorToClient(APlayerController* RemoteClient);
     void SyncDummyRotationWithProxy();
-    void SetupOnlineSplitScreen();
+    
 
     FTimerHandle SyncTimerHandle;
     FTimerHandle RotationSyncTimerHandle;
