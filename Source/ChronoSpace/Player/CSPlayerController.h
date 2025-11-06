@@ -178,4 +178,13 @@ private:
 	void ApplyCamera(ACSSpectatorPawn* DummyPawn, const FCameraPredictionData& CameraData);
 	void CleanupDummyLocalPlayer();
 	void AttachDummySpectatorToRemoteCharacter(ACSSpectatorPawn* DummyPawn);
+
+
+// Camera TargetArmLength Sync 
+public:
+	UFUNCTION(Server, Reliable)
+	void ServerBroadcastZoomToOthers(float NewArmLength);
+
+	UFUNCTION(Client, Reliable)
+	void ClientSetSpectatorCameraArmLength(float NewArmLength);
 };

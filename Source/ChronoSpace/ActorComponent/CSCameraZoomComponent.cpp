@@ -2,9 +2,9 @@
 
 
 #include "ActorComponent/CSCameraZoomComponent.h"
-#include "CSCameraZoomComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "ChronoSpace.h"
+#include "Player/CSPlayerController.h"
 
 // Sets default values for this component's properties
 UCSCameraZoomComponent::UCSCameraZoomComponent()
@@ -23,12 +23,28 @@ void UCSCameraZoomComponent::Init(USpringArmComponent* SpringArm, float InOrgLen
 
 void UCSCameraZoomComponent::ZoomCamera(float InZoomLength, float InZoomSpeed)
 {
-	if ( !bIsInit ) return;
+	if (!bIsInit) return;
 
 	TargetZoom = InZoomLength;
 	ZoomSpeed = InZoomSpeed;
-}
 
+	const float NewArmLength = (InZoomLength == 0) ? 1200.f : 600.f;   // will fix
+
+	if (AActor* Owner = GetOwner())
+	{
+		if (APawn* Pawn = Cast<APawn>(Owner))
+		{
+			if (ACSPlayerController* PC = Cast<ACSPlayerController>(Pawn->GetController()))
+			{
+				// 반드시 로컬 컨트롤러에서만 호출해야 서버로 전송됨
+				if (PC->IsLocalController())
+				{
+					PC->ServerBroadcastZoomToOthers(NewArmLength);
+				}
+			}
+		}
+	}
+}
 void UCSCameraZoomComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);

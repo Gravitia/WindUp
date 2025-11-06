@@ -17,6 +17,7 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/Pawn.h"
 #include "ChronoSpace.h"
+#include "GameFramework/SpringArmComponent.h"
 
 
 ACSPlayerController::ACSPlayerController()
@@ -617,4 +618,41 @@ void ACSPlayerController::AttachDummySpectatorToRemoteCharacter(ACSSpectatorPawn
 	DummyPawn->SetActorEnableCollision(false);
 
 	UE_LOG(LogCS, Warning, TEXT("Client: DummySpectator attached to %s"), *RemoteChar->GetName());
+}
+
+
+void ACSPlayerController::ServerBroadcastZoomToOthers_Implementation(float NewArmLength)
+{
+	// 서버 자신 (ListenServer)의 카메라도 즉시 변경
+	if (UWorld* World = GetWorld())
+	{
+		if (ACSGameMode* GM = Cast<ACSGameMode>(World->GetAuthGameMode()))
+		{
+			if (GM->DummySpectatorPawn && GM->DummySpectatorPawn->CameraBoom)
+			{
+				GM->DummySpectatorPawn->CameraBoom->TargetArmLength = NewArmLength;
+				UE_LOG(LogCS, Log, TEXT("Server: DummySpectator ArmLength set to %.1f"), NewArmLength);
+			}
+		}
+	}
+
+	// 다른 클라이언트들에게는 Client RPC로 전달
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		ACSPlayerController* PC = Cast<ACSPlayerController>(*It);
+		if (!PC || PC == this) continue; // 자기 자신 제외 (이미 위에서 처리)
+
+		PC->ClientSetSpectatorCameraArmLength(NewArmLength);
+	}
+}
+
+void ACSPlayerController::ClientSetSpectatorCameraArmLength_Implementation(float NewArmLength)
+{
+	if (ClientDummyPawn && ClientDummyPawn->CameraBoom)
+	{
+		ClientDummyPawn->CameraBoom->TargetArmLength = NewArmLength;
+
+		UE_LOG(LogCS, Log, TEXT("ClientSetSpectatorCameraArmLength: %s's CameraBoom set to %.1f"),
+			*GetName(), NewArmLength);
+	}
 }

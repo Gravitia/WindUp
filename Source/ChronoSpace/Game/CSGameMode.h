@@ -87,9 +87,11 @@ public:
     UPROPERTY()
     TMap< TObjectPtr< APlayerController >, TObjectPtr< ACSCameraViewProxy > > ClientCamProxies;
 
+    TObjectPtr< class ACSSpectatorPawn > DummySpectatorPawn;
+
 private:
     TArray< TObjectPtr< APlayerController > > ConnectedPlayers;
-    TObjectPtr< class ACSSpectatorPawn > DummySpectatorPawn;
+
     TObjectPtr< class ACSPlayerController > DummyPlayerController;
 
     void CreateDummyLocalPlayer();
