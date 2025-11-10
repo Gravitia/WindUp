@@ -22,6 +22,7 @@ public:
 	void SetGravityInfluenceRange(float Range);
 	void SetStopRange(float Range);
 	void SetPullStrength(float Strength);
+	void SetCheckComponentInMesh(bool bCheckComponent);
 
 protected:
 	UFUNCTION()
@@ -36,6 +37,8 @@ protected:
 	UFUNCTION()
 	void OnStopTriggerEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
+	void ProcessForCharacter(float DeltaTime);
+	void ProcessForStaticMesh(float DeltaTime);
 
 	UPROPERTY(VisibleAnywhere, Category = "Sphere", Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class USphereComponent> GravitySphereTrigger;
@@ -50,19 +53,28 @@ protected:
 	TObjectPtr<class UStaticMeshComponent> FieldMesh;
 
 	UPROPERTY()
-	TMap<FName, TObjectPtr<ACharacter> > CharactersInSphereTrigger;
+	TSet< TWeakObjectPtr<ACharacter> > CharactersInSphereTrigger;
 
 	UPROPERTY()
-	TSet< TObjectPtr<ACharacter> > CharactersInEventHorizon;
+	TSet< TWeakObjectPtr<ACharacter> > CharactersInEventHorizon;
 
-	UPROPERTY(EditAnywhere, Category = "Sphere")
+	UPROPERTY()
+	TSet< TWeakObjectPtr<UStaticMeshComponent> > StaticMeshesInSphereTrigger;
+
+	UPROPERTY()
+	TSet< TWeakObjectPtr<UStaticMeshComponent> > StaticMeshesInEventHorizon;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gravity")
 	float GravityInfluenceRange = 500.0f;
 
-	UPROPERTY(EditAnywhere, Category = "Sphere")
-	float PullStrength = 4000.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gravity")
+	float PullStrength = 10.0f;
 
-	UPROPERTY(EditAnywhere, Category = "Sphere")
-	float StopRadius = 50.0f;	
+	UPROPERTY(EditAnywhere, Category = "Gravity")
+	float StopRadius = 150.0f;	
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Field")
 	float MeshRadius = 50.0f;
+
+	bool bCheckMeshHaveComponent = false;
 };
