@@ -28,6 +28,7 @@
 #include "ActorComponent/CSTransformRecordComponent.h"
 #include "ActorComponent/CSCharacterPushedComponent.h"
 #include "ActorComponent/CSCharacterPulledByBlackhole.h"
+#include "ActorComponent/CSCameraZoomComponent.h"
 #include "Player/CSPlayerController.h"
 #include "DataAsset/CSCharacterPlayerData.h"
 #include "Components/SphereComponent.h"
@@ -49,6 +50,8 @@ ACSCharacterPlayer::ACSCharacterPlayer()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
+
+	ZoomComponent = CreateDefaultSubobject<UCSCameraZoomComponent>(TEXT("ZoomComponent"));
 
 	FirstPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
 	// 보통 플레이어 메쉬의 “head” 소켓(혹은 눈 위치)에 붙입니다.
@@ -88,6 +91,9 @@ ACSCharacterPlayer::ACSCharacterPlayer()
 	GravityCoreSphere->SetupAttachment(RootComponent);
 	GravityCoreSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	//GravityCoreSphere->AttachToComponent(RootComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+
+	GetCapsuleComponent()->SetCollisionResponseToChannel(CCHANNEL_CSSPECTATOR, ECR_Ignore);
+	GetMesh()->SetCollisionResponseToChannel(CCHANNEL_CSSPECTATOR, ECR_Ignore);
 }
 
 UAbilitySystemComponent* ACSCharacterPlayer::GetAbilitySystemComponent() const
@@ -218,6 +224,11 @@ void ACSCharacterPlayer::SetData()
 	CameraBoom->TargetArmLength = Data->TargetArmLength;
 	CameraBoom->SetRelativeLocation(Data->CameraOffset);
 
+	if ( ZoomComponent ) 
+	{
+		ZoomComponent->Init(CameraBoom, Data->TargetArmLength);
+	}
+
 	GetCharacterMovement()->RotationRate = Data->RotationRate;
 	GetCharacterMovement()->JumpZVelocity = Data->JumpZVelocity;
 	GetCharacterMovement()->AirControl = Data->AirControl;
@@ -247,45 +258,11 @@ void ACSCharacterPlayer::SetData()
 	Trigger->SetCapsuleSize(Data->TriggerRadius, Data->TriggerHeight); 
 }
 
-void ACSCharacterPlayer::SetShoulderLook(bool bIsShoulderLook)
+void ACSCharacterPlayer::ZoomCamera( float ZoomLength, float ZoomSpeed )
 {
-	if (!bIsShoulderLook)
-	{
-		// 1인칭 모드로 전환
-		CameraBoom->SetActive(false);            // 스프링암(3인칭) 꺼주고
-		FollowCamera->SetActive(false);
-		FirstPersonCamera->SetActive(true);      // 1인칭 카메라 켜기
+	if ( Data == nullptr || ZoomComponent == nullptr ) return;
 
-		GetMesh()->SetOwnerNoSee(true);
-
-		if (WindUpKeyActor)
-		{
-			UStaticMeshComponent* KeyMesh = WindUpKeyActor->GetComponentByClass<UStaticMeshComponent>();
-			if (KeyMesh)
-			{
-				KeyMesh->SetVisibility(false);
-			}
-		}
-		
-	}
-	else
-	{
-		// 3인칭 모드로 복귀
-		FirstPersonCamera->SetActive(false);
-		CameraBoom->SetActive(true);
-		FollowCamera->SetActive(true);
-
-		if (WindUpKeyActor)
-		{
-			UStaticMeshComponent* KeyMesh = WindUpKeyActor->GetComponentByClass<UStaticMeshComponent>();
-			if (KeyMesh)
-			{
-				KeyMesh->SetVisibility(true);
-			}
-		}
-
-		GetMesh()->SetOwnerNoSee(false); 
-	}
+	ZoomComponent->ZoomCamera(ZoomLength, ZoomSpeed);
 }
 
 void ACSCharacterPlayer::ShoulderMove(const FInputActionValue& Value)
@@ -393,6 +370,14 @@ void ACSCharacterPlayer::OnMovementModeChanged(
 	}
 }
 
+void ACSCharacterPlayer::ServerDestoryBlackHole_Implementation()
+{
+	if ( BlackHole )
+	{
+		BlackHole->SetDuration(0.2f);
+	}
+}
+
 void ACSCharacterPlayer::NetMulticastMakeGravityCoreSphere_Implementation(float SphereRaduis, float SphereScale)
 {
 	GravityCoreSphere->SetSphereRadius(SphereRaduis * SphereScale);
@@ -408,7 +393,7 @@ void ACSCharacterPlayer::NetMulticastDestroyGravityCoreSphere_Implementation()
 }
 
 void ACSCharacterPlayer::ServerSpawnAndSetBlackHole_Implementation(TSubclassOf<class ACSBlackHole> BlackHoleClass,
-	FVector Location, float Duration, float GravityInfluenceRange, float PullStrength, float StopRange)
+	FVector Location, float Duration, float GravityInfluenceRange, float PullStrength, float StopRange, bool bCheckComponent)
 {
 	if (UWorld* World = GetWorld())
 	{
@@ -417,7 +402,7 @@ void ACSCharacterPlayer::ServerSpawnAndSetBlackHole_Implementation(TSubclassOf<c
 		Params.Instigator = this;
 
 		FRotator Rotation = FRotator::ZeroRotator;
-		ACSBlackHole* BlackHole = World->SpawnActor<ACSBlackHole>(BlackHoleClass, Location, Rotation, Params);
+		BlackHole = World->SpawnActor<ACSBlackHole>(BlackHoleClass, Location, Rotation, Params);
 
 		if (BlackHole)
 		{
@@ -425,6 +410,7 @@ void ACSCharacterPlayer::ServerSpawnAndSetBlackHole_Implementation(TSubclassOf<c
 			BlackHole->SetGravityInfluenceRange(GravityInfluenceRange);
 			BlackHole->SetPullStrength(PullStrength);
 			BlackHole->SetStopRange(StopRange);
+			BlackHole->SetCheckComponentInMesh(bCheckComponent);
 		}
 	}
 }
