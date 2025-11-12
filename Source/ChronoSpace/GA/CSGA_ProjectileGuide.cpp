@@ -10,6 +10,11 @@
 #include "Character/CSCharacterPlayer.h"
 #include "ChronoSpace.h"
 
+/**
+* 레거시 코드, 삭제 예정
+* 사용 금지
+*/
+
 UCSGA_ProjectileGuide::UCSGA_ProjectileGuide()
 {
 	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::LocalOnly;
@@ -58,10 +63,10 @@ void UCSGA_ProjectileGuide::ActivateAbility(const FGameplayAbilitySpecHandle Han
 			}
 		}
 
-		if ( ACSCharacterPlayer* CSPlayer = Cast<ACSCharacterPlayer>(Character) )
+		/*if ( ACSCharacterPlayer* CSPlayer = Cast<ACSCharacterPlayer>(Character) )
 		{
-			CSPlayer->SetShoulderLook(false);
-		}
+			CSPlayer->ZoomCamera(false);
+		}*/
 	}
 
 	// 업데이트 타이머 시작
@@ -108,26 +113,26 @@ FVector UCSGA_ProjectileGuide::GetScreenCenterDirection() const
 			//}
 
 			// 마우스 조준 모드일 때만 마우스 위치 사용
-			int32 ViewportSizeX, ViewportSizeY;
-			PC->GetViewportSize(ViewportSizeX, ViewportSizeY);
+			//int32 ViewportSizeX, ViewportSizeY;
+			//PC->GetViewportSize(ViewportSizeX, ViewportSizeY);
 
-			float CurrentMouseX, CurrentMouseY;
-			if (PC->GetMousePosition(CurrentMouseX, CurrentMouseY))
-			{
-				float ScreenCenterX = ViewportSizeX * 0.5f;
-				float ScreenCenterY = ViewportSizeY * 0.5f;
+			//float CurrentMouseX, CurrentMouseY;
+			//if (PC->GetMousePosition(CurrentMouseX, CurrentMouseY))
+			//{
+			//	float ScreenCenterX = ViewportSizeX * 0.5f;
+			//	float ScreenCenterY = ViewportSizeY * 0.5f;
 
-				// 마우스 Y축 중앙에서 차이 계산
-				float MouseYOffset = CurrentMouseY - ScreenCenterY;
-				float AmplifiedYOffset = MouseYOffset * MouseYSensitivity;
-				float FinalY = ScreenCenterY + AmplifiedYOffset;
+			//	// 마우스 Y축 중앙에서 차이 계산
+			//	float MouseYOffset = CurrentMouseY - ScreenCenterY;
+			//	float AmplifiedYOffset = MouseYOffset * MouseYSensitivity;
+			//	float FinalY = ScreenCenterY + AmplifiedYOffset;
 
-				FVector WorldLocation, WorldDirection;
-				if (PC->DeprojectScreenPositionToWorld(ScreenCenterX, FinalY, WorldLocation, WorldDirection))
-				{
-					return WorldDirection;
-				}
-			}
+			//	FVector WorldLocation, WorldDirection;
+			//	if (PC->DeprojectScreenPositionToWorld(ScreenCenterX, FinalY, WorldLocation, WorldDirection))
+			//	{
+			//		return WorldDirection;
+			//	}
+			//}
 		}
 	}
 
@@ -137,10 +142,10 @@ FVector UCSGA_ProjectileGuide::GetScreenCenterDirection() const
 
 void UCSGA_ProjectileGuide::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
-	if ( ACSCharacterPlayer* CSPlayer = Cast<ACSCharacterPlayer>( ActorInfo->AvatarActor ) )
+	/*if ( ACSCharacterPlayer* CSPlayer = Cast<ACSCharacterPlayer>( ActorInfo->AvatarActor ) )
 	{
-		CSPlayer->SetShoulderLook(true);
-	}
+		CSPlayer->ZoomCamera(true);
+	}*/
 
 	// 타이머 정리
 	if (UpdateTimerHandle.IsValid())

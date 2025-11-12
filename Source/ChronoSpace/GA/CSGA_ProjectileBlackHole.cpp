@@ -87,7 +87,7 @@ void UCSGA_ProjectileBlackHole::ActivateAbility(const FGameplayAbilitySpecHandle
 
 		if (ACSCharacterPlayer* CSPlayer = Cast<ACSCharacterPlayer>(Character))
 		{
-			CSPlayer->SetShoulderLook(false);
+			CSPlayer->ZoomCamera( ZoomLength, ZoomSpeed );
 		}
 	}
 
@@ -162,7 +162,7 @@ void UCSGA_ProjectileBlackHole::EndAbility(const FGameplayAbilitySpecHandle Hand
 
 	if (ACSCharacterPlayer* CSPlayer = Cast<ACSCharacterPlayer>(ActorInfo->AvatarActor))
 	{
-		CSPlayer->SetShoulderLook(true);
+		CSPlayer->ZoomCamera( 0, ZoomSpeed );
 	}
 
 	// 타이머 정리
@@ -248,7 +248,7 @@ void UCSGA_ProjectileBlackHole::CheckMouseInput()
 				if ( !bIsBlackHoleSpawned )
 				{
 					CreateBlackHoleAtLocation(CurrentEndLocation);
-					Character->SetShoulderLook(true);
+					Character->ZoomCamera( 0, ZoomSpeed );
 					bIsBlackHoleSpawned = true;
 				}
 			}

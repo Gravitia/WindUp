@@ -40,6 +40,12 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile Guide")
 	float MouseYSensitivity = 1.5f;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile Guide")
+	float ZoomLength = 600.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile Guide")
+	float ZoomSpeed = 50.0f;
+
 	//UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Black Hole")
 	float Duration;
 

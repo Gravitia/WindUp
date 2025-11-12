@@ -6,3 +6,5 @@
 #define CPROFILE_CSTRIGGER TEXT("CSTrigger")
 #define CPROFILE_OVERLAPALL TEXT("OverlapAll")
 #define CCHANNEL_CSACTION ECC_GameTraceChannel1
+//#define CCHANNEL_CSSPECTATOR ECC_GameTraceChannel3
+#define CCHANNEL_CSSPECTATOR ECC_Camera

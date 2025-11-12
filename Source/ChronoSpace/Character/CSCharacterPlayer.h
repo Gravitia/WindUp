@@ -65,9 +65,12 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UCameraComponent> FollowCamera;
 
+	UPROPERTY()
+	TObjectPtr<class UCSCameraZoomComponent> ZoomComponent;
+
 // Move & Look
 public:
-	void SetShoulderLook(bool bIsShoulderLook);
+	void ZoomCamera( float ZoomLength, float ZoomSpeed );
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, Meta = (AllowPrivateAccess = "true"))
