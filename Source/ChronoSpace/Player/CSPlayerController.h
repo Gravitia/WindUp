@@ -8,6 +8,44 @@
 
 class UCSGameUIWidget;
 class SCSServerTravelWidget;
+class ACSSpectatorPawn;
+class ACSCameraViewProxy;
+class UCameraComponent;
+
+// 카메라 예측을 위한 데이터 구조체
+USTRUCT()
+struct FCameraPredictionData
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FVector Location = FVector::ZeroVector;
+
+	UPROPERTY()
+	FRotator Rotation = FRotator::ZeroRotator;
+
+	UPROPERTY()
+	float FOV = 90.0f;
+
+	UPROPERTY()
+	FVector Velocity = FVector::ZeroVector;
+
+	UPROPERTY()
+	FVector AngularVelocity = FVector::ZeroVector;
+
+	UPROPERTY()
+	float Timestamp = 0.0f;
+
+	FCameraPredictionData()
+	{
+		Location = FVector::ZeroVector;
+		Rotation = FRotator::ZeroRotator;
+		FOV = 90.0f;
+		Velocity = FVector::ZeroVector;
+		AngularVelocity = FVector::ZeroVector;
+		Timestamp = 0.0f;
+	}
+};
 
 /**
  * 
@@ -71,58 +109,82 @@ private:
 	// UI 
 	FTimerHandle UICreationTimerHandle;
 
-// Dual Mode
-protected:
-	UFUNCTION()
-	void UpdateRenderTarget();
+// Split Screen
+public:
+	// 더미 컨트롤러 플래그
+	UPROPERTY(BlueprintReadOnly, Category = "Split Screen")
+	bool bIsDummyController = false;
 
-	class ACSCharacterPlayer* FindFirstOtherPawn();
+	// 더미 컨트롤러로 설정
+	UFUNCTION(BlueprintCallable, Category = "Split Screen")
+	void SetAsDummyController(bool bDummy = true);
 
-	class ASceneCapture2D* SpawnCaptureAndAttach(class UCameraComponent* TargetCam, UTextureRenderTarget2D* TargetRT);
+	// 캐시된 프록시 참조
+	UPROPERTY()
+	TWeakObjectPtr<ACSCameraViewProxy> CachedProxy;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Render")
-	TObjectPtr<UTextureRenderTarget2D> RenderTargetP0;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Render")
-	TObjectPtr<UTextureRenderTarget2D> RenderTargetP1;
+private:
+	// 네트워크 업데이트 관련
+	float LocationUpdateInterval = 0.0167f; // 60fps
+	float TimeSinceLastUpdate = 0.0f;
+
+	// 클라이언트용 함수들
+	void SetupClientSplitScreen();
+	void CreateClientDummyPawn();
+	void StartClientDummySync(ACSSpectatorPawn* DummyPawn);
+	void SyncClientDummyWithRemotePlayer(ACSSpectatorPawn* DummyPawn);
+
+	// 클라이언트 더미 관련 변수들
+	UPROPERTY()
+	TObjectPtr< ACSSpectatorPawn > ClientDummyPawn;
+
+	FTimerHandle ClientSyncTimerHandle;
 
 	UPROPERTY()
-	TObjectPtr<class ASceneCapture2D> CaptureP0;
+	bool bClientSplitScreenSetupComplete = false;
 
+	// === 카메라 예측 시스템 ===
+
+	// 서버로부터 받은 카메라 데이터 히스토리
 	UPROPERTY()
-	TObjectPtr<class ASceneCapture2D> CaptureP1;
+	TArray<FCameraPredictionData> CameraHistory;
 
-// Dual Mode UI
-protected:
-	void ToggleDualMode();
-	void OpenDualMode();
-	void CloseDualMode();
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dual Mode UI")
-	TSubclassOf<class UUserWidget> DualModeUIClass;
-
+	// 현재 예측된 카메라 상태
 	UPROPERTY()
-	TObjectPtr<class UUserWidget> DualModeUI;
+	FCameraPredictionData PredictedCamera;
 
-	bool bIsDualMode;
+	// 마지막으로 받은 서버 데이터
+	UPROPERTY()
+	FCameraPredictionData LastServerCamera;
 
-	// =========================
-	// Server Travel UI ���� �Լ���
-	// =========================
-	/*
-	TSharedPtr<SCSServerTravelWidget> ServerTravelWidget;
-	void CreateServerTravelWidget();
+	// 예측 설정값들
+	UPROPERTY(EditAnywhere, Category = "Camera Prediction")
+	float MaxPredictionTime = 0.2f; // 최대 예측 시간 (200ms)
 
-	UFUNCTION(BlueprintCallable, Category = "Server Travel")
-	void ShowServerTravelUI();
+	UPROPERTY(EditAnywhere, Category = "Camera Prediction")
+	float CorrectionSpeed = 10.0f; // 서버 데이터로 보정하는 속도
 
-	UFUNCTION(BlueprintCallable, Category = "Server Travel")
-	void HideServerTravelUI();
+	UPROPERTY(EditAnywhere, Category = "Camera Prediction")
+	int32 MaxHistorySize = 10; // 저장할 히스토리 개수
 
-	UFUNCTION(BlueprintCallable, Category = "Server Travel")
-	void ToggleServerTravelUI();
+	UPROPERTY(EditAnywhere, Category = "Camera Prediction")
+	float ImmediateCorrectionLocationThreshold = 100.0f; // 즉시 보정할 위치 오차 임계값 (cm)
 
-	UFUNCTION(BlueprintPure, Category = "Server Travel")
-	bool IsServerTravelUIVisible() const;
-	*/
+	UPROPERTY(EditAnywhere, Category = "Camera Prediction")
+	float ImmediateCorrectionRotationThreshold = 10.0f; // 즉시 보정할 회전 오차 임계값 (도)
+
+	// 카메라 예측 관련 함수들
+	void ApplyCamera(ACSSpectatorPawn* DummyPawn, const FCameraPredictionData& CameraData);
+	void CleanupDummyLocalPlayer();
+	void AttachDummySpectatorToRemoteCharacter(ACSSpectatorPawn* DummyPawn);
+
+
+// Camera TargetArmLength Sync 
+public:
+	UFUNCTION(Server, Reliable)
+	void ServerBroadcastZoomToOthers(float NewArmLength);
+
+	UFUNCTION(Client, Reliable)
+	void ClientSetSpectatorCameraArmLength(float NewArmLength);
 };

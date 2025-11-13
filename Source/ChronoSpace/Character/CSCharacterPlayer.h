@@ -42,6 +42,14 @@ protected:
 	virtual void PreInitializeComponents() override; 
 	virtual void SetDead() override;
 
+
+protected:
+	UPROPERTY()
+	TObjectPtr<class UCSCharacterPushedComponent> PushedComponent;
+
+	UPROPERTY()
+	TObjectPtr<class UCSCharacterPulledByBlackhole> PulledByBlackholeComponent;
+
 // Data
 protected:
 	void SetData();
@@ -57,9 +65,12 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UCameraComponent> FollowCamera;
 
+	UPROPERTY()
+	TObjectPtr<class UCSCameraZoomComponent> ZoomComponent;
+
 // Move & Look
 public:
-	void SetShoulderLook(bool bIsShoulderLook);
+	void ZoomCamera( float ZoomLength, float ZoomSpeed );
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, Meta = (AllowPrivateAccess = "true"))
@@ -221,5 +232,11 @@ protected:
 public:
 	UFUNCTION(Server, Reliable)
 	void ServerSpawnAndSetBlackHole(TSubclassOf<class ACSBlackHole> BlackHoleClass,
-		FVector Location, float Duration, float GravityInfluenceRange, float PullStrength, float StopRange);
+		FVector Location, float Duration, float GravityInfluenceRange, float PullStrength, 
+		float StopRange, bool bCheckComponent);
+
+	UFUNCTION(Server, Reliable)
+	void ServerDestoryBlackHole();
+
+	TObjectPtr<class ACSBlackHole> BlackHole;
 };

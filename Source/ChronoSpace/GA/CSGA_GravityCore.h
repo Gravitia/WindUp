@@ -21,13 +21,10 @@ public:
 protected:
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 
-	UPROPERTY()
-	TObjectPtr< class UAbilityTask_WaitDelay > DelayTask;
+	void OnCore();
+	void OffCore();
 
 protected:
-	UFUNCTION()
-	void OnDurationFinished();
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Gravity Core")
 	TSubclassOf<class ACSGravityCoreSphere> GravityCoreClass;
 
@@ -37,9 +34,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale")
 	float CoreScale = 1.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Duration")
-	float DurationTime = 10.0f;
-
 	UPROPERTY()
 	TObjectPtr<ACharacter> OwnerCharacter;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Check Component")
+	bool bCheckMeshComponentAffectedByGravityCore = false;
 };
