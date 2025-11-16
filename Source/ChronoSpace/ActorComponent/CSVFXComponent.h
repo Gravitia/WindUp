@@ -19,6 +19,28 @@ enum class EActorAttachedVFX : uint8
 	NONE,
 };
 
+USTRUCT(BlueprintType)
+struct FWorldVFXInfo
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TObjectPtr< class UNiagaraSystem > NiagaraPtr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FVector Offset{ FVector::ZeroVector };
+};
+
+USTRUCT(BlueprintType)
+struct FActorAttachedVFXInfo
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TObjectPtr< class UNiagaraSystem > NiagaraPtr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FName SocketName{ NAME_None };
+};
+
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class CHRONOSPACE_API UCSVFXComponent : public UActorComponent
 {
@@ -31,12 +53,12 @@ public:
 public:
 	UFUNCTION( BlueprintCallable )
 	void PlayWorldVFX( EWorldVFX VFX );
-	void PlayActorAttackedVFX(EActorAttachedVFX VFX, FName Socket = NAME_None);
+	void PlayActorAttackedVFX(EActorAttachedVFX VFX);
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VFX")
-	TMap< EWorldVFX, TSoftObjectPtr< class UNiagaraSystem > > WorldVFXMap;
+	TMap< EWorldVFX, FWorldVFXInfo > WorldVFXMap; 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VFX")
-	TMap< EActorAttachedVFX, TSoftObjectPtr< class UNiagaraSystem > > ActorAttackedVFXMap;
+	TMap< EActorAttachedVFX, FActorAttachedVFXInfo > ActorAttackedVFXMap; 
 };

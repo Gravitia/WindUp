@@ -211,13 +211,24 @@ void ACSCharacterPlayer::SetDead()
 {
 	Super::SetDead();
 
-	/*APlayerController* PlayerController = Cast<APlayerController>(GetController()); 
+	APlayerController* PlayerController = Cast<APlayerController>(GetController()); 
 	if (PlayerController) 
 	{
 		DisableInput(PlayerController); 
-	}*/
+	}
 
 	VFXComponent->PlayWorldVFX(EWorldVFX::EFFECT_DEAD_0);
+}
+
+void ACSCharacterPlayer::SetRevive()
+{
+	Super::SetRevive();
+
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	if (PlayerController)
+	{
+		EnableInput(PlayerController);
+	}
 }
 
 void ACSCharacterPlayer::SetData()

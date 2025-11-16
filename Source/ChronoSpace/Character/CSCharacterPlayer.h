@@ -43,6 +43,7 @@ protected:
 
 public:
 	virtual void SetDead() override;
+	virtual void SetRevive() override;
 
 protected:
 	UPROPERTY()

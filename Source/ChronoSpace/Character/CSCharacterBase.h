@@ -19,6 +19,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual void SetDead();
 
+	UFUNCTION(BlueprintCallable)
+	virtual void SetRevive();
+
 protected:
 	UPROPERTY()
 	TObjectPtr<class UCSCustomGravityDirComponent> CustomGravityDirComponent;

@@ -47,8 +47,16 @@ ACSCharacterBase::ACSCharacterBase()
 
 void ACSCharacterBase::SetDead()
 {
-	/*GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
-	SetActorEnableCollision(false);*/
+	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
+	SetActorEnableCollision(false);
+	GetMesh()->SetVisibility(false);
+}
+
+void ACSCharacterBase::SetRevive()
+{
+	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
+	SetActorEnableCollision(true);
+	GetMesh()->SetVisibility(true);
 }
 
 
