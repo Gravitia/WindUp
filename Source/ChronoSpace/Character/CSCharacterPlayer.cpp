@@ -29,6 +29,7 @@
 #include "ActorComponent/CSCharacterPushedComponent.h"
 #include "ActorComponent/CSCharacterPulledByBlackhole.h"
 #include "ActorComponent/CSCameraZoomComponent.h"
+#include "ActorComponent/CSVFXComponent.h"
 #include "Player/CSPlayerController.h"
 #include "DataAsset/CSCharacterPlayerData.h"
 #include "Components/SphereComponent.h"
@@ -214,6 +215,19 @@ void ACSCharacterPlayer::SetDead()
 	if (PlayerController) 
 	{
 		DisableInput(PlayerController); 
+	}
+
+	VFXComponent->PlayWorldVFX(EWorldVFX::EFFECT_DEAD_0);
+}
+
+void ACSCharacterPlayer::SetRevive()
+{
+	Super::SetRevive();
+
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	if (PlayerController)
+	{
+		EnableInput(PlayerController);
 	}
 }
 
