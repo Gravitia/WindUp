@@ -15,9 +15,11 @@ public:
 	// Sets default values for this character's properties
 	ACSCharacterBase();
 
-protected:
+public:
+	UFUNCTION(BlueprintCallable)
 	virtual void SetDead();
 
+protected:
 	UPROPERTY()
 	TObjectPtr<class UCSCustomGravityDirComponent> CustomGravityDirComponent;
 
@@ -26,5 +28,10 @@ protected:
 protected:
 	void AttachWindUpKeyToSocket();
 
+	UPROPERTY()
 	TObjectPtr<AActor> WindUpKeyActor;
-};
+
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "VFX")
+	TObjectPtr< class UCSVFXComponent > VFXComponent;
+}; 

@@ -6,6 +6,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "UI/CSGASEnergyBarUserWidget.h"
 #include "ActorComponent/CSCustomGravityDirComponent.h"
+#include "ActorComponent/CSVFXComponent.h"
 #include "Physics/CSCollision.h"
 
 // Sets default values
@@ -40,12 +41,14 @@ ACSCharacterBase::ACSCharacterBase()
 
 	// Gravity Core
 	CustomGravityDirComponent = CreateDefaultSubobject<UCSCustomGravityDirComponent>(TEXT("CustomGravityDirComponent"));
+
+	VFXComponent = CreateDefaultSubobject<UCSVFXComponent>(TEXT("VFXComponent"));
 }
 
 void ACSCharacterBase::SetDead()
 {
-	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
-	SetActorEnableCollision(false);
+	/*GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
+	SetActorEnableCollision(false);*/
 }
 
 

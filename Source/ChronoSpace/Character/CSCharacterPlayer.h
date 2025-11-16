@@ -40,8 +40,9 @@ protected:
 protected:
 	virtual void BeginPlay() override;
 	virtual void PreInitializeComponents() override; 
-	virtual void SetDead() override;
 
+public:
+	virtual void SetDead() override;
 
 protected:
 	UPROPERTY()
