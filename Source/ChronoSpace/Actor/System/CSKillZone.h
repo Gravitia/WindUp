@@ -71,7 +71,4 @@ public:
 private:
     class ACSGameState* GetCSGameState() const;
     class ACSGameMode* GetCSGameMode() const;
-
-protected:
-    float ReviveDelay{ 1.0f };
 };

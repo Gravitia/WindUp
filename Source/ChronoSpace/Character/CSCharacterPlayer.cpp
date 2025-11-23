@@ -384,6 +384,12 @@ void ACSCharacterPlayer::OnMovementModeChanged(
 	}
 }
 
+float ACSCharacterPlayer::GetReviveTime()
+{
+	if (Data == nullptr) return 1.0f;
+	return Data->ReviveDelay;
+}
+
 void ACSCharacterPlayer::ServerDestoryBlackHole_Implementation()
 {
 	if ( BlackHole )

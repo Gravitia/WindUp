@@ -81,4 +81,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Trigger")
 	float TriggerHeight;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Revive")
+	float ReviveDelay{ 1.0f };
 };

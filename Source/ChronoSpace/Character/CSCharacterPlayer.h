@@ -241,4 +241,7 @@ public:
 	void ServerDestoryBlackHole();
 
 	TObjectPtr<class ACSBlackHole> BlackHole;
+
+public:
+	float GetReviveTime();
 };
