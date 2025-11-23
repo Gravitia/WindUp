@@ -8,6 +8,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Engine/World.h"
 #include "GameFramework/Pawn.h"
+#include "Character/CSCharacterPlayer.h"
 
 ACSKillZone::ACSKillZone()
 {
@@ -47,6 +48,12 @@ void ACSKillZone::KillPlayer(APawn* Player)
         GameState->HandlePlayerDeath(Player);
     }
 
+    ACSCharacterPlayer* CharacterPlayer = Cast<ACSCharacterPlayer>(Player);
+    if (CharacterPlayer)
+    {
+        CharacterPlayer->SetDead();
+    }
+
     UE_LOG(LogTemp, Warning, TEXT("Player killed by KillZone: %s"), *Player->GetName());
 }
 
@@ -68,16 +75,18 @@ void ACSKillZone::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComp, AAc
     if (Player && Player->IsPlayerControlled())
     {
         // 즉시 리스폰
-        ACSGameMode* GameMode = GetCSGameMode();
+        /*ACSGameMode* GameMode = GetCSGameMode();
         if (GameMode)
         {
             GameMode->RespawnSinglePlayer(Player);
             UE_LOG(LogTemp, Log, TEXT("Player instantly respawned: %s"), *Player->GetName());
-        }
+        }*/
+        KillPlayer( Player );
+        RevivePlayerWithDelay(Player, ReviveDelay);
     }
 }
 
-void ACSKillZone::KillPlayerWithDelay(APawn* Player, float DelayTime)
+void ACSKillZone::RevivePlayerWithDelay(APawn* Player, float DelayTime)
 {
     if (!Player || !IsValid(Player))
         return;
@@ -91,6 +100,12 @@ void ACSKillZone::KillPlayerWithDelay(APawn* Player, float DelayTime)
             if (GameMode && IsValid(Player))
             {
                 GameMode->RespawnSinglePlayer(Player);
+            }
+
+            ACSCharacterPlayer* CharacterPlayer = Cast<ACSCharacterPlayer>(Player);
+            if (CharacterPlayer)
+            {
+                CharacterPlayer->SetRevive();
             }
         },
         DelayTime,

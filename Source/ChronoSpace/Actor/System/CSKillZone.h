@@ -66,9 +66,13 @@ public:
         bool bFromSweep, const FHitResult& SweepResult);
 
     UFUNCTION(BlueprintCallable, Category = "Kill Zone")
-    void KillPlayerWithDelay(APawn* Player, float DelayTime);
+    void RevivePlayerWithDelay(APawn* Player, float DelayTime);
 
 private:
     class ACSGameState* GetCSGameState() const;
     class ACSGameMode* GetCSGameMode() const;
+
+protected:
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player")
+    float ReviveDelay{ 1.0f };
 };
