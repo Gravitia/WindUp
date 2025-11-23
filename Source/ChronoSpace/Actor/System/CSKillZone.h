@@ -73,6 +73,5 @@ private:
     class ACSGameMode* GetCSGameMode() const;
 
 protected:
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player")
     float ReviveDelay{ 1.0f };
 };

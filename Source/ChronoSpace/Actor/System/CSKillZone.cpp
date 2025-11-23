@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Actor/System/CSKillZone.h"
@@ -9,6 +9,9 @@
 #include "Engine/World.h"
 #include "GameFramework/Pawn.h"
 #include "Character/CSCharacterPlayer.h"
+#include "Common/CSCommon.h"
+#include "DataAsset/CSDA_KillZone.h"
+#include "ChronoSpace.h"
 
 ACSKillZone::ACSKillZone()
 {
@@ -31,9 +34,20 @@ void ACSKillZone::BeginPlay()
 {
     Super::BeginPlay();
 
-    // ����: OnTriggerBeginOverlap���� ���ε� ����
+    // 수정: OnTriggerBeginOverlap으로 바인딩 변경
     KillVolume->OnComponentBeginOverlap.AddDynamic(this, &ACSKillZone::OnTriggerBeginOverlap);
     VisualMesh->SetVisibility(bShowVisualMesh);
+
+    // 일단 그냥 모든 킬존이 BeginPlay에서 로드하도록 둠
+    // 나중에 부하가 심해지면 데이터애셋을 관리하는 서브시스템을 만들던가
+    // 애셋 메니저를 사용하기로
+    // 그냥 캐싱하면 댕글링 포인터 위험에서 100% 안전하진 않을 것이라 봄
+    UCSDA_KillZone* Data = LoadObject<UCSDA_KillZone>(nullptr, PATH_DA_KILL_ZONE); 
+    if (Data) 
+    {
+        UE_LOG(LogCS, Log, TEXT("ACSKillZone Data Loaded"));
+        ReviveDelay = Data->ReviveDelay; 
+    }
 }
 
 void ACSKillZone::KillPlayer(APawn* Player)
@@ -74,7 +88,7 @@ void ACSKillZone::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComp, AAc
     APawn* Player = Cast<APawn>(OtherActor);
     if (Player && Player->IsPlayerControlled())
     {
-        // ��� ������
+        // 즉시 리스폰
         /*ACSGameMode* GameMode = GetCSGameMode();
         if (GameMode)
         {
@@ -91,7 +105,7 @@ void ACSKillZone::RevivePlayerWithDelay(APawn* Player, float DelayTime)
     if (!Player || !IsValid(Player))
         return;
 
-    // ������ �� ������
+    // 딜레이 후 리스폰
     FTimerHandle RespawnTimer;
     GetWorld()->GetTimerManager().SetTimer(RespawnTimer,
         [this, Player]()
