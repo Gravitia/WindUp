@@ -33,20 +33,34 @@ public:
     // --------------------------
     // Bellows Mesh
     // --------------------------
-    UPROPERTY(EditAnywhere)
+    UPROPERTY(VisibleAnywhere)
     UStaticMeshComponent* Mesh;
 
+
     // --------------------------
-    // Linked Actor (push target)
+    // Linked Actor (LERP target)
     // --------------------------
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Move Object")
     TObjectPtr<AActor> LinkedActor;
 
-    // Force applied (PressTwo only)
+    // Y 방향으로 이동할 값
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Move Object")
-    FVector LinkedForce = FVector(0.f, 0.f, -30000.f);
+    float LinkedMoveDistance = 1000.f;
 
-    bool bLinkedActorPushed = false;
+    // Lerp duration
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Move Object")
+    float LinkedMoveDuration = 0.25f;
+
+    // Lerp control
+    bool bLinkedLerping = false;
+    bool bLinkedMoved = false;
+
+    FVector LinkedStartLoc;
+    FVector LinkedTargetLoc;
+    float LinkedLerpAlpha = 0.f;
+
+    void StartLinkedActorLerp();
+    void TickLinkedActorLerp(float DeltaTime);
 
 
     // --------------------------
@@ -66,7 +80,6 @@ public:
     // Scale LERP
     // --------------------------
     bool bScaleLerping = false;
-
     FVector StartScale;
     FVector TargetScale;
     float ScaleLerpAlpha = 0.f;
@@ -76,7 +89,6 @@ public:
 
     void StartScaleLerp(const FVector& NewTargetScale);
 
-    // scale values
     UPROPERTY(EditAnywhere)
     FVector IdleScale = FVector(1, 1, 1);
 
@@ -88,22 +100,14 @@ public:
 
 
     // --------------------------
-    // Push Linked Actor (Force)
-    // --------------------------
-    void PushLinkedActor();
-
-
-    // --------------------------
-    // Landing Event From Character
+    // Landing Event (From Character::Landed)
     // --------------------------
     UFUNCTION()
-    void NotifyPlayerLanded(ACharacter* PlayerCharacter); // from Character::Landed()
+    void NotifyPlayerLanded(ACharacter* PlayerCharacter);
 
 
-    // auto reset timer
+    // auto reset bellows scale
     FTimerHandle TimerHandle_Reset;
 
-
-    // replication
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };

@@ -3,7 +3,6 @@
 
 #include "CSBellows.h"
 #include "Net/UnrealNetwork.h"
-#include "GameFramework/Character.h"
 #include "TimerManager.h"
 #include "Components/PrimitiveComponent.h"
 
@@ -25,9 +24,7 @@ void ACSBellows::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
 
-    // -----------------------------
-    // Scale Lerp Animation
-    // -----------------------------
+    // Bellows scale lerp
     if (bScaleLerping)
     {
         ScaleLerpAlpha += DeltaSeconds / ScaleLerpDuration;
@@ -36,12 +33,17 @@ void ACSBellows::Tick(float DeltaSeconds)
         SetActorScale3D(NewScale);
 
         if (ScaleLerpAlpha >= 1.f)
-        {
             bScaleLerping = false;
-        }
     }
+
+    // Linked actor lerp movement
+    TickLinkedActorLerp(DeltaSeconds);
 }
 
+
+// --------------------------
+// Character Landed Event
+// --------------------------
 void ACSBellows::NotifyPlayerLanded(ACharacter* PlayerCharacter)
 {
     if (!HasAuthority()) return;
@@ -55,15 +57,13 @@ void ACSBellows::NotifyPlayerLanded(ACharacter* PlayerCharacter)
     case EBellowsState::PressOnePlayer:
         ChangeState(EBellowsState::PressTwoPlayer);
         break;
-
-    default:
-        break;
     }
 }
 
-// ----------------------
+
+// --------------------------
 // State Machine
-// ----------------------
+// --------------------------
 void ACSBellows::ChangeState(EBellowsState NewState)
 {
     BellowsState = NewState;
@@ -81,16 +81,15 @@ void ACSBellows::ChangeState(EBellowsState NewState)
     case EBellowsState::PressTwoPlayer:
         StartScaleLerp(PressTwoScale);
 
-        // Push linked actor only once
-        if (!bLinkedActorPushed)
+        // Only move once
+        if (!bLinkedMoved)
         {
-            PushLinkedActor();
-            bLinkedActorPushed = true;
+            StartLinkedActorLerp();
         }
         break;
     }
 
-    // Auto Reset to Idle (LinkedActor does NOT reset)
+    // reset only Bellows, not linked actor
     GetWorldTimerManager().ClearTimer(TimerHandle_Reset);
     GetWorldTimerManager().SetTimer(
         TimerHandle_Reset,
@@ -107,43 +106,52 @@ void ACSBellows::ResetToIdle()
     StartScaleLerp(IdleScale);
 }
 
-// ----------------------
+
+// --------------------------
 // Scale Lerp
-// ----------------------
+// --------------------------
 void ACSBellows::StartScaleLerp(const FVector& NewTargetScale)
 {
     StartScale = GetActorScale3D();
     TargetScale = NewTargetScale;
-
     ScaleLerpAlpha = 0.f;
     bScaleLerping = true;
 }
 
-// ----------------------
-// Push Linked Actor (Force)
-// ----------------------
-void ACSBellows::PushLinkedActor()
+
+// --------------------------
+// Linked Actor LERP Movement
+// --------------------------
+
+void ACSBellows::StartLinkedActorLerp()
 {
     if (!LinkedActor) return;
 
-    UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(LinkedActor->GetRootComponent());
-    if (!Prim) return;
+    LinkedStartLoc = LinkedActor->GetActorLocation();
+    LinkedTargetLoc = LinkedStartLoc + FVector(0.f, LinkedMoveDistance, 0.f);
 
-    if (!Prim->IsSimulatingPhysics())
-    {
-        Prim->SetSimulatePhysics(true);
-    }
-
-    // Add force (continuous force)
-    Prim->AddForce(LinkedForce, NAME_None, true);
-
-    // If you prefer instant impulse style:
-    // Prim->AddImpulse(LinkedForce);
+    LinkedLerpAlpha = 0.f;
+    bLinkedLerping = true;
+    bLinkedMoved = true;
 }
 
-// ----------------------
-// Rep Notify
-// ----------------------
+void ACSBellows::TickLinkedActorLerp(float DeltaTime)
+{
+    if (!bLinkedLerping || !LinkedActor) return;
+
+    LinkedLerpAlpha += DeltaTime / LinkedMoveDuration;
+    FVector NewLoc = FMath::Lerp(LinkedStartLoc, LinkedTargetLoc, LinkedLerpAlpha);
+
+    LinkedActor->SetActorLocation(NewLoc);
+
+    if (LinkedLerpAlpha >= 1.f)
+        bLinkedLerping = false;
+}
+
+
+// --------------------------
+// RepNotify
+// --------------------------
 void ACSBellows::OnRep_BellowsState()
 {
     switch (BellowsState)
@@ -159,18 +167,20 @@ void ACSBellows::OnRep_BellowsState()
     case EBellowsState::PressTwoPlayer:
         StartScaleLerp(PressTwoScale);
 
-        if (!bLinkedActorPushed)
+        if (!bLinkedMoved)
         {
-            PushLinkedActor();
-            bLinkedActorPushed = true;
+            StartLinkedActorLerp();
         }
         break;
     }
 }
 
+
+// --------------------------
+// Replication
+// --------------------------
 void ACSBellows::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
     DOREPLIFETIME(ACSBellows, BellowsState);
 }
