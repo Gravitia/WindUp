@@ -27,6 +27,7 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual void OnRep_PlayerState() override;
+	virtual void Landed(const FHitResult& Hit) override;
 
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
