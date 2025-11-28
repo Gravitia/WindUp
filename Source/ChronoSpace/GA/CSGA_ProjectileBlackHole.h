@@ -22,7 +22,6 @@ public:
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 
 protected:
-	// ���̵���� ����
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile Guide")
 	float GuideDuration = 5.0f;
 
@@ -32,11 +31,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile Guide")
 	float UpdateRate = 0.02f;
 
-	/** �÷��̾� �������κ��� �󸶳� ������ ��ġ���� �������� */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile Guide")
 	float StartOffsetDistance = 100.f;
 
-	// ���콺 Y�� �ΰ���
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile Guide")
 	float MouseYSensitivity = 1.5f;
 
@@ -68,13 +65,11 @@ private:
 	FVector GetStartLocation() const;
 
 private:
-	// ���콺 ���� ���� ����
 	bool bUsingMouseAiming = false;
 	FVector2D LastMousePosition = FVector2D::ZeroVector;
-	float MouseMovementThreshold = 1.0f; // ���콺 �̵� ���� �Ӱ谪
+	float MouseMovementThreshold = 1.0f; 
 
 private:
-	// �ʱ� ���� ���� ���� (�÷��̾� ȸ���� ������� ����)
 	FVector InitialAimDirection = FVector::ZeroVector;
 	bool bInitialDirectionSet = false;
 
