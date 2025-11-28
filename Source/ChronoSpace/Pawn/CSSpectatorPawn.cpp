@@ -64,7 +64,7 @@ ACSSpectatorPawn::ACSSpectatorPawn()
     CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
     CameraBoom->SetupAttachment(SkeletalMesh);
 
-    CameraBoom->TargetArmLength = 1200.f;
+    CameraBoom->TargetArmLength = 0.f;
     static ConstructorHelpers::FObjectFinder<UCSCharacterPlayerData> PlayerDataRef(TEXT("/Game/04_DataAssets/Character/BPDA_CharacterPlayerData.BPDA_CharacterPlayerData"));
     if ( PlayerDataRef.Succeeded() )
     {
@@ -104,61 +104,6 @@ ACSSpectatorPawn::ACSSpectatorPawn()
 void ACSSpectatorPawn::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
-
-    if (bSyncDirectlyToCamera && TargetCamera)
-    {
-        //  카메라 직접 동기화 모드
-        FVector TargetCameraLocation = TargetCamera->GetComponentLocation();
-        FRotator TargetCameraRotation = TargetCamera->GetComponentRotation();
-
-        FVector CurrentLocation = GetActorLocation();
-        FRotator CurrentRotation = GetActorRotation();
-
-        FVector NewLocation = FMath::VInterpTo(CurrentLocation, TargetCameraLocation, DeltaTime, SmoothingSpeed);
-        FRotator NewRotation = FMath::RInterpTo(CurrentRotation, TargetCameraRotation, DeltaTime, SmoothingSpeed);
-
-        SetActorLocationAndRotation(NewLocation, NewRotation);
-    }
-    else if (bHasTarget)
-    {
-        // 기존 위치 + 오프셋 모드
-        FVector CurrentLocation = GetActorLocation();
-        FRotator CurrentRotation = GetActorRotation();
-
-        FVector DesiredLocation;
-        FRotator DesiredRotation;
-
-        if (bUseOffsetFromTarget)
-        {
-            DesiredLocation = SplitScreen::CalculateOffsetPosition(TargetLocation, TargetRotation);
-
-            if (bLookAtTarget)
-            {
-                DesiredRotation = SplitScreen::CalculateLookAtRotation(DesiredLocation, TargetLocation);
-            }
-            else
-            {
-                DesiredRotation = TargetRotation;
-            }
-        }
-        else
-        {
-            DesiredLocation = TargetLocation;
-            DesiredRotation = TargetRotation;
-        }
-
-        float DistanceToTarget = FVector::Dist(DesiredLocation, TargetLocation);
-        if (DistanceToTarget < MinDistanceFromTarget)
-        {
-            FVector DirectionFromTarget = (DesiredLocation - TargetLocation).GetSafeNormal();
-            DesiredLocation = TargetLocation + (DirectionFromTarget * MinDistanceFromTarget);
-        }
-
-        FVector NewLocation = FMath::VInterpTo(CurrentLocation, DesiredLocation, DeltaTime, SmoothingSpeed);
-        FRotator NewRotation = FMath::RInterpTo(CurrentRotation, DesiredRotation, DeltaTime, SmoothingSpeed);
-
-        SetActorLocationAndRotation(NewLocation, NewRotation);
-    }
 
     //  타겟이 사라졌는지 체크하고 자동으로 재탐색
     if (!TargetCamera && TargetPawn)
