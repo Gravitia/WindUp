@@ -26,14 +26,6 @@ protected:
 	UPROPERTY()
 	TObjectPtr<class UCSCustomGravityDirComponent> CustomGravityDirComponent;
 
-
-	// Wind Up Key
-protected:
-	void AttachWindUpKeyToSocket();
-
-	UPROPERTY()
-	TObjectPtr<AActor> WindUpKeyActor;
-
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "VFX")
 	TObjectPtr< class UCSVFXComponent > VFXComponent;

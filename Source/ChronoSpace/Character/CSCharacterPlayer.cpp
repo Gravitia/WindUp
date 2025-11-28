@@ -155,8 +155,6 @@ void ACSCharacterPlayer::BeginPlay()
 		Subsystem->AddMappingContext(MappingContext, 0);
 	}
 
-	AttachWindUpKeyToSocket();
-	
 	/* AlwaysClockUnwind not using now 
 	AlwaysClockUnwind();
 	*/

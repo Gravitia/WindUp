@@ -59,7 +59,7 @@ void ACSCharacterBase::SetRevive()
 	GetMesh()->SetVisibility(true);
 }
 
-
+/*
 void ACSCharacterBase::AttachWindUpKeyToSocket()
 {
 	// 1. 블루프린트 클래스 로드
@@ -97,3 +97,5 @@ void ACSCharacterBase::AttachWindUpKeyToSocket()
 
 	UE_LOG(LogTemp, Log, TEXT("Blueprint Actor attached to socket: %s"), *SocketName.ToString());
 }
+
+*/
