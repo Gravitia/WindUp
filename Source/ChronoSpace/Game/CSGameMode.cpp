@@ -518,11 +518,7 @@ void ACSGameMode::SyncDummyRotationWithProxy()
 
     // 2. 해당 클라의 Proxy 가져오기
     ACSCameraViewProxy* ClientProxy = ClientCamProxies[RemoteClient];
-    if (ClientProxy == nullptr) {
-        UE_LOG(LogCS, Warning, TEXT("CS ClientProxy is null "));
-
-        return;
-    } 
+    if ( ClientProxy == nullptr ) return;
 
     FRepCamInfo& RemoteClientCam = ClientProxy->GetReplicatedCamera();
 
@@ -560,7 +556,7 @@ void ACSGameMode::SyncDummyRotationWithProxy()
         30.f // 보간 속도
     );
 
-    // DummySpectatorPawn->SetActorLocation(NewLoc);
+    DummySpectatorPawn->SetActorLocation(NewLoc);
 
     // 4. 회전은 클라 입력값을 그대로 쓰거나 무시 (옵션)
     //    여기서는 클라 카메라 회전 그대로 반영

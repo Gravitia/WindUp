@@ -501,7 +501,7 @@ void ACSPlayerController::ApplyCamera(ACSSpectatorPawn* DummyPawn, const FCamera
 		const FVector CurrentLoc = DummyPawn->GetActorLocation();
 		const float LocInterpSpeed = 30.f; // 이동 보간 속도
 		const FVector SmoothedLoc = FMath::VInterpTo(CurrentLoc, TargetLoc, GetWorld()->GetDeltaSeconds(), LocInterpSpeed);
-		// DummyPawn->SetActorLocation(SmoothedLoc);
+		DummyPawn->SetActorLocation(SmoothedLoc);
 		
 		// 회전 보간 (서버 카메라 회전 따라감)
 		if (APlayerController* DummyController = Cast<APlayerController>(DummyPawn->GetController()))
