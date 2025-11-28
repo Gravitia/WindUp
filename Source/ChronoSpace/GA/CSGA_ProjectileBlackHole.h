@@ -22,7 +22,7 @@ public:
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 
 protected:
-	// °¡ÀÌµå¶óÀÎ ¼³Á¤
+	// ï¿½ï¿½ï¿½Ìµï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile Guide")
 	float GuideDuration = 5.0f;
 
@@ -32,11 +32,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile Guide")
 	float UpdateRate = 0.02f;
 
-	/** ÇÃ·¹ÀÌ¾î Àü¹æÀ¸·ÎºÎÅÍ ¾ó¸¶³ª ¶³¾îÁø À§Ä¡¿¡¼­ ½ÃÀÛÇÒÁö */
+	/** ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îºï¿½ï¿½ï¿½ ï¿½ó¸¶³ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile Guide")
 	float StartOffsetDistance = 100.f;
 
-	// ¸¶¿ì½º YÃà ¹Î°¨µµ
+	// ï¿½ï¿½ï¿½ì½º Yï¿½ï¿½ ï¿½Î°ï¿½ï¿½ï¿½
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile Guide")
 	float MouseYSensitivity = 1.5f;
 
@@ -68,13 +68,13 @@ private:
 	FVector GetStartLocation() const;
 
 private:
-	// ¸¶¿ì½º Á¶ÁØ »óÅÂ °ü¸®
+	// ï¿½ï¿½ï¿½ì½º ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	bool bUsingMouseAiming = false;
 	FVector2D LastMousePosition = FVector2D::ZeroVector;
-	float MouseMovementThreshold = 1.0f; // ¸¶¿ì½º ÀÌµ¿ °¨Áö ÀÓ°è°ª
+	float MouseMovementThreshold = 1.0f; // ï¿½ï¿½ï¿½ì½º ï¿½Ìµï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ó°è°ª
 
 private:
-	// ÃÊ±â Á¶ÁØ ¹æÇâ ÀúÀå (ÇÃ·¹ÀÌ¾î È¸Àü¿¡ ¿µÇâ¹ÞÁö ¾ÊÀ½)
+	// ï¿½Ê±ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ È¸ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)
 	FVector InitialAimDirection = FVector::ZeroVector;
 	bool bInitialDirectionSet = false;
 
@@ -84,9 +84,10 @@ private:
 	// Black Hole 
 protected:
 	FVector CurrentEndLocation;
+	FVector CurrentDirection;    
 
 	void CheckMouseInput();
-	void CreateBlackHoleAtLocation(const FVector& Location);
+	void CreateBlackHoleAtLocation(const FVector& Direction);
 
 protected:
 	void SpawnBlackHoleDummy(FVector SpawnLocation);

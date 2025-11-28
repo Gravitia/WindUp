@@ -35,7 +35,7 @@
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Actor/CSBlackHole.h"
-
+#include "Net/UnrealNetwork.h"
 
 ACSCharacterPlayer::ACSCharacterPlayer()
 {
@@ -205,6 +205,13 @@ void ACSCharacterPlayer::PreInitializeComponents()
 	Super::PreInitializeComponents();
 
 	SetData();
+}
+
+void ACSCharacterPlayer::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ACSCharacterPlayer, BlackHole);
 }
 
 void ACSCharacterPlayer::SetDead()
@@ -413,16 +420,28 @@ void ACSCharacterPlayer::NetMulticastDestroyGravityCoreSphere_Implementation()
 }
 
 void ACSCharacterPlayer::ServerSpawnAndSetBlackHole_Implementation(TSubclassOf<class ACSBlackHole> BlackHoleClass,
-	FVector Location, float Duration, float GravityInfluenceRange, float PullStrength, float StopRange, bool bCheckComponent)
+	FVector Direction, float MaxDistance, float Duration, float GravityInfluenceRange, float PullStrength, float StopRange, bool bCheckComponent)
 {
 	if (UWorld* World = GetWorld())
 	{
+		FVector StartLocation = GetActorLocation() + FVector(0.0f, 0.0f, BaseEyeHeight); 
+		FVector EndLocation = StartLocation + Direction * MaxDistance; 
+
+		FCollisionQueryParams QueryParams; 
+		QueryParams.AddIgnoredActor(this); 
+
+		FHitResult HitResult; 
+		if (GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Visibility, QueryParams)) 
+		{
+			EndLocation = HitResult.Location; 
+		}
+
 		FActorSpawnParameters Params;
 		Params.Owner = this;
 		Params.Instigator = this;
 
 		FRotator Rotation = FRotator::ZeroRotator;
-		BlackHole = World->SpawnActor<ACSBlackHole>(BlackHoleClass, Location, Rotation, Params);
+		BlackHole = World->SpawnActor<ACSBlackHole>(BlackHoleClass, EndLocation, Rotation, Params);
 
 		if (BlackHole)
 		{
@@ -433,4 +452,23 @@ void ACSCharacterPlayer::ServerSpawnAndSetBlackHole_Implementation(TSubclassOf<c
 			BlackHole->SetCheckComponentInMesh(bCheckComponent);
 		}
 	}
+}
+
+void ACSCharacterPlayer::ServerSetBlackHoleLocation_Implementation(FVector Direction, float MaxDistance) 
+{
+	if (!IsValid(BlackHole)) return; 
+
+	FVector StartLocation = GetActorLocation() + FVector(0.0f, 0.0f, BaseEyeHeight);
+	FVector EndLocation = StartLocation + Direction * MaxDistance;
+
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor( this );
+
+	FHitResult HitResult;
+	if (GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Visibility, QueryParams))
+	{
+		EndLocation = HitResult.Location;
+	}
+
+	BlackHole->SetActorLocation(EndLocation);
 }
