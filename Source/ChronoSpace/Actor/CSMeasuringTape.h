@@ -13,7 +13,8 @@ class CHRONOSPACE_API ACSMeasuringTape : public AActor
 	
 public:	
 	ACSMeasuringTape();
-
+	
+	/* Meshes */
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Mesh")
 	UStaticMeshComponent* Mesh;
 
@@ -29,9 +30,43 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mesh")
 	UStaticMeshComponent* RulerMesh; 
 	
+	/* Trigger */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Trigger")
+	class UBoxComponent* Trigger;
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaTime) override;
 
+	UPROPERTY(ReplicatedUsing = OnRep_TargetScale)
+	float TargetScale = 1.0f;
 
+	float CurrentScaleInternal = 1.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Ruler")
+	float LerpSpeed = 5.0f;  // 부드럽게 늘어나는 속도
+
+	UPROPERTY(EditAnywhere, Category = "Ruler")
+	float TargetRulerScale = 5.0f;  // Ruler Scale
+
+	UFUNCTION()
+	void OnRep_TargetScale();
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	void SetRulerScale(float NewScale);
+
+	UFUNCTION()
+	void OnTriggerBegin(UPrimitiveComponent* OverlappedComp,
+		AActor* OtherActor,
+		UPrimitiveComponent* OtherComp,
+		int32 OtherBodyIndex,
+		bool bFromSweep,
+		const FHitResult& SweepResult);
+
+	UFUNCTION()
+	void OnTriggerEnd(UPrimitiveComponent* OverlappedComp,
+		AActor* OtherActor,
+		UPrimitiveComponent* OtherComp,
+		int32 OtherBodyIndex);
 };
