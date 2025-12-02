@@ -40,8 +40,11 @@ protected:
 protected:
 	virtual void BeginPlay() override;
 	virtual void PreInitializeComponents() override; 
-	virtual void SetDead() override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+public:
+	virtual void SetDead() override;
+	virtual void SetRevive() override;
 
 protected:
 	UPROPERTY()
@@ -232,11 +235,18 @@ protected:
 public:
 	UFUNCTION(Server, Reliable)
 	void ServerSpawnAndSetBlackHole(TSubclassOf<class ACSBlackHole> BlackHoleClass,
-		FVector Location, float Duration, float GravityInfluenceRange, float PullStrength, 
+		FVector Direction, float MaxDistance, float Duration, float GravityInfluenceRange, float PullStrength,
 		float StopRange, bool bCheckComponent);
+
+	UFUNCTION(Server, Unreliable)
+	void ServerSetBlackHoleLocation(FVector Direction, float MaxDistance);
 
 	UFUNCTION(Server, Reliable)
 	void ServerDestoryBlackHole();
 
+	UPROPERTY(Replicated)
 	TObjectPtr<class ACSBlackHole> BlackHole;
+
+public:
+	float GetReviveTime();
 };

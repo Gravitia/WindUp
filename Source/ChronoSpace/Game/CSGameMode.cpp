@@ -496,19 +496,24 @@ void ACSGameMode::AttachDummySpectatorToClient(APlayerController* RemoteClient)
 void ACSGameMode::SyncDummyRotationWithProxy()
 {
     // 1. 원격 클라 찾기
+    
     APlayerController* RemoteClient = nullptr;
-    for (APlayerController* PC : ConnectedPlayers)
+
+    if (RemoteClient == nullptr)
     {
-        if (PC && !PC->IsLocalController())
+        for (APlayerController* PC : ConnectedPlayers)
         {
-            RemoteClient = PC;
-            break;
+            if (PC && !PC->IsLocalController())
+            {
+                RemoteClient = PC;
+                break;
+            }
         }
-    }
-    if (!RemoteClient)
-    {
-        UE_LOG(LogCS, Warning, TEXT("SS RemoteClient null"));
-        return;
+        if (!RemoteClient)
+        {
+            UE_LOG(LogCS, Warning, TEXT("SS RemoteClient null"));
+            return;
+        }
     }
 
     // 2. 해당 클라의 Proxy 가져오기
@@ -568,8 +573,7 @@ void ACSGameMode::SyncDummyRotationWithProxy()
 
     DummyPlayerController->SetControlRotation(NewRot);
 
-    UE_LOG(LogCS, Verbose, TEXT("CS Server: Synced dummy location=%s, rotation=%s"),
-        *NewLoc.ToString(), *NewRot.ToString());
+    // UE_LOG(LogCS, Verbose, TEXT("CS Server: Synced dummy location=%s, rotation=%s"), *NewLoc.ToString(), *NewRot.ToString());
 }
 
 void ACSGameMode::SetupOnlineSplitScreen()
