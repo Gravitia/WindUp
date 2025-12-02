@@ -36,6 +36,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Actor/CSBlackHole.h"
 #include "Net/UnrealNetwork.h"
+#include "Actor/CSBellows.h"
 
 ACSCharacterPlayer::ACSCharacterPlayer()
 {
@@ -139,6 +140,22 @@ void ACSCharacterPlayer::OnRep_PlayerState()
 	GASManagerComponent->SetupGASInputComponent(Cast<UEnhancedInputComponent>(InputComponent));
 }
 
+void ACSCharacterPlayer::Landed(const FHitResult& Hit)
+{
+	Super::Landed(Hit);
+
+	// 밟은 Actor 가져오기
+	AActor* LandedActor = Hit.GetActor();
+	if (!LandedActor) return;
+
+	// Bellows인지 검사
+	ACSBellows* Bellows = Cast<ACSBellows>(LandedActor);
+	if (Bellows)
+	{
+		Bellows->NotifyPlayerLanded(this);
+	}
+}
+ 
 void ACSCharacterPlayer::BeginPlay()
 {
 	Super::BeginPlay();
