@@ -100,15 +100,6 @@ void UCSGA_ProjectileBlackHole::ActivateAbility(const FGameplayAbilitySpecHandle
 		true
 	);
 
-	// 지속시간 타이머 시작
-	/*GetWorld()->GetTimerManager().SetTimer(
-		DurationTimerHandle,
-		this,
-		&UCSGA_ProjectileBlackHole::OnGuideDurationEnd,
-		GuideDuration,
-		false
-	);*/
-
 	UE_LOG(LogCS, Log, TEXT("ProjectileGuide Activated"));
 
 }
@@ -186,15 +177,15 @@ void UCSGA_ProjectileBlackHole::UpdateGuideLine()
 	CheckMouseMovement();
 
 	FVector StartLocation = GetStartLocation();
-	FVector ScreenCenterDirection = GetScreenCenterDirection();
+	CurrentDirection = GetScreenCenterDirection();
 
-	if (ScreenCenterDirection.IsNearlyZero())
+	if (CurrentDirection.IsNearlyZero())
 	{
-		ScreenCenterDirection = FVector::ForwardVector;
+		CurrentDirection = FVector::ForwardVector;
 	}
 
 	// 화면 중앙 방향으로 라인 트레이스
-	FVector EndLocation = StartLocation + ScreenCenterDirection * MaxGuideDistance;
+	FVector EndLocation = StartLocation + CurrentDirection * MaxGuideDistance;
 
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(GetAvatarActorFromActorInfo());
@@ -206,10 +197,6 @@ void UCSGA_ProjectileBlackHole::UpdateGuideLine()
 	}
 
 	CurrentEndLocation = EndLocation;
-
-	// 조준 모드에 따라 다른 색상으로 표시
-	/*FColor SphereColor = bUsingMouseAiming ? FColor::Red : FColor::Orange;
-	DrawDebugSphere(GetWorld(), EndLocation, 45.0f, 8, SphereColor, false, UpdateRate + 0.01f);*/
 
 	if( !bIsDummySpawned )
 	{
@@ -247,9 +234,20 @@ void UCSGA_ProjectileBlackHole::CheckMouseInput()
 			{
 				if ( !bIsBlackHoleSpawned )
 				{
-					CreateBlackHoleAtLocation(CurrentEndLocation);
+					CreateBlackHoleAtLocation(CurrentDirection);
 					Character->ZoomCamera( 0, ZoomSpeed );
 					bIsBlackHoleSpawned = true;
+				}
+				else if( IsValid(Character->BlackHole) )
+				{
+					if ( Character->BlackHole->HasAuthority() )
+					{
+						Character->BlackHole->SetActorLocation(CurrentEndLocation);
+					}
+					else
+					{
+						Character->ServerSetBlackHoleLocation(CurrentDirection, MaxGuideDistance);
+					}
 				}
 			}
 			else if(bIsBlackHoleSpawned)
@@ -264,13 +262,13 @@ void UCSGA_ProjectileBlackHole::CheckMouseInput()
 	}
 }
 
-void UCSGA_ProjectileBlackHole::CreateBlackHoleAtLocation(const FVector& Location)
+void UCSGA_ProjectileBlackHole::CreateBlackHoleAtLocation(const FVector& Direction)
 {
 	ACSCharacterPlayer* CSPlayer = Cast<ACSCharacterPlayer>(GetAvatarActorFromActorInfo());
 
 	if ( CSPlayer )
 	{
-		CSPlayer->ServerSpawnAndSetBlackHole(BlackHoleClass, Location, Duration, GravityInfluenceRange, PullStrength, StopRange, bCheckMeshComponentPulledByBlackHole); 
+		CSPlayer->ServerSpawnAndSetBlackHole(BlackHoleClass, Direction, MaxGuideDistance, Duration, GravityInfluenceRange, PullStrength, StopRange, bCheckMeshComponentPulledByBlackHole);
 		bIsBlackHoleSpawned = true;
 	}
 }

@@ -29,13 +29,13 @@
 #include "ActorComponent/CSCharacterPushedComponent.h"
 #include "ActorComponent/CSCharacterPulledByBlackhole.h"
 #include "ActorComponent/CSCameraZoomComponent.h"
+#include "ActorComponent/CSVFXComponent.h"
 #include "Player/CSPlayerController.h"
 #include "DataAsset/CSCharacterPlayerData.h"
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Actor/CSBlackHole.h"
-#include "Actor/CSBellows.h"
-
+#include "Net/UnrealNetwork.h"
 
 ACSCharacterPlayer::ACSCharacterPlayer()
 {
@@ -155,8 +155,6 @@ void ACSCharacterPlayer::BeginPlay()
 		Subsystem->AddMappingContext(MappingContext, 0);
 	}
 
-	AttachWindUpKeyToSocket();
-	
 	/* AlwaysClockUnwind not using now 
 	AlwaysClockUnwind();
 	*/
@@ -207,6 +205,13 @@ void ACSCharacterPlayer::PreInitializeComponents()
 	SetData();
 }
 
+void ACSCharacterPlayer::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ACSCharacterPlayer, BlackHole);
+}
+
 void ACSCharacterPlayer::SetDead()
 {
 	Super::SetDead();
@@ -215,6 +220,19 @@ void ACSCharacterPlayer::SetDead()
 	if (PlayerController) 
 	{
 		DisableInput(PlayerController); 
+	}
+
+	VFXComponent->PlayWorldVFX(EWorldVFX::EFFECT_DEAD_0);
+}
+
+void ACSCharacterPlayer::SetRevive()
+{
+	Super::SetRevive();
+
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	if (PlayerController)
+	{
+		EnableInput(PlayerController);
 	}
 }
 
@@ -371,6 +389,12 @@ void ACSCharacterPlayer::OnMovementModeChanged(
 	}
 }
 
+float ACSCharacterPlayer::GetReviveTime()
+{
+	if (Data == nullptr) return 1.0f;
+	return Data->ReviveDelay;
+}
+
 void ACSCharacterPlayer::ServerDestoryBlackHole_Implementation()
 {
 	if ( BlackHole )
@@ -394,16 +418,28 @@ void ACSCharacterPlayer::NetMulticastDestroyGravityCoreSphere_Implementation()
 }
 
 void ACSCharacterPlayer::ServerSpawnAndSetBlackHole_Implementation(TSubclassOf<class ACSBlackHole> BlackHoleClass,
-	FVector Location, float Duration, float GravityInfluenceRange, float PullStrength, float StopRange, bool bCheckComponent)
+	FVector Direction, float MaxDistance, float Duration, float GravityInfluenceRange, float PullStrength, float StopRange, bool bCheckComponent)
 {
 	if (UWorld* World = GetWorld())
 	{
+		FVector StartLocation = GetActorLocation() + FVector(0.0f, 0.0f, BaseEyeHeight); 
+		FVector EndLocation = StartLocation + Direction * MaxDistance; 
+
+		FCollisionQueryParams QueryParams; 
+		QueryParams.AddIgnoredActor(this); 
+
+		FHitResult HitResult; 
+		if (GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Visibility, QueryParams)) 
+		{
+			EndLocation = HitResult.Location; 
+		}
+
 		FActorSpawnParameters Params;
 		Params.Owner = this;
 		Params.Instigator = this;
 
 		FRotator Rotation = FRotator::ZeroRotator;
-		BlackHole = World->SpawnActor<ACSBlackHole>(BlackHoleClass, Location, Rotation, Params);
+		BlackHole = World->SpawnActor<ACSBlackHole>(BlackHoleClass, EndLocation, Rotation, Params);
 
 		if (BlackHole)
 		{
@@ -416,18 +452,21 @@ void ACSCharacterPlayer::ServerSpawnAndSetBlackHole_Implementation(TSubclassOf<c
 	}
 }
 
-void ACSCharacterPlayer::Landed(const FHitResult& Hit)
+void ACSCharacterPlayer::ServerSetBlackHoleLocation_Implementation(FVector Direction, float MaxDistance) 
 {
-	Super::Landed(Hit);
+	if (!IsValid(BlackHole)) return; 
 
-	// 밟은 Actor 가져오기
-	AActor* LandedActor = Hit.GetActor();
-	if (!LandedActor) return;
+	FVector StartLocation = GetActorLocation() + FVector(0.0f, 0.0f, BaseEyeHeight);
+	FVector EndLocation = StartLocation + Direction * MaxDistance;
 
-	// Bellows인지 검사
-	ACSBellows* Bellows = Cast<ACSBellows>(LandedActor);
-	if (Bellows)
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor( this );
+
+	FHitResult HitResult;
+	if (GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Visibility, QueryParams))
 	{
-		Bellows->NotifyPlayerLanded(this);
+		EndLocation = HitResult.Location;
 	}
+
+	BlackHole->SetActorLocation(EndLocation);
 }

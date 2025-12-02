@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Actor/System/CSKillZone.h"
@@ -8,6 +8,9 @@
 #include "Components/StaticMeshComponent.h"
 #include "Engine/World.h"
 #include "GameFramework/Pawn.h"
+#include "Character/CSCharacterPlayer.h"
+#include "Common/CSCommon.h"
+#include "ChronoSpace.h"
 
 ACSKillZone::ACSKillZone()
 {
@@ -30,7 +33,7 @@ void ACSKillZone::BeginPlay()
 {
     Super::BeginPlay();
 
-    // ¼öÁ¤: OnTriggerBeginOverlapÀ¸·Î ¹ÙÀÎµù º¯°æ
+    // ìˆ˜ì •: OnTriggerBeginOverlapìœ¼ë¡œ ë°”ì¸ë”© ë³€ê²½
     KillVolume->OnComponentBeginOverlap.AddDynamic(this, &ACSKillZone::OnTriggerBeginOverlap);
     VisualMesh->SetVisibility(bShowVisualMesh);
 }
@@ -45,6 +48,12 @@ void ACSKillZone::KillPlayer(APawn* Player)
     if (GameState)
     {
         GameState->HandlePlayerDeath(Player);
+    }
+
+    ACSCharacterPlayer* CharacterPlayer = Cast<ACSCharacterPlayer>(Player);
+    if (CharacterPlayer)
+    {
+        CharacterPlayer->SetDead();
     }
 
     UE_LOG(LogTemp, Warning, TEXT("Player killed by KillZone: %s"), *Player->GetName());
@@ -64,37 +73,48 @@ void ACSKillZone::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComp, AAc
     if (!bIsActive)
         return;
 
-    APawn* Player = Cast<APawn>(OtherActor);
+    ACSCharacterPlayer* Player = Cast<ACSCharacterPlayer>(OtherActor);
     if (Player && Player->IsPlayerControlled())
     {
-        // Áï½Ã ¸®½ºÆù
-        ACSGameMode* GameMode = GetCSGameMode();
+        // ì¦‰ì‹œ ë¦¬ìŠ¤í°
+        /*ACSGameMode* GameMode = GetCSGameMode();
         if (GameMode)
         {
             GameMode->RespawnSinglePlayer(Player);
             UE_LOG(LogTemp, Log, TEXT("Player instantly respawned: %s"), *Player->GetName());
-        }
+        }*/
+        KillPlayer( Player );
+        RevivePlayerWithDelay(Player, Player->GetReviveTime()); 
     }
 }
 
-void ACSKillZone::KillPlayerWithDelay(APawn* Player, float DelayTime)
+void ACSKillZone::RevivePlayerWithDelay(APawn* Player, float DelayTime)
 {
     if (!Player || !IsValid(Player))
         return;
 
-    // µô·¹ÀÌ ÈÄ ¸®½ºÆù
+    // ë”œë ˆì´ í›„ ë¦¬ìŠ¤í°
     FTimerHandle RespawnTimer;
-    GetWorld()->GetTimerManager().SetTimer(RespawnTimer,
-        [this, Player]()
-        {
-            ACSGameMode* GameMode = GetCSGameMode();
-            if (GameMode && IsValid(Player))
+    TWeakObjectPtr<ACSKillZone> WeakThis = this;
+    if ( const auto& CharacterPlayer = Cast<ACSCharacterPlayer>(Player); CharacterPlayer )
+    {
+        TWeakObjectPtr<ACSCharacterPlayer> WeakPlayer = CharacterPlayer;
+        GetWorld()->GetTimerManager().SetTimer(RespawnTimer,
+            [WeakThis, WeakPlayer]()
             {
-                GameMode->RespawnSinglePlayer(Player);
-            }
-        },
-        DelayTime,
-        false);
+                if (!WeakThis.IsValid() || !WeakPlayer.IsValid()) return;
+                ACSGameMode* GameMode = WeakThis->GetCSGameMode();
+                if (GameMode)
+                {
+                    GameMode->RespawnSinglePlayer(WeakPlayer.Get());
+                }
+
+                WeakPlayer->SetRevive();
+            },
+            DelayTime,
+            false);
+    }
+    
 }
 
 ACSGameState* ACSKillZone::GetCSGameState() const

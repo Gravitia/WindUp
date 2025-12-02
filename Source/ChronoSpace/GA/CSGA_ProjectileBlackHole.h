@@ -22,7 +22,6 @@ public:
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 
 protected:
-	// 가이드라인 설정
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile Guide")
 	float GuideDuration = 5.0f;
 
@@ -32,11 +31,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile Guide")
 	float UpdateRate = 0.02f;
 
-	/** 플레이어 전방으로부터 얼마나 떨어진 위치에서 시작할지 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile Guide")
 	float StartOffsetDistance = 100.f;
 
-	// 마우스 Y축 민감도
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile Guide")
 	float MouseYSensitivity = 1.5f;
 
@@ -68,13 +65,11 @@ private:
 	FVector GetStartLocation() const;
 
 private:
-	// 마우스 조준 상태 관리
 	bool bUsingMouseAiming = false;
 	FVector2D LastMousePosition = FVector2D::ZeroVector;
-	float MouseMovementThreshold = 1.0f; // 마우스 이동 감지 임계값
+	float MouseMovementThreshold = 1.0f; 
 
 private:
-	// 초기 조준 방향 저장 (플레이어 회전에 영향받지 않음)
 	FVector InitialAimDirection = FVector::ZeroVector;
 	bool bInitialDirectionSet = false;
 
@@ -84,9 +79,10 @@ private:
 	// Black Hole 
 protected:
 	FVector CurrentEndLocation;
+	FVector CurrentDirection;    
 
 	void CheckMouseInput();
-	void CreateBlackHoleAtLocation(const FVector& Location);
+	void CreateBlackHoleAtLocation(const FVector& Direction);
 
 protected:
 	void SpawnBlackHoleDummy(FVector SpawnLocation);
