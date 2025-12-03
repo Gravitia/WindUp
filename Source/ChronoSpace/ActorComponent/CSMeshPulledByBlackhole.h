@@ -13,8 +13,8 @@ class CHRONOSPACE_API UCSMeshPulledByBlackhole : public UActorComponent
 	GENERATED_BODY()
 
 public:	
-	// Sets default values for this component's properties
 	UCSMeshPulledByBlackhole();
 
-		
+	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 };

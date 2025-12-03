@@ -37,6 +37,7 @@
 #include "Actor/CSBlackHole.h"
 #include "Net/UnrealNetwork.h"
 #include "Actor/CSBellows.h"
+#include "Subsystem/CSManagedActorSubsystem.h"
 
 ACSCharacterPlayer::ACSCharacterPlayer()
 {
@@ -444,6 +445,14 @@ void ACSCharacterPlayer::ServerSpawnAndSetBlackHole_Implementation(TSubclassOf<c
 
 		FCollisionQueryParams QueryParams; 
 		QueryParams.AddIgnoredActor(this); 
+
+		if ( IsValid(GetWorld()) )
+		{
+			if ( UCSManagedActorSubsystem* Subsystem = GetWorld()->GetSubsystem<UCSManagedActorSubsystem>(); Subsystem )
+			{
+				QueryParams.AddIgnoredActors( Subsystem->GetActorsPulledByBlackHole() );
+			}
+		}
 
 		FHitResult HitResult; 
 		if (GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Visibility, QueryParams)) 

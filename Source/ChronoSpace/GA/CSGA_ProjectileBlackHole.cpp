@@ -13,6 +13,7 @@
 #include "Character/CSCharacterPlayer.h"
 #include "Actor/CSBlackHoleDummy.h"
 #include "Actor/CSBlackHole.h"
+#include "Subsystem/CSManagedActorSubsystem.h"
 #include "ChronoSpace.h"
 
 UCSGA_ProjectileBlackHole::UCSGA_ProjectileBlackHole()
@@ -189,6 +190,14 @@ void UCSGA_ProjectileBlackHole::UpdateGuideLine()
 
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(GetAvatarActorFromActorInfo());
+
+	if ( IsValid( GetWorld() ) )
+	{
+		if ( UCSManagedActorSubsystem* Subsystem = GetWorld()->GetSubsystem<UCSManagedActorSubsystem>(); Subsystem )
+		{
+			QueryParams.AddIgnoredActors( Subsystem->GetActorsPulledByBlackHole() );
+		}
+	}
 
 	FHitResult HitResult;
 	if (GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Visibility, QueryParams))
