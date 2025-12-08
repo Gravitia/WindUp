@@ -60,8 +60,9 @@ void UCSGA_GravityCore::OnCore()
 		if (GravityCore)
 		{
 			GravityCore->SetCheckComponentInMesh(bCheckMeshComponentAffectedByGravityCore);
+			GravityCore->InitOwnerCharacter(OwnerCharacter);
 			UGameplayStatics::FinishSpawningActor(GravityCore, SpawnTransform);
-			GravityCore->AttachToActor(CurrentActorInfo->AvatarActor.Get(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+			// GravityCore->AttachToActor(CurrentActorInfo->AvatarActor.Get(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 		}
 
 		if (ACSCharacterPlayer* CSCharacter = Cast<ACSCharacterPlayer>(OwnerCharacter))

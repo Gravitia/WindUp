@@ -20,6 +20,11 @@ public:
 	FORCEINLINE float GetMeshRadius() { return MeshRadius; }
 	FORCEINLINE void SetCheckComponentInMesh(bool bInMeshHaveComponent) { bCheckMeshHaveComponent = bInMeshHaveComponent; }
 
+	TWeakObjectPtr<ACharacter> OwnerCharacter;
+	void InitOwnerCharacter(ACharacter* InOwner);
+	bool IsSpectatorRelatedActor(const AActor* OtherActor) const;
+
+
 protected:
 	virtual void BeginPlay() override;
 

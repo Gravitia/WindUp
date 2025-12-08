@@ -6,6 +6,8 @@
 #include "Components/StaticMeshComponent.h"
 #include "ActorComponent/CSMeshAffectedByGravityCore.h"
 #include "Physics/CSCollision.h"
+#include "GameFramework/Character.h"
+#include "Pawn/CSSpectatorPawn.h"
 #include "ChronoSpace.h"
 
 
@@ -64,6 +66,16 @@ void ACSGravityCoreSphere::Tick(float DeltaSeconds)
 		return;
 	}
 
+	if (OwnerCharacter.IsValid())
+	{
+		SetActorLocation(OwnerCharacter->GetActorLocation());
+	}
+
+	if (!HasAuthority())
+	{
+		return;
+	}
+
 	//ProcessForCharacter(DeltaSeconds);
 	ProcessForStaticMesh(DeltaSeconds);
 }
@@ -105,6 +117,18 @@ void ACSGravityCoreSphere::OnTriggerBeginOverlap(UPrimitiveComponent* Overlapped
 {
 	if (!HasAuthority()) return;
 
+	if (IsSpectatorRelatedActor(OtherActor))
+	{
+		UE_LOG(LogCS, Verbose, TEXT("GravityCore: Ignore overlap with Spectator hierarchy: %s"), *OtherActor->GetName());
+		return;
+	}
+
+	if (OtherActor && OtherActor->IsA(ACSSpectatorPawn::StaticClass()))
+	{
+		UE_LOG(LogCS, Verbose, TEXT("GravityCore: Ignore overlap with SpectatorPawn %s"), *OtherActor->GetName());
+		return;
+	}
+
 	// For StaticMesh
 	UStaticMeshComponent* TargetStaticMeshComp = Cast<UStaticMeshComponent>(OtherComp);
 	if (TargetStaticMeshComp)
@@ -122,6 +146,17 @@ void ACSGravityCoreSphere::OnTriggerBeginOverlap(UPrimitiveComponent* Overlapped
 void ACSGravityCoreSphere::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	if (!HasAuthority()) return;
+
+	if (IsSpectatorRelatedActor(OtherActor))
+	{
+		UE_LOG(LogCS, Verbose, TEXT("GravityCore: Ignore overlap with Spectator hierarchy: %s"), *OtherActor->GetName());
+		return;
+	}
+
+	if (OtherActor && OtherActor->IsA(ACSSpectatorPawn::StaticClass()))
+	{
+		return;
+	}
 
 	// For StaticMesh
 	UStaticMeshComponent* TargetStaticMeshComp = Cast<UStaticMeshComponent>(OtherComp);
@@ -142,4 +177,34 @@ void ACSGravityCoreSphere::OnCoreBeginOverlap(UPrimitiveComponent* OverlappedCom
 		TargetStaticMeshComp->SetPhysicsLinearVelocity(FVector::ZeroVector, false);
 		TargetStaticMeshComp->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector, false);
 	}
+}
+
+
+void ACSGravityCoreSphere::InitOwnerCharacter(ACharacter* InOwner)
+{
+	OwnerCharacter = InOwner;
+}
+
+bool ACSGravityCoreSphere::IsSpectatorRelatedActor(const AActor* OtherActor) const
+{
+	if (!OtherActor) return false;
+
+	// 1) 자기 자신이 스펙터폰이면
+	if (OtherActor->IsA(ACSSpectatorPawn::StaticClass()))
+	{
+		return true;
+	}
+
+	// 2) Attach 계층 상 부모들 중에 스펙터폰이 있으면
+	const AActor* Parent = OtherActor->GetAttachParentActor();
+	while (Parent)
+	{
+		if (Parent->IsA(ACSSpectatorPawn::StaticClass()))
+		{
+			return true;
+		}
+		Parent = Parent->GetAttachParentActor();
+	}
+
+	return false;
 }
