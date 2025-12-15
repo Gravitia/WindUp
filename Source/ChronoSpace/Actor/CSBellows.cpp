@@ -46,20 +46,28 @@ void ACSBellows::Tick(float DeltaSeconds)
 // --------------------------
 void ACSBellows::NotifyPlayerLanded(ACharacter* PlayerCharacter)
 {
-    if (!HasAuthority()) return;
+    if (!HasAuthority() || !PlayerCharacter) return;
 
     switch (BellowsState)
     {
     case EBellowsState::Idle:
+        // 첫 번째 플레이어 기록
+        FirstPressedPlayer = PlayerCharacter;
         ChangeState(EBellowsState::PressOnePlayer);
         break;
 
     case EBellowsState::PressOnePlayer:
+        // 같은 플레이어면 무시
+        if (FirstPressedPlayer == PlayerCharacter)
+        {
+            return;
+        }
+
+        // 다른 플레이어일 때만 성공
         ChangeState(EBellowsState::PressTwoPlayer);
         break;
     }
 }
-
 
 // --------------------------
 // State Machine
@@ -95,7 +103,7 @@ void ACSBellows::ChangeState(EBellowsState NewState)
         TimerHandle_Reset,
         this,
         &ACSBellows::ResetToIdle,
-        0.5f,
+        2.5f,
         false
     );
 }
@@ -104,6 +112,9 @@ void ACSBellows::ResetToIdle()
 {
     BellowsState = EBellowsState::Idle;
     StartScaleLerp(IdleScale);
+
+    // 첫 플레이어 리셋
+    FirstPressedPlayer = nullptr;
 }
 
 
@@ -128,7 +139,11 @@ void ACSBellows::StartLinkedActorLerp()
     if (!LinkedActor) return;
 
     LinkedStartLoc = LinkedActor->GetActorLocation();
-    LinkedTargetLoc = LinkedStartLoc + FVector(0.f, LinkedMoveDistance, 0.f);
+    // 풀무 기준 뒤쪽 방향
+    const FVector BellowsBackwardDir = -GetActorForwardVector();
+
+    LinkedTargetLoc = LinkedStartLoc + (BellowsBackwardDir * LinkedMoveDistance);
+
 
     LinkedLerpAlpha = 0.f;
     bLinkedLerping = true;

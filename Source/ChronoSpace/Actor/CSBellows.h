@@ -36,6 +36,9 @@ public:
     UPROPERTY(VisibleAnywhere)
     UStaticMeshComponent* Mesh;
 
+    UPROPERTY()
+    TWeakObjectPtr<ACharacter> FirstPressedPlayer;
+
 
     // --------------------------
     // Linked Actor (LERP target)
