@@ -250,4 +250,10 @@ public:
 
 public:
 	float GetReviveTime();
+
+
+	/* Respawn Sound */
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sound")
+	USoundBase* ReviveSound;
 };

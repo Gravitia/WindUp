@@ -35,9 +35,10 @@
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Actor/CSBlackHole.h"
-#include "Net/UnrealNetwork.h"
 #include "Actor/CSBellows.h"
 #include "Subsystem/CSManagedActorSubsystem.h"
+#include "Kismet/GameplayStatics.h"
+
 
 ACSCharacterPlayer::ACSCharacterPlayer()
 {
@@ -246,6 +247,17 @@ void ACSCharacterPlayer::SetDead()
 void ACSCharacterPlayer::SetRevive()
 {
 	Super::SetRevive();
+
+	// Sound 
+
+	if (ReviveSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			this,
+			ReviveSound,
+			GetActorLocation()
+		);
+	}
 
 	APlayerController* PlayerController = Cast<APlayerController>(GetController());
 	if (PlayerController)
