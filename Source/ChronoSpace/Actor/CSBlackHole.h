@@ -37,6 +37,8 @@ protected:
 	UFUNCTION()
 	void OnStopTriggerEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
+	virtual void Destroyed() override;
+
 	void ProcessForCharacter(float DeltaTime);
 	void ProcessForStaticMesh(float DeltaTime);
 
@@ -77,4 +79,11 @@ protected:
 	float MeshRadius = 50.0f;
 
 	bool bCheckMeshHaveComponent = false;
+
+	/* Sound */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sound")
+	USoundBase* BlackHoleOnSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sound")
+	USoundBase* BlackHoleOffSound;
 };

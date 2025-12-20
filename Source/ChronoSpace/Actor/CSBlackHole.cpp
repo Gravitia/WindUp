@@ -60,6 +60,15 @@ void ACSBlackHole::BeginPlay()
 	Super::BeginPlay();
 	
 	GravitySphereTrigger->SetSphereRadius(GravityInfluenceRange, true);
+
+	if (BlackHoleOnSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			this,
+			BlackHoleOnSound,
+			GetActorLocation()
+		);
+	}
 }
 
 // Called every frame
@@ -82,6 +91,21 @@ void ACSBlackHole::SetDuration(float Duration)
 	{
 		SetLifeSpan(Duration);
 	}
+}
+
+void ACSBlackHole::Destroyed()
+{
+	// BlackHole OFF Sound
+	if (BlackHoleOffSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			this,
+			BlackHoleOffSound,
+			GetActorLocation()
+		);
+	}
+
+	Super::Destroyed();
 }
 
 void ACSBlackHole::SetGravityInfluenceRange(float Range)
