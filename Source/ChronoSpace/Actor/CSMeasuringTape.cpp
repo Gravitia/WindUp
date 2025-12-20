@@ -42,12 +42,19 @@ ACSMeasuringTape::ACSMeasuringTape()
     RulerAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("RulerAudio"));
     RulerAudioComponent->SetupAttachment(RootComponent);
     RulerAudioComponent->bAutoActivate = false;
+
+    
 }
 
 // Called when the game starts or when spawned
 void ACSMeasuringTape::BeginPlay()
 {
 	Super::BeginPlay();
+
+    // 기본 트랜스폼 저장
+    EyesBaseRotation = EyesMesh->GetRelativeRotation();
+
+    NoseBaseRotation = NoseMesh->GetRelativeRotation();
 
     Trigger->OnComponentBeginOverlap.AddDynamic(this, &ACSMeasuringTape::OnTriggerBegin);
     Trigger->OnComponentEndOverlap.AddDynamic(this, &ACSMeasuringTape::OnTriggerEnd);
@@ -57,6 +64,7 @@ void ACSMeasuringTape::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
+    // 기존 줄자 로직 그대로
     CurrentScaleInternal = FMath::FInterpTo(
         CurrentScaleInternal,
         TargetScale,
@@ -64,24 +72,43 @@ void ACSMeasuringTape::Tick(float DeltaTime)
         LerpSpeed
     );
 
-    RulerMesh->SetRelativeScale3D(
-        FVector(CurrentScaleInternal, 1.f, 1.f)
-    );
+    RulerMesh->SetRelativeScale3D(FVector(CurrentScaleInternal, 1.f, 1.f));
 
-    // 목표 도달 시 사운드 종료
-    if (FMath::IsNearlyEqual(CurrentScaleInternal, TargetScale, 0.01f))
+    // 얼굴 반응 보간
+    if (bFaceReacting)
     {
-        if (RulerAudioComponent && RulerAudioComponent->IsPlaying())
-        {
-            RulerAudioComponent->Stop();
-        }
 
-        bIsExtending = false;
-        bIsRetracting = false;
+        EyesMesh->SetRelativeRotation(
+            FMath::RInterpTo(
+                EyesMesh->GetRelativeRotation(),
+                EyesTargetRotation,
+                DeltaTime,
+                FaceLerpSpeed
+            )
+        );
+
+        NoseMesh->SetRelativeRotation(
+            FMath::RInterpTo(
+                NoseMesh->GetRelativeRotation(),
+                NoseTargetRotation,
+                DeltaTime,
+                FaceLerpSpeed
+            )
+        );
+
+        if (
+            EyesMesh->GetRelativeRotation().Equals(EyesTargetRotation, 0.5f) &&
+            NoseMesh->GetRelativeRotation().Equals(NoseTargetRotation, 0.5f)
+            )
+        {
+            bFaceReacting = false;
+        }
     }
 }
 
-void ACSMeasuringTape::OnTriggerBegin(UPrimitiveComponent* OverlappedComp,
+
+void ACSMeasuringTape::OnTriggerBegin(
+    UPrimitiveComponent* OverlappedComp,
     AActor* OtherActor,
     UPrimitiveComponent* OtherComp,
     int32 OtherBodyIndex,
@@ -89,22 +116,31 @@ void ACSMeasuringTape::OnTriggerBegin(UPrimitiveComponent* OverlappedComp,
     const FHitResult& SweepResult)
 {
     if (!HasAuthority()) return;
+    if (!OtherActor || OtherActor == this) return;
 
-    // 플레이어인지 체크
-    if (OtherActor && OtherActor != this)
-    {
-        SetRulerScale(TargetRulerScale);  // 5배
-    }
+    SetRulerScale(TargetRulerScale);
+
+    // 목표값 계산만 수행
+    EyesTargetRotation = EyesBaseRotation + EyesReactRotation;
+    NoseTargetRotation = NoseBaseRotation + NoseReactRotation;
+
+    bFaceReacting = true;
 }
 
-void ACSMeasuringTape::OnTriggerEnd(UPrimitiveComponent* OverlappedComp,
+void ACSMeasuringTape::OnTriggerEnd(
+    UPrimitiveComponent* OverlappedComp,
     AActor* OtherActor,
     UPrimitiveComponent* OtherComp,
     int32 OtherBodyIndex)
 {
-    if (!HasAuthority()) return;
 
-    SetRulerScale(1.0f);  // 원래 크기
+    SetRulerScale(1.0f);
+
+    // 무조건 베이스로 복귀
+    EyesTargetRotation = EyesBaseRotation;
+    NoseTargetRotation = NoseBaseRotation;
+
+    bFaceReacting = true;
 }
 
 void ACSMeasuringTape::SetRulerScale(float NewScale)

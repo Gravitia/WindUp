@@ -82,4 +82,32 @@ protected:
 
 	bool bIsExtending = false;
 	bool bIsRetracting = false;
+
+	/* =========================
+	* Face Reaction (Eyes / Nose)
+	* ========================= */
+
+	// 기본 트랜스폼 저장
+	FRotator EyesBaseRotation;
+
+	FRotator NoseBaseRotation;
+
+	// Eyes
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FaceReaction|Eyes")
+	FRotator EyesReactRotation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FaceReaction|Nose")
+	FRotator NoseReactRotation;
+
+	// 실제 Tick에서 향하는 목표 회전
+	FRotator EyesTargetRotation;
+	FRotator NoseTargetRotation;
+
+	// 연출 속도
+	UPROPERTY(EditAnywhere, Category = "FaceReaction")
+	float FaceLerpSpeed = 8.f;
+
+	// 상태
+	bool bFaceReacting = false;
 };
