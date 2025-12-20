@@ -4,6 +4,7 @@
 #include "Actor/CSMeasuringTape.h"
 #include "Components/BoxComponent.h"
 #include "Net/UnrealNetwork.h"
+#include "Components/AudioComponent.h"
 
 ACSMeasuringTape::ACSMeasuringTape()
 {
@@ -35,6 +36,12 @@ ACSMeasuringTape::ACSMeasuringTape()
     Trigger->SetupAttachment(RootComponent);
     Trigger->SetBoxExtent(FVector(64.f, 64.f, 64.f));
     Trigger->SetCollisionProfileName("Trigger");
+
+
+    // Sound
+    RulerAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("RulerAudio"));
+    RulerAudioComponent->SetupAttachment(RootComponent);
+    RulerAudioComponent->bAutoActivate = false;
 }
 
 // Called when the game starts or when spawned
@@ -50,11 +57,28 @@ void ACSMeasuringTape::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    // 부드럽게 보간
-    CurrentScaleInternal = FMath::FInterpTo(CurrentScaleInternal, TargetScale, DeltaTime, LerpSpeed);
+    CurrentScaleInternal = FMath::FInterpTo(
+        CurrentScaleInternal,
+        TargetScale,
+        DeltaTime,
+        LerpSpeed
+    );
 
-    FVector NewScale = FVector(CurrentScaleInternal, 1.0f, 1.0f);
-    RulerMesh->SetRelativeScale3D(NewScale);
+    RulerMesh->SetRelativeScale3D(
+        FVector(CurrentScaleInternal, 1.f, 1.f)
+    );
+
+    // 목표 도달 시 사운드 종료
+    if (FMath::IsNearlyEqual(CurrentScaleInternal, TargetScale, 0.01f))
+    {
+        if (RulerAudioComponent && RulerAudioComponent->IsPlaying())
+        {
+            RulerAudioComponent->Stop();
+        }
+
+        bIsExtending = false;
+        bIsRetracting = false;
+    }
 }
 
 void ACSMeasuringTape::OnTriggerBegin(UPrimitiveComponent* OverlappedComp,
@@ -85,8 +109,32 @@ void ACSMeasuringTape::OnTriggerEnd(UPrimitiveComponent* OverlappedComp,
 
 void ACSMeasuringTape::SetRulerScale(float NewScale)
 {
+    if (TargetScale == NewScale)
+        return;
+
+    const bool bExtend = NewScale > TargetScale;
+    const bool bRetract = NewScale < TargetScale;
+
     TargetScale = NewScale;
-    OnRep_TargetScale();   // 서버에서도 즉시 반영됨
+    OnRep_TargetScale();
+
+    //  사운드 제어
+    if (bExtend && ExtendSound)
+    {
+        RulerAudioComponent->Stop();
+        RulerAudioComponent->SetSound(ExtendSound);
+        RulerAudioComponent->Play();
+        bIsExtending = true;
+        bIsRetracting = false;
+    }
+    else if (bRetract && RetractSound)
+    {
+        RulerAudioComponent->Stop();
+        RulerAudioComponent->SetSound(RetractSound);
+        RulerAudioComponent->Play();
+        bIsRetracting = true;
+        bIsExtending = false;
+    }
 }
 
 void ACSMeasuringTape::OnRep_TargetScale()

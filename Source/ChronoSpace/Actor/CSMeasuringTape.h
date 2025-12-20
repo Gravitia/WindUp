@@ -69,4 +69,17 @@ protected:
 		AActor* OtherActor,
 		UPrimitiveComponent* OtherComp,
 		int32 OtherBodyIndex);
+
+	/* Sound */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sound")
+	UAudioComponent* RulerAudioComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sound")
+	USoundBase* ExtendSound;   // 늘어날 때
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sound")
+	USoundBase* RetractSound;  // 줄어들 때
+
+	bool bIsExtending = false;
+	bool bIsRetracting = false;
 };
