@@ -28,7 +28,7 @@ UCSGA_ProjectileBlackHole::UCSGA_ProjectileBlackHole()
 
 	CurrentEndLocation = FVector::ZeroVector;
 
-	bIsDummySpawned = false;
+	//bIsDummySpawned = false;
 	bIsBlackHoleSpawned = false;
 	bIsAming = false;
 
@@ -56,7 +56,7 @@ void UCSGA_ProjectileBlackHole::ActivateAbility(const FGameplayAbilitySpecHandle
 	}
 	bIsAming = true;
 
-	bIsDummySpawned = false;
+	//bIsDummySpawned = false;
 
 	if (!GetAvatarActorFromActorInfo())
 	{
@@ -69,7 +69,7 @@ void UCSGA_ProjectileBlackHole::ActivateAbility(const FGameplayAbilitySpecHandle
 	LastMousePosition = FVector2D::ZeroVector;
 	bInitialDirectionSet = false;
 
-	// ★ 초기 조준 방향 저장 (한 번만 설정)
+	// 초기 조준 방향 저장 (한 번만 설정)
 	if (ACharacter* Character = Cast<ACharacter>(GetAvatarActorFromActorInfo()))
 	{
 		InitialAimDirection = Character->GetActorForwardVector();
@@ -86,10 +86,10 @@ void UCSGA_ProjectileBlackHole::ActivateAbility(const FGameplayAbilitySpecHandle
 			}
 		}
 
-		if (ACSCharacterPlayer* CSPlayer = Cast<ACSCharacterPlayer>(Character))
+		/*if (ACSCharacterPlayer* CSPlayer = Cast<ACSCharacterPlayer>(Character))
 		{
 			CSPlayer->ZoomCamera( ZoomLength, ZoomSpeed );
-		}
+		}*/
 	}
 
 	// 업데이트 타이머 시작
@@ -152,10 +152,10 @@ void UCSGA_ProjectileBlackHole::EndAbility(const FGameplayAbilitySpecHandle Hand
 		BlackHoleDummyActor->Destroy();
 	}
 
-	if (ACSCharacterPlayer* CSPlayer = Cast<ACSCharacterPlayer>(ActorInfo->AvatarActor))
+	/*if (ACSCharacterPlayer* CSPlayer = Cast<ACSCharacterPlayer>(ActorInfo->AvatarActor))
 	{
 		CSPlayer->ZoomCamera( 0, ZoomSpeed );
-	}
+	}*/
 
 	// 타이머 정리
 	if (UpdateTimerHandle.IsValid())
@@ -207,7 +207,7 @@ void UCSGA_ProjectileBlackHole::UpdateGuideLine()
 
 	CurrentEndLocation = EndLocation;
 
-	if( !bIsDummySpawned )
+	/*if( !bIsDummySpawned )
 	{
 		SpawnBlackHoleDummy(CurrentEndLocation);
 		bIsDummySpawned = true;
@@ -221,7 +221,7 @@ void UCSGA_ProjectileBlackHole::UpdateGuideLine()
 		{
 			BlackHoleDummyActor->Destroy(); 
 		}
-	}
+	}*/
 
 	CheckMouseInput();
 }
@@ -238,8 +238,35 @@ void UCSGA_ProjectileBlackHole::CheckMouseInput()
 	{
 		if (APlayerController* PC = Cast<APlayerController>(Character->GetController()))
 		{
-			// 왼쪽 마우스 버튼 클릭 감지
-			if (PC->IsInputKeyDown(EKeys::LeftMouseButton))
+			if ( PC->IsInputKeyDown(EKeys::RightMouseButton) )
+			{
+				if (!bIsBlackHoleSpawned)
+				{
+					CreateBlackHoleAtLocation(CurrentDirection);
+					bIsBlackHoleSpawned = true;
+				}
+				else if (IsValid(Character->BlackHole))
+				{
+					if (Character->BlackHole->HasAuthority())
+					{
+						Character->BlackHole->SetActorLocation(CurrentEndLocation);
+					}
+					else
+					{
+						Character->ServerSetBlackHoleLocation(CurrentDirection, MaxGuideDistance);
+					}
+				}
+			}
+			else if (bIsBlackHoleSpawned)
+			{
+				Character->ServerDestoryBlackHole();
+				bIsBlackHoleSpawned = false;
+				bIsAming = false;
+
+				EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+			}
+
+			/*if (PC->IsInputKeyDown(EKeys::LeftMouseButton))
 			{
 				if ( !bIsBlackHoleSpawned )
 				{
@@ -266,7 +293,7 @@ void UCSGA_ProjectileBlackHole::CheckMouseInput()
 				bIsAming = false;
 
 				EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
-			}
+			}*/
 		}
 	}
 }
@@ -281,7 +308,7 @@ void UCSGA_ProjectileBlackHole::CreateBlackHoleAtLocation(const FVector& Directi
 		bIsBlackHoleSpawned = true;
 	}
 }
-
+/*
 void UCSGA_ProjectileBlackHole::SpawnBlackHoleDummy(FVector SpawnLocation)
 {
 	FActorSpawnParameters Params;
@@ -297,7 +324,7 @@ void UCSGA_ProjectileBlackHole::SpawnBlackHoleDummy(FVector SpawnLocation)
 		BlackHoleDummyActor->SetGravityInfluenceRange( GravityInfluenceRange );
 	}
 }
-
+*/
 void UCSGA_ProjectileBlackHole::InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
 {
 	// GAS 컴포넌트 구조상 서버에서만 불린다

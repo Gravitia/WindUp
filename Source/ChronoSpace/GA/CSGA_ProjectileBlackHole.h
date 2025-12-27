@@ -85,7 +85,7 @@ protected:
 	void CreateBlackHoleAtLocation(const FVector& Direction);
 
 protected:
-	void SpawnBlackHoleDummy(FVector SpawnLocation);
+	//void SpawnBlackHoleDummy(FVector SpawnLocation);
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Black Hole Dummy")
 	TSubclassOf<class ACSBlackHoleDummy> BlackHoleDummyClass;
@@ -96,7 +96,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Black Hole")
 	TSubclassOf<class ACSBlackHole> BlackHoleClass;
 
-	bool bIsDummySpawned;
+	//bool bIsDummySpawned;
 	bool bIsBlackHoleSpawned;
 
 protected:
