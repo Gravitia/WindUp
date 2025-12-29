@@ -117,7 +117,7 @@ void ACSBlackHole::SetGravityInfluenceRange(float Range)
 	{
 		FVector SphereLocation = GravitySphereTrigger->GetComponentLocation();
 		float SphereRadius = GravitySphereTrigger->GetScaledSphereRadius();
-
+		/*
 		DrawDebugSphere(
 			GetWorld(),
 			SphereLocation,
@@ -129,6 +129,7 @@ void ACSBlackHole::SetGravityInfluenceRange(float Range)
 			0,				// 디버그 선 우선순위
 			2.0f			// 선 두께
 		);
+		*/
 	}
 
 	FieldMesh->SetRelativeScale3D( FVector( GravityInfluenceRange / MeshRadius) ); 

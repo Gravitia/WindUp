@@ -71,7 +71,7 @@ void ACSTA_BlackHoleSphere::BeginPlay()
 	{
 		FVector SphereLocation = GravitySphereTrigger->GetComponentLocation();
 		float SphereRadius = GravitySphereTrigger->GetScaledSphereRadius();
-
+		/*
 		DrawDebugSphere(
 			GetWorld(),
 			SphereLocation,
@@ -83,6 +83,7 @@ void ACSTA_BlackHoleSphere::BeginPlay()
 			0,           // 디버그 선 우선순위
 			2.0f         // 선 두께
 		);
+		*/
 	}
 }
 
