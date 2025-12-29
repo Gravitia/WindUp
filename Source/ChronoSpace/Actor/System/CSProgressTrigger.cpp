@@ -1,12 +1,14 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "UI/CSProgressUITrigger.h"
+
+#include "Actor/System/CSProgressTrigger.h"
 #include "Components/BoxComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/Pawn.h"
 #include "UI/CSProgressUIWidget.h"
 
-ACSProgressUITrigger::ACSProgressUITrigger()
+// Sets default values
+ACSProgressTrigger::ACSProgressTrigger()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
@@ -18,16 +20,19 @@ ACSProgressUITrigger::ACSProgressUITrigger()
 	TriggerBox->SetCollisionProfileName(TEXT("Trigger"));
 }
 
-void ACSProgressUITrigger::BeginPlay()
+// Called when the game starts or when spawned
+void ACSProgressTrigger::BeginPlay()
 {
 	Super::BeginPlay();
+	
 
 	TriggerBox->OnComponentBeginOverlap.AddDynamic(
-		this, &ACSProgressUITrigger::OnTriggerBegin
+		this, &ACSProgressTrigger::OnTriggerBegin
 	);
 }
 
-void ACSProgressUITrigger::OnTriggerBegin(
+
+void ACSProgressTrigger::OnTriggerBegin(
 	UPrimitiveComponent* OverlappedComponent,
 	AActor* OtherActor,
 	UPrimitiveComponent* OtherComp,
@@ -56,8 +61,9 @@ void ACSProgressUITrigger::OnTriggerBegin(
 		return;
 
 	Widget->AddToViewport(50);
-	Widget->Show(ProgressTextId, DisplayDuration);
+	Widget->Show(ProgressText, DisplayDuration, bProgressText);
 
 	bTriggered = true;
 	SetActorEnableCollision(false);
 }
+

@@ -4,18 +4,19 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "CSProgressUITrigger.generated.h"
+#include "CSProgressTrigger.generated.h"
 
 class UBoxComponent;
 class UCSProgressUIWidget;
 
 UCLASS()
-class CHRONOSPACE_API ACSProgressUITrigger : public AActor
+class CHRONOSPACE_API ACSProgressTrigger : public AActor
 {
 	GENERATED_BODY()
-
-public:
-	ACSProgressUITrigger();
+	
+public:	
+	// Sets default values for this actor's properties
+	ACSProgressTrigger();
 
 protected:
 	virtual void BeginPlay() override;
@@ -45,9 +46,12 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Progress UI")
 	TSubclassOf<UCSProgressUIWidget> ProgressUIWidgetClass;
 
+	UPROPERTY(EditAnywhere, Category = "Progress UI")
+	bool bProgressText;
+
 	/** 전달할 텍스트 ID */
 	UPROPERTY(EditAnywhere, Category = "Progress UI")
-	FName ProgressTextId;
+	FName ProgressText;
 
 	/** 표시 유지 시간 */
 	UPROPERTY(EditAnywhere, Category = "Progress UI")

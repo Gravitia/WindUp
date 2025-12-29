@@ -19,10 +19,14 @@ class CHRONOSPACE_API UCSProgressUIWidget : public UUserWidget
 public:
 	/** 트리거에서 호출하는 진입 함수 */
 	UFUNCTION(BlueprintCallable)
-	void Show(FName InProgressTextId, float Duration);
+	void Show(FName InProgressText, float Duration, bool bProgressText);
 
 protected:
 	/** BP에서 구현할 실제 표시 로직 */
 	UFUNCTION(BlueprintImplementableEvent)
-	void OnShowProgressUI(FName InProgressTextId, float Duration);
+	void OnShowProgressUI(FName InProgressText, float Duration);
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnShowProgressEvent();
+
 };
