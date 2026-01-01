@@ -133,6 +133,8 @@ void ACSMeasuringTape::OnTriggerEnd(
     UPrimitiveComponent* OtherComp,
     int32 OtherBodyIndex)
 {
+    if (!HasAuthority()) return;
+    if (!OtherActor || OtherActor == this) return;
 
     SetRulerScale(1.0f);
 
@@ -153,30 +155,31 @@ void ACSMeasuringTape::SetRulerScale(float NewScale)
 
     TargetScale = NewScale;
     OnRep_TargetScale();
+}
 
-    //  사운드 제어
+void ACSMeasuringTape::OnRep_TargetScale()
+{
+    const bool bExtend = TargetScale > CurrentScaleInternal;
+    const bool bRetract = TargetScale < CurrentScaleInternal;
+
     if (bExtend && ExtendSound)
     {
         RulerAudioComponent->Stop();
         RulerAudioComponent->SetSound(ExtendSound);
         RulerAudioComponent->Play();
-        bIsExtending = true;
-        bIsRetracting = false;
     }
     else if (bRetract && RetractSound)
     {
         RulerAudioComponent->Stop();
         RulerAudioComponent->SetSound(RetractSound);
         RulerAudioComponent->Play();
-        bIsRetracting = true;
-        bIsExtending = false;
     }
 }
 
-void ACSMeasuringTape::OnRep_TargetScale()
+void ACSMeasuringTape::OnRep_FaceReact()
 {
-    // 리플리케이션은 목표값만 업데이트
-    // 실제 보간된 스케일은 Tick에서 처리
+    // 아무 것도 안 해도 됨
+    // Tick에서 bFaceReacting 보고 보간 시작
 }
 
 void ACSMeasuringTape::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -184,4 +187,7 @@ void ACSMeasuringTape::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
     DOREPLIFETIME(ACSMeasuringTape, TargetScale);
+    DOREPLIFETIME(ACSMeasuringTape, bFaceReacting);
+    DOREPLIFETIME(ACSMeasuringTape, EyesTargetRotation);
+    DOREPLIFETIME(ACSMeasuringTape, NoseTargetRotation);
 }

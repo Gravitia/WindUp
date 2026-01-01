@@ -37,24 +37,7 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
-
-	UPROPERTY(ReplicatedUsing = OnRep_TargetScale)
-	float TargetScale = 1.0f;
-
-	float CurrentScaleInternal = 1.0f;
-
-	UPROPERTY(EditAnywhere, Category = "Ruler")
-	float LerpSpeed = 5.0f;  // 부드럽게 늘어나는 속도
-
-	UPROPERTY(EditAnywhere, Category = "Ruler")
-	float TargetRulerScale = 5.0f;  // Ruler Scale
-
-	UFUNCTION()
-	void OnRep_TargetScale();
-
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
-	void SetRulerScale(float NewScale);
 
 	UFUNCTION()
 	void OnTriggerBegin(UPrimitiveComponent* OverlappedComp,
@@ -80,19 +63,40 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sound")
 	USoundBase* RetractSound;  // 줄어들 때
 
+	/* */
+
+	UPROPERTY(ReplicatedUsing = OnRep_TargetScale)
+	float TargetScale = 1.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Ruler")
+	float LerpSpeed = 5.0f;  // 부드럽게 늘어나는 속도
+
+	UPROPERTY(EditAnywhere, Category = "Ruler")
+	float TargetRulerScale = 5.0f;  // Ruler Scale
+
+	// 연출 속도
+	UPROPERTY(EditAnywhere, Category = "FaceReaction")
+	float FaceLerpSpeed = 8.f;
+
+	// 상태
+	UPROPERTY(ReplicatedUsing = OnRep_FaceReact)
+	bool bFaceReacting = false;
+
+	float CurrentScaleInternal = 1.0f;
 	bool bIsExtending = false;
 	bool bIsRetracting = false;
 
-	/* =========================
-	* Face Reaction (Eyes / Nose)
-	* ========================= */
+	UFUNCTION()
+	void OnRep_TargetScale();
 
-	// 기본 트랜스폼 저장
+	void SetRulerScale(float NewScale);
+
+	UFUNCTION()
+	void OnRep_FaceReact();
+
+	/*Face Reaction (Eyes / Nose) */
 	FRotator EyesBaseRotation;
-
 	FRotator NoseBaseRotation;
-
-	// Eyes
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FaceReaction|Eyes")
 	FRotator EyesReactRotation;
@@ -100,14 +104,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FaceReaction|Nose")
 	FRotator NoseReactRotation;
 
-	// 실제 Tick에서 향하는 목표 회전
+	UPROPERTY(Replicated)
 	FRotator EyesTargetRotation;
+	UPROPERTY(Replicated)
 	FRotator NoseTargetRotation;
-
-	// 연출 속도
-	UPROPERTY(EditAnywhere, Category = "FaceReaction")
-	float FaceLerpSpeed = 8.f;
-
-	// 상태
-	bool bFaceReacting = false;
 };
