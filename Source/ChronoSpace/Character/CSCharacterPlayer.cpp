@@ -94,7 +94,12 @@ ACSCharacterPlayer::ACSCharacterPlayer()
 	GravityCoreSphere->SetCollisionProfileName(CPROFILE_CSCAPSULE);
 	GravityCoreSphere->SetupAttachment(RootComponent);
 	GravityCoreSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	GravityCoreSphere->SetCollisionResponseToChannel(CCHANNEL_CSSPECTATOR, ECR_Ignore);
+	//GravityCoreSphere->SetCollisionResponseToChannel(CCHANNEL_CSSPECTATOR, ECR_Ignore);
+	GravityCoreSphere->SetCollisionResponseToAllChannels(ECR_Ignore);
+	GravityCoreSphere->SetCollisionResponseToChannel(
+		CCHANNEL_CSGRAVITY_CORE_AFFECTED,
+		ECR_Block
+	);
 	//GravityCoreSphere->AttachToComponent(RootComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 
 	GetCapsuleComponent()->SetCollisionResponseToChannel(CCHANNEL_CSSPECTATOR, ECR_Ignore);

@@ -13,7 +13,7 @@ class CHRONOSPACE_API UCSMeshAffectedByGravityCore : public UActorComponent
 	GENERATED_BODY()
 
 public:	
-	// Sets default values for this component's properties
 	UCSMeshAffectedByGravityCore();
-		
+
+	virtual void BeginPlay() override;
 };
