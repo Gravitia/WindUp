@@ -3,6 +3,7 @@
 
 #include "GA/CSGA_ProjectileBlackHole.h"
 #include "GA/CSGA_BlackHole.h"
+#include "GA/CSGA_CameraZoom.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/Character.h"
 #include "Engine/World.h"
@@ -85,11 +86,6 @@ void UCSGA_ProjectileBlackHole::ActivateAbility(const FGameplayAbilitySpecHandle
 				LastMousePosition = FVector2D(MouseX, MouseY);
 			}
 		}
-
-		/*if (ACSCharacterPlayer* CSPlayer = Cast<ACSCharacterPlayer>(Character))
-		{
-			CSPlayer->ZoomCamera( ZoomLength, ZoomSpeed );
-		}*/
 	}
 
 	// 업데이트 타이머 시작
@@ -100,6 +96,14 @@ void UCSGA_ProjectileBlackHole::ActivateAbility(const FGameplayAbilitySpecHandle
 		UpdateRate,
 		true
 	);
+
+	if (UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo())
+	{
+		if (CameraZoomAbilityClass)
+		{
+			ASC->TryActivateAbilityByClass(CameraZoomAbilityClass);
+		}
+	}
 
 	UE_LOG(LogCS, Log, TEXT("ProjectileGuide Activated"));
 
@@ -152,11 +156,6 @@ void UCSGA_ProjectileBlackHole::EndAbility(const FGameplayAbilitySpecHandle Hand
 		BlackHoleDummyActor->Destroy();
 	}
 
-	/*if (ACSCharacterPlayer* CSPlayer = Cast<ACSCharacterPlayer>(ActorInfo->AvatarActor))
-	{
-		CSPlayer->ZoomCamera( 0, ZoomSpeed );
-	}*/
-
 	// 타이머 정리
 	if (UpdateTimerHandle.IsValid())
 	{
@@ -207,22 +206,6 @@ void UCSGA_ProjectileBlackHole::UpdateGuideLine()
 
 	CurrentEndLocation = EndLocation;
 
-	/*if( !bIsDummySpawned )
-	{
-		SpawnBlackHoleDummy(CurrentEndLocation);
-		bIsDummySpawned = true;
-	}
-
-	if ( BlackHoleDummyActor )
-	{
-		BlackHoleDummyActor->SetActorLocation(CurrentEndLocation);
-
-		if ( bIsBlackHoleSpawned )
-		{
-			BlackHoleDummyActor->Destroy(); 
-		}
-	}*/
-
 	CheckMouseInput();
 }
 
@@ -263,37 +246,20 @@ void UCSGA_ProjectileBlackHole::CheckMouseInput()
 				bIsBlackHoleSpawned = false;
 				bIsAming = false;
 
-				EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
-			}
-
-			/*if (PC->IsInputKeyDown(EKeys::LeftMouseButton))
-			{
-				if ( !bIsBlackHoleSpawned )
+				if (UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo())
 				{
-					CreateBlackHoleAtLocation(CurrentDirection);
-					Character->ZoomCamera( 0, ZoomSpeed );
-					bIsBlackHoleSpawned = true;
-				}
-				else if( IsValid(Character->BlackHole) )
-				{
-					if ( Character->BlackHole->HasAuthority() )
+					if (CameraZoomAbilityClass)
 					{
-						Character->BlackHole->SetActorLocation(CurrentEndLocation);
-					}
-					else
-					{
-						Character->ServerSetBlackHoleLocation(CurrentDirection, MaxGuideDistance);
+						if (FGameplayAbilitySpec* Spec =
+							ASC->FindAbilitySpecFromClass(CameraZoomAbilityClass))
+						{
+							ASC->CancelAbilityHandle(Spec->Handle);
+						}
 					}
 				}
-			}
-			else if(bIsBlackHoleSpawned)
-			{
-				Character->ServerDestoryBlackHole();
-				bIsBlackHoleSpawned = false;
-				bIsAming = false;
 
 				EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
-			}*/
+			}
 		}
 	}
 }
@@ -308,23 +274,7 @@ void UCSGA_ProjectileBlackHole::CreateBlackHoleAtLocation(const FVector& Directi
 		bIsBlackHoleSpawned = true;
 	}
 }
-/*
-void UCSGA_ProjectileBlackHole::SpawnBlackHoleDummy(FVector SpawnLocation)
-{
-	FActorSpawnParameters Params;
-	Params.Owner = GetOwningActorFromActorInfo();
-	Params.Instigator = Cast<APawn>(GetAvatarActorFromActorInfo());
-	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	BlackHoleDummyActor =
-		GetWorld()->SpawnActor<ACSBlackHoleDummy>(BlackHoleDummyClass, SpawnLocation,
-			FRotator::ZeroRotator, Params);
-	if (BlackHoleDummyActor)
-	{
-		BlackHoleDummyActor->SetGravityInfluenceRange( GravityInfluenceRange );
-	}
-}
-*/
 void UCSGA_ProjectileBlackHole::InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
 {
 	// GAS 컴포넌트 구조상 서버에서만 불린다
@@ -340,6 +290,19 @@ void UCSGA_ProjectileBlackHole::InputPressed(const FGameplayAbilitySpecHandle Ha
 	if ( !bIsBlackHoleSpawned )
 	{
 		bIsAming = false;
+
+		if (UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo())
+		{
+			if (CameraZoomAbilityClass)
+			{
+				if (FGameplayAbilitySpec* Spec =
+					ASC->FindAbilitySpecFromClass(CameraZoomAbilityClass))
+				{
+					ASC->CancelAbilityHandle(Spec->Handle);
+				}
+			}
+		}
+
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 	}
 }

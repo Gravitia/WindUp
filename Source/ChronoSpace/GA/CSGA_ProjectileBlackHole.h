@@ -37,12 +37,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile Guide")
 	float MouseYSensitivity = 1.5f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile Guide")
-	float ZoomLength = 600.0f;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile Guide")
-	float ZoomSpeed = 50.0f;
-
 	//UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Black Hole")
 	float Duration;
 
@@ -107,4 +101,9 @@ public:
 
 protected:
 	bool bIsAming;
+
+protected:
+	/** 블랙홀 조준 시 사용하는 카메라 줌 Ability (BP 가능) */
+	UPROPERTY(EditDefaultsOnly, Category = "Camera")
+	TSubclassOf<UGameplayAbility> CameraZoomAbilityClass;
 };
