@@ -48,7 +48,7 @@ protected:
      * Pattern / Step System
      * ========================= */
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Trap|Pattern")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Default")
     TArray<FTrapStep> TrapSteps;
 
     int32 CurrentStepIndex = 0;
