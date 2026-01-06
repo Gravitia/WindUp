@@ -43,18 +43,18 @@ protected:
 	/* ================= Progress UI ================= */
 
 	/** 표시할 Progress UI 위젯 클래스 (BP) */
-	UPROPERTY(EditAnywhere, Category = "Progress UI")
+	UPROPERTY(EditAnywhere, Category = "Default")
 	TSubclassOf<UCSProgressUIWidget> ProgressUIWidgetClass;
 
-	UPROPERTY(EditAnywhere, Category = "Progress UI")
+	UPROPERTY(EditAnywhere, Category = "Default")
 	bool bProgressText;
 
 	/** 전달할 텍스트 ID */
-	UPROPERTY(EditAnywhere, Category = "Progress UI")
+	UPROPERTY(EditAnywhere, Category = "Default")
 	FName ProgressText;
 
 	/** 표시 유지 시간 */
-	UPROPERTY(EditAnywhere, Category = "Progress UI")
+	UPROPERTY(EditAnywhere, Category = "Default")
 	float DisplayDuration = 3.0f;
 
 	/* ================= State ================= */
