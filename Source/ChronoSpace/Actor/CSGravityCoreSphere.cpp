@@ -24,6 +24,10 @@ ACSGravityCoreSphere::ACSGravityCoreSphere()
 
 	SphereTrigger->OnComponentBeginOverlap.AddDynamic(this, &ACSGravityCoreSphere::OnTriggerBeginOverlap);
 	SphereTrigger->OnComponentEndOverlap.AddDynamic(this, &ACSGravityCoreSphere::OnTriggerEndOverlap);
+	SphereTrigger->SetCollisionResponseToChannel(
+		CCHANNEL_CSGRAVITY_CORE_AFFECTED,
+		ECR_Overlap
+	);
 
 	// Static Mesh
 	StaticMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));

@@ -23,6 +23,8 @@ enum class EAbilityIndex : int32
 
 	WindUp = 150,
 	ProjectileGuide = 151,
+	CameraZoom = 152,
+
 
 	ScaleSmall = 200,
 	ScaleNormal = 201,

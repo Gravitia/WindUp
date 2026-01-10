@@ -6,6 +6,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "UI/CSGASEnergyBarUserWidget.h"
 #include "ActorComponent/CSCustomGravityDirComponent.h"
+#include "ActorComponent/CSVFXComponent.h"
 #include "Physics/CSCollision.h"
 
 // Sets default values
@@ -40,15 +41,25 @@ ACSCharacterBase::ACSCharacterBase()
 
 	// Gravity Core
 	CustomGravityDirComponent = CreateDefaultSubobject<UCSCustomGravityDirComponent>(TEXT("CustomGravityDirComponent"));
+
+	VFXComponent = CreateDefaultSubobject<UCSVFXComponent>(TEXT("VFXComponent"));
 }
 
 void ACSCharacterBase::SetDead()
 {
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 	SetActorEnableCollision(false);
+	GetMesh()->SetVisibility(false);
 }
 
+void ACSCharacterBase::SetRevive()
+{
+	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
+	SetActorEnableCollision(true);
+	GetMesh()->SetVisibility(true);
+}
 
+/*
 void ACSCharacterBase::AttachWindUpKeyToSocket()
 {
 	// 1. 블루프린트 클래스 로드
@@ -86,3 +97,5 @@ void ACSCharacterBase::AttachWindUpKeyToSocket()
 
 	UE_LOG(LogTemp, Log, TEXT("Blueprint Actor attached to socket: %s"), *SocketName.ToString());
 }
+
+*/

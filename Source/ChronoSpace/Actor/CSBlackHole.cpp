@@ -60,6 +60,15 @@ void ACSBlackHole::BeginPlay()
 	Super::BeginPlay();
 	
 	GravitySphereTrigger->SetSphereRadius(GravityInfluenceRange, true);
+
+	if (BlackHoleOnSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			this,
+			BlackHoleOnSound,
+			GetActorLocation()
+		);
+	}
 }
 
 // Called every frame
@@ -84,6 +93,21 @@ void ACSBlackHole::SetDuration(float Duration)
 	}
 }
 
+void ACSBlackHole::Destroyed()
+{
+	// BlackHole OFF Sound
+	if (BlackHoleOffSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			this,
+			BlackHoleOffSound,
+			GetActorLocation()
+		);
+	}
+
+	Super::Destroyed();
+}
+
 void ACSBlackHole::SetGravityInfluenceRange(float Range)
 {
 	GravityInfluenceRange = Range;
@@ -93,7 +117,7 @@ void ACSBlackHole::SetGravityInfluenceRange(float Range)
 	{
 		FVector SphereLocation = GravitySphereTrigger->GetComponentLocation();
 		float SphereRadius = GravitySphereTrigger->GetScaledSphereRadius();
-
+		/*
 		DrawDebugSphere(
 			GetWorld(),
 			SphereLocation,
@@ -105,6 +129,7 @@ void ACSBlackHole::SetGravityInfluenceRange(float Range)
 			0,				// 디버그 선 우선순위
 			2.0f			// 선 두께
 		);
+		*/
 	}
 
 	FieldMesh->SetRelativeScale3D( FVector( GravityInfluenceRange / MeshRadius) ); 

@@ -18,11 +18,11 @@ public:
 
 	virtual void Tick(float DeltaSeconds) override;
 
-	FORCEINLINE void SetDuration(float Duration);
-	FORCEINLINE void SetGravityInfluenceRange(float Range);
-	FORCEINLINE void SetStopRange(float Range);
-	FORCEINLINE void SetPullStrength(float Strength);
-	FORCEINLINE void SetCheckComponentInMesh(bool bCheckComponent);
+	void SetDuration(float Duration);
+	void SetGravityInfluenceRange(float Range);
+	void SetStopRange(float Range);
+	void SetPullStrength(float Strength);
+	void SetCheckComponentInMesh(bool bCheckComponent);
 
 protected:
 	UFUNCTION()
@@ -36,6 +36,8 @@ protected:
 
 	UFUNCTION()
 	void OnStopTriggerEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+	virtual void Destroyed() override;
 
 	void ProcessForCharacter(float DeltaTime);
 	void ProcessForStaticMesh(float DeltaTime);
@@ -77,4 +79,11 @@ protected:
 	float MeshRadius = 50.0f;
 
 	bool bCheckMeshHaveComponent = false;
+
+	/* Sound */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sound")
+	USoundBase* BlackHoleOnSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sound")
+	USoundBase* BlackHoleOffSound;
 };

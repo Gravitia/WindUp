@@ -39,4 +39,12 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Check Component")
 	bool bCheckMeshComponentAffectedByGravityCore = false;
+
+
+	/* Sound */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sound")
+	USoundBase* GravityCoreOnSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sound")
+	USoundBase* GravityCoreOffSound;
 };

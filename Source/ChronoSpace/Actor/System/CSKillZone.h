@@ -66,7 +66,7 @@ public:
         bool bFromSweep, const FHitResult& SweepResult);
 
     UFUNCTION(BlueprintCallable, Category = "Kill Zone")
-    void KillPlayerWithDelay(APawn* Player, float DelayTime);
+    void RevivePlayerWithDelay(APawn* Player, float DelayTime);
 
 private:
     class ACSGameState* GetCSGameState() const;

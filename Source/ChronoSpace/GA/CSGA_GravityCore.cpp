@@ -64,6 +64,15 @@ void UCSGA_GravityCore::OnCore()
 			GravityCore->AttachToActor(CurrentActorInfo->AvatarActor.Get(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 		}
 
+		if (GravityCoreOnSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(
+				this,
+				GravityCoreOnSound,
+				OwnerCharacter->GetActorLocation()
+			);
+		}
+
 		if (ACSCharacterPlayer* CSCharacter = Cast<ACSCharacterPlayer>(OwnerCharacter))
 		{
 			CSCharacter->NetMulticastMakeGravityCoreSphere(GravityCore->GetMeshRadius(), GravityCore->GetActorScale3D().X);
@@ -77,6 +86,16 @@ void UCSGA_GravityCore::OffCore()
 {
 	if (GravityCore)
 	{
+		if (GravityCoreOffSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(
+				this,
+				GravityCoreOffSound,
+				GravityCore->GetActorLocation()
+			);
+		}
+
+
 		GravityCore->Destroy();
 		GravityCore = nullptr;
 	}

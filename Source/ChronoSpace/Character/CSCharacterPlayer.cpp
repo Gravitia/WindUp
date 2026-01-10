@@ -28,11 +28,16 @@
 #include "ActorComponent/CSTransformRecordComponent.h"
 #include "ActorComponent/CSCharacterPushedComponent.h"
 #include "ActorComponent/CSCharacterPulledByBlackhole.h"
+#include "ActorComponent/CSCameraZoomComponent.h"
+#include "ActorComponent/CSVFXComponent.h"
 #include "Player/CSPlayerController.h"
 #include "DataAsset/CSCharacterPlayerData.h"
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Actor/CSBlackHole.h"
+#include "Actor/CSBellows.h"
+#include "Subsystem/CSManagedActorSubsystem.h"
+#include "Kismet/GameplayStatics.h"
 
 
 ACSCharacterPlayer::ACSCharacterPlayer()
@@ -49,6 +54,8 @@ ACSCharacterPlayer::ACSCharacterPlayer()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
+
+	ZoomComponent = CreateDefaultSubobject<UCSCameraZoomComponent>(TEXT("ZoomComponent"));
 
 	FirstPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
 	// 보통 플레이어 메쉬의 “head” 소켓(혹은 눈 위치)에 붙입니다.
@@ -87,7 +94,16 @@ ACSCharacterPlayer::ACSCharacterPlayer()
 	GravityCoreSphere->SetCollisionProfileName(CPROFILE_CSCAPSULE);
 	GravityCoreSphere->SetupAttachment(RootComponent);
 	GravityCoreSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	//GravityCoreSphere->SetCollisionResponseToChannel(CCHANNEL_CSSPECTATOR, ECR_Ignore);
+	GravityCoreSphere->SetCollisionResponseToAllChannels(ECR_Ignore);
+	GravityCoreSphere->SetCollisionResponseToChannel(
+		CCHANNEL_CSGRAVITY_CORE_AFFECTED,
+		ECR_Block
+	);
 	//GravityCoreSphere->AttachToComponent(RootComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+
+	GetCapsuleComponent()->SetCollisionResponseToChannel(CCHANNEL_CSSPECTATOR, ECR_Ignore);
+	GetMesh()->SetCollisionResponseToChannel(CCHANNEL_CSSPECTATOR, ECR_Ignore);
 }
 
 UAbilitySystemComponent* ACSCharacterPlayer::GetAbilitySystemComponent() const
@@ -132,6 +148,22 @@ void ACSCharacterPlayer::OnRep_PlayerState()
 	GASManagerComponent->SetupGASInputComponent(Cast<UEnhancedInputComponent>(InputComponent));
 }
 
+void ACSCharacterPlayer::Landed(const FHitResult& Hit)
+{
+	Super::Landed(Hit);
+
+	// 밟은 Actor 가져오기
+	AActor* LandedActor = Hit.GetActor();
+	if (!LandedActor) return;
+
+	// Bellows인지 검사
+	ACSBellows* Bellows = Cast<ACSBellows>(LandedActor);
+	if (Bellows)
+	{
+		Bellows->NotifyPlayerLanded(this);
+	}
+}
+ 
 void ACSCharacterPlayer::BeginPlay()
 {
 	Super::BeginPlay();
@@ -148,8 +180,6 @@ void ACSCharacterPlayer::BeginPlay()
 		Subsystem->AddMappingContext(MappingContext, 0);
 	}
 
-	AttachWindUpKeyToSocket();
-	
 	/* AlwaysClockUnwind not using now 
 	AlwaysClockUnwind();
 	*/
@@ -200,6 +230,13 @@ void ACSCharacterPlayer::PreInitializeComponents()
 	SetData();
 }
 
+void ACSCharacterPlayer::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ACSCharacterPlayer, BlackHole);
+}
+
 void ACSCharacterPlayer::SetDead()
 {
 	Super::SetDead();
@@ -209,6 +246,30 @@ void ACSCharacterPlayer::SetDead()
 	{
 		DisableInput(PlayerController); 
 	}
+
+	VFXComponent->PlayWorldVFX(EWorldVFX::EFFECT_DEAD_0);
+}
+
+void ACSCharacterPlayer::SetRevive()
+{
+	Super::SetRevive();
+
+	// Sound 
+
+	if (ReviveSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			this,
+			ReviveSound,
+			GetActorLocation()
+		);
+	}
+
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	if (PlayerController)
+	{
+		EnableInput(PlayerController);
+	}
 }
 
 void ACSCharacterPlayer::SetData()
@@ -217,6 +278,11 @@ void ACSCharacterPlayer::SetData()
 
 	CameraBoom->TargetArmLength = Data->TargetArmLength;
 	CameraBoom->SetRelativeLocation(Data->CameraOffset);
+
+	if ( ZoomComponent ) 
+	{
+		ZoomComponent->Init(CameraBoom, Data->TargetArmLength);
+	}
 
 	GetCharacterMovement()->RotationRate = Data->RotationRate;
 	GetCharacterMovement()->JumpZVelocity = Data->JumpZVelocity;
@@ -247,45 +313,11 @@ void ACSCharacterPlayer::SetData()
 	Trigger->SetCapsuleSize(Data->TriggerRadius, Data->TriggerHeight); 
 }
 
-void ACSCharacterPlayer::SetShoulderLook(bool bIsShoulderLook)
+void ACSCharacterPlayer::ZoomCamera( float ZoomLength, float ZoomSpeed )
 {
-	if (!bIsShoulderLook)
-	{
-		// 1인칭 모드로 전환
-		CameraBoom->SetActive(false);            // 스프링암(3인칭) 꺼주고
-		FollowCamera->SetActive(false);
-		FirstPersonCamera->SetActive(true);      // 1인칭 카메라 켜기
+	if ( Data == nullptr || ZoomComponent == nullptr ) return;
 
-		GetMesh()->SetOwnerNoSee(true);
-
-		if (WindUpKeyActor)
-		{
-			UStaticMeshComponent* KeyMesh = WindUpKeyActor->GetComponentByClass<UStaticMeshComponent>();
-			if (KeyMesh)
-			{
-				KeyMesh->SetVisibility(false);
-			}
-		}
-		
-	}
-	else
-	{
-		// 3인칭 모드로 복귀
-		FirstPersonCamera->SetActive(false);
-		CameraBoom->SetActive(true);
-		FollowCamera->SetActive(true);
-
-		if (WindUpKeyActor)
-		{
-			UStaticMeshComponent* KeyMesh = WindUpKeyActor->GetComponentByClass<UStaticMeshComponent>();
-			if (KeyMesh)
-			{
-				KeyMesh->SetVisibility(true);
-			}
-		}
-
-		GetMesh()->SetOwnerNoSee(false); 
-	}
+	ZoomComponent->ZoomCamera(ZoomLength, ZoomSpeed);
 }
 
 void ACSCharacterPlayer::ShoulderMove(const FInputActionValue& Value)
@@ -393,6 +425,12 @@ void ACSCharacterPlayer::OnMovementModeChanged(
 	}
 }
 
+float ACSCharacterPlayer::GetReviveTime()
+{
+	if (Data == nullptr) return 1.0f;
+	return Data->ReviveDelay;
+}
+
 void ACSCharacterPlayer::ServerDestoryBlackHole_Implementation()
 {
 	if ( BlackHole )
@@ -416,16 +454,36 @@ void ACSCharacterPlayer::NetMulticastDestroyGravityCoreSphere_Implementation()
 }
 
 void ACSCharacterPlayer::ServerSpawnAndSetBlackHole_Implementation(TSubclassOf<class ACSBlackHole> BlackHoleClass,
-	FVector Location, float Duration, float GravityInfluenceRange, float PullStrength, float StopRange, bool bCheckComponent)
+	FVector Direction, float MaxDistance, float Duration, float GravityInfluenceRange, float PullStrength, float StopRange, bool bCheckComponent)
 {
 	if (UWorld* World = GetWorld())
 	{
+		FVector StartLocation = GetActorLocation() + FVector(0.0f, 0.0f, BaseEyeHeight); 
+		FVector EndLocation = StartLocation + Direction * MaxDistance; 
+
+		FCollisionQueryParams QueryParams; 
+		QueryParams.AddIgnoredActor(this); 
+
+		if ( IsValid(GetWorld()) )
+		{
+			if ( UCSManagedActorSubsystem* Subsystem = GetWorld()->GetSubsystem<UCSManagedActorSubsystem>(); Subsystem )
+			{
+				QueryParams.AddIgnoredActors( Subsystem->GetActorsPulledByBlackHole() );
+			}
+		}
+
+		FHitResult HitResult; 
+		if (GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Visibility, QueryParams)) 
+		{
+			EndLocation = HitResult.Location; 
+		}
+
 		FActorSpawnParameters Params;
 		Params.Owner = this;
 		Params.Instigator = this;
 
 		FRotator Rotation = FRotator::ZeroRotator;
-		BlackHole = World->SpawnActor<ACSBlackHole>(BlackHoleClass, Location, Rotation, Params);
+		BlackHole = World->SpawnActor<ACSBlackHole>(BlackHoleClass, EndLocation, Rotation, Params);
 
 		if (BlackHole)
 		{
@@ -436,4 +494,23 @@ void ACSCharacterPlayer::ServerSpawnAndSetBlackHole_Implementation(TSubclassOf<c
 			BlackHole->SetCheckComponentInMesh(bCheckComponent);
 		}
 	}
+}
+
+void ACSCharacterPlayer::ServerSetBlackHoleLocation_Implementation(FVector Direction, float MaxDistance) 
+{
+	if (!IsValid(BlackHole)) return; 
+
+	FVector StartLocation = GetActorLocation() + FVector(0.0f, 0.0f, BaseEyeHeight);
+	FVector EndLocation = StartLocation + Direction * MaxDistance;
+
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor( this );
+
+	FHitResult HitResult;
+	if (GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Visibility, QueryParams))
+	{
+		EndLocation = HitResult.Location;
+	}
+
+	BlackHole->SetActorLocation(EndLocation);
 }

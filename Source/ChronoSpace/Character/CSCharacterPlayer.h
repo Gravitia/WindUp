@@ -27,6 +27,7 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual void OnRep_PlayerState() override;
+	virtual void Landed(const FHitResult& Hit) override;
 
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
@@ -40,8 +41,11 @@ protected:
 protected:
 	virtual void BeginPlay() override;
 	virtual void PreInitializeComponents() override; 
-	virtual void SetDead() override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+public:
+	virtual void SetDead() override;
+	virtual void SetRevive() override;
 
 protected:
 	UPROPERTY()
@@ -65,9 +69,12 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UCameraComponent> FollowCamera;
 
+	UPROPERTY()
+	TObjectPtr<class UCSCameraZoomComponent> ZoomComponent;
+
 // Move & Look
 public:
-	void SetShoulderLook(bool bIsShoulderLook);
+	void ZoomCamera( float ZoomLength, float ZoomSpeed );
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, Meta = (AllowPrivateAccess = "true"))
@@ -229,11 +236,24 @@ protected:
 public:
 	UFUNCTION(Server, Reliable)
 	void ServerSpawnAndSetBlackHole(TSubclassOf<class ACSBlackHole> BlackHoleClass,
-		FVector Location, float Duration, float GravityInfluenceRange, float PullStrength, 
+		FVector Direction, float MaxDistance, float Duration, float GravityInfluenceRange, float PullStrength,
 		float StopRange, bool bCheckComponent);
+
+	UFUNCTION(Server, Unreliable)
+	void ServerSetBlackHoleLocation(FVector Direction, float MaxDistance);
 
 	UFUNCTION(Server, Reliable)
 	void ServerDestoryBlackHole();
 
+	UPROPERTY(Replicated)
 	TObjectPtr<class ACSBlackHole> BlackHole;
+
+public:
+	float GetReviveTime();
+
+
+	/* Respawn Sound */
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sound")
+	USoundBase* ReviveSound;
 };

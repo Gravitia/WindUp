@@ -2,11 +2,36 @@
 
 
 #include "ActorComponent/CSMeshPulledByBlackhole.h"
+#include "Subsystem/CSManagedActorSubsystem.h"
+#include "ChronoSpace.h"
 
-// Sets default values for this component's properties
 UCSMeshPulledByBlackhole::UCSMeshPulledByBlackhole()
 {
 
+}
+
+void UCSMeshPulledByBlackhole::BeginPlay()
+{
+	if ( !IsValid(GetWorld()) || !IsValid(GetOwner()) ) return;
+	UCSManagedActorSubsystem* Subsystem = GetWorld()->GetSubsystem< UCSManagedActorSubsystem >();
+
+	if ( IsValid( Subsystem ) )
+	{
+		UE_LOG(LogCS, Log, TEXT("Actor Registered"));
+		Subsystem->RegisterActorPulledByBlackHole(GetOwner());
+	}
+}
+
+void UCSMeshPulledByBlackhole::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (!IsValid(GetWorld()) || !IsValid(GetOwner())) return;
+
+	UCSManagedActorSubsystem* Subsystem = GetWorld()->GetSubsystem< UCSManagedActorSubsystem >();
+
+	if ( IsValid(Subsystem) )
+	{
+		Subsystem->UnRegisterActorPulledByBlackHole( GetOwner() );
+	}
 }
 
 
