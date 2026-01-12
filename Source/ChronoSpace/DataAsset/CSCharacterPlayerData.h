@@ -57,13 +57,13 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
 	FVector CameraOffset;
-
+	/*
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Anim")
 	TSubclassOf<class UAnimInstance> AnimInstance;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mesh")
 	TObjectPtr<class USkeletalMesh> Mesh;
-
+	*/
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mesh")
 	FVector MeshLocation;
 
