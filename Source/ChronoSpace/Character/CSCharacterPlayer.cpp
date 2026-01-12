@@ -305,8 +305,8 @@ void ACSCharacterPlayer::SetData()
 
 	// SetCapsulSize vs InitCapsuleSize 
 
-	GetMesh()->SetSkeletalMesh(Data->Mesh);
-	GetMesh()->SetAnimInstanceClass(Data->AnimInstance);
+	// GetMesh()->SetSkeletalMesh(Data->Mesh);
+	// GetMesh()->SetAnimInstanceClass(Data->AnimInstance);
 	GetMesh()->SetRelativeLocation(Data->MeshLocation);
 	GetMesh()->SetRelativeRotation(Data->MeshRotation); 
 
