@@ -22,18 +22,18 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	UPROPERTY(VisibleAnywhere, Category = "Platform")
+	UPROPERTY(VisibleAnywhere, Category = "Default|LevelDesign")
 	UStaticMeshComponent* Mesh;
 
 	// Assign in level per platform instance
-	UPROPERTY(EditInstanceOnly, Category = "Platform")
+	UPROPERTY(EditAnywhere, Category = "Default|LevelDesign")
 	ACSTrackManager* Track = nullptr;
 
 	// cm offset along spline
-	UPROPERTY(EditInstanceOnly, Category = "Platform")
+	UPROPERTY(EditAnywhere, Category = "Default|LevelDesign")
 	float OffsetDistance = 0.f;
 
 	// optional vertical offset
-	UPROPERTY(EditInstanceOnly, Category = "Platform")
+	UPROPERTY(EditAnywhere, Category = "Default|LevelDesign")
 	float ZOffset = 0.f;
 };

@@ -27,15 +27,15 @@ protected:
 	virtual void BeginPlay() override;
 
 	// Track spline owned by this manager (recommended)
-	UPROPERTY(VisibleAnywhere, Category = "Track")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Default|LevelDesign")
 	USplineComponent* Spline;
 
 	// cm/s
-	UPROPERTY(EditAnywhere, Category = "Track")
+	UPROPERTY(EditAnywhere, Category = "Default|LevelDesign")
 	float MoveSpeed = 300.f;
 
 	// smoothing for clients
-	UPROPERTY(EditAnywhere, Category = "Track")
+	UPROPERTY(EditAnywhere, Category = "Default|LevelDesign")
 	float InterpSpeed = 8.f;
 
 	// replicated progress distance (0..SplineLength)
