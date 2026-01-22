@@ -4,6 +4,8 @@
 #include "Player/CSPlayerState.h"
 #include "AbilitySystemComponent.h"
 #include "Attribute/CSAttributeSet.h"
+#include "Net/UnrealNetwork.h"
+#include "Actor/System/CSRespawnPoint.h"
 
 ACSPlayerState::ACSPlayerState()
 {
@@ -21,7 +23,6 @@ UAbilitySystemComponent* ACSPlayerState::GetAbilitySystemComponent() const
 	return ASC;
 }
 
-
 void ACSPlayerState::BeginPlay()
 {
 	Super::BeginPlay();
@@ -36,6 +37,15 @@ void ACSPlayerState::BeginPlay()
 			.AddUObject(this, &ACSPlayerState::MaxHealthChanged);
 	}
 }
+
+void ACSPlayerState::GetLifetimeReplicatedProps(
+    TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+    DOREPLIFETIME(ACSPlayerState, PersonalRespawnPoint);
+}
+
 
 float ACSPlayerState::GetHealth() const
 {
@@ -63,6 +73,19 @@ float ACSPlayerState::GetHealthPercent() const
 		return GetHealth() / MaxHP;
 	}
 	return 0.0f;
+}
+
+void ACSPlayerState::SetPersonalRespawnPoint(ACSRespawnPoint* NewPoint)
+{
+	if (HasAuthority())
+	{
+		PersonalRespawnPoint = NewPoint;
+	}
+}
+
+ACSRespawnPoint* ACSPlayerState::GetPersonalRespawnPoint() const
+{
+	return PersonalRespawnPoint;
 }
 
 void ACSPlayerState::HealthChanged(const FOnAttributeChangeData& Data)

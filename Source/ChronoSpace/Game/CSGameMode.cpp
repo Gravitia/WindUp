@@ -4,6 +4,7 @@
 #include "Game/CSGameMode.h"
 #include "Game/CSGameState.h"
 #include "Player/CSPlayerController.h"
+#include "Player/CSPlayerState.h"
 #include "Actor/System/CSCheckPoint.h"
 #include "Actor/System/CSRespawnPoint.h"
 #include "Actor/CSCameraViewProxy.h"
@@ -24,8 +25,6 @@ ACSGameMode::ACSGameMode()
 
     // Set our custom GameState
     GameStateClass = ACSGameState::StaticClass();
-
-    CurrentRespawnPoint = nullptr;
 
     DummySpectatorPawnClass = ACSSpectatorPawn::StaticClass();
 }
@@ -251,7 +250,6 @@ UClass* ACSGameMode::GetDefaultPawnClassForController_Implementation(AController
             if (Id == 0 && PawnClassPlayer0) return PawnClassPlayer0;
             if (Id == 1 && PawnClassPlayer1) return PawnClassPlayer1;
         }
-
     }
 
     // 2) 온라인 멀티플레이어: 현재 플레이어 수 기준
@@ -277,109 +275,35 @@ UClass* ACSGameMode::GetDefaultPawnClassForController_Implementation(AController
     return Super::GetDefaultPawnClassForController_Implementation(InController);
 }
 
-void ACSGameMode::SetCurrentRespawnPoint(ACSRespawnPoint* NewRespawnPoint)
-{
-    if (CurrentRespawnPoint != NewRespawnPoint)
-    {
-        CurrentRespawnPoint = NewRespawnPoint;
-        OnRespawnPointChanged(NewRespawnPoint);
-        UE_LOG(LogCS, Log, TEXT("CSLog : Current respawn point updated"));
-    }
-}
-
-void ACSGameMode::RespawnAllPlayersAtCurrentPoint()
-{
-    if (!CurrentRespawnPoint)
-    {
-        UE_LOG(LogCS, Warning, TEXT("No current respawn point set"));
-        return;
-    }
-
-    // Get all players from GameState
-    ACSGameState* CSGameState = GetCSGameState();
-    if (!CSGameState)
-    {
-        UE_LOG(LogCS, Warning, TEXT("CSGameState not found for respawn"));
-        return;
-    }
-
-    // Get all players (both dead and alive)
-    TArray<APawn*> AllPlayers;
-    AllPlayers.Append(CSGameState->GetDeadPlayers());
-    AllPlayers.Append(CSGameState->GetAlivePlayers());
-
-    // Respawn all players at current respawn point
-    for (APawn* Player : AllPlayers)
-    {
-        if (Player && CurrentRespawnPoint)
-        {
-            CurrentRespawnPoint->SpawnPlayerHere(Player);
-        }
-    }
-
-    // Reset all death states in GameState
-    for (APawn* Player : AllPlayers)
-    {
-        if (Player)
-        {
-            CSGameState->HandlePlayerRevive(Player);
-        }
-    }
-
-    OnAllPlayersRespawned();
-
-    UE_LOG(LogCS, Log, TEXT("All players respawned at current respawn point"));
-}
-
-void ACSGameMode::HandlePlayerDeath(APawn* DeadPlayer)
-{
-    // Delegate to GameState for state management
-    ACSGameState* CSGameState = GetCSGameState();
-    if (CSGameState)
-    {
-        CSGameState->HandlePlayerDeath(DeadPlayer);
-    }
-    else
-    {
-        UE_LOG(LogCS, Warning, TEXT("CSGameState not found for player death handling"));
-    }
-}
-
-
 bool ACSGameMode::RespawnSinglePlayer(APawn* Player)
 {
-    UE_LOG(LogCS, Log, TEXT("CSLog : RespawnSinglePlayer() "));
+    if (!Player) return false;
 
-    if (!Player)
+    ACSPlayerState* PS = Player->GetPlayerState<ACSPlayerState>();
+    if (!PS)
     {
-        UE_LOG(LogCS, Warning, TEXT("Invalid player for respawn"));
+        UE_LOG(LogCS, Warning, TEXT("No PlayerState for respawn"));
         return false;
     }
 
-    if (!CurrentRespawnPoint)
+    ACSRespawnPoint* RespawnPoint = PS->GetPersonalRespawnPoint();
+    if (!RespawnPoint)
     {
-        UE_LOG(LogCS, Warning, TEXT("No current respawn point set for single player respawn"));
-        return false;
+        UE_LOG(LogCS, Warning, TEXT("No personal respawn point, using fallback"));
+        return false; // 또는 맵 시작 지점
     }
 
-    // Respawn the player at current respawn point
-    CurrentRespawnPoint->SpawnPlayerHere(Player);
+    RespawnPoint->SpawnPlayerHere(Player);
 
-    // Reset player death state in GameState
-    ACSGameState* CSGameState = GetCSGameState();
-    if (CSGameState)
+    if (ACSGameState* GS = GetCSGameState())
     {
-        CSGameState->HandlePlayerRevive(Player);
+        GS->HandlePlayerRevive(Player);
     }
 
-    UE_LOG(LogCS, Log, TEXT("Single player respawned: %s"), *Player->GetName());
+    UE_LOG(LogCS, Log, TEXT("Personal respawned: %s"), *Player->GetName());
     return true;
 }
 
-bool ACSGameMode::RespawnPlayerAtCurrentPoint(APawn* Player)
-{
-    return RespawnSinglePlayer(Player);
-}
 
 ACSGameState* ACSGameMode::GetCSGameState() const
 {

@@ -11,17 +11,6 @@ UCSGA_GiveDamage::UCSGA_GiveDamage()
 {
 	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::ServerOnly;
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
-
-	/*static ConstructorHelpers::FClassFinder<UGameplayEffect> DamageEffectRef(TEXT("/Game/01_Blueprint/GA/GE/BPGE_PatrolDamage.BPGE_PatrolDamage_C"));
-	if ( DamageEffectRef.Succeeded() )
-	{
-		DamageEffect = DamageEffectRef.Class;
-		UE_LOG(LogCS, Log, TEXT("DamageEffect class not null "));
-	}
-	else
-	{
-		UE_LOG(LogCS, Log, TEXT("DamageEffect is null"));
-	}*/
 	DamageEffect = nullptr;
 }
 
