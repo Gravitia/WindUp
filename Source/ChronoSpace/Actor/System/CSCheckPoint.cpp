@@ -4,12 +4,12 @@
 #include "Actor/System/CSCheckPoint.h"
 #include "Actor/System/CSKillZone.h"
 #include "Actor/System/CSRespawnPoint.h"
-#include "Game/CSGameMode.h"
 #include "Components/BoxComponent.h"
 #include "GameFramework/Pawn.h"
 #include "Engine/World.h"
 #include "Subsystem/CSGameProgressSubsystem.h"
 #include "Kismet/GameplayStatics.h"
+#include "Player/CSPlayerState.h"
 
 ACSCheckPoint::ACSCheckPoint()
 {
@@ -56,22 +56,18 @@ void ACSCheckPoint::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComp, A
     {
         UE_LOG(LogTemp, Log, TEXT("CSLog : CheckPoint - Player detected: %s"), *Player->GetName());
 
-        // GameMode 가져오기 (서버에서만)
-        ACSGameMode* GameMode = GetCSGameMode();
-        if (!GameMode)
+        ACSPlayerState* PS = Player->GetPlayerState<ACSPlayerState>();
+        if (!PS)
         {
-            UE_LOG(LogTemp, Warning, TEXT("CSLog : CheckPoint - GameMode is null!"));
+            UE_LOG(LogTemp, Warning, TEXT("CSLog : PlayerState not found"));
             return;
         }
 
-        if (!ConnectedRespawnPoint)
-        {
-            UE_LOG(LogTemp, Warning, TEXT("CSLog : CheckPoint - ConnectedRespawnPoint is null! Please set it in Blueprint."));
-            return;
-        }
+        PS->SetPersonalRespawnPoint(ConnectedRespawnPoint);
 
-        UE_LOG(LogTemp, Log, TEXT("CSLog : CheckPoint - Setting respawn point"));
-        GameMode->SetCurrentRespawnPoint(ConnectedRespawnPoint);
+        UE_LOG(LogTemp, Log,
+            TEXT("CSLog : Personal respawn point set for %s"),
+            *Player->GetName());
 
         if (SaveStageClear)
         {
@@ -131,28 +127,18 @@ void ACSCheckPoint::ServerActivateCheckpoint_Implementation(APawn* Player)
     UE_LOG(LogTemp, Log, TEXT("CSLog : ServerActivateCheckpoint called for player: %s"),
         Player ? *Player->GetName() : TEXT("NULL"));
 
-    ACSGameMode* GameMode = GetCSGameMode();
-    if (GameMode && ConnectedRespawnPoint)
+    ACSPlayerState* PS = Player->GetPlayerState<ACSPlayerState>();
+    if (!PS)
     {
-        GameMode->SetCurrentRespawnPoint(ConnectedRespawnPoint);
-        UE_LOG(LogTemp, Log, TEXT("CSLog : Checkpoint activated via RPC"));
-    }
-    else
-    {
-        UE_LOG(LogTemp, Warning, TEXT("CSLog : ServerActivateCheckpoint - GameMode or RespawnPoint is null"));
-    }
-}
-
-ACSGameMode* ACSCheckPoint::GetCSGameMode() const
-{
-    // 서버에서만 GameMode에 접근 가능
-    if (HasAuthority())
-    {
-        return Cast<ACSGameMode>(GetWorld()->GetAuthGameMode());
+        UE_LOG(LogTemp, Warning, TEXT("CSLog : PlayerState not found"));
+        return;
     }
 
-    UE_LOG(LogTemp, Warning, TEXT("CSLog : GetCSGameMode called on client - returning nullptr"));
-    return nullptr;
+    PS->SetPersonalRespawnPoint(ConnectedRespawnPoint);
+
+    UE_LOG(LogTemp, Log,
+        TEXT("CSLog : Personal respawn point set for %s"),
+        *Player->GetName());
 }
 
 UCSGameProgressSubsystem* ACSCheckPoint::GetGameProgressSubsystem() const

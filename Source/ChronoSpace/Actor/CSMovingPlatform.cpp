@@ -35,7 +35,7 @@ void ACSMovingPlatform::Tick(float DeltaSeconds)
 	USplineComponent* Spline = Track->GetSpline();
 	const float SplineLength = Track->GetSplineLength();
 
-	UE_LOG(LogTemp, Log, TEXT("SplineLength : %f"), SplineLength);
+	//UE_LOG(LogTemp, Log, TEXT("SplineLength : %f"), SplineLength);
 
 
 	if (!Spline || SplineLength <= KINDA_SMALL_NUMBER)

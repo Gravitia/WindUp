@@ -42,10 +42,6 @@ public:
     // === RPC Alternative (Optional) ===
     UFUNCTION(Server, Reliable, Category = "CheckPoint")
     void ServerActivateCheckpoint(APawn* Player);
-
-private:
-    class ACSGameMode* GetCSGameMode() const;
-    // CSGameProgressSubsystem const; 
     
 // Save 
 public:
