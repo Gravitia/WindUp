@@ -91,7 +91,8 @@ ACSCharacterPlayer::ACSCharacterPlayer()
 
 	GravityCoreSphere = CreateDefaultSubobject<USphereComponent>(TEXT("GravityCoreSphere"));
 	GravityCoreSphere->SetIsReplicated(true);
-	GravityCoreSphere->SetCollisionProfileName(CPROFILE_CSCAPSULE);
+	GravityCoreSphere->SetCollisionProfileName(CPROFILE_GRAVITY_CORE);
+	GravityCoreSphere->SetCollisionObjectType(CCHANNEL_CSGRAVITY_CORE);
 	GravityCoreSphere->SetupAttachment(RootComponent);
 	GravityCoreSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	//GravityCoreSphere->SetCollisionResponseToChannel(CCHANNEL_CSSPECTATOR, ECR_Ignore);
@@ -100,8 +101,12 @@ ACSCharacterPlayer::ACSCharacterPlayer()
 		CCHANNEL_CSGRAVITY_CORE_AFFECTED,
 		ECR_Block
 	);
+	GravityCoreSphere->SetCollisionResponseToChannel(
+		CCHANNEL_CSPLAYER,
+		ECR_Block
+	);
 	//GravityCoreSphere->AttachToComponent(RootComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-
+	GetCapsuleComponent()->SetCollisionObjectType(CCHANNEL_CSPLAYER);
 	GetCapsuleComponent()->SetCollisionResponseToChannel(CCHANNEL_CSSPECTATOR, ECR_Ignore);
 	GetMesh()->SetCollisionResponseToChannel(CCHANNEL_CSSPECTATOR, ECR_Ignore);
 }
@@ -441,14 +446,19 @@ void ACSCharacterPlayer::ServerDestoryBlackHole_Implementation()
 
 void ACSCharacterPlayer::NetMulticastMakeGravityCoreSphere_Implementation(float SphereRaduis, float SphereScale)
 {
-	GravityCoreSphere->SetSphereRadius(SphereRaduis * SphereScale);
-	GravityCoreSphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	if (GravityCoreSphere) 
+	{
+		UE_LOG(LogCS, Log, TEXT("GravityCore On"));
+		GravityCoreSphere->SetSphereRadius(SphereRaduis * SphereScale);
+		GravityCoreSphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	}
 }
 
 void ACSCharacterPlayer::NetMulticastDestroyGravityCoreSphere_Implementation()
 {
 	if (GravityCoreSphere)
 	{
+		UE_LOG(LogCS, Log, TEXT("GravityCore Off"));
 		GravityCoreSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
 }
