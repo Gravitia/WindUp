@@ -35,12 +35,12 @@ ACSGravityCoreSphere::ACSGravityCoreSphere()
 	);
 
 	// Static Mesh
-	/*StaticMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
+	StaticMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
 	StaticMeshComp->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
 	StaticMeshComp->SetupAttachment(SphereTrigger); 
 	StaticMeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	StaticMeshComp->SetIsReplicated(true);
-	StaticMeshComp->OnComponentBeginOverlap.AddDynamic(this, &ACSGravityCoreSphere::OnCoreBeginOverlap);*/
+	StaticMeshComp->OnComponentBeginOverlap.AddDynamic(this, &ACSGravityCoreSphere::OnCoreBeginOverlap);
 
 	MeshRadius = 50.0f;
 }
