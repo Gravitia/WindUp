@@ -42,6 +42,9 @@ protected:
 
 
 	/* Sound */
+	UPROPERTY()
+	UAudioComponent* GravityCoreOnAudioComp;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sound")
 	USoundBase* GravityCoreOnSound;
 

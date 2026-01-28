@@ -7,6 +7,7 @@
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/SphereComponent.h"
+#include "Components/AudioComponent.h"
 #include "Physics/CSCollision.h"
 #include "ChronoSpace.h"
 #include "Character/CSCharacterPlayer.h"
@@ -45,6 +46,14 @@ void UCSGA_GravityCore::EndAbility(const FGameplayAbilitySpecHandle Handle, cons
 void UCSGA_GravityCore::OnCore()
 {
 	OwnerCharacter = Cast<ACharacter>(CurrentActorInfo->AvatarActor.Get());
+	if (!OwnerCharacter) return;
+	
+	// 기존 On 사운드가 남아있다면 정리
+	if (GravityCoreOnAudioComp)
+	{
+		GravityCoreOnAudioComp->Stop();
+		GravityCoreOnAudioComp = nullptr;
+	}
 
 	if (OwnerCharacter && OwnerCharacter->GetCharacterMovement())
 	{
@@ -66,11 +75,15 @@ void UCSGA_GravityCore::OnCore()
 
 		if (GravityCoreOnSound)
 		{
-			UGameplayStatics::PlaySoundAtLocation(
-				this,
-				GravityCoreOnSound,
-				OwnerCharacter->GetActorLocation()
-			);
+			GravityCoreOnAudioComp =
+				UGameplayStatics::SpawnSoundAttached(
+					GravityCoreOnSound,
+					OwnerCharacter->GetRootComponent(),
+					NAME_None,
+					FVector::ZeroVector,
+					EAttachLocation::SnapToTarget,
+					false
+				);
 		}
 
 		if (ACSCharacterPlayer* CSCharacter = Cast<ACSCharacterPlayer>(OwnerCharacter))
@@ -84,6 +97,14 @@ void UCSGA_GravityCore::OnCore()
 
 void UCSGA_GravityCore::OffCore()
 {
+
+	// On 사운드 강제 종료
+	if (GravityCoreOnAudioComp)
+	{
+		GravityCoreOnAudioComp->Stop();
+		GravityCoreOnAudioComp = nullptr;
+	}
+
 	if (GravityCore)
 	{
 		if (GravityCoreOffSound)
