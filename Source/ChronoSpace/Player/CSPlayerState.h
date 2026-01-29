@@ -10,6 +10,8 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHealthChanged, float, Health, float, MaxHealth);
 
+class ACSRespawnPoint;
+
 /**
  * 
  */
@@ -37,7 +39,16 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Health")
 	FOnHealthChanged OnHealthChanged;
 
+	UPROPERTY(Replicated)
+	ACSRespawnPoint* PersonalRespawnPoint;
+
+	UFUNCTION()
+	void SetPersonalRespawnPoint(ACSRespawnPoint* NewPoint);
+	ACSRespawnPoint* GetPersonalRespawnPoint() const;
+
 protected:
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 	UPROPERTY(EditAnywhere, Category = GAS)
 	TObjectPtr<class UAbilitySystemComponent> ASC;
 
@@ -49,4 +60,7 @@ protected:
 	// Health 변화 콜백
 	virtual void HealthChanged(const FOnAttributeChangeData& Data);
 	virtual void MaxHealthChanged(const FOnAttributeChangeData& Data);
+
+
+
 };

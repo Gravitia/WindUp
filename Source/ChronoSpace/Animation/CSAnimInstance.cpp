@@ -37,8 +37,9 @@ void UCSAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		bIsJumping = bIsFalling & (Velocity.Z > JumpingThreshold); 
 	}
 
-	// 화면 디버그 출력 ---------------------------
+	/* 화면 디버그 출력 ---------------------------
 	if (GEngine)
+
 	{
 		GEngine->AddOnScreenDebugMessage(
 			1,                            // 고정 ID → 같은 줄에 덮어쓰기
@@ -47,7 +48,7 @@ void UCSAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 			FString::Printf(TEXT("GroundSpeed: %.2f"), GroundSpeed)
 		);
 	}
-
+	*/
 
 	if ( GravityComponent )
 	{

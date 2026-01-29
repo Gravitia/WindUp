@@ -6,7 +6,7 @@
 
 UCSMeshAffectedByGravityCore::UCSMeshAffectedByGravityCore()
 {
-
+	SetIsReplicated(true);
 }
 
 void UCSMeshAffectedByGravityCore::BeginPlay()
@@ -24,6 +24,6 @@ void UCSMeshAffectedByGravityCore::BeginPlay()
 		UE_LOG(LogTemp, Warning, TEXT("No StaticMeshComponent found on %s"), *Owner->GetName()); 
 		return;
 	}
-	MeshComp->SetCollisionObjectType( CCHANNEL_CSGRAVITY_CORE_AFFECTED );
+	MeshComp->SetCollisionObjectType(CCHANNEL_CSGRAVITY_CORE_AFFECTED);
 }
 

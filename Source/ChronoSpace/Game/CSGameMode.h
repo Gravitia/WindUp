@@ -29,6 +29,8 @@ public:
     UPROPERTY(EditDefaultsOnly, Category = "Pawn")
     TSubclassOf<APawn> PawnClassPlayer1;
 
+    bool RespawnSinglePlayer(APawn* Player);
+
 protected:
     virtual UClass* GetDefaultPawnClassForController_Implementation(AController* InController) override;
     /** SeamlessTravel 시, 기존 PlayerController가 옴겨질 때 호출됨 */
@@ -38,36 +40,6 @@ protected:
     virtual void PostLogin(APlayerController* NewPlayer) override;
     virtual void Logout(AController* Exiting) override;
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-
-    // Current respawn point
-    UPROPERTY(BlueprintReadOnly, Category = "Respawn")
-    class ACSRespawnPoint* CurrentRespawnPoint;
-
-public:
-    // === Simple Respawn System ===
-    UFUNCTION(BlueprintCallable, Category = "Respawn")
-    void SetCurrentRespawnPoint(class ACSRespawnPoint* NewRespawnPoint);
-
-    UFUNCTION(BlueprintCallable, Category = "Respawn")
-    void RespawnAllPlayersAtCurrentPoint();
-
-    // === Player Death Handling (GameState Integration) ===
-    UFUNCTION(BlueprintCallable, Category = "Player Death")
-    void HandlePlayerDeath(APawn* DeadPlayer);
-
-    // === Events ===
-    UFUNCTION(BlueprintImplementableEvent, Category = "GameMode Events")
-    void OnRespawnPointChanged(ACSRespawnPoint* NewRespawnPoint);
-
-    UFUNCTION(BlueprintImplementableEvent, Category = "GameMode Events")
-    void OnAllPlayersRespawned();
-
-    // === Single Player Respawn ===
-    UFUNCTION(BlueprintCallable, Category = "Respawn")
-    bool RespawnSinglePlayer(APawn* Player);
-
-    UFUNCTION(BlueprintCallable, Category = "Respawn")
-    bool RespawnPlayerAtCurrentPoint(APawn* Player);
 
 private:
     class ACSGameState* GetCSGameState() const;

@@ -96,7 +96,7 @@ void UCSGA_ProjectileBlackHole::ActivateAbility(const FGameplayAbilitySpecHandle
 		UpdateRate,
 		true
 	);
-
+	/*
 	if (UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo())
 	{
 		if (CameraZoomAbilityClass)
@@ -104,6 +104,7 @@ void UCSGA_ProjectileBlackHole::ActivateAbility(const FGameplayAbilitySpecHandle
 			ASC->TryActivateAbilityByClass(CameraZoomAbilityClass);
 		}
 	}
+	*/
 
 	UE_LOG(LogCS, Log, TEXT("ProjectileGuide Activated"));
 
@@ -246,6 +247,7 @@ void UCSGA_ProjectileBlackHole::CheckMouseInput()
 				bIsBlackHoleSpawned = false;
 				bIsAming = false;
 
+				/*
 				if (UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo())
 				{
 					if (CameraZoomAbilityClass)
@@ -257,6 +259,7 @@ void UCSGA_ProjectileBlackHole::CheckMouseInput()
 						}
 					}
 				}
+				*/
 
 				EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 			}
@@ -291,6 +294,7 @@ void UCSGA_ProjectileBlackHole::InputPressed(const FGameplayAbilitySpecHandle Ha
 	{
 		bIsAming = false;
 
+		/*
 		if (UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo())
 		{
 			if (CameraZoomAbilityClass)
@@ -302,6 +306,7 @@ void UCSGA_ProjectileBlackHole::InputPressed(const FGameplayAbilitySpecHandle Ha
 				}
 			}
 		}
+		*/
 
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 	}

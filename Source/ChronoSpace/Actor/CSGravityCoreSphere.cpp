@@ -19,6 +19,7 @@ ACSGravityCoreSphere::ACSGravityCoreSphere()
 	SphereTrigger->SetSphereRadius(GravityInfluenceRange, true);
 	SphereTrigger->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
 	SphereTrigger->SetCollisionProfileName(CPROFILE_OVERLAPALL);
+	SphereTrigger->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	RootComponent = SphereTrigger;
 	SphereTrigger->SetIsReplicated(true);
 
@@ -27,6 +28,10 @@ ACSGravityCoreSphere::ACSGravityCoreSphere()
 	SphereTrigger->SetCollisionResponseToChannel(
 		CCHANNEL_CSGRAVITY_CORE_AFFECTED,
 		ECR_Overlap
+	);
+	SphereTrigger->SetCollisionResponseToChannel(
+		CCHANNEL_CSGRAVITY_CORE,
+		ECR_Ignore
 	);
 
 	// Static Mesh
@@ -49,7 +54,7 @@ void ACSGravityCoreSphere::BeginPlay()
 		StaticMesh.LoadSynchronous();
 	}
 	
-	if ( StaticMesh.IsValid() )
+	if ( StaticMesh.IsValid() && IsValid( StaticMeshComp ) )
 	{
 		StaticMeshComp->SetStaticMesh(StaticMesh.Get());
 	}
@@ -63,10 +68,7 @@ void ACSGravityCoreSphere::BeginPlay()
 
 void ACSGravityCoreSphere::Tick(float DeltaSeconds)
 {
-	if (!HasAuthority())
-	{
-		return;
-	}
+	if (!HasAuthority()) return;
 
 	//ProcessForCharacter(DeltaSeconds);
 	ProcessForStaticMesh(DeltaSeconds);
@@ -74,6 +76,7 @@ void ACSGravityCoreSphere::Tick(float DeltaSeconds)
 
 void ACSGravityCoreSphere::ProcessForStaticMesh(float DeltaTime)
 {
+	if( !IsValid(SphereTrigger) ) return;
 	const FVector CoreLocation = SphereTrigger->GetComponentLocation();
 
 	for (auto It = StaticMeshesInSphereTrigger.CreateIterator(); It; ++It)

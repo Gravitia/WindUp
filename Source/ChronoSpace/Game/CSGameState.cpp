@@ -111,7 +111,6 @@ void ACSGameState::HandlePlayerDeath(APawn* DeadPlayer)
         MulticastOnPlayerDied(DeadPlayer);
         UE_LOG(LogTemp, Log, TEXT("Player died: %s"), *DeadPlayer->GetName());
 
-        CheckAllPlayersDeath();
     }
 }
 
@@ -277,33 +276,3 @@ const FPlayerDeathState* ACSGameState::FindPlayerDeathState(APawn* Player) const
     return nullptr;
 }
 
-void ACSGameState::CheckAllPlayersDeath()
-{
-    if (AreAllPlayersDead())
-    {
-        MulticastOnAllPlayersDead();
-        MulticastOnAllPlayersAboutToRespawn(AllDeadRespawnDelay);
-
-        GetWorld()->GetTimerManager().SetTimer(AllDeadRespawnTimer,
-            this,
-            &ACSGameState::TriggerAllPlayersRespawn,
-            AllDeadRespawnDelay,
-            false);
-
-        UE_LOG(LogTemp, Warning, TEXT("All players are dead! Respawning in %.1f seconds"), AllDeadRespawnDelay);
-    }
-}
-
-void ACSGameState::TriggerAllPlayersRespawn()
-{
-    if (ACSGameMode* GameMode = Cast<ACSGameMode>(GetWorld()->GetAuthGameMode()))
-    {
-        GameMode->RespawnAllPlayersAtCurrentPoint();
-
-        for (FPlayerDeathState& DeathState : PlayerDeathStates)
-        {
-            DeathState.bIsDead = false;
-            DeathState.DeathTime = 0.0f;
-        }
-    }
-}

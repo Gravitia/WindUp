@@ -1,6 +1,5 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "Actor/System/CSKillZone.h"
 #include "Game/CSGameState.h"
 #include "Game/CSGameMode.h"
@@ -33,8 +32,12 @@ void ACSKillZone::BeginPlay()
 {
     Super::BeginPlay();
 
-    // 수정: OnTriggerBeginOverlap으로 바인딩 변경
-    KillVolume->OnComponentBeginOverlap.AddDynamic(this, &ACSKillZone::OnTriggerBeginOverlap);
+    // Trigger 바인딩
+    KillVolume->OnComponentBeginOverlap.AddDynamic(
+        this,
+        &ACSKillZone::OnTriggerBeginOverlap
+    );
+
     VisualMesh->SetVisibility(bShowVisualMesh);
 }
 
@@ -43,20 +46,24 @@ void ACSKillZone::KillPlayer(APawn* Player)
     if (!Player || !IsValid(Player))
         return;
 
-    // Tell GameState that player died
-    ACSGameState* GameState = GetCSGameState();
-    if (GameState)
+    // GameState에 사망 알림
+    if (ACSGameState* GameState = GetCSGameState())
     {
         GameState->HandlePlayerDeath(Player);
     }
 
-    ACSCharacterPlayer* CharacterPlayer = Cast<ACSCharacterPlayer>(Player);
-    if (CharacterPlayer)
+    // 캐릭터 사망 처리
+    if (ACSCharacterPlayer* CharacterPlayer = Cast<ACSCharacterPlayer>(Player))
     {
         CharacterPlayer->SetDead();
     }
 
-    UE_LOG(LogTemp, Warning, TEXT("Player killed by KillZone: %s"), *Player->GetName());
+    UE_LOG(
+        LogTemp,
+        Warning,
+        TEXT("Player killed by KillZone: %s"),
+        *Player->GetName()
+    );
 }
 
 void ACSKillZone::SetActive(bool bNewActive)
@@ -64,9 +71,14 @@ void ACSKillZone::SetActive(bool bNewActive)
     bIsActive = bNewActive;
 }
 
-void ACSKillZone::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
-    UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
-    bool bFromSweep, const FHitResult& SweepResult)
+void ACSKillZone::OnTriggerBeginOverlap(
+    UPrimitiveComponent* OverlappedComp,
+    AActor* OtherActor,
+    UPrimitiveComponent* OtherComp,
+    int32 OtherBodyIndex,
+    bool bFromSweep,
+    const FHitResult& SweepResult
+)
 {
     UE_LOG(LogTemp, Log, TEXT("CSLog : KillZone OnTriggerBeginOverlap"));
 
@@ -76,15 +88,8 @@ void ACSKillZone::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComp, AAc
     ACSCharacterPlayer* Player = Cast<ACSCharacterPlayer>(OtherActor);
     if (Player && Player->IsPlayerControlled())
     {
-        // 즉시 리스폰
-        /*ACSGameMode* GameMode = GetCSGameMode();
-        if (GameMode)
-        {
-            GameMode->RespawnSinglePlayer(Player);
-            UE_LOG(LogTemp, Log, TEXT("Player instantly respawned: %s"), *Player->GetName());
-        }*/
-        KillPlayer( Player );
-        RevivePlayerWithDelay(Player, Player->GetReviveTime()); 
+        KillPlayer(Player);
+        RevivePlayerWithDelay(Player, Player->GetReviveTime());
     }
 }
 
@@ -93,18 +98,21 @@ void ACSKillZone::RevivePlayerWithDelay(APawn* Player, float DelayTime)
     if (!Player || !IsValid(Player))
         return;
 
-    // 딜레이 후 리스폰
     FTimerHandle RespawnTimer;
     TWeakObjectPtr<ACSKillZone> WeakThis = this;
-    if ( const auto& CharacterPlayer = Cast<ACSCharacterPlayer>(Player); CharacterPlayer )
+
+    if (ACSCharacterPlayer* CharacterPlayer = Cast<ACSCharacterPlayer>(Player))
     {
         TWeakObjectPtr<ACSCharacterPlayer> WeakPlayer = CharacterPlayer;
-        GetWorld()->GetTimerManager().SetTimer(RespawnTimer,
+
+        GetWorld()->GetTimerManager().SetTimer(
+            RespawnTimer,
             [WeakThis, WeakPlayer]()
             {
-                if (!WeakThis.IsValid() || !WeakPlayer.IsValid()) return;
-                ACSGameMode* GameMode = WeakThis->GetCSGameMode();
-                if (GameMode)
+                if (!WeakThis.IsValid() || !WeakPlayer.IsValid())
+                    return;
+
+                if (ACSGameMode* GameMode = WeakThis->GetCSGameMode())
                 {
                     GameMode->RespawnSinglePlayer(WeakPlayer.Get());
                 }
@@ -112,9 +120,9 @@ void ACSKillZone::RevivePlayerWithDelay(APawn* Player, float DelayTime)
                 WeakPlayer->SetRevive();
             },
             DelayTime,
-            false);
+            false
+        );
     }
-    
 }
 
 ACSGameState* ACSKillZone::GetCSGameState() const
