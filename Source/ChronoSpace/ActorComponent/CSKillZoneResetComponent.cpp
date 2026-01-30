@@ -62,6 +62,8 @@ void UCSKillZoneResetComponent::OnBeginOverlap(
     // 서버에서만 위치 변경 (멀티 동기화 핵심)
     if (!Owner->HasAuthority())
         return;
+    
+    if (bIgnoreKillZone) return;
 
     if (OtherActor->IsA(ACSKillZone::StaticClass()))
     {

@@ -39,5 +39,10 @@ private:
     TObjectPtr<UBoxComponent> OverlapBox = nullptr;
 
     FVector StartLocation = FVector::ZeroVector;
+
+public:
+    // KillZone Immortal
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default|KillZone")
+    bool bIgnoreKillZone = false;
 		
 };
