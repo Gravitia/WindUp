@@ -8,6 +8,7 @@
 ACSAutoTrap::ACSAutoTrap()
 {
     bReplicates = true;
+    bAlwaysRelevant = true;
     PrimaryActorTick.bCanEverTick = false;
 }
 
