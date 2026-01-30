@@ -86,7 +86,7 @@ void ACSKillZone::OnTriggerBeginOverlap(
         return;
 
     ACSCharacterPlayer* Player = Cast<ACSCharacterPlayer>(OtherActor);
-    if (Player && Player->IsPlayerControlled())
+    if (Player && Player->IsPlayerControlled() && !Player->bIgnoreKillZone)
     {
         KillPlayer(Player);
         RevivePlayerWithDelay(Player, Player->GetReviveTime());

@@ -256,4 +256,12 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sound")
 	USoundBase* ReviveSound;
+
+
+public:
+	// KillZone Debug Immortal
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default|KillZone")
+	bool bIgnoreKillZone = false;
+
+
 };
