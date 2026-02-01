@@ -119,12 +119,29 @@ void ACSConveyorManager::OnRep_RepProgress()
 
 void ACSConveyorManager::BuildVisual()
 {
-	if (!ConveyorISM || !ConveyorMesh || Platforms.Num() <= 0)
+	if (!ConveyorISM || !ConveyorMesh)
 	{
 		return;
 	}
 
+	// AssignedPlatforms 기준으로 유효 개수 계산(순서 유지)
+	int32 ValidCount = 0;
+	for (ACSConveyorPlatform* P : AssignedPlatforms)
+	{
+		if (P)
+		{
+			++ValidCount;
+		}
+	}
+
 	ConveyorISM->ClearInstances();
+
+	if (ValidCount <= 0)
+	{
+		ConveyorISM->MarkRenderStateDirty();
+		return;
+	}
+
 	ConveyorISM->SetStaticMesh(ConveyorMesh);
 
 	if (ConveyorMaterial)
@@ -132,7 +149,7 @@ void ACSConveyorManager::BuildVisual()
 		ConveyorISM->SetMaterial(0, ConveyorMaterial);
 	}
 
-	for (int32 i = 0; i < Platforms.Num(); ++i)
+	for (int32 i = 0; i < ValidCount; ++i)
 	{
 		FTransform T;
 		T.SetLocation(FVector(0.f, (float)i * ConveyorSpacing, 0.f));
@@ -141,6 +158,8 @@ void ACSConveyorManager::BuildVisual()
 
 		ConveyorISM->AddInstance(T);
 	}
+
+	ConveyorISM->MarkRenderStateDirty();
 }
 
 void ACSConveyorManager::GetLifetimeReplicatedProps(
