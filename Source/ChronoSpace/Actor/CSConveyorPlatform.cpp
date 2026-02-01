@@ -13,42 +13,18 @@ ACSConveyorPlatform::ACSConveyorPlatform()
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	RootComponent = Mesh;
 
-	// 컨베이어 바닥은 서버에서만 위치 계산
-	bReplicates = false;
 	SetReplicateMovement(false);
-
-	Mesh->SetCollisionProfileName(TEXT("BlockAllDynamic"));
+	bReplicates = true;
 }
 
-void ACSConveyorPlatform::BeginPlay()
-{
-	Super::BeginPlay();
-}
-
-float ACSConveyorPlatform::GetMeshLength() const
-{
-	if (!Mesh || !Mesh->GetStaticMesh())
-	{
-		return 0.f;
-	}
-
-	const FBox BoundingBox = Mesh->GetStaticMesh()->GetBoundingBox();
-
-	// FBox는 Min / Max 멤버를 직접 사용
-	const float LocalLength = BoundingBox.Max.X - BoundingBox.Min.X;
-
-	// 스케일 반영
-	return FMath::Abs(LocalLength * Mesh->GetComponentScale().X);
-}
-
-void ACSConveyorPlatform::Init(ACSConveyorManager* InManager, float InOffsetDistance)
+void ACSConveyorPlatform::SetManager(ACSConveyorManager* InManager)
 {
 	Manager = InManager;
-	OffsetDistance = InOffsetDistance;
+}
 
-	// 시각적으로는 숨기되, 충돌은 유지
-	SetActorHiddenInGame(true);
-	SetActorEnableCollision(true);
+void ACSConveyorPlatform::SetIndexOffset(float InOffsetDistance)
+{
+	OffsetDistance = InOffsetDistance;
 }
 
 void ACSConveyorPlatform::Tick(float DeltaSeconds)
@@ -60,36 +36,21 @@ void ACSConveyorPlatform::Tick(float DeltaSeconds)
 		return;
 	}
 
-	USplineComponent* Spline = Manager->GetSpline();
-	const float SplineLength = Manager->GetSplineLength();
-
-	if (!Spline || SplineLength <= KINDA_SMALL_NUMBER)
+	const float TotalLength = Manager->GetTotalLength();
+	if (TotalLength <= KINDA_SMALL_NUMBER)
 	{
 		return;
 	}
 
-	float Distance = Manager->GetSmoothedDistance() + OffsetDistance;
-	Distance = FMath::Fmod(Distance, SplineLength);
-
-	if (Distance < 0.f)
+	float D = OffsetDistance + Manager->GetSmoothedProgress();
+	D = FMath::Fmod(D, TotalLength);
+	if (D < 0.f)
 	{
-		Distance += SplineLength;
+		D += TotalLength;
 	}
 
-	const FTransform T =
-		Spline->GetTransformAtDistanceAlongSpline(
-			Distance,
-			ESplineCoordinateSpace::World
-		);
+	FVector Loc = Manager->GetActorLocation();
+	Loc.Y += D;
 
-	FVector Location = T.GetLocation();
-	Location.Z += ZOffset;
-
-	SetActorLocationAndRotation(
-		Location,
-		T.GetRotation(),
-		false,
-		nullptr,
-		ETeleportType::None
-	);
+	SetActorLocation(Loc, false, nullptr, ETeleportType::None);
 }

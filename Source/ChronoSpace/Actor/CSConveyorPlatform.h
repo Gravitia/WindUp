@@ -16,29 +16,23 @@ class CHRONOSPACE_API ACSConveyorPlatform : public AActor
 	
 public:
 	ACSConveyorPlatform();
-	
+
 	virtual void Tick(float DeltaSeconds) override;
-	// ConveyorManager에서 생성 직후 호출
-	void Init(ACSConveyorManager* InManager, float InOffsetDistance);
-	float GetMeshLength() const;
+
+	void SetManager(ACSConveyorManager* InManager);
+	void SetIndexOffset(float InOffsetDistance);
+
+	float GetOffsetDistance() const { return OffsetDistance; }
 
 protected:
-	virtual void BeginPlay() override;
-
-private:
-	// 실제 바닥 역할을 하는 메쉬
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* Mesh;
 
-	// 부모 컨베이어 매니저 (단일 진실 소스)
+private:
 	UPROPERTY()
 	ACSConveyorManager* Manager = nullptr;
 
-	// 스플라인 기준 오프셋
+	// Manager가 (index * spacing)으로 세팅
 	float OffsetDistance = 0.f;
-
-	// 높이 보정
-	UPROPERTY(EditAnywhere, Category = "Conveyor")
-	float ZOffset = 0.f;
 
 };

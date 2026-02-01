@@ -6,7 +6,6 @@
 #include "GameFramework/Actor.h"
 #include "CSConveyorManager.generated.h"
 
-class USplineComponent;
 class UInstancedStaticMeshComponent;
 class ACSConveyorPlatform;
 
@@ -18,87 +17,76 @@ class CHRONOSPACE_API ACSConveyorManager : public AActor
 public:
 	ACSConveyorManager();
 
+	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	virtual void GetLifetimeReplicatedProps(
+		TArray<FLifetimeProperty>& OutLifetimeProps
+	) const override;
 
 	// ===== Accessors =====
-	USplineComponent* GetSpline() const { return Spline; }
-	float GetSplineLength() const { return SplineLength; }
-	float GetSmoothedDistance() const { return SmoothedDistance; }
-	float GetMoveSpeed() const { return MoveSpeed; }
+	float GetSmoothedProgress() const { return SmoothedProgress; }
+	float GetTotalLength() const { return TotalLength; }
+	float GetConveyorSpacing() const { return ConveyorSpacing; }
 
 protected:
-	virtual void BeginPlay() override;
-
-	// 에디터/블루프린트에서 재생성용
-	UFUNCTION(BlueprintCallable, Category = "Conveyor")
-	void RebuildConveyor();
-
 	// =========================
 	// Conveyor Logic
 	// =========================
-
-	// cm/s
 	UPROPERTY(EditAnywhere, Category = "Default|Conveyor|Logic")
 	float MoveSpeed = 300.f;
 
-	// client smoothing
 	UPROPERTY(EditAnywhere, Category = "Default|Conveyor|Logic")
 	float InterpSpeed = 8.f;
 
-	// replicated progress along spline
-	UPROPERTY(ReplicatedUsing = OnRep_RepDistance)
-	float RepDistance = 0.f;
+	UPROPERTY(ReplicatedUsing = OnRep_RepProgress)
+	float RepProgress = 0.f;
 
 	UFUNCTION()
-	void OnRep_RepDistance();
+	void OnRep_RepProgress();
 
 	// =========================
-	// Conveyor Shape
+	// Conveyor Layout
 	// =========================
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Default|Conveyor|Shape")
-	USplineComponent* Spline;
-
-	// =========================
-	// Conveyor Visual
-	// =========================
-
-	UPROPERTY(EditAnywhere, Category = "Default|Conveyor|Visual")
-	UStaticMesh* BeltMesh;
-
-	UPROPERTY(EditAnywhere, Category = "Default|Conveyor|Visual")
-	FVector MeshScale = FVector(1.f);
-
-	// 0이면 Mesh 길이 자동 사용
-	UPROPERTY(EditAnywhere, Category = "Default|Conveyor|Visual")
-	float MeshSpacing = 0.f;
-
-	UPROPERTY(VisibleAnywhere, Category = "Default|Conveyor|Visual")
-	UInstancedStaticMeshComponent* BeltISM;
+	UPROPERTY(EditAnywhere, Category = "Default|Conveyor|Layout")
+	float ConveyorSpacing = 200.f;
 
 	// =========================
 	// Conveyor Platforms
 	// =========================
+	// 레벨에서 매니저마다 직접 지정
+	UPROPERTY(EditInstanceOnly, Category = "Default|Conveyor|Platform", meta = (DisplayName = "Assigned Platforms"))
+	TArray<TObjectPtr<ACSConveyorPlatform>> AssignedPlatforms;
 
-	// 숨겨진 실제 바닥 클래스
-	UPROPERTY(EditAnywhere, Category = "Default|Conveyor|Platform")
-	TSubclassOf<ACSConveyorPlatform> ConveyorPlatformClass;
-
+	// 런타임용(정리/중복 제거 후 사용하는 배열)
 	UPROPERTY()
-	TArray<ACSConveyorPlatform*> Platforms;
+	TArray<TObjectPtr<ACSConveyorPlatform>> Platforms;
 
 	// =========================
-	// Internal
+	// Conveyor Visual (선택)
 	// =========================
+	UPROPERTY(EditAnywhere, Category = "Default|Conveyor|Visual")
+	UStaticMesh* ConveyorMesh;
 
-	void BuildBeltMeshes();
-	void BuildPlatforms();
+	UPROPERTY(EditAnywhere, Category = "Default|Conveyor|Visual")
+	UMaterialInterface* ConveyorMaterial;
+
+	UPROPERTY(VisibleAnywhere, Category = "Default|Conveyor|Visual")
+	UInstancedStaticMeshComponent* ConveyorISM;
+
+	// =========================
+	// Build
+	// =========================
+	UFUNCTION(BlueprintCallable, Category = "Conveyor")
+	void InitializePlatformsFromAssigned();
+
+	UFUNCTION(BlueprintCallable, Category = "Conveyor")
+	void BuildVisual();
 
 private:
-	float SplineLength = 0.f;
+	float TotalLength = 0.f;
 
-	// client-side smoothing
-	float TargetDistance = 0.f;
-	float SmoothedDistance = 0.f;
+	float TargetProgress = 0.f;
+	float SmoothedProgress = 0.f;
+
 };

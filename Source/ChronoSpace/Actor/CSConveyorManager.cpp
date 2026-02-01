@@ -3,9 +3,10 @@
 
 #include "Actor/CSConveyorManager.h"
 #include "Actor/CSConveyorPlatform.h"
-#include "Components/SplineComponent.h"
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Net/UnrealNetwork.h"
+#include "Engine/World.h"
+#include "Kismet/GameplayStatics.h"
 
 ACSConveyorManager::ACSConveyorManager()
 {
@@ -14,194 +15,131 @@ ACSConveyorManager::ACSConveyorManager()
 	bReplicates = true;
 	SetReplicateMovement(false);
 
-	Spline = CreateDefaultSubobject<USplineComponent>(TEXT("Spline"));
-	RootComponent = Spline;
+	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 
-	BeltISM = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("BeltISM"));
-	BeltISM->SetupAttachment(RootComponent);
-	BeltISM->SetMobility(EComponentMobility::Movable);
-	BeltISM->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	ConveyorISM = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("ConveyorISM"));
+	ConveyorISM->SetupAttachment(RootComponent);
+	ConveyorISM->SetMobility(EComponentMobility::Movable);
+	ConveyorISM->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void ACSConveyorManager::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (Spline)
+	InitializePlatformsFromAssigned();
+	// BuildVisual(); // 필요하면 호출
+
+	TargetProgress = RepProgress;
+	SmoothedProgress = RepProgress;
+}
+
+void ACSConveyorManager::InitializePlatformsFromAssigned()
+{
+	Platforms.Empty();
+
+	// 1) null 제거하면서 순서 유지
+	for (ACSConveyorPlatform* P : AssignedPlatforms)
 	{
-		SplineLength = Spline->GetSplineLength();
+		if (!P)
+		{
+			continue;
+		}
+
+		Platforms.Add(P);
 	}
 
-	TargetDistance = RepDistance;
-	SmoothedDistance = RepDistance;
+	// 2) 인덱스 기반 오프셋 적용
+	for (int32 i = 0; i < Platforms.Num(); ++i)
+	{
+		ACSConveyorPlatform* P = Platforms[i];
+		if (!P)
+		{
+			continue;
+		}
 
-	// 실제 바닥
-	BuildPlatforms();
+		P->SetManager(this);
+		P->SetIndexOffset((float)i * ConveyorSpacing);
+	}
+
+	// 3) 총 길이는 "플랫폼 개수 * spacing"
+	TotalLength = (float)Platforms.Num() * ConveyorSpacing;
+
+	if (TotalLength <= KINDA_SMALL_NUMBER)
+	{
+		TotalLength = 0.f;
+	}
 }
+
 
 void ACSConveyorManager::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	if (!Spline || SplineLength <= KINDA_SMALL_NUMBER)
+	if (TotalLength <= KINDA_SMALL_NUMBER)
 	{
 		return;
 	}
 
-	// Server: authoritative progress
+	// ===== Server =====
 	if (HasAuthority())
 	{
-		RepDistance += MoveSpeed * DeltaSeconds;
-		RepDistance = FMath::Fmod(RepDistance, SplineLength);
-
-		if (RepDistance < 0.f)
+		RepProgress += MoveSpeed * DeltaSeconds;
+		RepProgress = FMath::Fmod(RepProgress, TotalLength);
+		if (RepProgress < 0.f)
 		{
-			RepDistance += SplineLength;
+			RepProgress += TotalLength;
 		}
 
-		TargetDistance = RepDistance;
+		TargetProgress = RepProgress;
 	}
 
-	// Client-side smoothing
-	const float Delta = FMath::Abs(TargetDistance - SmoothedDistance);
+	// ===== Client smoothing =====
+	const float Delta = FMath::Abs(TargetProgress - SmoothedProgress);
 
-	if (Delta > SplineLength * 0.5f)
+	if (Delta > TotalLength * 0.5f)
 	{
-		SmoothedDistance = TargetDistance;
+		SmoothedProgress = TargetProgress;
 	}
 	else
 	{
-		SmoothedDistance =
-			FMath::FInterpTo(SmoothedDistance, TargetDistance, DeltaSeconds, InterpSpeed);
+		SmoothedProgress = FMath::FInterpTo(
+			SmoothedProgress,
+			TargetProgress,
+			DeltaSeconds,
+			InterpSpeed
+		);
 	}
 }
 
-void ACSConveyorManager::RebuildConveyor()
+void ACSConveyorManager::OnRep_RepProgress()
 {
-	if (!Spline)
+	TargetProgress = RepProgress;
+}
+
+void ACSConveyorManager::BuildVisual()
+{
+	if (!ConveyorISM || !ConveyorMesh || Platforms.Num() <= 0)
 	{
 		return;
 	}
 
-	SplineLength = Spline->GetSplineLength();
+	ConveyorISM->ClearInstances();
+	ConveyorISM->SetStaticMesh(ConveyorMesh);
 
-	// 기존 플랫폼 제거
-	for (ACSConveyorPlatform* Platform : Platforms)
+	if (ConveyorMaterial)
 	{
-		if (Platform)
-		{
-			Platform->Destroy();
-		}
-	}
-	Platforms.Empty();
-
-	// 시각 메쉬
-	BuildBeltMeshes();
-
-}
-
-void ACSConveyorManager::BuildPlatforms()
-{
-	if (!ConveyorPlatformClass || !Spline)
-	{
-		return;
+		ConveyorISM->SetMaterial(0, ConveyorMaterial);
 	}
 
-	// 기존 플랫폼 제거
-	for (ACSConveyorPlatform* Platform : Platforms)
+	for (int32 i = 0; i < Platforms.Num(); ++i)
 	{
-		if (Platform)
-		{
-			Platform->Destroy();
-		}
-	}
-	Platforms.Empty();
+		FTransform T;
+		T.SetLocation(FVector(0.f, (float)i * ConveyorSpacing, 0.f));
+		T.SetRotation(FQuat::Identity);
+		T.SetScale3D(FVector(1.f));
 
-	float AccumulatedDistance = 0.f;
-
-	while (AccumulatedDistance < SplineLength)
-	{
-		FActorSpawnParameters Params;
-		Params.Owner = this;
-		Params.SpawnCollisionHandlingOverride =
-			ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-		ACSConveyorPlatform* Platform =
-			GetWorld()->SpawnActor<ACSConveyorPlatform>(
-				ConveyorPlatformClass,
-				FTransform::Identity,
-				Params
-			);
-
-		if (!Platform)
-		{
-			break;
-		}
-
-		const float PlatformLength = Platform->GetMeshLength();
-
-		if (PlatformLength <= KINDA_SMALL_NUMBER)
-		{
-			Platform->Destroy();
-			break;
-		}
-
-		Platform->Init(this, AccumulatedDistance);
-		Platforms.Add(Platform);
-
-		AccumulatedDistance += PlatformLength;
-	}
-}
-
-
-void ACSConveyorManager::OnRep_RepDistance()
-{
-	TargetDistance = RepDistance;
-}
-
-void ACSConveyorManager::BuildBeltMeshes()
-{
-	if (!Spline || !BeltMesh || !BeltISM)
-	{
-		return;
-	}
-
-	BeltISM->ClearInstances();
-	BeltISM->SetStaticMesh(BeltMesh);
-
-	const FBoxSphereBounds Bounds = BeltMesh->GetBounds();
-	const float MeshLength = Bounds.BoxExtent.X * 2.f * MeshScale.X;
-	const float Step = (MeshSpacing > 0.f) ? MeshSpacing : MeshLength;
-
-	if (Step <= KINDA_SMALL_NUMBER)
-	{
-		return;
-	}
-
-	const int32 Count = FMath::FloorToInt(SplineLength / Step);
-
-	for (int32 i = 0; i < Count; ++i)
-	{
-		const float Distance = i * Step;
-
-		const FVector Location =
-			Spline->GetLocationAtDistanceAlongSpline(
-				Distance,
-				ESplineCoordinateSpace::Local
-			);
-
-		const FRotator Rotation =
-			Spline->GetRotationAtDistanceAlongSpline(
-				Distance,
-				ESplineCoordinateSpace::Local
-			);
-
-		FTransform Transform;
-		Transform.SetLocation(Location);
-		Transform.SetRotation(Rotation.Quaternion());
-		Transform.SetScale3D(MeshScale);
-
-		BeltISM->AddInstance(Transform);
+		ConveyorISM->AddInstance(T);
 	}
 }
 
@@ -211,5 +149,5 @@ void ACSConveyorManager::GetLifetimeReplicatedProps(
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(ACSConveyorManager, RepDistance);
+	DOREPLIFETIME(ACSConveyorManager, RepProgress);
 }
