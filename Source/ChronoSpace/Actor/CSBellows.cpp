@@ -9,7 +9,7 @@
 ACSBellows::ACSBellows()
 {
     PrimaryActorTick.bCanEverTick = true;
-    SetReplicates(true);
+    bReplicates = true;
 
     Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BellowsMesh"));
     RootComponent = Mesh;
