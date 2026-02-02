@@ -6,7 +6,9 @@
 
 UCSMeshAffectedByGravityCore::UCSMeshAffectedByGravityCore()
 {
-	SetIsReplicated(true);
+	// SetIsReplicated(true);
+
+	SetIsReplicatedByDefault(true);
 }
 
 void UCSMeshAffectedByGravityCore::BeginPlay()
