@@ -51,6 +51,7 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Default")
     TArray<FTrapStep> TrapSteps;
 
+    UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Default")
     int32 CurrentStepIndex = 0;
 
     void ExecuteCurrentStep();
@@ -61,22 +62,30 @@ protected:
      * Replication
      * ========================= */
 
-     // 현재 실행 중인 스텝 슬롯
-    UPROPERTY(ReplicatedUsing = OnRep_CurrentStep)
+     // 현재 스텝 슬롯 (값 자체는 복제되지만, 변경이 없으면 OnRep는 안 뜰 수 있음)
+    UPROPERTY(Replicated)
     ETrapStepSlot CurrentStepSlot = ETrapStepSlot::First;
 
+    // "스텝이 실행됐다"를 보장하는 시리얼 (매 스텝마다 무조건 증가 -> OnRep가 항상 호출)
+    UPROPERTY(ReplicatedUsing = OnRep_StepSerial)
+    uint8 StepSerial = 0;
+
     UFUNCTION()
-    void OnRep_CurrentStep();
+    void OnRep_StepSerial();
 
     /* =========================
      * Blueprint Hooks
      * ========================= */
 
-     // 눌림/해제 같은 상태 연출용
+     // 눌림/해제 같은 상태 연출용(필요하면 BP에서 사용)
     UFUNCTION(BlueprintImplementableEvent)
     void PlayTrapAnim(bool bPressed);
 
     // 스텝 실행 이벤트 (행동 해석은 BP 책임)
     UFUNCTION(BlueprintImplementableEvent)
     void OnTrapStep(ETrapStepSlot StepSlot);
+
+private:
+    // 디버그/안전용: 서버에서만 스텝 진행을 시작하도록 강제
+    void StartServerPattern();
 };
