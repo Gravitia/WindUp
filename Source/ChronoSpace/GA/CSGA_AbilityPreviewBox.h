@@ -43,5 +43,5 @@ private:
 	
 
 	UPROPERTY(EditAnywhere, Category = "Duration")
-	float DurationTime = 1.1f;
+	float DurationTime = 5.0f;
 };

@@ -8,6 +8,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/BoxComponent.h"
+#include "Physics/CSCollision.h" 
 #include "ChronoSpace.h"
 
 ACSTA_ReverseGravityBox::ACSTA_ReverseGravityBox()
@@ -22,6 +23,10 @@ ACSTA_ReverseGravityBox::ACSTA_ReverseGravityBox()
     static ConstructorHelpers::FObjectFinder<UMaterial> MaterialRef(TEXT("/Script/Engine.Material'/Game/31_Material/MAT_AntyGravity.MAT_AntyGravity'"));
     
     SetSteticMeshMaterial(MaterialRef.Object, MeshScale.X);
+
+
+    // 플레이어 채널만 Overlap
+    BoxTrigger->SetCollisionResponseToChannel(CCHANNEL_CSPLAYER, ECR_Overlap);
 }
 
 void ACSTA_ReverseGravityBox::StartTargeting(UGameplayAbility* Ability)
