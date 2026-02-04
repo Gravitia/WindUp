@@ -6,11 +6,14 @@
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/Pawn.h"
 #include "UI/CSProgressUIWidget.h"
+#include "Interface/CSProgressActivatable.h"
 
-// Sets default values
 ACSProgressTrigger::ACSProgressTrigger()
 {
 	PrimaryActorTick.bCanEverTick = false;
+
+	// 멀티에서 서버가 상태를 바꿀 거면, 트리거도 복제 켜두는 게 안정적
+	bReplicates = true;
 
 	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	RootComponent = Root;
@@ -20,17 +23,14 @@ ACSProgressTrigger::ACSProgressTrigger()
 	TriggerBox->SetCollisionProfileName(TEXT("Trigger"));
 }
 
-// Called when the game starts or when spawned
 void ACSProgressTrigger::BeginPlay()
 {
 	Super::BeginPlay();
-	
 
 	TriggerBox->OnComponentBeginOverlap.AddDynamic(
 		this, &ACSProgressTrigger::OnTriggerBegin
 	);
 }
-
 
 void ACSProgressTrigger::OnTriggerBegin(
 	UPrimitiveComponent* OverlappedComponent,
@@ -40,30 +40,72 @@ void ACSProgressTrigger::OnTriggerBegin(
 	bool bFromSweep,
 	const FHitResult& SweepResult)
 {
-	if (bTriggered)
+	if (bTriggerOnce && bTriggered)
+	{
 		return;
+	}
 
 	APawn* Pawn = Cast<APawn>(OtherActor);
 	if (!Pawn)
+	{
 		return;
+	}
 
-	APlayerController* PC = Cast<APlayerController>(Pawn->GetController());
-	if (!PC)
+	// =================
+	// 1) UI는 "해당 플레이어 로컬"에서만 띄우기
+	// =================
+	if (Pawn->IsLocallyControlled())
+	{
+		APlayerController* PC = Cast<APlayerController>(Pawn->GetController());
+		if (PC && ProgressUIWidgetClass)
+		{
+			if (UCSProgressUIWidget* Widget = CreateWidget<UCSProgressUIWidget>(PC, ProgressUIWidgetClass))
+			{
+				Widget->AddToViewport(50);
+				Widget->Show(ProgressText, DisplayDuration, bProgressText);
+			}
+		}
+	}
+
+	// =================
+	// 2) 가동/정지는 서버에서만 처리
+	// =================
+	if (!HasAuthority())
+	{
 		return;
+	}
 
-	if (!ProgressUIWidgetClass)
-		return;
+	// Activate
+	for (AActor* Target : ActivateTargets)
+	{
+		if (!IsValid(Target))
+			continue;
 
-	UCSProgressUIWidget* Widget =
-		CreateWidget<UCSProgressUIWidget>(PC, ProgressUIWidgetClass);
+		if (Target->GetClass()->ImplementsInterface(UCSProgressActivatable::StaticClass()))
+		{
+			ICSProgressActivatable::Execute_Activate(Target, Pawn, TriggerId);
+		}
+	}
 
-	if (!Widget)
-		return;
+	// Deactivate
+	for (AActor* Target : DeactivateTargets)
+	{
+		if (!IsValid(Target))
+			continue;
 
-	Widget->AddToViewport(50);
-	Widget->Show(ProgressText, DisplayDuration, bProgressText);
+		if (Target->GetClass()->ImplementsInterface(UCSProgressActivatable::StaticClass()))
+		{
+			ICSProgressActivatable::Execute_Deactivate(Target, Pawn, TriggerId);
+		}
+	}
 
+	// 트리거 상태 처리
 	bTriggered = true;
+
+	// 충돌 비활성(재발동 방지)
 	SetActorEnableCollision(false);
+
+	// 전파 빨리
+	ForceNetUpdate();
 }
 

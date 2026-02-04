@@ -14,8 +14,7 @@ class CHRONOSPACE_API ACSProgressTrigger : public AActor
 {
 	GENERATED_BODY()
 	
-public:	
-	// Sets default values for this actor's properties
+public:
 	ACSProgressTrigger();
 
 protected:
@@ -31,7 +30,6 @@ protected:
 		const FHitResult& SweepResult
 	);
 
-protected:
 	/* ================= Components ================= */
 
 	UPROPERTY(VisibleAnywhere)
@@ -42,23 +40,39 @@ protected:
 
 	/* ================= Progress UI ================= */
 
-	/** 표시할 Progress UI 위젯 클래스 (BP) */
-	UPROPERTY(EditAnywhere, Category = "Default")
+	UPROPERTY(EditAnywhere, Category = "Default|UI")
 	TSubclassOf<UCSProgressUIWidget> ProgressUIWidgetClass;
 
-	UPROPERTY(EditAnywhere, Category = "Default")
-	bool bProgressText;
+	UPROPERTY(EditAnywhere, Category = "Default|UI")
+	bool bProgressText = true;
 
-	/** 전달할 텍스트 ID */
-	UPROPERTY(EditAnywhere, Category = "Default")
+	UPROPERTY(EditAnywhere, Category = "Default|UI")
 	FName ProgressText;
 
-	/** 표시 유지 시간 */
-	UPROPERTY(EditAnywhere, Category = "Default")
+	UPROPERTY(EditAnywhere, Category = "Default|UI")
 	float DisplayDuration = 3.0f;
+
+	/* ================= Targets ================= */
+
+	// 트리거에 닿으면 Activate 할 대상들(레벨에 배치된 액터 드래그로 넣기)
+	UPROPERTY(EditAnywhere, Category = "Default|Progress")
+	TArray<TObjectPtr<AActor>> ActivateTargets;
+
+	// 트리거에 닿으면 Deactivate 할 대상들
+	UPROPERTY(EditAnywhere, Category = "Default|Progress")
+	TArray<TObjectPtr<AActor>> DeactivateTargets;
+
+	// 트리거 ID (디버그/로그용)
+	UPROPERTY(EditAnywhere, Category = "Default|Progress")
+	FName TriggerId = NAME_None;
+
+	// 한 번만 발동할지
+	UPROPERTY(EditAnywhere, Category = "Default|Progress")
+	bool bTriggerOnce = true;
 
 	/* ================= State ================= */
 
+	UPROPERTY(VisibleInstanceOnly, Category = "Default|Progress")
 	bool bTriggered = false;
 
 };
