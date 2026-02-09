@@ -84,7 +84,7 @@ void ACSConveyorManager::Tick(float DeltaSeconds)
 	// ===== Server =====
 	if (HasAuthority())
 	{
-		RepProgress += MoveSpeed * DeltaSeconds;
+		RepProgress -= MoveSpeed * DeltaSeconds;
 		RepProgress = FMath::Fmod(RepProgress, TotalLength);
 		if (RepProgress < 0.f)
 		{

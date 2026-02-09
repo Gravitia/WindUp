@@ -15,6 +15,8 @@ ACSConveyorPlatform::ACSConveyorPlatform()
 
 	SetReplicateMovement(false);
 	bReplicates = true;
+
+
 }
 
 void ACSConveyorPlatform::SetManager(ACSConveyorManager* InManager)
