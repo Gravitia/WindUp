@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -22,7 +22,7 @@ enum class EAbilityIndex : int32
 	TimeRewind = 101,
 
 	WindUp = 150,
-	ProjectileGuide = 151,
+	ProjectileGuide = 151,	// Projectile BlackHole
 	CameraZoom = 152,
 
 
@@ -76,6 +76,13 @@ protected:
 	UPROPERTY(EditAnywhere, Category = GAS)
 	TMap< EAbilityIndex, TSubclassOf<class UGameplayAbility> > StartInputAbilities; 
 
+	// ì‰¬í•‘ ë¹Œë“œì—ì„œë§Œ ì‘ë™
+	UPROPERTY(EditAnywhere, Category = GAS)
+	TSet< EAbilityIndex > AbilitiesPlayer1Banned;
+
+	UPROPERTY(EditAnywhere, Category = GAS)
+	TSet< EAbilityIndex > AbilitiesPlayer2Banned;
+
 // Action
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, Meta = (AllowPrivateAccess = "true"))
@@ -126,7 +133,7 @@ protected:
 
 protected:
 
-	// WindUp ÀÔ·Â ÇÚµé·¯µé
+	// WindUp ì…ë ¥ í•¸ë“¤ëŸ¬ë“¤
 	UFUNCTION()
 	void OnWindUpStarted(const struct FInputActionValue& Value);
 
@@ -137,6 +144,6 @@ protected:
 	void OnWindUpCompleted(const struct FInputActionValue& Value);
 
 private:
-	// WindUp »óÅÂ ÃßÀû
+	// WindUp ìƒíƒœ ì¶”ì 
 	bool bWindUpActive = false;
 };

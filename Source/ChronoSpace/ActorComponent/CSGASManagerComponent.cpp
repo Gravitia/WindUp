@@ -37,6 +37,18 @@ void UCSGASManagerComponent::SetGASAbilities()
 
 	for (const auto& StartInputAbility : StartInputAbilities) 
 	{
+		if ( UE_BUILD_SHIPPING )
+		{
+			TSet< EAbilityIndex > BannedAbilities;
+			if (Cast<APawn>(GetOwner())->IsLocallyControlled()) // ¼­¹ö
+				BannedAbilities = AbilitiesPlayer1Banned;
+			else
+				BannedAbilities = AbilitiesPlayer2Banned;
+
+			if (BannedAbilities.Find(StartInputAbility.Key))
+				continue;
+		}
+
 		FGameplayAbilitySpec StartSpec(StartInputAbility.Value); 
 		StartSpec.InputID = static_cast<int32>(StartInputAbility.Key); 
 		ASC->GiveAbility(StartSpec); 
