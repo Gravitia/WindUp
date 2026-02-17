@@ -22,14 +22,13 @@ enum class EAbilityIndex : int32
 	TimeRewind = 101,
 
 	WindUp = 150,
-	ProjectileGuide = 151,	// Projectile BlackHole
+	ProjectileBlackHole = 151,	// Projectile BlackHole
 	CameraZoom = 152,
 
 
 	ScaleSmall = 200,
 	ScaleNormal = 201,
-	ScaleLarge = 202
-
+	ScaleLarge = 202,
 };
 
 
@@ -66,6 +65,7 @@ protected:
 	void HandleGASInputReleased(int32 InputId);
 	// ********************************************************
 
+	bool IsPlayer1();
 
 	UPROPERTY(EditAnywhere, Category = GAS)
 	TObjectPtr<class UAbilitySystemComponent> ASC;
@@ -129,7 +129,7 @@ protected:
 	TObjectPtr<class UInputAction> GravityCoreAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<class UInputAction> ProjectileGuideAction;
+	TObjectPtr<class UInputAction> ProjectileBlackHoleAction;
 
 protected:
 

@@ -106,7 +106,7 @@ void UCSGA_ProjectileBlackHole::ActivateAbility(const FGameplayAbilitySpecHandle
 	}
 	*/
 
-	UE_LOG(LogCS, Log, TEXT("ProjectileGuide Activated"));
+	UE_LOG(LogCS, Log, TEXT("ProjectileBlackHole Activated"));
 
 }
 
@@ -168,7 +168,7 @@ void UCSGA_ProjectileBlackHole::EndAbility(const FGameplayAbilitySpecHandle Hand
 		GetWorld()->GetTimerManager().ClearTimer(DurationTimerHandle);
 	}
 
-	UE_LOG(LogCS, Log, TEXT("ProjectileGuide Ended"));
+	UE_LOG(LogCS, Log, TEXT("ProjectileBlackHole Ended"));
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 

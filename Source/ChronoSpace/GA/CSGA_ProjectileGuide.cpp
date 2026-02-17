@@ -87,7 +87,7 @@ void UCSGA_ProjectileGuide::ActivateAbility(const FGameplayAbilitySpecHandle Han
 		false
 	);
 
-	UE_LOG(LogCS, Log, TEXT("ProjectileGuide Activated"));
+	UE_LOG(LogCS, Log, TEXT("ProjectileBlackHole Activated"));
 }
 
 FVector UCSGA_ProjectileGuide::GetScreenCenterDirection() const
@@ -158,7 +158,7 @@ void UCSGA_ProjectileGuide::EndAbility(const FGameplayAbilitySpecHandle Handle, 
 		GetWorld()->GetTimerManager().ClearTimer(DurationTimerHandle);
 	}
 
-	UE_LOG(LogCS, Log, TEXT("ProjectileGuide Ended"));
+	UE_LOG(LogCS, Log, TEXT("ProjectileBlackHole Ended"));
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 
