@@ -187,4 +187,10 @@ public:
 
 	UFUNCTION(Client, Reliable)
 	void ClientSetSpectatorCameraArmLength(float NewArmLength);
+
+// Respawn Camera Direction Set
+public:
+	UFUNCTION(Client, Reliable)
+	void Client_ApplyRespawnView(const FRotator& Rot);
+
 };

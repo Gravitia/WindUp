@@ -656,3 +656,14 @@ void ACSPlayerController::ClientSetSpectatorCameraArmLength_Implementation(float
 			*GetName(), NewArmLength);
 	}
 }
+
+void ACSPlayerController::Client_ApplyRespawnView_Implementation(const FRotator& Rot)
+{
+	SetControlRotation(Rot);
+
+	// (선택) 몸도 같이 맞추고 싶으면
+	if (APawn* P = GetPawn())
+	{
+		P->SetActorRotation(Rot);
+	}
+}

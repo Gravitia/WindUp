@@ -15,6 +15,8 @@ ACSKillZone::ACSKillZone()
 {
     PrimaryActorTick.bCanEverTick = false;
 
+    bReplicates = true;
+
     // Kill Volume as root
     KillVolume = CreateDefaultSubobject<UBoxComponent>(TEXT("KillVolume"));
     RootComponent = KillVolume;
@@ -26,6 +28,8 @@ ACSKillZone::ACSKillZone()
     VisualMesh->SetupAttachment(RootComponent);
     VisualMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     VisualMesh->SetVisibility(bShowVisualMesh);
+
+
 }
 
 void ACSKillZone::BeginPlay()

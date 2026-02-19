@@ -306,7 +306,7 @@ bool ACSGameMode::RespawnSinglePlayer(APawn* Player)
 
     // 3) 스폰 트랜스폼 결정 (+ Z 오프셋)
     FTransform SpawnTM = RespawnPoint->GetActorTransform();
-    SpawnTM.AddToTranslation(FVector(0.f, 0.f, 100.f)); // 필요 없으면 0으로
+    SpawnTM.AddToTranslation(FVector(0.f, 0.f, 100.f)); 
 
     // 4) 엔진 정석 리스폰: 새 Pawn 스폰 + Possess 흐름
     RestartPlayerAtTransform(Controller, SpawnTM);
@@ -324,6 +324,11 @@ bool ACSGameMode::RespawnSinglePlayer(APawn* Player)
     {
         UE_LOG(LogCS, Warning, TEXT("RespawnSinglePlayer: Restart succeeded but NewPawn is null"));
         return false;
+    }
+
+    if (ACSPlayerController* CSPC = Cast<ACSPlayerController>(Controller))
+    {
+        CSPC->Client_ApplyRespawnView(SpawnRot);
     }
 
     // (선택) 시선/카메라까지 확실히 맞추기
