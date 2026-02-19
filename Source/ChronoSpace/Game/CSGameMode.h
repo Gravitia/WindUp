@@ -63,7 +63,6 @@ public:
 
 private:
     TArray< TObjectPtr< APlayerController > > ConnectedPlayers;
-
     TObjectPtr< class ACSPlayerController > DummyPlayerController;
 
     void CreateDummyLocalPlayer();
@@ -73,4 +72,5 @@ private:
 
     FTimerHandle SyncTimerHandle;
     FTimerHandle RotationSyncTimerHandle;
+
 };

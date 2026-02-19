@@ -22,9 +22,6 @@ public:
     UArrowComponent* DirectionArrow;
 
 public:
-    // === Core Functions ===
-    UFUNCTION(BlueprintCallable, Category = "Respawn Point")
-    void SpawnPlayerHere(APawn* Player);
 
     UFUNCTION(BlueprintCallable, Category = "Respawn Point")
     FVector GetRespawnLocation() const { return GetActorLocation(); }

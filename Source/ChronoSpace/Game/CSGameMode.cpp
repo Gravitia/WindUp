@@ -5,6 +5,7 @@
 #include "Game/CSGameState.h"
 #include "Player/CSPlayerController.h"
 #include "Player/CSPlayerState.h"
+#include "Character/CSCharacterPlayer.h"
 #include "Actor/System/CSCheckPoint.h"
 #include "Actor/System/CSRespawnPoint.h"
 #include "Actor/CSCameraViewProxy.h"
@@ -277,30 +278,72 @@ UClass* ACSGameMode::GetDefaultPawnClassForController_Implementation(AController
 
 bool ACSGameMode::RespawnSinglePlayer(APawn* Player)
 {
-    if (!Player) return false;
+    if (!HasAuthority() || !IsValid(Player))
+        return false;
 
-    ACSPlayerState* PS = Player->GetPlayerState<ACSPlayerState>();
-    if (!PS)
+    // 1) 컨트롤러 확보 (RestartPlayerAtTransform은 Controller가 필요)
+    AController* Controller = Player->GetController();
+    if (!IsValid(Controller))
     {
-        UE_LOG(LogCS, Warning, TEXT("No PlayerState for respawn"));
+        UE_LOG(LogCS, Warning, TEXT("RespawnSinglePlayer: Controller is null"));
+        return false;
+    }
+
+    // 2) 개인 리스폰 포인트 확보
+    ACSPlayerState* PS = Player->GetPlayerState<ACSPlayerState>();
+    if (!IsValid(PS))
+    {
+        UE_LOG(LogCS, Warning, TEXT("RespawnSinglePlayer: No PlayerState"));
         return false;
     }
 
     ACSRespawnPoint* RespawnPoint = PS->GetPersonalRespawnPoint();
-    if (!RespawnPoint)
+    if (!IsValid(RespawnPoint))
     {
-        UE_LOG(LogCS, Warning, TEXT("No personal respawn point, using fallback"));
-        return false; // 또는 맵 시작 지점
+        UE_LOG(LogCS, Warning, TEXT("RespawnSinglePlayer: No personal respawn point"));
+        return false;
     }
 
-    RespawnPoint->SpawnPlayerHere(Player);
+    // 3) 스폰 트랜스폼 결정 (+ Z 오프셋)
+    FTransform SpawnTM = RespawnPoint->GetActorTransform();
+    SpawnTM.AddToTranslation(FVector(0.f, 0.f, 100.f)); // 필요 없으면 0으로
 
+    // 4) 엔진 정석 리스폰: 새 Pawn 스폰 + Possess 흐름
+    RestartPlayerAtTransform(Controller, SpawnTM);
+
+    APawn* NewPawn = Controller->GetPawn();
+    if (!IsValid(NewPawn)) return false;
+
+    // 위치가 안 먹는 케이스 방지: 한 번 더 확정
+    const FVector SpawnLoc = SpawnTM.GetLocation();
+    const FRotator SpawnRot = SpawnTM.GetRotation().Rotator();
+    NewPawn->TeleportTo(SpawnLoc, SpawnRot, false, true);
+    NewPawn->ForceNetUpdate();
+
+    if (!IsValid(NewPawn))
+    {
+        UE_LOG(LogCS, Warning, TEXT("RespawnSinglePlayer: Restart succeeded but NewPawn is null"));
+        return false;
+    }
+
+    // (선택) 시선/카메라까지 확실히 맞추기
+    if (APlayerController* PC = Cast<APlayerController>(Controller))
+    {
+        PC->SetControlRotation(SpawnRot);
+        PC->ClientSetRotation(SpawnRot, true);
+    }
+
+    // 6) GameState 부활 처리: "새 Pawn" 기준으로 호출하는 게 중요
     if (ACSGameState* GS = GetCSGameState())
     {
-        GS->HandlePlayerRevive(Player);
+        GS->HandlePlayerRevive(NewPawn);
     }
 
-    UE_LOG(LogCS, Log, TEXT("Personal respawned: %s"), *Player->GetName());
+    UE_LOG(LogCS, Log, TEXT("Personal respawned via RestartPlayerAtTransform: %s -> %s"),
+        *Player->GetName(),
+        *NewPawn->GetName()
+    );
+
     return true;
 }
 

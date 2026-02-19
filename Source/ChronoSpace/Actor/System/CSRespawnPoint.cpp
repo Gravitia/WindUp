@@ -21,24 +21,3 @@ ACSRespawnPoint::ACSRespawnPoint()
     DirectionArrow->SetArrowColor(FLinearColor::Blue);
     DirectionArrow->ArrowSize = 2.0f;
 }
-
-void ACSRespawnPoint::SpawnPlayerHere(APawn* Player)
-{
-    if (!Player)
-        return;
-
-    // Set player location and rotation
-    Player->SetActorLocation(GetActorLocation());
-    Player->SetActorRotation(GetActorRotation());
-
-    // Clear velocity
-    if (ACharacter* Character = Cast<ACharacter>(Player))
-    {
-        if (UCharacterMovementComponent* MovementComp = Character->GetCharacterMovement())
-        {
-            MovementComp->Velocity = FVector::ZeroVector;
-        }
-    }
-
-    UE_LOG(LogTemp, Log, TEXT("Player spawned at RespawnPoint"));
-}
