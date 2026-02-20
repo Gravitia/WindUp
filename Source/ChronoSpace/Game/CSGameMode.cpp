@@ -574,7 +574,7 @@ void ACSGameMode::SetupOnlineSplitScreen()
 
                 SyncDummyRotationWithProxy();
             }),
-        0.016f,   // 60FPS 주기
+        0.033f,   // FPS 주기
         true      // 반복
     );
 }

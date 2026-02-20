@@ -13,7 +13,7 @@ ACSCameraViewProxy::ACSCameraViewProxy()
 
     bReplicates = true;
     bAlwaysRelevant = true;   // 어디서나 항상 관련
-    SetNetUpdateFrequency(60.f);   // 필요 시 조정
+    SetNetUpdateFrequency(30.f);   // 필요 시 조정
     SetReplicateMovement(false); // 우리는 위치/회전을 액터 위치로 안 쓰고, RepCam만 복제
 
     bIsServerProxy = false;

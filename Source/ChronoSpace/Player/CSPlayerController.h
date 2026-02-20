@@ -11,6 +11,7 @@ class SCSServerTravelWidget;
 class ACSSpectatorPawn;
 class ACSCameraViewProxy;
 class UCameraComponent;
+class ACSCharacterPlayer;
 
 // 카메라 예측을 위한 데이터 구조체
 USTRUCT()
@@ -58,15 +59,15 @@ class CHRONOSPACE_API ACSPlayerController : public APlayerController
 public:
 	ACSPlayerController();
 
-	// UI ���� Ŭ���� - Blueprint���� ����
+	// UI
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "UI")
 	TSubclassOf<UCSGameUIWidget> GameUIWidgetClass;
 
-	// ���� UI ����
+	// UI 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "UI")
 	TObjectPtr<UCSGameUIWidget> GameUIWidget;
 
-	// UI ���� �Լ���
+	// UI
 	UFUNCTION(BlueprintCallable, Category = "UI")
 	void ShowGameUI();
 
@@ -79,12 +80,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "UI")
 	void RefreshGameUI();
 
-	// ���� UI ���� Ȯ��
+	// UI 
 	UFUNCTION(BlueprintPure, Category = "UI")
 	bool IsGameUIVisible() const;
 
 	/*
-	// UI ���� ���� ���� (Blueprint��)
+	// UI 
 	UFUNCTION(BlueprintPure, Category = "UI")
 	UCSGameUIWidget* GetGameUIWidget() const { return GameUIWidget; }
 	*/
@@ -99,7 +100,7 @@ protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void SetupInputComponent() override;
 
-	// PlayerState ��ȭ ����
+	// PlayerState
 	virtual void OnRep_PlayerState() override;
 
 private:
@@ -123,6 +124,8 @@ public:
 	UPROPERTY()
 	TWeakObjectPtr<ACSCameraViewProxy> CachedProxy;
 
+	UPROPERTY(Transient)
+	TWeakObjectPtr<ACSCharacterPlayer> CachedRemoteCharacter;
 
 private:
 	// 네트워크 업데이트 관련

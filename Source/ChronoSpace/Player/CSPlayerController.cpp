@@ -433,7 +433,7 @@ void ACSPlayerController::StartClientDummySync(ACSSpectatorPawn* DummyPawn)
 
 				SyncClientDummyWithRemotePlayer(DummyPawn);
 			}),
-		0.008f,
+		0.033f,
 		true
 	);
 }
@@ -489,35 +489,42 @@ void ACSPlayerController::ApplyCamera(ACSSpectatorPawn* DummyPawn, const FCamera
 {
 	if (!DummyPawn) return;
 
-	// 오직 클라에서 서버 캐릭터 예측에만 쓰이니..
-	for (TActorIterator<ACSCharacterPlayer> It(GetWorld()); It; ++It)
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	ACSCharacterPlayer* RemoteChar = CachedRemoteCharacter.Get();
+
+	if (!IsValid(RemoteChar) || RemoteChar->IsLocallyControlled())
 	{
-		ACSCharacterPlayer* TargetCharacter = *It;
-		if (!TargetCharacter || TargetCharacter->IsLocallyControlled())
-			continue;
+		CachedRemoteCharacter.Reset();
+		RemoteChar = nullptr;
 
-		// 위치 보간 (서버 캐릭터를 따라감)
-		const FVector TargetLoc = TargetCharacter->GetActorLocation();
-		const FVector CurrentLoc = DummyPawn->GetActorLocation();
-		const float LocInterpSpeed = 30.f; // 이동 보간 속도
-		const FVector SmoothedLoc = FMath::VInterpTo(CurrentLoc, TargetLoc, GetWorld()->GetDeltaSeconds(), LocInterpSpeed);
-		DummyPawn->SetActorLocation(SmoothedLoc);
-		
-		// 회전 보간 (서버 카메라 회전 따라감)
-		if (APlayerController* DummyController = Cast<APlayerController>(DummyPawn->GetController()))
+		for (TActorIterator<ACSCharacterPlayer> It(World); It; ++It)
 		{
-			const FRotator CurrentRot = DummyController->GetControlRotation();
-			const FRotator TargetRot = CameraData.Rotation;
-			const float RotInterpSpeed = 45.f; // 회전 보간 속도
-			const FRotator SmoothedRot = FMath::RInterpTo(CurrentRot, TargetRot, GetWorld()->GetDeltaSeconds(), RotInterpSpeed);
+			ACSCharacterPlayer* Target = *It;
+			if (!IsValid(Target)) continue;
+			if (Target->IsLocallyControlled()) continue;
 
-			DummyController->SetControlRotation(SmoothedRot);
+			CachedRemoteCharacter = Target;
+			RemoteChar = Target;
+			break;
 		}
 
-		break;
+		if (!IsValid(RemoteChar))
+			return;
+	}
+
+	const FVector TargetLoc = RemoteChar->GetActorLocation();
+	const FVector CurrentLoc = DummyPawn->GetActorLocation();
+	DummyPawn->SetActorLocation(FMath::VInterpTo(CurrentLoc, TargetLoc, World->GetDeltaSeconds(), 30.f));
+
+	if (APlayerController* DummyController = Cast<APlayerController>(DummyPawn->GetController()))
+	{
+		const FRotator SmoothedRot =
+			FMath::RInterpTo(DummyController->GetControlRotation(), CameraData.Rotation, World->GetDeltaSeconds(), 45.f);
+		DummyController->SetControlRotation(SmoothedRot);
 	}
 }
-
 void ACSPlayerController::SetAsDummyController(bool bDummy)
 {
 	bIsDummyController = bDummy;
@@ -667,3 +674,4 @@ void ACSPlayerController::Client_ApplyRespawnView_Implementation(const FRotator&
 		P->SetActorRotation(Rot);
 	}
 }
+
