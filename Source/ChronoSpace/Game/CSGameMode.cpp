@@ -34,6 +34,8 @@ void ACSGameMode::BeginPlay()
 {
     Super::BeginPlay();
 
+    /*
+
     if (bAutoEnableSplitScreen)
     {
         UCSSplitScreenSubsystem* CSSplitSubsystem = GetGameInstance()->GetSubsystem<UCSSplitScreenSubsystem>();
@@ -43,6 +45,7 @@ void ACSGameMode::BeginPlay()
             CSSplitSubsystem->EnableSplitScreen();
         }
     }
+    */
 }
 
 void ACSGameMode::PostLogin(APlayerController* NewPlayer)
@@ -116,7 +119,7 @@ void ACSGameMode::PostLogin(APlayerController* NewPlayer)
             UE_LOG(LogCS, Warning, TEXT("CS Created ServerCamProxy (ListenServer POV, No Owner)"));
         }
     }
-
+    /*
     if (bAutoEnableSplitScreen)
     {
         if (GetWorld()->GetNetMode() == NM_ListenServer)
@@ -129,6 +132,7 @@ void ACSGameMode::PostLogin(APlayerController* NewPlayer)
             }
         }
     }
+    */
 }
 
 void ACSGameMode::HandleSeamlessTravelPlayer(AController*& C)

@@ -34,8 +34,8 @@ void ACSPlayerController::BeginPlay()
 	SetupInputMode();
 
 	// UI 생성을 약간 지연 (PlayerState 초기화 대기)
-	GetWorldTimerManager().SetTimer(UICreationTimerHandle, this, &ACSPlayerController::InitializeUI, 0.2f, false);
-
+	// GetWorldTimerManager().SetTimer(UICreationTimerHandle, this, &ACSPlayerController::InitializeUI, 0.2f, false);
+	/*
 	if (!bIsDummyController)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("SS Player Controller Started - IsLocalController: %s"),
@@ -75,6 +75,7 @@ void ACSPlayerController::BeginPlay()
 			);
 		}
 	}
+	*/
 }
 
 void ACSPlayerController::ShakeCamera()
@@ -84,6 +85,7 @@ void ACSPlayerController::ShakeCamera()
 		ClientStartCameraShake(CameraShake);
 	}
 }
+
 void ACSPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
@@ -420,7 +422,7 @@ void ACSPlayerController::StartClientDummySync(ACSSpectatorPawn* DummyPawn)
 	}
 
 	UE_LOG(LogTemp, Warning, TEXT("SS Starting client dummy sync"));
-
+	/*
 	// 클라이언트에서 원격 플레이어와 동기화
 	GetWorldTimerManager().SetTimer(
 		ClientSyncTimerHandle,
@@ -436,6 +438,7 @@ void ACSPlayerController::StartClientDummySync(ACSSpectatorPawn* DummyPawn)
 		0.033f,
 		true
 	);
+	*/
 }
 
 void ACSPlayerController::SyncClientDummyWithRemotePlayer(ACSSpectatorPawn* DummyPawn)
@@ -516,14 +519,18 @@ void ACSPlayerController::ApplyCamera(ACSSpectatorPawn* DummyPawn, const FCamera
 
 	const FVector TargetLoc = RemoteChar->GetActorLocation();
 	const FVector CurrentLoc = DummyPawn->GetActorLocation();
-	DummyPawn->SetActorLocation(FMath::VInterpTo(CurrentLoc, TargetLoc, World->GetDeltaSeconds(), 30.f));
+	
+	// 필요 없음. 
+	//DummyPawn->SetActorLocation(FMath::VInterpTo(CurrentLoc, TargetLoc, World->GetDeltaSeconds(), 30.f));
+
 
 	if (APlayerController* DummyController = Cast<APlayerController>(DummyPawn->GetController()))
 	{
 		const FRotator SmoothedRot =
-			FMath::RInterpTo(DummyController->GetControlRotation(), CameraData.Rotation, World->GetDeltaSeconds(), 45.f);
+			FMath::RInterpTo(DummyController->GetControlRotation(), CameraData.Rotation, World->GetDeltaSeconds(), 8.f);
 		DummyController->SetControlRotation(SmoothedRot);
 	}
+	
 }
 void ACSPlayerController::SetAsDummyController(bool bDummy)
 {
