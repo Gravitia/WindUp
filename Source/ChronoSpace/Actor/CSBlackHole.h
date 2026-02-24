@@ -42,10 +42,10 @@ protected:
 	void ProcessForCharacter(float DeltaTime);
 	void ProcessForStaticMesh(float DeltaTime);
 
-	UPROPERTY(VisibleAnywhere, Category = "Sphere", Meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sphere", Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class USphereComponent> GravitySphereTrigger;
 
-	UPROPERTY(VisibleAnywhere, Category = "Sphere", Meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sphere", Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class USphereComponent> EventHorizonSphereTrigger;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mesh")
