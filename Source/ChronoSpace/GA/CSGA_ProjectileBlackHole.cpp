@@ -6,6 +6,7 @@
 #include "GA/CSGA_CameraZoom.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/Character.h"
+#include "GameFramework/SpringArmComponent.h"
 #include "Engine/World.h"
 #include "DrawDebugHelpers.h"
 #include "Abilities/GameplayAbilityTypes.h"
@@ -37,6 +38,10 @@ UCSGA_ProjectileBlackHole::UCSGA_ProjectileBlackHole()
 	GravityInfluenceRange = 500.0f;
 	PullStrength = 10.0f;
 	StopRange = 100.0f;
+
+	CameraZOffsetWhileAiming = 400.0f;
+	bApplyCameraZOffsetWhileAiming = true;
+	bCameraOffsetApplied = false;
 
 	bRetriggerInstancedAbility = true;
 }
@@ -106,6 +111,8 @@ void UCSGA_ProjectileBlackHole::ActivateAbility(const FGameplayAbilitySpecHandle
 	}
 	*/
 
+	ApplyCameraZOffset();
+
 	UE_LOG(LogCS, Log, TEXT("ProjectileBlackHole Activated"));
 
 }
@@ -152,6 +159,8 @@ FVector UCSGA_ProjectileBlackHole::GetScreenCenterDirection() const
 
 void UCSGA_ProjectileBlackHole::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
+	RestoreCameraZOffset();
+
 	if ( BlackHoleDummyActor )
 	{
 		BlackHoleDummyActor->Destroy();
@@ -167,6 +176,8 @@ void UCSGA_ProjectileBlackHole::EndAbility(const FGameplayAbilitySpecHandle Hand
 	{
 		GetWorld()->GetTimerManager().ClearTimer(DurationTimerHandle);
 	}
+
+	
 
 	UE_LOG(LogCS, Log, TEXT("ProjectileBlackHole Ended"));
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
@@ -349,4 +360,56 @@ void UCSGA_ProjectileBlackHole::CheckMouseMovement()
 			}
 		}
 	}
+}
+
+
+void UCSGA_ProjectileBlackHole::ApplyCameraZOffset()
+{
+	if (!bApplyCameraZOffsetWhileAiming || bCameraOffsetApplied)
+	{
+		return;
+	}
+
+	AActor* Avatar = GetAvatarActorFromActorInfo();
+	if (!IsValid(Avatar))
+	{
+		return;
+	}
+
+	// 캐릭터에 붙은 스프링암 컴포넌트 찾기
+	USpringArmComponent* SpringArmComp = Avatar->FindComponentByClass<USpringArmComponent>();
+	if (!IsValid(SpringArmComp))
+	{
+		UE_LOG(LogCS, Warning, TEXT("ApplyCameraZOffset: SpringArmComponent not found"));
+		return;
+	}
+
+	CachedSpringArmComponent = SpringArmComp;
+	CachedSpringArmRelativeLocation = SpringArmComp->GetRelativeLocation();
+
+	FVector NewRelativeLocation = CachedSpringArmRelativeLocation;
+	NewRelativeLocation.Z += CameraZOffsetWhileAiming; // 기본 400
+
+	SpringArmComp->SetRelativeLocation(NewRelativeLocation);
+	bCameraOffsetApplied = true;
+
+	UE_LOG(LogCS, Log, TEXT("ApplyCameraZOffset(SpringArm): Z + %f"), CameraZOffsetWhileAiming);
+}
+
+void UCSGA_ProjectileBlackHole::RestoreCameraZOffset()
+{
+	if (!bCameraOffsetApplied)
+	{
+		return;
+	}
+
+	if (IsValid(CachedSpringArmComponent))
+	{
+		CachedSpringArmComponent->SetRelativeLocation(CachedSpringArmRelativeLocation);
+		UE_LOG(LogCS, Log, TEXT("RestoreCameraZOffset(SpringArm): Restored spring arm relative location"));
+	}
+
+	CachedSpringArmComponent = nullptr;
+	CachedSpringArmRelativeLocation = FVector::ZeroVector;
+	bCameraOffsetApplied = false;
 }

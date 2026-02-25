@@ -7,6 +7,8 @@
 #include "ActorComponent/CSGASManagerComponent.h"
 #include "CSGA_ProjectileBlackHole.generated.h"
 
+class UCameraComponent;
+
 /**
  * 
  */
@@ -106,4 +108,22 @@ protected:
 	/** 블랙홀 조준 시 사용하는 카메라 줌 Ability (BP 가능) */
 	UPROPERTY(EditDefaultsOnly, Category = "Camera")
 	TSubclassOf<UGameplayAbility> CameraZoomAbilityClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Default|Camera")
+	float CameraZOffsetWhileAiming = 400.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Default|Camera")
+	bool bApplyCameraZOffsetWhileAiming = true;
+
+	UPROPERTY(Transient)
+	TObjectPtr<class USpringArmComponent> CachedSpringArmComponent = nullptr;
+
+	UPROPERTY(Transient)
+	FVector CachedSpringArmRelativeLocation = FVector::ZeroVector;
+
+	UPROPERTY(Transient)
+	bool bCameraOffsetApplied = false;
+
+	void ApplyCameraZOffset();
+	void RestoreCameraZOffset();
 };

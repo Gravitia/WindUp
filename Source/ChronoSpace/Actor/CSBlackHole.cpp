@@ -31,6 +31,7 @@ ACSBlackHole::ACSBlackHole()
 	GravitySphereTrigger->OnComponentBeginOverlap.AddDynamic(this, &ACSBlackHole::OnTriggerBeginOverlap);
 	GravitySphereTrigger->OnComponentEndOverlap.AddDynamic(this, &ACSBlackHole::OnTriggerEndOverlap);
 
+
 	// EventHorizonSphereTrigger
 	EventHorizonSphereTrigger = CreateDefaultSubobject<USphereComponent>(TEXT("EventHorizonSphereTrigger"));
 	EventHorizonSphereTrigger->SetupAttachment(GravitySphereTrigger);
