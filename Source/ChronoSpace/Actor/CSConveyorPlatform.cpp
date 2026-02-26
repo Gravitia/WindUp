@@ -31,28 +31,29 @@ void ACSConveyorPlatform::SetIndexOffset(float InOffsetDistance)
 
 void ACSConveyorPlatform::Tick(float DeltaSeconds)
 {
-	Super::Tick(DeltaSeconds);
+    Super::Tick(DeltaSeconds);
 
-	if (!Manager)
-	{
-		return;
-	}
+    if (!Manager)
+    {
+        return;
+    }
 
-	const float TotalLength = Manager->GetTotalLength();
-	if (TotalLength <= KINDA_SMALL_NUMBER)
-	{
-		return;
-	}
+    const float TotalLength = Manager->GetTotalLength();
+    if (TotalLength <= KINDA_SMALL_NUMBER)
+    {
+        return;
+    }
 
-	float D = OffsetDistance + Manager->GetSmoothedProgress();
-	D = FMath::Fmod(D, TotalLength);
-	if (D < 0.f)
-	{
-		D += TotalLength;
-	}
+    float D = OffsetDistance + Manager->GetSmoothedProgress();
+    D = FMath::Fmod(D, TotalLength);
+    if (D < 0.f)
+    {
+        D += TotalLength;
+    }
 
-	FVector Loc = Manager->GetActorLocation();
-	Loc.Y += D;
+    FVector Loc = Manager->GetActorLocation();
+    Loc.Y += D;
+    Loc.Z += ZOffset; // Ãß°¡
 
-	SetActorLocation(Loc, false, nullptr, ETeleportType::None);
+    SetActorLocation(Loc, false, nullptr, ETeleportType::None);
 }

@@ -28,6 +28,9 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* Mesh;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default|Conveyor|Offset")
+	float ZOffset = 0.f;
+
 private:
 	UPROPERTY()
 	ACSConveyorManager* Manager = nullptr;
