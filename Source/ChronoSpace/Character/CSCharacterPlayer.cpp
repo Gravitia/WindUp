@@ -155,6 +155,8 @@ void ACSCharacterPlayer::OnRep_PlayerState()
 
 void ACSCharacterPlayer::Landed(const FHitResult& Hit)
 {
+	// 풀무 로직 수정으로 인한 Landed 주석 처리 
+	/*
 	Super::Landed(Hit);
 
 	// 밟은 Actor 가져오기
@@ -167,6 +169,7 @@ void ACSCharacterPlayer::Landed(const FHitResult& Hit)
 	{
 		Bellows->NotifyPlayerLanded(this);
 	}
+	*/
 }
  
 void ACSCharacterPlayer::BeginPlay()

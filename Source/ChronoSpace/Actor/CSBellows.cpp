@@ -1,9 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "CSBellows.h"
 #include "Net/UnrealNetwork.h"
 #include "TimerManager.h"
+#include "Components/StaticMeshComponent.h"
+#include "Components/BoxComponent.h"
+#include "GameFramework/Character.h"
 #include "Components/PrimitiveComponent.h"
 
 ACSBellows::ACSBellows()
@@ -13,66 +15,148 @@ ACSBellows::ACSBellows()
 
     Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BellowsMesh"));
     RootComponent = Mesh;
+
+    PressTrigger = CreateDefaultSubobject<UBoxComponent>(TEXT("PressTrigger"));
+    PressTrigger->SetupAttachment(RootComponent);
+    PressTrigger->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+    PressTrigger->SetCollisionResponseToAllChannels(ECR_Ignore);
+    PressTrigger->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+    PressTrigger->SetGenerateOverlapEvents(true);
+
+    // 초기 Mesh 스케일
+    Mesh->SetRelativeScale3D(IdleScale);
 }
 
 void ACSBellows::BeginPlay()
 {
     Super::BeginPlay();
+
+    if (PressTrigger)
+    {
+        PressTrigger->OnComponentBeginOverlap.AddDynamic(this, &ACSBellows::OnTriggerBeginOverlap);
+        PressTrigger->OnComponentEndOverlap.AddDynamic(this, &ACSBellows::OnTriggerEndOverlap);
+    }
+
+    if (Mesh)
+    {
+        Mesh->SetRelativeScale3D(IdleScale);
+    }
 }
 
 void ACSBellows::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
 
-    // Bellows scale lerp
-    if (bScaleLerping)
+    if (bScaleLerping && Mesh)
     {
         ScaleLerpAlpha += DeltaSeconds / ScaleLerpDuration;
 
-        FVector NewScale = FMath::Lerp(StartScale, TargetScale, ScaleLerpAlpha);
-        SetActorScale3D(NewScale);
+        const float Alpha = FMath::Clamp(ScaleLerpAlpha, 0.f, 1.f);
+        const FVector NewScale = FMath::Lerp(StartScale, TargetScale, Alpha);
+        Mesh->SetRelativeScale3D(NewScale);
 
-        if (ScaleLerpAlpha >= 1.f)
+        if (Alpha >= 1.f)
+        {
             bScaleLerping = false;
+        }
     }
 
-    // Linked actor lerp movement
     TickLinkedActorLerp(DeltaSeconds);
 }
 
-
-// --------------------------
-// Character Landed Event
-// --------------------------
-void ACSBellows::NotifyPlayerLanded(ACharacter* PlayerCharacter)
+void ACSBellows::OnTriggerBeginOverlap(
+    UPrimitiveComponent* OverlappedComp,
+    AActor* OtherActor,
+    UPrimitiveComponent* OtherComp,
+    int32 OtherBodyIndex,
+    bool bFromSweep,
+    const FHitResult& SweepResult
+)
 {
-    if (!HasAuthority() || !PlayerCharacter) return;
-
-    switch (BellowsState)
+    if (!HasAuthority())
     {
-    case EBellowsState::Idle:
-        // 첫 번째 플레이어 기록
-        FirstPressedPlayer = PlayerCharacter;
-        ChangeState(EBellowsState::PressOnePlayer);
-        break;
+        return;
+    }
 
-    case EBellowsState::PressOnePlayer:
-        // 같은 플레이어면 무시
-        if (FirstPressedPlayer == PlayerCharacter)
+    ACharacter* Ch = Cast<ACharacter>(OtherActor);
+    if (!Ch)
+    {
+        return;
+    }
+
+    OverlappingPlayers.Add(Ch);
+
+    if (bHoldPressTwoState)
+    {
+        return;
+    }
+
+    RecomputeStateFromOverlap();
+}
+
+void ACSBellows::OnTriggerEndOverlap(
+    UPrimitiveComponent* OverlappedComp,
+    AActor* OtherActor,
+    UPrimitiveComponent* OtherComp,
+    int32 OtherBodyIndex
+)
+{
+    if (!HasAuthority())
+    {
+        return;
+    }
+
+    ACharacter* Ch = Cast<ACharacter>(OtherActor);
+    if (!Ch)
+    {
+        return;
+    }
+
+    OverlappingPlayers.Remove(Ch);
+
+    if (bHoldPressTwoState)
+    {
+        return;
+    }
+
+    RecomputeStateFromOverlap();
+}
+
+void ACSBellows::RecomputeStateFromOverlap()
+{
+    for (auto It = OverlappingPlayers.CreateIterator(); It; ++It)
+    {
+        if (!It->IsValid())
         {
-            return;
+            It.RemoveCurrent();
         }
+    }
 
-        // 다른 플레이어일 때만 성공
-        ChangeState(EBellowsState::PressTwoPlayer);
-        break;
+    if (bHoldPressTwoState)
+    {
+        return;
+    }
+
+    const int32 Count = OverlappingPlayers.Num();
+
+    EBellowsState NewState = EBellowsState::Idle;
+
+    if (Count == 1)
+    {
+        NewState = EBellowsState::PressOnePlayer;
+    }
+    else if (Count >= 2)
+    {
+        NewState = EBellowsState::PressTwoPlayer;
+    }
+
+    if (BellowsState != NewState)
+    {
+        ApplyState(NewState);
     }
 }
 
-// --------------------------
-// State Machine
-// --------------------------
-void ACSBellows::ChangeState(EBellowsState NewState)
+void ACSBellows::ApplyState(EBellowsState NewState)
 {
     BellowsState = NewState;
 
@@ -88,62 +172,63 @@ void ACSBellows::ChangeState(EBellowsState NewState)
 
     case EBellowsState::PressTwoPlayer:
         StartScaleLerp(PressTwoScale);
+        StartPressTwoHold();
 
-        // Only move once
         if (!bLinkedMoved)
         {
             StartLinkedActorLerp();
         }
         break;
+
+    default:
+        break;
     }
-
-    // reset only Bellows, not linked actor
-    GetWorldTimerManager().ClearTimer(TimerHandle_Reset);
-    GetWorldTimerManager().SetTimer(
-        TimerHandle_Reset,
-        this,
-        &ACSBellows::ResetToIdle,
-        2.5f,
-        false
-    );
 }
 
-void ACSBellows::ResetToIdle()
-{
-    BellowsState = EBellowsState::Idle;
-    StartScaleLerp(IdleScale);
-
-    // 첫 플레이어 리셋
-    FirstPressedPlayer = nullptr;
-}
-
-
-// --------------------------
-// Scale Lerp
-// --------------------------
 void ACSBellows::StartScaleLerp(const FVector& NewTargetScale)
 {
-    StartScale = GetActorScale3D();
+    if (!Mesh)
+    {
+        return;
+    }
+
+    StartScale = Mesh->GetRelativeScale3D();
     TargetScale = NewTargetScale;
     ScaleLerpAlpha = 0.f;
     bScaleLerping = true;
 }
 
+void ACSBellows::StartPressTwoHold()
+{
+    bHoldPressTwoState = true;
 
-// --------------------------
-// Linked Actor LERP Movement
-// --------------------------
+    GetWorldTimerManager().ClearTimer(TimerHandle_PressTwoHold);
+    GetWorldTimerManager().SetTimer(
+        TimerHandle_PressTwoHold,
+        this,
+        &ACSBellows::EndPressTwoHold,
+        PressTwoHoldTime,
+        false
+    );
+}
+
+void ACSBellows::EndPressTwoHold()
+{
+    bHoldPressTwoState = false;
+    RecomputeStateFromOverlap();
+}
 
 void ACSBellows::StartLinkedActorLerp()
 {
-    if (!LinkedActor) return;
+    if (!LinkedActor)
+    {
+        return;
+    }
 
     LinkedStartLoc = LinkedActor->GetActorLocation();
-    // 풀무 기준 뒤쪽 방향
+
     const FVector BellowsBackwardDir = -GetActorForwardVector();
-
     LinkedTargetLoc = LinkedStartLoc + (BellowsBackwardDir * LinkedMoveDistance);
-
 
     LinkedLerpAlpha = 0.f;
     bLinkedLerping = true;
@@ -152,21 +237,23 @@ void ACSBellows::StartLinkedActorLerp()
 
 void ACSBellows::TickLinkedActorLerp(float DeltaTime)
 {
-    if (!bLinkedLerping || !LinkedActor) return;
+    if (!bLinkedLerping || !LinkedActor)
+    {
+        return;
+    }
 
     LinkedLerpAlpha += DeltaTime / LinkedMoveDuration;
-    FVector NewLoc = FMath::Lerp(LinkedStartLoc, LinkedTargetLoc, LinkedLerpAlpha);
+    const float Alpha = FMath::Clamp(LinkedLerpAlpha, 0.f, 1.f);
 
+    const FVector NewLoc = FMath::Lerp(LinkedStartLoc, LinkedTargetLoc, Alpha);
     LinkedActor->SetActorLocation(NewLoc);
 
-    if (LinkedLerpAlpha >= 1.f)
+    if (Alpha >= 1.f)
+    {
         bLinkedLerping = false;
+    }
 }
 
-
-// --------------------------
-// RepNotify
-// --------------------------
 void ACSBellows::OnRep_BellowsState()
 {
     switch (BellowsState)
@@ -187,15 +274,15 @@ void ACSBellows::OnRep_BellowsState()
             StartLinkedActorLerp();
         }
         break;
+
+    default:
+        break;
     }
 }
 
-
-// --------------------------
-// Replication
-// --------------------------
 void ACSBellows::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
     DOREPLIFETIME(ACSBellows, BellowsState);
 }
