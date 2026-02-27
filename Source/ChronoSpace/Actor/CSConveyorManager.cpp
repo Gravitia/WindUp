@@ -20,7 +20,12 @@ ACSConveyorManager::ACSConveyorManager()
 	ConveyorISM = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("ConveyorISM"));
 	ConveyorISM->SetupAttachment(RootComponent);
 	ConveyorISM->SetMobility(EComponentMobility::Movable);
-	ConveyorISM->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	// 기존: NoCollision
+	ConveyorISM->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	
+	// 가장 쉬운 방법: 프로필 사용
+	ConveyorISM->SetCollisionProfileName(TEXT("BlockAll"));
+
 }
 
 void ACSConveyorManager::BeginPlay()
