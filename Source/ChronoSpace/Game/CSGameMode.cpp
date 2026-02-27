@@ -13,6 +13,7 @@
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/Pawn.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Engine/LocalPlayer.h"
 #include "HAL/PlatformMisc.h" // FPlatformUserId 사용을 위해 추가
 #include "TimerManager.h" // GetWorldTimerManager() 사용을 위해
@@ -47,6 +48,23 @@ void ACSGameMode::BeginPlay()
 
 void ACSGameMode::PostLogin(APlayerController* NewPlayer)
 {
+    ConnectedPlayers.AddUnique(NewPlayer);
+
+    if (ACSPlayerState* CSPS = NewPlayer->GetPlayerState<ACSPlayerState>())
+    {
+        const int32 PlayerIndex = ConnectedPlayers.IndexOfByKey(NewPlayer);
+
+        if (PlayerIndex == 0)
+        {
+            CSPS->SetPlayerSlot(ECSPlayerSlot::Player0);
+        }
+        else
+        {
+            CSPS->SetPlayerSlot(ECSPlayerSlot::Player1);
+        }
+    }
+
+    // Super 
     Super::PostLogin(NewPlayer);
 
     if (NewPlayer && NewPlayer->GetPawn())
@@ -63,7 +81,7 @@ void ACSGameMode::PostLogin(APlayerController* NewPlayer)
         OnPlayerLogin.Broadcast();
     }
 
-    ConnectedPlayers.AddUnique(NewPlayer);
+    
 
     // === 분리된 Proxy 시스템 ===
 
@@ -242,9 +260,14 @@ void ACSGameMode::Logout(AController* Exiting)
 
 UClass* ACSGameMode::GetDefaultPawnClassForController_Implementation(AController* InController)
 {
+    if (!InController)
+    {
+        return Super::GetDefaultPawnClassForController_Implementation(InController);
+    }
+
+    // 로컬 스플릿스크린은 기존 로직 유지 가능
     if (const APlayerController* PC = Cast<APlayerController>(InController))
     {
-        // 1) 로컬 스플릿스크린: ControllerId 기준(0,1,2…)
         if (const ULocalPlayer* LP = PC->GetLocalPlayer())
         {
             const int32 Id = LP->GetControllerId();
@@ -253,26 +276,21 @@ UClass* ACSGameMode::GetDefaultPawnClassForController_Implementation(AController
         }
     }
 
-    // 2) 온라인 멀티플레이어: 현재 플레이어 수 기준
-    if (HasAuthority())
+    // 온라인/리스폰은 PlayerState 슬롯 기준
+    if (const ACSPlayerState* CSPS = InController->GetPlayerState<ACSPlayerState>())
     {
-        int32 CurrentPlayerCount = GetNumPlayers();
+        switch (CSPS->GetPlayerSlot())
+        {
+        case ECSPlayerSlot::Player0:
+            if (PawnClassPlayer0) return PawnClassPlayer0;
+            break;
 
-        // 첫 번째 플레이어 (PlayerCount = 1)
-        if (CurrentPlayerCount == 1 && PawnClassPlayer0)
-        {
-            UE_LOG(LogCS, Log, TEXT("Using PawnClassPlayer0 for first online player"));
-            return PawnClassPlayer0;
-        }
-        // 두 번째 플레이어 (PlayerCount = 2)
-        else if (CurrentPlayerCount == 2 && PawnClassPlayer1)
-        {
-            UE_LOG(LogCS, Log, TEXT("Using PawnClassPlayer1 for second online player"));
-            return PawnClassPlayer1;
+        case ECSPlayerSlot::Player1:
+            if (PawnClassPlayer1) return PawnClassPlayer1;
+            break;
         }
     }
 
-    // 설정이 없으면 기본(프로젝트의 DefaultPawnClass) 사용
     return Super::GetDefaultPawnClassForController_Implementation(InController);
 }
 
@@ -281,7 +299,6 @@ bool ACSGameMode::RespawnSinglePlayer(APawn* Player)
     if (!HasAuthority() || !IsValid(Player))
         return false;
 
-    // 1) 컨트롤러 확보 (RestartPlayerAtTransform은 Controller가 필요)
     AController* Controller = Player->GetController();
     if (!IsValid(Controller))
     {
@@ -289,7 +306,6 @@ bool ACSGameMode::RespawnSinglePlayer(APawn* Player)
         return false;
     }
 
-    // 2) 개인 리스폰 포인트 확보
     ACSPlayerState* PS = Player->GetPlayerState<ACSPlayerState>();
     if (!IsValid(PS))
     {
@@ -304,26 +320,55 @@ bool ACSGameMode::RespawnSinglePlayer(APawn* Player)
         return false;
     }
 
-    // 3) 스폰 트랜스폼 결정 (+ Z 오프셋)
     FTransform SpawnTM = RespawnPoint->GetActorTransform();
-    SpawnTM.AddToTranslation(FVector(0.f, 0.f, 100.f)); 
+    SpawnTM.AddToTranslation(FVector(0.f, 0.f, 120.f));
 
-    // 4) 엔진 정석 리스폰: 새 Pawn 스폰 + Possess 흐름
+    APawn* OldPawn = Player;
+
+    // 기존 Pawn 정리
+    Controller->UnPossess();
+
+    if (IsValid(OldPawn))
+    {
+        OldPawn->DetachFromControllerPendingDestroy();
+        OldPawn->SetActorEnableCollision(false);
+        OldPawn->SetReplicateMovement(false);
+        OldPawn->Destroy();
+    }
+
     RestartPlayerAtTransform(Controller, SpawnTM);
 
     APawn* NewPawn = Controller->GetPawn();
-    if (!IsValid(NewPawn)) return false;
-
-    // 위치가 안 먹는 케이스 방지: 한 번 더 확정
-    const FVector SpawnLoc = SpawnTM.GetLocation();
-    const FRotator SpawnRot = SpawnTM.GetRotation().Rotator();
-    NewPawn->TeleportTo(SpawnLoc, SpawnRot, false, true);
-    NewPawn->ForceNetUpdate();
-
     if (!IsValid(NewPawn))
     {
-        UE_LOG(LogCS, Warning, TEXT("RespawnSinglePlayer: Restart succeeded but NewPawn is null"));
+        UE_LOG(LogCS, Warning, TEXT("RespawnSinglePlayer: NewPawn is null"));
         return false;
+    }
+
+    const FVector SpawnLoc = SpawnTM.GetLocation();
+    const FRotator SpawnRot = SpawnTM.GetRotation().Rotator();
+
+    NewPawn->SetActorLocationAndRotation(
+        SpawnLoc,
+        SpawnRot,
+        false,
+        nullptr,
+        ETeleportType::TeleportPhysics
+    );
+
+    NewPawn->ForceNetUpdate();
+    NewPawn->FlushNetDormancy();
+
+    if (ACharacter* NewCharacter = Cast<ACharacter>(NewPawn))
+    {
+        if (UCharacterMovementComponent* MovementComp = NewCharacter->GetCharacterMovement())
+        {
+            MovementComp->StopMovementImmediately();
+            MovementComp->Velocity = FVector::ZeroVector;
+            MovementComp->SetMovementMode(MOVE_Walking);
+            MovementComp->bForceNextFloorCheck = true;
+            MovementComp->UpdateComponentVelocity();
+        }
     }
 
     if (ACSPlayerController* CSPC = Cast<ACSPlayerController>(Controller))
@@ -331,27 +376,23 @@ bool ACSGameMode::RespawnSinglePlayer(APawn* Player)
         CSPC->Client_ApplyRespawnView(SpawnRot);
     }
 
-    // (선택) 시선/카메라까지 확실히 맞추기
     if (APlayerController* PC = Cast<APlayerController>(Controller))
     {
         PC->SetControlRotation(SpawnRot);
         PC->ClientSetRotation(SpawnRot, true);
     }
 
-    // 6) GameState 부활 처리: "새 Pawn" 기준으로 호출하는 게 중요
     if (ACSGameState* GS = GetCSGameState())
     {
         GS->HandlePlayerRevive(NewPawn);
     }
 
-    UE_LOG(LogCS, Log, TEXT("Personal respawned via RestartPlayerAtTransform: %s -> %s"),
-        *Player->GetName(),
-        *NewPawn->GetName()
-    );
+    UE_LOG(LogCS, Log, TEXT("RespawnSinglePlayer: %s -> %s"),
+        *GetNameSafe(OldPawn),
+        *GetNameSafe(NewPawn));
 
     return true;
 }
-
 
 ACSGameState* ACSGameMode::GetCSGameState() const
 {

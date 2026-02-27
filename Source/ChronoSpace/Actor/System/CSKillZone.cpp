@@ -115,13 +115,15 @@ void ACSKillZone::RevivePlayerWithDelay(APawn* Player, float DelayTime)
             {
                 if (!WeakThis.IsValid() || !WeakPlayer.IsValid())
                     return;
+                
+                // SetRevive를 RespawnSinglePlayer 보다 먼저 호출해야함. 
+                WeakPlayer->SetRevive();
 
                 if (ACSGameMode* GameMode = WeakThis->GetCSGameMode())
                 {
                     GameMode->RespawnSinglePlayer(WeakPlayer.Get());
                 }
 
-                WeakPlayer->SetRevive();
             },
             DelayTime,
             false

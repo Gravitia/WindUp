@@ -8,9 +8,18 @@
 #include "AbilitySystemComponent.h"
 #include "CSPlayerState.generated.h"
 
+UENUM(BlueprintType)
+enum class ECSPlayerSlot : uint8
+{
+	Player0,
+	Player1
+};
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHealthChanged, float, Health, float, MaxHealth);
 
 class ACSRespawnPoint;
+
+
 
 /**
  * 
@@ -61,6 +70,12 @@ protected:
 	virtual void HealthChanged(const FOnAttributeChangeData& Data);
 	virtual void MaxHealthChanged(const FOnAttributeChangeData& Data);
 
+// Character Mesh 
+public:
+	void SetPlayerSlot(ECSPlayerSlot InSlot) { PlayerSlot = InSlot; }
+	ECSPlayerSlot GetPlayerSlot() const { return PlayerSlot; }
 
-
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	ECSPlayerSlot PlayerSlot = ECSPlayerSlot::Player0;
 };
