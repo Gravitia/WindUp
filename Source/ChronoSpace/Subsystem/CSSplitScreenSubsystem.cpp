@@ -6,10 +6,11 @@
 #include "Engine/World.h"
 #include "Engine/LocalPlayer.h"
 #include "TimerManager.h"
+#include "ChronoSpace.h"
 
 UCSSplitScreenSubsystem::UCSSplitScreenSubsystem()
 {
-    // ±âº»°ª ¼³Á¤
+    // ê¸°ë³¸ê°’ ì„¤ì •
     bEnableSplitScreen = true;
     bUseDualMode = true;
     MaxSplitScreenPlayers = 2;
@@ -34,20 +35,19 @@ void UCSSplitScreenSubsystem::SetupSplitScreenViewport()
         return;
     }
 
-    // ½ºÇÃ¸´ ½ºÅ©¸°À» Ç×»ó È°¼ºÈ­
+    // ìŠ¤í”Œë¦¿ ìŠ¤í¬ë¦°ì„ í•­ìƒ í™œì„±í™”
     GEngine->GameViewport->SetForceDisableSplitscreen(false);
     GEngine->GameViewport->MaxSplitscreenPlayers = MaxSplitScreenPlayers;
 
-    // µà¾ó ¸ðµå ¼³Á¤
+    // ë“€ì–¼ ëª¨ë“œ ì„¤ì •
     if (bUseDualMode)
     {
-        // 2ÀÎ ÇÃ·¹ÀÌ¾î¿ë °¡·Î ºÐÇÒ ¼³Á¤
         GEngine->GameViewport->MaxSplitscreenPlayers = 2;
-        UE_LOG(LogTemp, Warning, TEXT("SS Dual Mode Viewport Setup - Max Players: %d"), MaxSplitScreenPlayers);
+        UE_LOG(LogCS, Log, TEXT("Dual Mode Viewport Setup - Max Players: 2"));
     }
     else
     {
-        UE_LOG(LogTemp, Warning, TEXT("SS Standard Viewport Setup - Max Players: %d"), MaxSplitScreenPlayers);
+        UE_LOG(LogCS, Log, TEXT("Standard Viewport Setup - Max Players: %d"), MaxSplitScreenPlayers);
     }
 }
 

@@ -38,18 +38,17 @@ void ACSPlayerController::BeginPlay()
 
 	if (!bIsDummyController)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("SS Player Controller Started - IsLocalController: %s"),
+		UE_LOG(LogCS, Log, TEXT("PlayerController BeginPlay - IsLocalController: %s"),
 			IsLocalController() ? TEXT("true") : TEXT("false"));
 
 		// 클라이언트에서 로컬 컨트롤러인 경우 스플릿 스크린 설정
 		if (GetWorld()->GetNetMode() == NM_Client && IsLocalController())
 		{
-			UE_LOG(LogTemp, Warning, TEXT("SS Client detected - Setting up split screen"));
+			UE_LOG(LogCS, Log, TEXT("Client detected - Setting up split screen"));
 
-			// 이미 설정이 완료되었는지 체크
 			if (bClientSplitScreenSetupComplete)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("SS Client split screen already setup, skipping"));
+				UE_LOG(LogCS, Log, TEXT("Client split screen already setup, skipping"));
 				return;
 			}
 
@@ -59,19 +58,24 @@ void ACSPlayerController::BeginPlay()
 				CSSplitSubsystem->EnableSplitScreen();
 			}
 
-			// 더미 로컬 플레이어 생성 (한 번만)
-			FTimerHandle ClientSetupHandle;
+			// 폴링 타이머: 조건이 갖춰질 때까지 0.5초마다 재시도 (고정 딜레이 대신)
 			GetWorldTimerManager().SetTimer(
-				ClientSetupHandle,
-				[this]()
+				ClientSetupRetryHandle,
+				FTimerDelegate::CreateWeakLambda(this, [this]()
 				{
-					if (!bClientSplitScreenSetupComplete) // 다시 한번 체크
+					if (!IsValid(this) || bClientSplitScreenSetupComplete)
 					{
-						SetupClientSplitScreen();
+						GetWorldTimerManager().ClearTimer(ClientSetupRetryHandle);
+						return;
 					}
-				},
-				1.0f, // n초 지연
-				false
+					SetupClientSplitScreen();
+					if (bClientSplitScreenSetupComplete)
+					{
+						GetWorldTimerManager().ClearTimer(ClientSetupRetryHandle);
+					}
+				}),
+				0.5f,  // 0.5초 간격 폴링
+				true   // 반복 (성공 시 자동 중지)
 			);
 		}
 	}
@@ -113,6 +117,7 @@ void ACSPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	// 타이머 정리
 	GetWorldTimerManager().ClearTimer(UICreationTimerHandle);
 	GetWorldTimerManager().ClearTimer(ClientSyncTimerHandle);
+	GetWorldTimerManager().ClearTimer(ClientSetupRetryHandle);
 
 	CleanupDummyLocalPlayer();
 	
@@ -245,21 +250,21 @@ void ACSPlayerController::SetupClientSplitScreen()
 	// 이미 설정 완료된 경우 리턴
 	if (bClientSplitScreenSetupComplete)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("SS Client split screen setup already complete"));
+		UE_LOG(LogCS, Log, TEXT("Client split screen setup already complete"));
 		return;
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("SS Setting up client split screen"));
+	UE_LOG(LogCS, Log, TEXT("Setting up client split screen"));
 
 	UGameInstance* GameInstance = GetGameInstance();
 	if (!GameInstance) return;
 
 	int32 CurrentLocalPlayers = GameInstance->GetNumLocalPlayers();
-	UE_LOG(LogTemp, Warning, TEXT("SS Client current local players: %d"), CurrentLocalPlayers);
+	UE_LOG(LogCS, Log, TEXT("Client current local players: %d"), CurrentLocalPlayers);
 
 	if (CurrentLocalPlayers >= 2)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("SS Client already has 2+ local players"));
+		UE_LOG(LogCS, Log, TEXT("Client already has 2+ local players"));
 
 		// 이미 LocalPlayer가 있다면 더미 폰만 생성 (한 번만)
 		if (!ClientDummyPawn)
@@ -279,7 +284,7 @@ void ACSPlayerController::SetupClientSplitScreen()
 
 	if (DummyLocalPlayer)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("SS Client dummy local player created successfully"));
+		UE_LOG(LogCS, Log, TEXT("Client dummy local player created successfully"));
 		// LocalPlayer 생성 성공 후 더미 폰 생성
 		CreateClientDummyPawn();
 
@@ -288,7 +293,7 @@ void ACSPlayerController::SetupClientSplitScreen()
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("SS Client failed to create dummy local player: %s"), *OutError);
+		UE_LOG(LogCS, Error, TEXT("Client failed to create dummy local player: %s"), *OutError);
 	}
 }
 
@@ -299,7 +304,7 @@ void ACSPlayerController::CreateClientDummyPawn()
 	// 이미 더미 폰이 있다면 리턴
 	if (ClientDummyPawn && IsValid(ClientDummyPawn))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("SS Client dummy pawn already exists and is valid"));
+		UE_LOG(LogCS, Log, TEXT("Client dummy pawn already exists and is valid"));
 		return;
 	}
 
@@ -314,7 +319,7 @@ void ACSPlayerController::CreateClientDummyPawn()
 
 	if (ClientDummyPawn)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("SS Client dummy pawn created successfully"));
+		UE_LOG(LogCS, Log, TEXT("Client dummy pawn created successfully"));
 
 		ClientDummyPawn->Rename(TEXT("ClientSpectatorPawn"));
 
@@ -328,7 +333,7 @@ void ACSPlayerController::CreateClientDummyPawn()
 			if (PC && PC->bIsDummyController && PC != this)
 			{
 				ExistingDummyController = PC;
-				UE_LOG(LogTemp, Warning, TEXT("SS Found existing dummy controller: %s"), *PC->GetName());
+				UE_LOG(LogCS, Log, TEXT("Found existing dummy controller: %s"), *PC->GetName());
 				break;
 			}
 		}
@@ -351,12 +356,12 @@ void ACSPlayerController::CreateClientDummyPawn()
 					if (DummyController)
 					{
 						DummyController->SetAsDummyController(true);
-						UE_LOG(LogTemp, Warning, TEXT("SS New dummy controller created: %s"), *DummyController->GetName());
+						UE_LOG(LogCS, Log, TEXT("New dummy controller created: %s"), *DummyController->GetName());
 					}
 				}
 				else
 				{
-					UE_LOG(LogTemp, Warning, TEXT("SS SecondLocalPlayer already has controller, skipping creation"));
+					UE_LOG(LogCS, Log, TEXT("SecondLocalPlayer already has controller, skipping creation"));
 					// 이미 컨트롤러가 있다면 그것을 사용
 					if (SecondLocalPlayer->PlayerController)
 					{
@@ -391,7 +396,7 @@ void ACSPlayerController::CreateClientDummyPawn()
 						DummyController->Possess(ClientDummyPawn);
 					}
 
-					UE_LOG(LogTemp, Warning, TEXT("SS Client dummy controller setup complete"));
+					UE_LOG(LogCS, Log, TEXT("Client dummy controller setup complete"));
 				}
 			}
 		}
@@ -404,7 +409,7 @@ void ACSPlayerController::CreateClientDummyPawn()
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("SS Failed to create client dummy pawn"));
+		UE_LOG(LogCS, Error, TEXT("Failed to create client dummy pawn"));
 	}
 
 	AttachDummySpectatorToRemoteCharacter(ClientDummyPawn);
@@ -415,11 +420,11 @@ void ACSPlayerController::StartClientDummySync(ACSSpectatorPawn* DummyPawn)
 {
 	if (!DummyPawn)
 	{
-		UE_LOG(LogTemp, Error, TEXT("SS Cannot start sync - dummy pawn is null"));
+		UE_LOG(LogCS, Error, TEXT("Cannot start sync - dummy pawn is null"));
 		return;
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("SS Starting client dummy sync"));
+	UE_LOG(LogCS, Log, TEXT("Starting client dummy sync"));
 
 	// 클라이언트에서 원격 플레이어와 동기화
 	GetWorldTimerManager().SetTimer(
@@ -445,7 +450,7 @@ void ACSPlayerController::SyncClientDummyWithRemotePlayer(ACSSpectatorPawn* Dumm
 	UWorld* World = GetWorld();
 	if (!World)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("World is null in SyncClientDummyWithRemotePlayer"));
+		UE_LOG(LogCS, Warning, TEXT("World is null in SyncClientDummyWithRemotePlayer"));
 		return;
 	}
 
@@ -489,32 +494,38 @@ void ACSPlayerController::ApplyCamera(ACSSpectatorPawn* DummyPawn, const FCamera
 {
 	if (!DummyPawn) return;
 
-	// 오직 클라에서 서버 캐릭터 예측에만 쓰이니..
-	for (TActorIterator<ACSCharacterPlayer> It(GetWorld()); It; ++It)
+	// 원격 캐릭터 캐시 확인 (무효 시에만 재탐색)
+	ACSCharacterPlayer* TargetCharacter = CachedRemoteCharacter.Get();
+	if (!TargetCharacter)
 	{
-		ACSCharacterPlayer* TargetCharacter = *It;
-		if (!TargetCharacter || TargetCharacter->IsLocallyControlled())
-			continue;
-
-		// 위치 보간 (서버 캐릭터를 따라감)
-		const FVector TargetLoc = TargetCharacter->GetActorLocation();
-		const FVector CurrentLoc = DummyPawn->GetActorLocation();
-		const float LocInterpSpeed = 30.f; // 이동 보간 속도
-		const FVector SmoothedLoc = FMath::VInterpTo(CurrentLoc, TargetLoc, GetWorld()->GetDeltaSeconds(), LocInterpSpeed);
-		DummyPawn->SetActorLocation(SmoothedLoc);
-		
-		// 회전 보간 (서버 카메라 회전 따라감)
-		if (APlayerController* DummyController = Cast<APlayerController>(DummyPawn->GetController()))
+		for (TActorIterator<ACSCharacterPlayer> It(GetWorld()); It; ++It)
 		{
-			const FRotator CurrentRot = DummyController->GetControlRotation();
-			const FRotator TargetRot = CameraData.Rotation;
-			const float RotInterpSpeed = 45.f; // 회전 보간 속도
-			const FRotator SmoothedRot = FMath::RInterpTo(CurrentRot, TargetRot, GetWorld()->GetDeltaSeconds(), RotInterpSpeed);
-
-			DummyController->SetControlRotation(SmoothedRot);
+			if (*It && !(*It)->IsLocallyControlled())
+			{
+				TargetCharacter = *It;
+				CachedRemoteCharacter = TargetCharacter;
+				break;
+			}
 		}
+		if (!TargetCharacter) return;
+	}
 
-		break;
+	// 위치 보간 (서버 캐릭터를 따라감)
+	const FVector TargetLoc = TargetCharacter->GetActorLocation();
+	const FVector CurrentLoc = DummyPawn->GetActorLocation();
+	const float LocInterpSpeed = 30.f;
+	const FVector SmoothedLoc = FMath::VInterpTo(CurrentLoc, TargetLoc, GetWorld()->GetDeltaSeconds(), LocInterpSpeed);
+	DummyPawn->SetActorLocation(SmoothedLoc);
+
+	// 회전 보간 (서버 카메라 회전 따라감)
+	if (APlayerController* DummyController = Cast<APlayerController>(DummyPawn->GetController()))
+	{
+		const FRotator CurrentRot = DummyController->GetControlRotation();
+		const FRotator TargetRot = CameraData.Rotation;
+		const float RotInterpSpeed = 45.f;
+		const FRotator SmoothedRot = FMath::RInterpTo(CurrentRot, TargetRot, GetWorld()->GetDeltaSeconds(), RotInterpSpeed);
+
+		DummyController->SetControlRotation(SmoothedRot);
 	}
 }
 
@@ -530,7 +541,7 @@ void ACSPlayerController::CleanupDummyLocalPlayer()
 	UGameInstance* GameInstance = GetGameInstance();
 	if (!GameInstance)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("CleanupDummyLocalPlayer: GameInstance is null"));
+		UE_LOG(LogCS, Warning, TEXT("CleanupDummyLocalPlayer: GameInstance is null"));
 		return;
 	}
 
@@ -541,7 +552,7 @@ void ACSPlayerController::CleanupDummyLocalPlayer()
 
 		if (SecondLocalPlayer)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Cleaning up dummy local player: %s"), *SecondLocalPlayer->GetName());
+			UE_LOG(LogCS, Log, TEXT("Cleaning up dummy local player: %s"), *SecondLocalPlayer->GetName());
 
 			// 1) 관련된 Pawn / Controller 정리
 			if (APlayerController* DummyPC = SecondLocalPlayer->PlayerController)
@@ -558,12 +569,12 @@ void ACSPlayerController::CleanupDummyLocalPlayer()
 		}
 		else
 		{
-			UE_LOG(LogTemp, Warning, TEXT("CleanupDummyLocalPlayer: No dummy LocalPlayer found"));
+			UE_LOG(LogCS, Log, TEXT("CleanupDummyLocalPlayer: No dummy LocalPlayer found"));
 		}
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("CleanupDummyLocalPlayer: Only one LocalPlayer exists, skipping"));
+		UE_LOG(LogCS, Verbose, TEXT("CleanupDummyLocalPlayer: Only one LocalPlayer exists, skipping"));
 	}
 }
 
@@ -617,7 +628,7 @@ void ACSPlayerController::AttachDummySpectatorToRemoteCharacter(ACSSpectatorPawn
 	DummyPawn->SetActorHiddenInGame(true);
 	DummyPawn->SetActorEnableCollision(false);
 
-	UE_LOG(LogCS, Warning, TEXT("Client: DummySpectator attached to %s"), *RemoteChar->GetName());
+	UE_LOG(LogCS, Log, TEXT("Client: DummySpectator attached to %s"), *RemoteChar->GetName());
 }
 
 

@@ -15,8 +15,8 @@
 #include "GameFramework/Pawn.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Engine/LocalPlayer.h"
-#include "HAL/PlatformMisc.h" // FPlatformUserId »ç¿ëÀ» À§ÇØ Ãß°¡
-#include "TimerManager.h" // GetWorldTimerManager() »ç¿ëÀ» À§ÇØ
+#include "HAL/PlatformMisc.h" // FPlatformUserId ì‚¬ìš©ì„ ìœ„í•´ ì¶”ê°€
+#include "TimerManager.h" // GetWorldTimerManager() ì‚¬ìš©ì„ ìœ„í•´
 #include "Components/CapsuleComponent.h"
 #include "Subsystem/CSSplitScreenSubsystem.h"
 #include "ChronoSpace.h"
@@ -81,72 +81,11 @@ void ACSGameMode::PostLogin(APlayerController* NewPlayer)
         OnPlayerLogin.Broadcast();
     }
 
-    
+    // Proxy ìƒì„± (ê³µí†µ í—¬í¼)
+    CreateProxiesForPlayer(NewPlayer);
 
-    // === ºĞ¸®µÈ Proxy ½Ã½ºÅÛ ===
-
-    // 1) Å¬¶óÀÌ¾ğÆ®º° °³º° Proxy »ı¼º (¸ğµç ¿ø°İ Å¬¶óÀÌ¾ğÆ®¿ë)
-    if (!NewPlayer->IsLocalController()) // ¿ø°İ Å¬¶óÀÌ¾ğÆ®
-    {
-        UE_LOG(LogCS, Log, TEXT("ACSGameMode::PostLogin - %s"), *NewPlayer->GetName());
-        FActorSpawnParameters ClientProxyParams;
-        ClientProxyParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-        ClientProxyParams.Owner = NewPlayer; // Å¬¶óÀÌ¾ğÆ®¸¦ Owner·Î ¼³Á¤
-
-        ACSCameraViewProxy* ClientProxy = GetWorld()->SpawnActor<ACSCameraViewProxy>(
-            ACSCameraViewProxy::StaticClass(),
-            FTransform::Identity,
-            ClientProxyParams
-        );
-
-        if (ClientProxy)
-        {
-            // Áß¿ä: Å¬¶óÀÌ¾ğÆ®¿¡µµ º¹Á¦µÇµµ·Ï ¼³Á¤
-            ClientProxy->SetReplicates(true);
-            ClientProxy->SetReplicateMovement(false); // Ä«¸Ş¶ó µ¥ÀÌÅÍ¸¸ º¹Á¦
-            ClientProxy->SetIsServerProxy(false);
-
-            // Å¬¶óÀÌ¾ğÆ®º° Proxy ¸Ê¿¡ Ãß°¡
-            ClientCamProxies.Add(NewPlayer, ClientProxy);
-        }
-    }
-
-    // 2) ¼­¹ö ·ÎÄÃ ÇÃ·¹ÀÌ¾î¿ë Proxy »ı¼º (ÇÑ ¹ø¸¸)
-    if (NewPlayer->IsLocalController() && !ServerCamProxy)
-    {
-        FActorSpawnParameters ServerProxyParams;
-        ServerProxyParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-        // Owner¸¦ ¼³Á¤ÇÏÁö ¾ÊÀ½ - ¼­¹ö Àü¿ë Proxy
-
-        ServerCamProxy = GetWorld()->SpawnActor<ACSCameraViewProxy>(
-            ACSCameraViewProxy::StaticClass(),
-            FTransform::Identity,
-            ServerProxyParams
-        );
-
-        if (ServerCamProxy)
-        {
-            // ¼­¹ö Proxyµµ º¹Á¦µÇµµ·Ï ¼³Á¤
-            ServerCamProxy->SetReplicates(true);
-            ServerCamProxy->SetReplicateMovement(false);
-            ServerCamProxy->SetIsServerProxy(true);
-
-            UE_LOG(LogCS, Warning, TEXT("CS Created ServerCamProxy (ListenServer POV, No Owner)"));
-        }
-    }
-
-    if (bAutoEnableSplitScreen)
-    {
-        if (GetWorld()->GetNetMode() == NM_ListenServer)
-        {
-            // Á¤È®È÷ 2¸íÀÏ ¶§¸¸ ½ÇÇà (Áßº¹ ¹æÁö)
-            if (ConnectedPlayers.Num() == 2 && !DummyPlayerController)
-            {
-                UE_LOG(LogCS, Warning, TEXT("SS Starting split screen setup..."));
-                SetupOnlineSplitScreen();
-            }
-        }
-    }
+    // SplitScreen ì„¤ì • (ê³µí†µ í—¬í¼)
+    TrySplitScreenSetup();
 }
 
 void ACSGameMode::HandleSeamlessTravelPlayer(AController*& C)
@@ -157,9 +96,8 @@ void ACSGameMode::HandleSeamlessTravelPlayer(AController*& C)
     if (!NewPlayer)
         return;
 
-    UE_LOG(LogCS, Warning, TEXT("HandleSeamlessTravelPlayer: %s"), *NewPlayer->GetName());
+    UE_LOG(LogCS, Log, TEXT("HandleSeamlessTravelPlayer: %s"), *NewPlayer->GetName());
 
-    // === ±âÁ¸ PostLogin ·ÎÁ÷ ÀÏºÎ ±×´ë·Î Àû¿ë ===
     if (NewPlayer && NewPlayer->GetPawn())
     {
         ACSGameState* CSGameState = GetCSGameState();
@@ -174,61 +112,11 @@ void ACSGameMode::HandleSeamlessTravelPlayer(AController*& C)
 
     ConnectedPlayers.AddUnique(NewPlayer);
 
-    // === Proxy ½Ã½ºÅÛ Àç»ı¼º ===
-    if (!NewPlayer->IsLocalController()) // ¿ø°İ Å¬¶ó¿ë Proxy
-    {
-        FActorSpawnParameters ClientProxyParams;
-        ClientProxyParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-        ClientProxyParams.Owner = NewPlayer;
+    // Proxy ìƒì„± (ê³µí†µ í—¬í¼)
+    CreateProxiesForPlayer(NewPlayer);
 
-        ACSCameraViewProxy* ClientProxy = GetWorld()->SpawnActor<ACSCameraViewProxy>(
-            ACSCameraViewProxy::StaticClass(),
-            FTransform::Identity,
-            ClientProxyParams
-        );
-
-        if (ClientProxy)
-        {
-            ClientProxy->SetReplicates(true);
-            ClientProxy->SetReplicateMovement(false);
-            ClientProxy->SetIsServerProxy(false);
-            ClientCamProxies.Add(NewPlayer, ClientProxy);
-        }
-    }
-
-    // ¼­¹ö¿ë Proxy
-    if (NewPlayer->IsLocalController() && !ServerCamProxy)
-    {
-        FActorSpawnParameters ServerProxyParams;
-        ServerProxyParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-        ServerCamProxy = GetWorld()->SpawnActor<ACSCameraViewProxy>(
-            ACSCameraViewProxy::StaticClass(),
-            FTransform::Identity,
-            ServerProxyParams
-        );
-
-        if (ServerCamProxy)
-        {
-            ServerCamProxy->SetReplicates(true);
-            ServerCamProxy->SetReplicateMovement(false);
-            ServerCamProxy->SetIsServerProxy(true);
-            UE_LOG(LogCS, Warning, TEXT("SeamlessTravel: Created ServerCamProxy"));
-        }
-    }
-
-    // === SplitScreen Àç¼¼ÆÃ ===
-    if (bAutoEnableSplitScreen)
-    {
-        if (GetWorld()->GetNetMode() == NM_ListenServer)
-        {
-            if (ConnectedPlayers.Num() == 2 && !DummyPlayerController)
-            {
-                UE_LOG(LogCS, Warning, TEXT("SeamlessTravel: Rebuilding split screen setup..."));
-                SetupOnlineSplitScreen();
-            }
-        }
-    }
+    // SplitScreen ì„¤ì • (ê³µí†µ í—¬í¼)
+    TrySplitScreenSetup();
 }
 
 
@@ -245,13 +133,12 @@ void ACSGameMode::Logout(AController* Exiting)
                 CSGameState->RemovePlayerFromDeathTracking(ExitingPawn);
             }
 
-            UE_LOG(LogCS, Log, TEXT("Player logged out"));
+            UE_LOG(LogCS, Log, TEXT("Player logged out: %s"), *PC->GetName());
         }
-    }
 
-    APlayerController* PC = Cast<APlayerController>(Exiting);
-    if (PC)
-    {
+        // SplitScreen ê´€ë ¨ ë¦¬ì†ŒìŠ¤ ì •ë¦¬
+        CleanupSplitScreenForPlayer(PC);
+
         ConnectedPlayers.Remove(PC);
     }
 
@@ -265,7 +152,7 @@ UClass* ACSGameMode::GetDefaultPawnClassForController_Implementation(AController
         return Super::GetDefaultPawnClassForController_Implementation(InController);
     }
 
-    // ·ÎÄÃ ½ºÇÃ¸´½ºÅ©¸°Àº ±âÁ¸ ·ÎÁ÷ À¯Áö °¡´É
+    // ë¡œì»¬ ìŠ¤í”Œë¦¿ìŠ¤í¬ë¦°ì€ ê¸°ì¡´ ë¡œì§ ìœ ì§€ ê°€ëŠ¥
     if (const APlayerController* PC = Cast<APlayerController>(InController))
     {
         if (const ULocalPlayer* LP = PC->GetLocalPlayer())
@@ -276,7 +163,7 @@ UClass* ACSGameMode::GetDefaultPawnClassForController_Implementation(AController
         }
     }
 
-    // ¿Â¶óÀÎ/¸®½ºÆùÀº PlayerState ½½·Ô ±âÁØ
+    // ì˜¨ë¼ì¸/ë¦¬ìŠ¤í°ì€ PlayerState ìŠ¬ë¡¯ ê¸°ì¤€
     if (const ACSPlayerState* CSPS = InController->GetPlayerState<ACSPlayerState>())
     {
         switch (CSPS->GetPlayerSlot())
@@ -325,7 +212,7 @@ bool ACSGameMode::RespawnSinglePlayer(APawn* Player)
 
     APawn* OldPawn = Player;
 
-    // ±âÁ¸ Pawn Á¤¸®
+    // ê¸°ì¡´ Pawn ì •ë¦¬
     Controller->UnPossess();
 
     if (IsValid(OldPawn))
@@ -404,7 +291,7 @@ void ACSGameMode::CreateDummyLocalPlayer()
     UGameInstance* GameInstance = GetGameInstance();
     if (!GameInstance) return;
 
-    // ÇöÀç ·ÎÄÃ ÇÃ·¹ÀÌ¾î ¼ö È®ÀÎ
+    // í˜„ì¬ ë¡œì»¬ í”Œë ˆì´ì–´ ìˆ˜ í™•ì¸
     int32 CurrentLocalPlayers = GameInstance->GetNumLocalPlayers();
 
     if (CurrentLocalPlayers >= 2)
@@ -413,7 +300,7 @@ void ACSGameMode::CreateDummyLocalPlayer()
         // return;
     }
 
-    // ´õ¹Ì ·ÎÄÃ ÇÃ·¹ÀÌ¾î »ı¼º
+    // ë”ë¯¸ ë¡œì»¬ í”Œë ˆì´ì–´ ìƒì„±
     FPlatformUserId DummyUserId = FGenericPlatformMisc::GetPlatformUserForUserIndex(1);
     FString OutError;
     ULocalPlayer* DummyLocalPlayer = GameInstance->CreateLocalPlayer(DummyUserId, OutError, false);
@@ -428,7 +315,7 @@ void ACSGameMode::CreateDummyLocalPlayer()
         UE_LOG(LogCS, Warning, TEXT("SS Success to create dummy local player"));
     }
 
-    // ´õ¹Ì ½ºÆåÅ×ÀÌÅÍ Æù »ı¼º
+    // ë”ë¯¸ ìŠ¤í™í…Œì´í„° í° ìƒì„±
     FVector SpawnLocation = FVector(0, 0, 0);
     FRotator SpawnRotation = FRotator::ZeroRotator;
 
@@ -438,7 +325,7 @@ void ACSGameMode::CreateDummyLocalPlayer()
         SpawnRotation
     );
 
-    if (!DummySpectatorPawn)
+    if (DummySpectatorPawn)
     {
         DummySpectatorPawn->Rename(TEXT("ServerSpectatorPawn"));
     }
@@ -450,11 +337,11 @@ void ACSGameMode::CreateDummyLocalPlayer()
         return;
     }
 
-    // ´õ¹Ì ÇÃ·¹ÀÌ¾î ÄÁÆ®·Ñ·¯ »ı¼º
+    // ë”ë¯¸ í”Œë ˆì´ì–´ ì»¨íŠ¸ë¡¤ëŸ¬ ìƒì„±
     DummyPlayerController = GetWorld()->SpawnActor<ACSPlayerController>();
     if (DummyPlayerController)
     {
-        // ´õ¹Ì·Î Ç¥½Ã
+        // ë”ë¯¸ë¡œ í‘œì‹œ
         DummyPlayerController->SetAsDummyController(true);
         DummyPlayerController->SetPawn(nullptr);
         DummyPlayerController->SetPlayer(DummyLocalPlayer);
@@ -482,7 +369,7 @@ void ACSGameMode::AttachDummySpectatorToClient(APlayerController* RemoteClient)
 
     if (!DummySpectatorPawn)
     {
-        // ´õ¹Ì Æù ½ºÆù
+        // ë”ë¯¸ í° ìŠ¤í°
         DummySpectatorPawn = GetWorld()->SpawnActor<ACSSpectatorPawn>(
             DummySpectatorPawnClass,
             FVector::ZeroVector,
@@ -492,12 +379,12 @@ void ACSGameMode::AttachDummySpectatorToClient(APlayerController* RemoteClient)
 
     if (DummySpectatorPawn)
     {
-        // Å¬¶ó Ä³¸¯ÅÍ ½ºÄÌ·¹Åæ ¼ÒÄÏ¿¡ Attach
+        // í´ë¼ ìºë¦­í„° ìŠ¤ì¼ˆë ˆí†¤ ì†Œì¼“ì— Attach
         FAttachmentTransformRules AttachRules(EAttachmentRule::SnapToTarget, true);
         DummySpectatorPawn->AttachToComponent(Mesh, AttachRules, FName("camera_socket"));
-        // "head" ´ë½Å Ä³¸¯ÅÍ ½ºÄÌ·¹Åæ ¼ÒÄÏ ÀÌ¸§ »ç¿ë
+        // "head" ëŒ€ì‹  ìºë¦­í„° ìŠ¤ì¼ˆë ˆí†¤ ì†Œì¼“ ì´ë¦„ ì‚¬ìš©
 
-        // PawnÀº º¸ÀÌÁö ¾Ê°Ô ¼³Á¤
+        // Pawnì€ ë³´ì´ì§€ ì•Šê²Œ ì„¤ì •
         DummySpectatorPawn->SetActorHiddenInGame(true);
         DummySpectatorPawn->SetActorEnableCollision(false);
 
@@ -508,7 +395,7 @@ void ACSGameMode::AttachDummySpectatorToClient(APlayerController* RemoteClient)
 
 void ACSGameMode::SyncDummyRotationWithProxy()
 {
-    // 1. ¿ø°İ Å¬¶ó Ã£±â
+    // 1. ì›ê²© í´ë¼ ì°¾ê¸°
     
     APlayerController* RemoteClient = nullptr;
 
@@ -529,9 +416,10 @@ void ACSGameMode::SyncDummyRotationWithProxy()
         }
     }
 
-    // 2. ÇØ´ç Å¬¶óÀÇ Proxy °¡Á®¿À±â
-    ACSCameraViewProxy* ClientProxy = ClientCamProxies[RemoteClient];
-    if ( ClientProxy == nullptr ) return;
+    // 2. í•´ë‹¹ í´ë¼ì˜ Proxy ê°€ì ¸ì˜¤ê¸°
+    TObjectPtr<ACSCameraViewProxy>* FoundProxy = ClientCamProxies.Find(RemoteClient);
+    if (!FoundProxy || !(*FoundProxy)) return;
+    ACSCameraViewProxy* ClientProxy = *FoundProxy;
 
     FRepCamInfo& RemoteClientCam = ClientProxy->GetReplicatedCamera();
 
@@ -541,19 +429,19 @@ void ACSGameMode::SyncDummyRotationWithProxy()
         return;
     }
 
-    // 3. À§Ä¡ µ¿±âÈ­ (Ä³¸¯ÅÍ Å©±â¸¸Å­ ¿ÀÇÁ¼Â Àû¿ë)
+    // 3. ìœ„ì¹˜ ë™ê¸°í™” (ìºë¦­í„° í¬ê¸°ë§Œí¼ ì˜¤í”„ì…‹ ì ìš©)
     APawn* ClientPawn = RemoteClient->GetPawn();
-    FVector TargetLoc = RemoteClientCam.Location; // ±âº»°ª: Å¬¶ó Ä«¸Ş¶ó À§Ä¡ ±×´ë·Î
+    FVector TargetLoc = RemoteClientCam.Location; // ê¸°ë³¸ê°’: í´ë¼ ì¹´ë©”ë¼ ìœ„ì¹˜ ê·¸ëŒ€ë¡œ
 
     if (ClientPawn)
     {
-        // 3-1) root¿¡ offset Àû¿ëÇÑ camera_socket ÇÊ¿ä. 
+        // 3-1) rootì— offset ì ìš©í•œ camera_socket í•„ìš”. 
         if (USkeletalMeshComponent* Mesh = ClientPawn->FindComponentByClass<USkeletalMeshComponent>())
         {
             if (Mesh->DoesSocketExist(TEXT("camera_socket")))
             {
                 TargetLoc = Mesh->GetSocketLocation(TEXT("camera_socket"));
-                // SocketÀÌ ¾øÀ¸¸é ±âº»À¸·Î Ä³¸¯ÅÍÀÇ Áß¾ÓÀÎµí. 
+                // Socketì´ ì—†ìœ¼ë©´ ê¸°ë³¸ìœ¼ë¡œ ìºë¦­í„°ì˜ ì¤‘ì•™ì¸ë“¯. 
             }
         }
         else
@@ -566,13 +454,13 @@ void ACSGameMode::SyncDummyRotationWithProxy()
         DummySpectatorPawn->GetActorLocation(),
         TargetLoc,
         GetWorld()->GetDeltaSeconds(),
-        30.f // º¸°£ ¼Óµµ
+        30.f // ë³´ê°„ ì†ë„
     );
 
     DummySpectatorPawn->SetActorLocation(NewLoc);
 
-    // 4. È¸ÀüÀº Å¬¶ó ÀÔ·Â°ªÀ» ±×´ë·Î ¾²°Å³ª ¹«½Ã (¿É¼Ç)
-    //    ¿©±â¼­´Â Å¬¶ó Ä«¸Ş¶ó È¸Àü ±×´ë·Î ¹İ¿µ
+    // 4. íšŒì „ì€ í´ë¼ ì…ë ¥ê°’ì„ ê·¸ëŒ€ë¡œ ì“°ê±°ë‚˜ ë¬´ì‹œ (ì˜µì…˜)
+    //    ì—¬ê¸°ì„œëŠ” í´ë¼ ì¹´ë©”ë¼ íšŒì „ ê·¸ëŒ€ë¡œ ë°˜ì˜
     
     FRotator TargetRot = RemoteClientCam.Rotation;
     FRotator CurrentRot = DummyPlayerController->GetControlRotation();
@@ -581,7 +469,7 @@ void ACSGameMode::SyncDummyRotationWithProxy()
         CurrentRot,
         TargetRot,
         GetWorld()->GetDeltaSeconds(),
-        20.f // º¸°£ ¼Óµµ
+        20.f // ë³´ê°„ ì†ë„
     );
 
     DummyPlayerController->SetControlRotation(NewRot);
@@ -592,7 +480,7 @@ void ACSGameMode::SyncDummyRotationWithProxy()
 void ACSGameMode::SetupOnlineSplitScreen()
 {
     CreateDummyLocalPlayer();
-    // ¿ø°İ Å¬¶ó Ã£±â ¡æ ´õ¹Ì ½ºÆåÅ×ÀÌÅÍ ºÙÀÌ±â
+    // ì›ê²© í´ë¼ ì°¾ê¸° â†’ ë”ë¯¸ ìŠ¤í™í…Œì´í„° ë¶™ì´ê¸°
     APlayerController* RemoteClient = nullptr;
     for (APlayerController* PC : ConnectedPlayers)
     {
@@ -604,8 +492,8 @@ void ACSGameMode::SetupOnlineSplitScreen()
     }
     AttachDummySpectatorToClient(RemoteClient);
 
-    // === È¸Àü µ¿±âÈ­ Å¸ÀÌ¸Ó ½ÃÀÛ ===
-    // WeakLambda·Î ¹Ù²Ù±â. 
+    // === íšŒì „ ë™ê¸°í™” íƒ€ì´ë¨¸ ì‹œì‘ ===
+    // WeakLambdaë¡œ ë°”ê¾¸ê¸°. 
     GetWorldTimerManager().SetTimer(
         RotationSyncTimerHandle,
         FTimerDelegate::CreateWeakLambda(this, [this]()
@@ -615,8 +503,8 @@ void ACSGameMode::SetupOnlineSplitScreen()
 
                 SyncDummyRotationWithProxy();
             }),
-        0.016f,   // 60FPS ÁÖ±â
-        true      // ¹İº¹
+        0.016f,   // 60FPS ì£¼ê¸°
+        true      // ë°˜ë³µ
     );
 }
 
@@ -624,11 +512,112 @@ void ACSGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
     Super::EndPlay(EndPlayReason);
 
-    // È¸Àü µ¿±âÈ­ Å¸ÀÌ¸Ó Á¾·á
+    // íšŒì „ ë™ê¸°í™” íƒ€ì´ë¨¸ ì¢…ë£Œ
     if (GetWorld())
     {
         GetWorldTimerManager().ClearTimer(RotationSyncTimerHandle);
     }
 
-    UE_LOG(LogCS, Warning, TEXT("CSGameMode::EndPlay - cleared rotation sync timer"));
+    UE_LOG(LogCS, Log, TEXT("CSGameMode::EndPlay - cleared rotation sync timer"));
+}
+
+// ============================================================
+// í—¬í¼ í•¨ìˆ˜: PostLogin / HandleSeamlessTravelPlayer ê³µí†µ
+// ============================================================
+
+void ACSGameMode::CreateProxiesForPlayer(APlayerController* NewPlayer)
+{
+    if (!NewPlayer) return;
+
+    // 1) ì›ê²© í´ë¼ì´ì–¸íŠ¸ë³„ ê°œë³„ Proxy ìƒì„±
+    if (!NewPlayer->IsLocalController())
+    {
+        UE_LOG(LogCS, Log, TEXT("CreateProxiesForPlayer: Creating client proxy for %s"), *NewPlayer->GetName());
+
+        FActorSpawnParameters ClientProxyParams;
+        ClientProxyParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+        ClientProxyParams.Owner = NewPlayer;
+
+        ACSCameraViewProxy* ClientProxy = GetWorld()->SpawnActor<ACSCameraViewProxy>(
+            ACSCameraViewProxy::StaticClass(),
+            FTransform::Identity,
+            ClientProxyParams
+        );
+
+        if (ClientProxy)
+        {
+            ClientProxy->SetReplicates(true);
+            ClientProxy->SetReplicateMovement(false);
+            ClientProxy->SetIsServerProxy(false);
+            ClientCamProxies.Add(NewPlayer, ClientProxy);
+        }
+    }
+
+    // 2) ì„œë²„ ë¡œì»¬ í”Œë ˆì´ì–´ìš© Proxy ìƒì„± (í•œ ë²ˆë§Œ)
+    if (NewPlayer->IsLocalController() && !ServerCamProxy)
+    {
+        FActorSpawnParameters ServerProxyParams;
+        ServerProxyParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+        ServerCamProxy = GetWorld()->SpawnActor<ACSCameraViewProxy>(
+            ACSCameraViewProxy::StaticClass(),
+            FTransform::Identity,
+            ServerProxyParams
+        );
+
+        if (ServerCamProxy)
+        {
+            ServerCamProxy->SetReplicates(true);
+            ServerCamProxy->SetReplicateMovement(false);
+            ServerCamProxy->SetIsServerProxy(true);
+            UE_LOG(LogCS, Log, TEXT("Created ServerCamProxy (ListenServer POV)"));
+        }
+    }
+}
+
+void ACSGameMode::TrySplitScreenSetup()
+{
+    if (!bAutoEnableSplitScreen) return;
+    if (GetWorld()->GetNetMode() != NM_ListenServer) return;
+    if (ConnectedPlayers.Num() != 2) return;
+    if (DummyPlayerController) return; // ì´ë¯¸ ì„¤ì •ë¨
+
+    UE_LOG(LogCS, Log, TEXT("TrySplitScreenSetup: Starting split screen setup..."));
+    SetupOnlineSplitScreen();
+}
+
+void ACSGameMode::CleanupSplitScreenForPlayer(APlayerController* ExitingPlayer)
+{
+    if (!ExitingPlayer) return;
+
+    // 1) í•´ë‹¹ í”Œë ˆì´ì–´ì˜ ClientProxy ì •ë¦¬
+    TObjectPtr<ACSCameraViewProxy>* FoundProxy = ClientCamProxies.Find(ExitingPlayer);
+    if (FoundProxy && *FoundProxy)
+    {
+        (*FoundProxy)->Destroy();
+        UE_LOG(LogCS, Log, TEXT("CleanupSplitScreenForPlayer: Destroyed client proxy for %s"), *ExitingPlayer->GetName());
+    }
+    ClientCamProxies.Remove(ExitingPlayer);
+
+    // 2) ë™ê¸°í™” íƒ€ì´ë¨¸ ì¤‘ì§€
+    if (GetWorld())
+    {
+        GetWorldTimerManager().ClearTimer(RotationSyncTimerHandle);
+    }
+
+    // 3) Dummy SpectatorPawn ì •ë¦¬
+    if (DummySpectatorPawn)
+    {
+        DummySpectatorPawn->Destroy();
+        DummySpectatorPawn = nullptr;
+        UE_LOG(LogCS, Log, TEXT("CleanupSplitScreenForPlayer: Destroyed DummySpectatorPawn"));
+    }
+
+    // 4) Dummy PlayerController ì •ë¦¬
+    if (DummyPlayerController)
+    {
+        DummyPlayerController->Destroy();
+        DummyPlayerController = nullptr;
+        UE_LOG(LogCS, Log, TEXT("CleanupSplitScreenForPlayer: Destroyed DummyPlayerController"));
+    }
 }

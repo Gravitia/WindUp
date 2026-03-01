@@ -60,4 +60,8 @@ public:
 protected:
     UPROPERTY(Replicated)
     bool bIsServerProxy;
+
+private:
+    /** 클라이언트 카메라 전송 주기 타이머 (인스턴스별) */
+    float ClientSendTimer = 0.0f;
 };

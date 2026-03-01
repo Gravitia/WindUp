@@ -86,13 +86,12 @@ void ACSCameraViewProxy::Tick(float DeltaSeconds)
     }
     else
     {
-        static float SendTimer = 0.0f;
-        SendTimer += DeltaSeconds;
+        ClientSendTimer += DeltaSeconds;
         const float SendInterval = 1.f / 30.f;
 
-        if (SendTimer >= SendInterval)
+        if (ClientSendTimer >= SendInterval)
         {
-            SendTimer = 0.f;
+            ClientSendTimer = 0.f;
 
             APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
             if (!PC || !PC->IsLocalController() || !PC->PlayerCameraManager)

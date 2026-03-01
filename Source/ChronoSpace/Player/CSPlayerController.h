@@ -10,6 +10,7 @@ class UCSGameUIWidget;
 class SCSServerTravelWidget;
 class ACSSpectatorPawn;
 class ACSCameraViewProxy;
+class ACSCharacterPlayer;
 class UCameraComponent;
 
 // 카메라 예측을 위한 데이터 구조체
@@ -140,6 +141,7 @@ private:
 	TObjectPtr< ACSSpectatorPawn > ClientDummyPawn;
 
 	FTimerHandle ClientSyncTimerHandle;
+	FTimerHandle ClientSetupRetryHandle;
 
 	UPROPERTY()
 	bool bClientSplitScreenSetupComplete = false;
@@ -178,6 +180,9 @@ private:
 	void ApplyCamera(ACSSpectatorPawn* DummyPawn, const FCameraPredictionData& CameraData);
 	void CleanupDummyLocalPlayer();
 	void AttachDummySpectatorToRemoteCharacter(ACSSpectatorPawn* DummyPawn);
+
+	/** 원격 캐릭터 캐시 (매 프레임 TActorIterator 순회 방지) */
+	TWeakObjectPtr<ACSCharacterPlayer> CachedRemoteCharacter;
 
 
 // Camera TargetArmLength Sync 

@@ -34,7 +34,7 @@ public:
 
 protected:
     virtual UClass* GetDefaultPawnClassForController_Implementation(AController* InController) override;
-    /** SeamlessTravel ��, ���� PlayerController�� �Ȱ��� �� ȣ��� */
+    /** SeamlessTravel 시, 기존 PlayerController가 옴겨질 때 호출됨 */
     virtual void HandleSeamlessTravelPlayer(AController*& C) override;
 
     virtual void BeginPlay() override;
@@ -54,7 +54,7 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Split Screen")
     TSubclassOf<APawn> DummySpectatorPawnClass;
 
-    UPROPERTY() // GC ��ȣ
+    UPROPERTY() // GC 보호
     TObjectPtr< class ACSCameraViewProxy > ServerCamProxy = nullptr;
 
     UPROPERTY()
@@ -70,6 +70,15 @@ private:
     void AttachDummySpectatorToClient(APlayerController* RemoteClient);
     void SyncDummyRotationWithProxy();
     void SetupOnlineSplitScreen();
+
+    /** PostLogin/SeamlessTravel 공통: 플레이어별 CameraViewProxy 생성 */
+    void CreateProxiesForPlayer(APlayerController* NewPlayer);
+
+    /** PostLogin/SeamlessTravel 공통: SplitScreen 조건 확인 + 설정 */
+    void TrySplitScreenSetup();
+
+    /** Logout: 나간 플레이어의 Proxy/Dummy 리소스 정리 */
+    void CleanupSplitScreenForPlayer(APlayerController* ExitingPlayer);
 
     FTimerHandle SyncTimerHandle;
     FTimerHandle RotationSyncTimerHandle;
