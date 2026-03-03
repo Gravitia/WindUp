@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Game/CSGameMode.h"
+#include "GameFramework/GameModeBase.h"
 #include "CSLobbyGameMode.generated.h"
 
 /**
@@ -12,7 +12,7 @@
  * - 로비에서 필요한 UI RPC를 지원
  */
 UCLASS()
-class CHRONOSPACE_API ACSLobbyGameMode : public ACSGameMode
+class CHRONOSPACE_API ACSLobbyGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
 
