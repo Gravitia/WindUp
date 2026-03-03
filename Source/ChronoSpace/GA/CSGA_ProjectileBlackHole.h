@@ -105,7 +105,7 @@ protected:
 	bool bIsAming;
 
 protected:
-	/** ºí·¢È¦ Á¶ÁØ ½Ã »ç¿ëÇÏ´Â Ä«¸Ş¶ó ÁÜ Ability (BP °¡´É) */
+	/** ë¸”ë™í™€ ì¡°ì¤€ ì‹œ ì‚¬ìš©í•˜ëŠ” ì¹´ë©”ë¼ ì¤Œ Ability (BP ê°€ëŠ¥) */
 	UPROPERTY(EditDefaultsOnly, Category = "Camera")
 	TSubclassOf<UGameplayAbility> CameraZoomAbilityClass;
 
@@ -124,6 +124,16 @@ protected:
 	UPROPERTY(Transient)
 	bool bCameraOffsetApplied = false;
 
+	/** Lerp ê´€ë ¨ */
+	FTimerHandle CameraOffsetLerpTimerHandle;
+	FVector CameraOffsetLerpStart = FVector::ZeroVector;
+	FVector CameraOffsetLerpTarget = FVector::ZeroVector;
+	float CameraOffsetLerpElapsed = 0.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Default|Camera")
+	float CameraOffsetLerpDuration = 0.5f;
+
 	void ApplyCameraZOffset();
 	void RestoreCameraZOffset();
+	void UpdateCameraOffsetLerp();
 };

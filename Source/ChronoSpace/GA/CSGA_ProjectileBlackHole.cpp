@@ -387,13 +387,27 @@ void UCSGA_ProjectileBlackHole::ApplyCameraZOffset()
 	CachedSpringArmComponent = SpringArmComp;
 	CachedSpringArmRelativeLocation = SpringArmComp->GetRelativeLocation();
 
-	FVector NewRelativeLocation = CachedSpringArmRelativeLocation;
-	NewRelativeLocation.Z += CameraZOffsetWhileAiming; // 기본 400
+	FVector TargetLocation = CachedSpringArmRelativeLocation;
+	TargetLocation.Z += CameraZOffsetWhileAiming;
 
-	SpringArmComp->SetRelativeLocation(NewRelativeLocation);
+	// Lerp 시작
+	CameraOffsetLerpStart = CachedSpringArmRelativeLocation;
+	CameraOffsetLerpTarget = TargetLocation;
+	CameraOffsetLerpElapsed = 0.f;
 	bCameraOffsetApplied = true;
 
-	UE_LOG(LogCS, Log, TEXT("ApplyCameraZOffset(SpringArm): Z + %f"), CameraZOffsetWhileAiming);
+	if (UWorld* World = Avatar->GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(CameraOffsetLerpTimerHandle);
+		World->GetTimerManager().SetTimer(
+			CameraOffsetLerpTimerHandle,
+			FTimerDelegate::CreateUObject(this, &UCSGA_ProjectileBlackHole::UpdateCameraOffsetLerp),
+			0.016f,
+			true
+		);
+	}
+
+	UE_LOG(LogCS, Log, TEXT("ApplyCameraZOffset(SpringArm): Lerp Z + %f over %f seconds"), CameraZOffsetWhileAiming, CameraOffsetLerpDuration);
 }
 
 void UCSGA_ProjectileBlackHole::RestoreCameraZOffset()
@@ -403,13 +417,59 @@ void UCSGA_ProjectileBlackHole::RestoreCameraZOffset()
 		return;
 	}
 
+	// Apply Lerp 타이머가 실행 중이면 정리
 	if (IsValid(CachedSpringArmComponent))
 	{
+		if (UWorld* World = CachedSpringArmComponent->GetWorld())
+		{
+			World->GetTimerManager().ClearTimer(CameraOffsetLerpTimerHandle);
+		}
+
 		CachedSpringArmComponent->SetRelativeLocation(CachedSpringArmRelativeLocation);
-		UE_LOG(LogCS, Log, TEXT("RestoreCameraZOffset(SpringArm): Restored spring arm relative location"));
+		UE_LOG(LogCS, Log, TEXT("RestoreCameraZOffset(SpringArm): Restored immediately"));
 	}
 
 	CachedSpringArmComponent = nullptr;
 	CachedSpringArmRelativeLocation = FVector::ZeroVector;
 	bCameraOffsetApplied = false;
+}
+
+void UCSGA_ProjectileBlackHole::UpdateCameraOffsetLerp()
+{
+	if (!IsValid(CachedSpringArmComponent))
+	{
+		// 스프링암이 사라졌으면 타이머 정리
+		if (UWorld* World = GetWorld())
+		{
+			World->GetTimerManager().ClearTimer(CameraOffsetLerpTimerHandle);
+		}
+		CachedSpringArmComponent = nullptr;
+		CachedSpringArmRelativeLocation = FVector::ZeroVector;
+		return;
+	}
+
+	CameraOffsetLerpElapsed += 0.016f;
+	const float Alpha = FMath::Clamp(CameraOffsetLerpElapsed / CameraOffsetLerpDuration, 0.f, 1.f);
+
+	// EaseInOut 커브 적용
+	const float SmoothedAlpha = FMath::InterpEaseInOut(0.f, 1.f, Alpha, 2.f);
+
+	const FVector NewLocation = FMath::Lerp(CameraOffsetLerpStart, CameraOffsetLerpTarget, SmoothedAlpha);
+	CachedSpringArmComponent->SetRelativeLocation(NewLocation);
+
+	if (Alpha >= 1.f)
+	{
+		// Lerp 완료
+		if (UWorld* World = CachedSpringArmComponent->GetWorld())
+		{
+			World->GetTimerManager().ClearTimer(CameraOffsetLerpTimerHandle);
+		}
+
+		// 원복 완료 시 캐시 정리
+		if (!bCameraOffsetApplied)
+		{
+			CachedSpringArmComponent = nullptr;
+			CachedSpringArmRelativeLocation = FVector::ZeroVector;
+		}
+	}
 }
