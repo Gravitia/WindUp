@@ -123,12 +123,12 @@ void ACSBlackHole::SetGravityInfluenceRange(float Range)
 			GetWorld(),
 			SphereLocation,
 			SphereRadius,
-			12,				// ¼¼±×¸ÕÆ® ¼ö (±¸ÀÇ ¸Å²ô·¯¿ò)
+			12,				// ì„¸ê·¸ë¨¼íŠ¸ ìˆ˜ (êµ¬ì˜ ë§¤ë„ëŸ¬ì›€)
 			FColor::Green,
-			false,			// Áö¼Ó Ç¥½Ã
-			5,   // Áö¼Ó ½Ã°£ 
-			0,				// µð¹ö±× ¼± ¿ì¼±¼øÀ§
-			2.0f			// ¼± µÎ²²
+			false,			// ì§€ì† í‘œì‹œ
+			5,   // ì§€ì† ì‹œê°„ 
+			0,				// ë””ë²„ê·¸ ì„  ìš°ì„ ìˆœìœ„
+			2.0f			// ì„  ë‘ê»˜
 		);
 		*/
 	}
@@ -167,6 +167,7 @@ void ACSBlackHole::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComponen
 	if ( StaticMeshComp )
 	{
 		StaticMeshComp->SetEnableGravity(false);
+		StaticMeshComp->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 		StaticMeshesInSphereTrigger.Add(StaticMeshComp);
 	}
 }
@@ -186,6 +187,7 @@ void ACSBlackHole::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedComponent,
 	if (StaticMeshComp)
 	{
 		StaticMeshComp->SetEnableGravity(true);
+		StaticMeshComp->SetCollisionResponseToChannel(ECC_Camera, ECR_Block);
 		StaticMeshesInSphereTrigger.Remove(StaticMeshComp);
 	}
 }

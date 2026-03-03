@@ -27,5 +27,6 @@ void UCSMeshAffectedByGravityCore::BeginPlay()
 		return;
 	}
 	MeshComp->SetCollisionObjectType(CCHANNEL_CSGRAVITY_CORE_AFFECTED);
+	MeshComp->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 }
 
