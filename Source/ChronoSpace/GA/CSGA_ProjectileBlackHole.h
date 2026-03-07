@@ -133,6 +133,15 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Default|Camera")
 	float CameraOffsetLerpDuration = 0.5f;
 
+	/** 줌 복원(줌아웃) Lerp 시간 */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Default|Camera")
+	float CameraOffsetRestoreLerpDuration = 0.3f;
+
+	/** EndAbility 지연 처리 (Lerp 완료 후 호출) */
+	bool bIsPendingEndAbility = false;
+	bool bPendingEndAbility_Replicate = false;
+	bool bPendingEndAbility_WasCancelled = false;
+
 	void ApplyCameraZOffset();
 	void RestoreCameraZOffset();
 	void UpdateCameraOffsetLerp();

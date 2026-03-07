@@ -50,6 +50,8 @@ void UCSGA_ProjectileBlackHole::ActivateAbility(const FGameplayAbilitySpecHandle
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
+	bIsPendingEndAbility = false;
+
 	check(BlackHoleDummyClass);
 
 	// GAS 컴포넌트 구조 상 서버는 이미 눌렸을 때 ActivateAbility 발동 안함
@@ -130,10 +132,10 @@ FVector UCSGA_ProjectileBlackHole::GetScreenCenterDirection() const
 			// 0 = left/top, 1 = right/bottom (for two players)
 			int32 ControllerId = PC->GetLocalPlayer()->GetControllerId();
 
-			// Left player uses 25% X, right player 75%
+			// Left player uses 75% X (right side), right player 25% X (left side)
 			float ScreenCenterX = (ControllerId == 0)
-				? ViewportSizeX * 0.25f
-				: ViewportSizeX * 0.75f;
+				? ViewportSizeX * 0.75f
+				: ViewportSizeX * 0.25f;
 
 			float ScreenCenterY = ViewportSizeY * 0.5f;
 
@@ -159,8 +161,6 @@ FVector UCSGA_ProjectileBlackHole::GetScreenCenterDirection() const
 
 void UCSGA_ProjectileBlackHole::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
-	RestoreCameraZOffset();
-
 	if ( BlackHoleDummyActor )
 	{
 		BlackHoleDummyActor->Destroy();
@@ -177,7 +177,19 @@ void UCSGA_ProjectileBlackHole::EndAbility(const FGameplayAbilitySpecHandle Hand
 		GetWorld()->GetTimerManager().ClearTimer(DurationTimerHandle);
 	}
 
-	
+	// 카메라 복원 Lerp 시작 — Lerp 완료 후에 Super::EndAbility 호출
+	bool bNeedRestoreLerp = bCameraOffsetApplied;
+	RestoreCameraZOffset();
+
+	if (bNeedRestoreLerp && CameraOffsetLerpTimerHandle.IsValid())
+	{
+		// Lerp 실행 중이므로 Super::EndAbility 지연
+		bIsPendingEndAbility = true;
+		bPendingEndAbility_Replicate = bReplicateEndAbility;
+		bPendingEndAbility_WasCancelled = bWasCancelled;
+		UE_LOG(LogCS, Log, TEXT("ProjectileBlackHole EndAbility deferred (waiting for camera restore Lerp)"));
+		return;
+	}
 
 	UE_LOG(LogCS, Log, TEXT("ProjectileBlackHole Ended"));
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
@@ -384,14 +396,22 @@ void UCSGA_ProjectileBlackHole::ApplyCameraZOffset()
 		return;
 	}
 
-	CachedSpringArmComponent = SpringArmComp;
-	CachedSpringArmRelativeLocation = SpringArmComp->GetRelativeLocation();
+	// 복원 Lerp 도중 재활성화된 경우, 기존 원래 위치(CachedSpringArmRelativeLocation) 유지
+	if (CachedSpringArmComponent == SpringArmComp)
+	{
+		// 이미 캐시된 원래 위치를 그대로 사용
+	}
+	else
+	{
+		CachedSpringArmComponent = SpringArmComp;
+		CachedSpringArmRelativeLocation = SpringArmComp->GetRelativeLocation();
+	}
 
 	FVector TargetLocation = CachedSpringArmRelativeLocation;
 	TargetLocation.Z += CameraZOffsetWhileAiming;
 
-	// Lerp 시작
-	CameraOffsetLerpStart = CachedSpringArmRelativeLocation;
+	// Lerp 시작 (현재 위치에서 목표 위치로)
+	CameraOffsetLerpStart = SpringArmComp->GetRelativeLocation();
 	CameraOffsetLerpTarget = TargetLocation;
 	CameraOffsetLerpElapsed = 0.f;
 	bCameraOffsetApplied = true;
@@ -417,21 +437,32 @@ void UCSGA_ProjectileBlackHole::RestoreCameraZOffset()
 		return;
 	}
 
-	// Apply Lerp 타이머가 실행 중이면 정리
-	if (IsValid(CachedSpringArmComponent))
+	if (!IsValid(CachedSpringArmComponent))
 	{
-		if (UWorld* World = CachedSpringArmComponent->GetWorld())
-		{
-			World->GetTimerManager().ClearTimer(CameraOffsetLerpTimerHandle);
-		}
-
-		CachedSpringArmComponent->SetRelativeLocation(CachedSpringArmRelativeLocation);
-		UE_LOG(LogCS, Log, TEXT("RestoreCameraZOffset(SpringArm): Restored immediately"));
+		bCameraOffsetApplied = false;
+		CachedSpringArmComponent = nullptr;
+		CachedSpringArmRelativeLocation = FVector::ZeroVector;
+		return;
 	}
 
-	CachedSpringArmComponent = nullptr;
-	CachedSpringArmRelativeLocation = FVector::ZeroVector;
-	bCameraOffsetApplied = false;
+	// 현재 위치에서 원래 위치로 Lerp 시작
+	CameraOffsetLerpStart = CachedSpringArmComponent->GetRelativeLocation();
+	CameraOffsetLerpTarget = CachedSpringArmRelativeLocation;
+	CameraOffsetLerpElapsed = 0.f;
+	bCameraOffsetApplied = false;	// UpdateCameraOffsetLerp에서 Lerp 완료 시 캐시 정리됨
+
+	if (UWorld* World = CachedSpringArmComponent->GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(CameraOffsetLerpTimerHandle);
+		World->GetTimerManager().SetTimer(
+			CameraOffsetLerpTimerHandle,
+			FTimerDelegate::CreateUObject(this, &UCSGA_ProjectileBlackHole::UpdateCameraOffsetLerp),
+			0.016f,
+			true
+		);
+	}
+
+	UE_LOG(LogCS, Log, TEXT("RestoreCameraZOffset(SpringArm): Lerp restore over %f seconds"), CameraOffsetLerpDuration);
 }
 
 void UCSGA_ProjectileBlackHole::UpdateCameraOffsetLerp()
@@ -445,11 +476,20 @@ void UCSGA_ProjectileBlackHole::UpdateCameraOffsetLerp()
 		}
 		CachedSpringArmComponent = nullptr;
 		CachedSpringArmRelativeLocation = FVector::ZeroVector;
+
+		// 지연된 EndAbility 처리
+		if (bIsPendingEndAbility)
+		{
+			bIsPendingEndAbility = false;
+			UE_LOG(LogCS, Log, TEXT("ProjectileBlackHole Ended (deferred, spring arm lost)"));
+			Super::EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, bPendingEndAbility_Replicate, bPendingEndAbility_WasCancelled);
+		}
 		return;
 	}
 
 	CameraOffsetLerpElapsed += 0.016f;
-	const float Alpha = FMath::Clamp(CameraOffsetLerpElapsed / CameraOffsetLerpDuration, 0.f, 1.f);
+	const float CurrentLerpDuration = bCameraOffsetApplied ? CameraOffsetLerpDuration : CameraOffsetRestoreLerpDuration;
+	const float Alpha = FMath::Clamp(CameraOffsetLerpElapsed / CurrentLerpDuration, 0.f, 1.f);
 
 	// EaseInOut 커브 적용
 	const float SmoothedAlpha = FMath::InterpEaseInOut(0.f, 1.f, Alpha, 2.f);
@@ -470,6 +510,14 @@ void UCSGA_ProjectileBlackHole::UpdateCameraOffsetLerp()
 		{
 			CachedSpringArmComponent = nullptr;
 			CachedSpringArmRelativeLocation = FVector::ZeroVector;
+		}
+
+		// 지연된 EndAbility 처리
+		if (bIsPendingEndAbility)
+		{
+			bIsPendingEndAbility = false;
+			UE_LOG(LogCS, Log, TEXT("ProjectileBlackHole Ended (deferred, after camera restore Lerp)"));
+			Super::EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, bPendingEndAbility_Replicate, bPendingEndAbility_WasCancelled);
 		}
 	}
 }
