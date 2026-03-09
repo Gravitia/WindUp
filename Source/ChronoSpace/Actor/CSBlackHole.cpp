@@ -96,6 +96,21 @@ void ACSBlackHole::SetDuration(float Duration)
 
 void ACSBlackHole::Destroyed()
 {
+	// 블랙홀 파괴 시, 중력 범위 안에 남아있는 메쉬들의 상태를 안전하게 복원
+	for (auto It = StaticMeshesInSphereTrigger.CreateIterator(); It; ++It)
+	{
+		UStaticMeshComponent* Mesh = It->Get();
+		if (IsValid(Mesh))
+		{
+			Mesh->SetEnableGravity(true);
+			Mesh->SetCollisionResponseToChannel(ECC_Camera, ECR_Block);
+			Mesh->SetPhysicsLinearVelocity(FVector::ZeroVector, false);
+			Mesh->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector, false);
+		}
+	}
+	StaticMeshesInSphereTrigger.Empty();
+	StaticMeshesInEventHorizon.Empty();
+
 	// BlackHole OFF Sound
 	if (BlackHoleOffSound)
 	{
