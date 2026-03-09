@@ -17,28 +17,38 @@ class CHRONOSPACE_API UCSSplitScreenSubsystem : public UGameInstanceSubsystem
 public:
     UCSSplitScreenSubsystem();
 
-    // UGameInstance ¿À¹ö¶óÀÌµå
+    // UGameInstance ì˜¤ë²„ë¼ì´ë“œ
     virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
-    // ½ºÇÃ¸´ ½ºÅ©¸° ±âº» ±â´É
+    // ìŠ¤í”Œë¦¿ ìŠ¤í¬ë¦° ê¸°ë³¸ ê¸°ëŠ¥
     UFUNCTION(BlueprintCallable, Category = "Split Screen")
     void EnableSplitScreen();
 
     UFUNCTION(BlueprintCallable, Category = "Split Screen")
     void DisableSplitScreen();
 
-    // »óÅÂ È®ÀÎ ÇÔ¼öµé
+    // í’€ìŠ¤í¬ë¦° ì „í™˜ (ì• ë‹ˆë©”ì´ì…˜)
+    UFUNCTION(BlueprintCallable, Category = "Split Screen")
+    void TransitionToFullScreen(int32 PlayerIndex);
+
+    UFUNCTION(BlueprintCallable, Category = "Split Screen")
+    void TransitionToSplitScreen();
+
+    // ìƒíƒœ í™•ì¸ í•¨ìˆ˜ë“¤
     UFUNCTION(BlueprintPure, Category = "Split Screen")
     bool IsSplitScreenEnabled() const { return bSplitScreenActive; }
 
     UFUNCTION(BlueprintPure, Category = "Split Screen")
     bool IsDualModeEnabled() const { return bUseDualMode; }
 
+    UFUNCTION(BlueprintPure, Category = "Split Screen")
+    bool IsInFullScreenMode() const;
+
 protected:
-    // ½ºÇÃ¸´ ½ºÅ©¸° ¼³Á¤
+    // ìŠ¤í”Œë¦¿ ìŠ¤í¬ë¦° ì„¤ì •
     void SetupSplitScreenViewport();
 
-    // ¼³Á¤ º¯¼öµé
+    // ì„¤ì • ë³€ìˆ˜ë“¤
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Split Screen")
     bool bEnableSplitScreen = true;
 
@@ -48,11 +58,11 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Split Screen")
     int32 MaxSplitScreenPlayers = 2;
 
-    // ·±Å¸ÀÓ »óÅÂ
+    // ëŸ°íƒ€ì„ ìƒíƒœ
     UPROPERTY(BlueprintReadOnly, Category = "Split Screen")
     bool bSplitScreenActive = false;
 
-    // Å¸ÀÌ¸Ó ÇÚµéµé
+    // íƒ€ì´ë¨¸ í•¸ë“¤ë“¤
     FTimerHandle SplitScreenTimerHandle;
     FTimerHandle DualModeToggleHandle;
 };

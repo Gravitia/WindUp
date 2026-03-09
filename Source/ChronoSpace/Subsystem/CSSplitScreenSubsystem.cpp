@@ -2,6 +2,7 @@
 
 
 #include "Subsystem/CSSplitScreenSubsystem.h"
+#include "UI/CSGameViewportClient.h"
 #include "Engine/Engine.h"
 #include "Engine/World.h"
 #include "Engine/LocalPlayer.h"
@@ -81,4 +82,58 @@ void UCSSplitScreenSubsystem::DisableSplitScreen()
 
     bSplitScreenActive = false;
     UE_LOG(LogTemp, Warning, TEXT("SS Split Screen Disabled"));
+}
+
+void UCSSplitScreenSubsystem::TransitionToFullScreen(int32 PlayerIndex)
+{
+    if (!GEngine || !GEngine->GameViewport)
+    {
+        UE_LOG(LogCS, Warning, TEXT("TransitionToFullScreen: GameViewport is null"));
+        return;
+    }
+
+    UCSGameViewportClient* ViewportClient = Cast<UCSGameViewportClient>(GEngine->GameViewport);
+    if (!ViewportClient)
+    {
+        UE_LOG(LogCS, Warning, TEXT("TransitionToFullScreen: Not using CSGameViewportClient"));
+        return;
+    }
+
+    ViewportClient->StartFullScreenTransition(PlayerIndex);
+    UE_LOG(LogCS, Log, TEXT("TransitionToFullScreen: Requested for Player %d"), PlayerIndex);
+}
+
+void UCSSplitScreenSubsystem::TransitionToSplitScreen()
+{
+    if (!GEngine || !GEngine->GameViewport)
+    {
+        UE_LOG(LogCS, Warning, TEXT("TransitionToSplitScreen: GameViewport is null"));
+        return;
+    }
+
+    UCSGameViewportClient* ViewportClient = Cast<UCSGameViewportClient>(GEngine->GameViewport);
+    if (!ViewportClient)
+    {
+        UE_LOG(LogCS, Warning, TEXT("TransitionToSplitScreen: Not using CSGameViewportClient"));
+        return;
+    }
+
+    ViewportClient->StartSplitScreenTransition();
+    UE_LOG(LogCS, Log, TEXT("TransitionToSplitScreen: Requested"));
+}
+
+bool UCSSplitScreenSubsystem::IsInFullScreenMode() const
+{
+    if (!GEngine || !GEngine->GameViewport)
+    {
+        return false;
+    }
+
+    UCSGameViewportClient* ViewportClient = Cast<UCSGameViewportClient>(GEngine->GameViewport);
+    if (!ViewportClient)
+    {
+        return false;
+    }
+
+    return ViewportClient->IsInFullScreenMode();
 }
