@@ -187,7 +187,7 @@ protected:
 	UFUNCTION(Server, Reliable)
 	void Server_ApplyClockUnwind();
 
-	// »õ·Î Ãß°¡ÇÒ Multicast ÇÔ¼ö ¼±¾ğ
+	// ìƒˆë¡œ ì¶”ê°€í•  Multicast í•¨ìˆ˜ ì„ ì–¸
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_ApplyClockUnwind();
 
@@ -196,7 +196,7 @@ private:
 	
 
 
-// ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡ Coyote-Time(ÄÚ¿äÅ× Á¡ÇÁ) ¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡¦¡
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Coyote-Time(ì½”ìš”í…Œ ì í”„) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 	UFUNCTION(BlueprintCallable)
 	void StartCoyoteTimer();
 
@@ -207,7 +207,7 @@ private:
 	bool bCanCoyoteJump = false;
 
 	UPROPERTY(EditAnywhere)
-	float CoyoteTime = 0.33f;          // °ü¿ë ±¸°£(ÃÊ)
+	float CoyoteTime = 0.33f;          // ê´€ìš© êµ¬ê°„(ì´ˆ)
 
 	UPROPERTY(EditAnywhere)
 	FTimerHandle CoyoteTimerHandle;
@@ -232,7 +232,7 @@ protected:
 	TObjectPtr<class USphereComponent> GravityCoreSphere;
 
 // Black Hole
-// GA°¡ RPC°¡ ¾ø´Â °Í¿¡ ´ëÇÑ ¿ìÈ¸..
+// GAê°€ RPCê°€ ì—†ëŠ” ê²ƒì— ëŒ€í•œ ìš°íšŒ..
 public:
 	UFUNCTION(Server, Reliable)
 	void ServerSpawnAndSetBlackHole(TSubclassOf<class ACSBlackHole> BlackHoleClass,
