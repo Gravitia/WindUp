@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "CSCameraVolume.generated.h"
+#include "CSFixedCameraVolume.generated.h"
 
 class UBoxComponent;
 class UCameraComponent;
@@ -15,12 +15,12 @@ class UCameraComponent;
  * 카메라는 이 액터의 CameraComponent 위치/회전에 고정됨.
  */
 UCLASS()
-class CHRONOSPACE_API ACSCameraVolume : public AActor
+class CHRONOSPACE_API ACSFixedCameraVolume : public AActor
 {
 	GENERATED_BODY()
 
 public:
-	ACSCameraVolume();
+	ACSFixedCameraVolume();
 
 protected:
 	virtual void BeginPlay() override;

@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Actor/CSCameraVolume.h"
+#include "Actor/CSFixedCameraVolume.h"
 #include "Components/BoxComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/Character.h"
@@ -10,7 +10,7 @@
 #include "Engine/LocalPlayer.h"
 #include "ChronoSpace.h"
 
-ACSCameraVolume::ACSCameraVolume()
+ACSFixedCameraVolume::ACSFixedCameraVolume()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
@@ -21,8 +21,8 @@ ACSCameraVolume::ACSCameraVolume()
 	TriggerBox->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
 	TriggerBox->SetGenerateOverlapEvents(true);
 
-	TriggerBox->OnComponentBeginOverlap.AddDynamic(this, &ACSCameraVolume::OnTriggerBeginOverlap);
-	TriggerBox->OnComponentEndOverlap.AddDynamic(this, &ACSCameraVolume::OnTriggerEndOverlap);
+	TriggerBox->OnComponentBeginOverlap.AddDynamic(this, &ACSFixedCameraVolume::OnTriggerBeginOverlap);
+	TriggerBox->OnComponentEndOverlap.AddDynamic(this, &ACSFixedCameraVolume::OnTriggerEndOverlap);
 
 	// 고정 카메라 컴포넌트 — 에디터에서 위치/회전 조정 가능
 	FixedCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FixedCamera"));
@@ -31,13 +31,13 @@ ACSCameraVolume::ACSCameraVolume()
 	FixedCamera->SetRelativeRotation(FRotator(0.f, 90.f, 0.f));
 }
 
-void ACSCameraVolume::BeginPlay()
+void ACSFixedCameraVolume::BeginPlay()
 {
 	Super::BeginPlay();
 	PlayersInTrigger = 0;
 }
 
-void ACSCameraVolume::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepHitResult)
+void ACSFixedCameraVolume::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepHitResult)
 {
 	ACharacter* Character = Cast<ACharacter>(OtherActor);
 	if (!Character) return;
@@ -76,15 +76,15 @@ void ACSCameraVolume::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedCompo
 			if (UCSSplitScreenSubsystem* Subsystem = GI->GetSubsystem<UCSSplitScreenSubsystem>())
 			{
 				Subsystem->TransitionToFullScreen(TargetPlayerIndex);
-				UE_LOG(LogCS, Log, TEXT("CameraVolume: Player %d → Full Screen transition"), TargetPlayerIndex);
+				UE_LOG(LogCS, Log, TEXT("FixedCameraVolume: Player %d → Full Screen transition"), TargetPlayerIndex);
 			}
 		}
 	}
 
-	UE_LOG(LogCS, Log, TEXT("CameraVolume: %s entered → Fixed camera, ControlRotation locked"), *Character->GetName());
+	UE_LOG(LogCS, Log, TEXT("FixedCameraVolume: %s entered → Fixed camera, ControlRotation locked"), *Character->GetName());
 }
 
-void ACSCameraVolume::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+void ACSFixedCameraVolume::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	ACharacter* Character = Cast<ACharacter>(OtherActor);
 	if (!Character) return;
@@ -116,10 +116,10 @@ void ACSCameraVolume::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedCompone
 			if (UCSSplitScreenSubsystem* Subsystem = GI->GetSubsystem<UCSSplitScreenSubsystem>())
 			{
 				Subsystem->TransitionToSplitScreen();
-				UE_LOG(LogCS, Log, TEXT("CameraVolume: All players left → Split Screen transition"));
+				UE_LOG(LogCS, Log, TEXT("FixedCameraVolume: All players left → Split Screen transition"));
 			}
 		}
 	}
 
-	UE_LOG(LogCS, Log, TEXT("CameraVolume: %s exited → Restore 3rd-person camera"), *Character->GetName());
+	UE_LOG(LogCS, Log, TEXT("FixedCameraVolume: %s exited → Restore 3rd-person camera"), *Character->GetName());
 }
