@@ -40,4 +40,20 @@ protected:
 	/** 줌 이동 속도 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default|Camera Volume")
 	float ZoomSpeed = 5.f;
+
+	/** true이면 진입 시 풀스크린, 퇴장 시 스플릿 스크린 전환 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default|Camera Volume")
+	bool bUseSplitScreenTransition = false;
+
+	/** true이면 진입한 캐릭터의 화면만 풀스크린으로 전환. false이면 항상 FixedFullScreenPlayerIndex 기준 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default|Camera Volume", meta = (EditCondition = "bUseSplitScreenTransition"))
+	bool bFullScreenForEnteringPlayer = true;
+
+	/** bFullScreenForEnteringPlayer가 false일 때 사용할 고정 플레이어 인덱스 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default|Camera Volume", meta = (EditCondition = "bUseSplitScreenTransition && !bFullScreenForEnteringPlayer"))
+	int32 FixedFullScreenPlayerIndex = 0;
+
+private:
+	/** 트리거 안에 있는 플레이어 수 (스플릿 스크린 복원 판단용) */
+	int32 PlayersInTrigger = 0;
 };
