@@ -12,7 +12,7 @@
 
 ACSFixedCameraVolume::ACSFixedCameraVolume()
 {
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 
 	TriggerBox = CreateDefaultSubobject<UBoxComponent>(TEXT("TriggerBox"));
 	RootComponent = TriggerBox;
@@ -37,6 +37,36 @@ void ACSFixedCameraVolume::BeginPlay()
 	PlayersInTrigger = 0;
 }
 
+void ACSFixedCameraVolume::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	for (auto It = ControlRotationLerpStates.CreateIterator(); It; ++It)
+	{
+		APlayerController* PC = It->Key;
+		FControlRotationLerpState& State = It->Value;
+
+		if (!IsValid(PC) || !State.bIsLerping)
+		{
+			It.RemoveCurrent();
+			continue;
+		}
+
+		State.Elapsed += DeltaTime;
+		const float Alpha = FMath::Clamp(State.Elapsed / State.Duration, 0.f, 1.f);
+		const float SmoothedAlpha = FMath::InterpEaseInOut(0.f, 1.f, Alpha, 2.f);
+
+		const FRotator NewRotation = FMath::Lerp(State.StartRotation, State.TargetRotation, SmoothedAlpha);
+		PC->SetControlRotation(NewRotation);
+
+		if (Alpha >= 1.f)
+		{
+			State.bIsLerping = false;
+			It.RemoveCurrent();
+		}
+	}
+}
+
 void ACSFixedCameraVolume::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepHitResult)
 {
 	ACharacter* Character = Cast<ACharacter>(OtherActor);
@@ -52,9 +82,18 @@ void ACSFixedCameraVolume::OnTriggerBeginOverlap(UPrimitiveComponent* Overlapped
 	{
 		PC->SetViewTargetWithBlend(this, BlendTime);
 
-		// 컨트롤러 회전 저장 후 고정
+		// 컨트롤러 회전 저장
 		SavedControlRotations.Add(PC, PC->GetControlRotation());
-		PC->SetControlRotation(FixedControlRotation);
+
+		// ControlRotation은 Lerp로 부드럽게 전환 (이동 방향이 즉시 바뀌지 않음)
+		FControlRotationLerpState LerpState;
+		LerpState.StartRotation = PC->GetControlRotation();
+		LerpState.TargetRotation = FixedControlRotation;
+		LerpState.Elapsed = 0.f;
+		LerpState.Duration = ControlRotationBlendTime;
+		LerpState.bIsLerping = true;
+		ControlRotationLerpStates.Add(PC, LerpState);
+
 		PC->SetIgnoreLookInput(true);
 	}
 
@@ -99,9 +138,17 @@ void ACSFixedCameraVolume::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedCo
 	{
 		PC->SetViewTargetWithBlend(Character, BlendTime);
 
+		// ControlRotation도 Lerp로 부드럽게 복원
 		if (FRotator* SavedRot = SavedControlRotations.Find(PC))
 		{
-			PC->SetControlRotation(*SavedRot);
+			FControlRotationLerpState LerpState;
+			LerpState.StartRotation = PC->GetControlRotation();
+			LerpState.TargetRotation = *SavedRot;
+			LerpState.Elapsed = 0.f;
+			LerpState.Duration = ControlRotationBlendTime;
+			LerpState.bIsLerping = true;
+			ControlRotationLerpStates.Add(PC, LerpState);
+
 			SavedControlRotations.Remove(PC);
 		}
 

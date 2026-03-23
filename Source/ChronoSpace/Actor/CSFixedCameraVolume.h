@@ -13,6 +13,7 @@ class UCameraComponent;
  * 레벨에 배치하여 캐릭터가 진입하면 고정 카메라 시점으로 전환,
  * 벗어나면 원래 3인칭 카메라로 복원하는 트리거 액터.
  * 카메라는 이 액터의 CameraComponent 위치/회전에 고정됨.
+ * ControlRotation은 Lerp로 부드럽게 전환되어 이동 방향이 자연스럽게 바뀜.
  */
 UCLASS()
 class CHRONOSPACE_API ACSFixedCameraVolume : public AActor
@@ -24,6 +25,7 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION()
 	void OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepHitResult);
@@ -47,6 +49,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default|Camera Volume")
 	FRotator FixedControlRotation = FRotator(0.f, 0.f, 0.f);
 
+	/** ControlRotation Lerp 전환 시간 (초). 카메라 BlendTime과 별도로 조정 가능 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default|Camera Volume")
+	float ControlRotationBlendTime = 0.75f;
+
 	/** true이면 진입 시 풀스크린, 퇴장 시 스플릿 스크린 전환 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default|Camera Volume")
 	bool bUseSplitScreenTransition = false;
@@ -65,4 +71,15 @@ private:
 
 	/** 트리거 안에 있는 플레이어 수 (스플릿 스크린 복원 판단용) */
 	int32 PlayersInTrigger = 0;
+
+	/** ControlRotation Lerp 상태 */
+	struct FControlRotationLerpState
+	{
+		FRotator StartRotation;
+		FRotator TargetRotation;
+		float Elapsed = 0.f;
+		float Duration = 0.75f;
+		bool bIsLerping = false;
+	};
+	TMap<APlayerController*, FControlRotationLerpState> ControlRotationLerpStates;
 };
