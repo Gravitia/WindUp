@@ -7,12 +7,12 @@
 #include "CSButtonIndicatorComponent.generated.h"
 
 class UMaterialInterface;
-class UChildActorComponent;
+class UStaticMeshComponent;
 
 /**
  * CSMeshAffectedByGravityCore / CSMeshPulledByBlackhole 와 같은 액터에 붙이는 컴포넌트.
- * BeginPlay에서 형제 Gravity 컴포넌트를 자동 탐색해 Delegate에 바인딩하고,
- * 상호작용 시작/종료 시 지정된 버튼 ChildActor들의 머티리얼을 전환한다.
+ * 형제 Gravity 컴포넌트를 자동 탐색해 Delegate에 바인딩하고,
+ * 상호작용 시작/종료 시 ButtonMeshes에 지정된 StaticMeshComponent의 머티리얼을 전환한다.
  */
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class CHRONOSPACE_API UCSButtonIndicatorComponent : public UActorComponent
@@ -34,11 +34,11 @@ protected:
 
 protected:
 	/**
-	 * 머티리얼을 전환할 버튼 ChildActorComponent 목록.
-	 * 비워두면 오너 액터의 모든 ChildActorComponent를 대상으로 한다.
+	 * 머티리얼을 전환할 버튼 StaticMeshComponent 목록.
+	 * 비워두면 오너의 StaticMeshComponent 중 이름에 "button"이 포함된 것을 자동 탐색.
 	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Button Indicator")
-	TArray<TObjectPtr<UChildActorComponent>> ButtonChildActors;
+	TArray<TObjectPtr<UStaticMeshComponent>> ButtonMeshes;
 
 	/** 활성화 시 적용할 머티리얼 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Button Indicator")
@@ -49,7 +49,6 @@ protected:
 	int32 MaterialSlotIndex = 0;
 
 private:
-	/** 각 버튼 ChildActor에서 찾은 메쉬와 원본 머티리얼 캐시 */
 	struct FButtonMeshCache
 	{
 		TWeakObjectPtr<UStaticMeshComponent> Mesh;

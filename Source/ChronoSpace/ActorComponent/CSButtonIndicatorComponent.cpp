@@ -4,7 +4,6 @@
 #include "ActorComponent/CSButtonIndicatorComponent.h"
 #include "ActorComponent/CSMeshAffectedByGravityCore.h"
 #include "ActorComponent/CSMeshPulledByBlackhole.h"
-#include "Components/ChildActorComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "ChronoSpace.h"
 
@@ -36,22 +35,22 @@ void UCSButtonIndicatorComponent::BindToSiblingComponents()
 	{
 		GravityComp->OnInteractionStarted.AddDynamic(this, &UCSButtonIndicatorComponent::OnInteractionStarted);
 		GravityComp->OnInteractionEnded.AddDynamic(this, &UCSButtonIndicatorComponent::OnInteractionEnded);
-		UE_LOG(LogCS, Log, TEXT("[CSButtonIndicator] ✔ GravityCore 컴포넌트 바인딩 성공 → %s"), *Owner->GetName());
+		UE_LOG(LogCS, Log, TEXT("[CSButtonIndicator] ✔ GravityCore 바인딩 성공 → %s"), *Owner->GetName());
 	}
 	else
 	{
-		UE_LOG(LogCS, Warning, TEXT("[CSButtonIndicator] ✘ GravityCore 컴포넌트 없음 → %s"), *Owner->GetName());
+		UE_LOG(LogCS, Warning, TEXT("[CSButtonIndicator] ✘ GravityCore 없음 → %s"), *Owner->GetName());
 	}
 
 	if (UCSMeshPulledByBlackhole* BlackholeComp = Owner->FindComponentByClass<UCSMeshPulledByBlackhole>())
 	{
 		BlackholeComp->OnInteractionStarted.AddDynamic(this, &UCSButtonIndicatorComponent::OnInteractionStarted);
 		BlackholeComp->OnInteractionEnded.AddDynamic(this, &UCSButtonIndicatorComponent::OnInteractionEnded);
-		UE_LOG(LogCS, Log, TEXT("[CSButtonIndicator] ✔ Blackhole 컴포넌트 바인딩 성공 → %s"), *Owner->GetName());
+		UE_LOG(LogCS, Log, TEXT("[CSButtonIndicator] ✔ Blackhole 바인딩 성공 → %s"), *Owner->GetName());
 	}
 	else
 	{
-		UE_LOG(LogCS, Warning, TEXT("[CSButtonIndicator] ✘ Blackhole 컴포넌트 없음 → %s"), *Owner->GetName());
+		UE_LOG(LogCS, Warning, TEXT("[CSButtonIndicator] ✘ Blackhole 없음 → %s"), *Owner->GetName());
 	}
 }
 
@@ -80,33 +79,33 @@ void UCSButtonIndicatorComponent::CacheButtonMeshes()
 
 	CachedButtonMeshes.Reset();
 
-	// ButtonChildActors가 비어있으면 오너의 모든 ChildActorComponent를 대상으로 한다
-	TArray<UChildActorComponent*> Targets;
-	if (ButtonChildActors.Num() > 0)
+	// ButtonMeshes가 비어있으면 이름에 "button"이 포함된 StaticMeshComponent를 자동 탐색
+	if (ButtonMeshes.Num() == 0)
 	{
-		for (UChildActorComponent* CAC : ButtonChildActors)
-		{
-			if (IsValid(CAC)) Targets.Add(CAC);
-		}
-	}
-	else
-	{
-		Owner->GetComponents<UChildActorComponent>(Targets);
-	}
+		TArray<UStaticMeshComponent*> AllMeshes;
+		Owner->GetComponents<UStaticMeshComponent>(AllMeshes);
 
-	for (UChildActorComponent* CAC : Targets)
-	{
-		AActor* ChildActor = CAC->GetChildActor();
-		if (!IsValid(ChildActor))
+		for (UStaticMeshComponent* Mesh : AllMeshes)
 		{
-			UE_LOG(LogCS, Warning, TEXT("[CSButtonIndicator] ✘ ChildActorComponent '%s' → ChildActor 없음"), *CAC->GetName());
-			continue;
+			if (Mesh->GetName().Contains(TEXT("button"), ESearchCase::IgnoreCase))
+			{
+				ButtonMeshes.Add(Mesh);
+				UE_LOG(LogCS, Log, TEXT("[CSButtonIndicator] ✔ 자동 탐색 → %s"), *Mesh->GetName());
+			}
 		}
 
-		UStaticMeshComponent* Mesh = ChildActor->FindComponentByClass<UStaticMeshComponent>();
+		if (ButtonMeshes.Num() == 0)
+		{
+			UE_LOG(LogCS, Warning, TEXT("[CSButtonIndicator] ✘ 'button' 포함 메쉬 없음 → %s"), *Owner->GetName());
+			return;
+		}
+	}
+
+	for (UStaticMeshComponent* Mesh : ButtonMeshes)
+	{
 		if (!IsValid(Mesh))
 		{
-			UE_LOG(LogCS, Warning, TEXT("[CSButtonIndicator] ✘ ChildActor '%s' → StaticMeshComponent 없음"), *ChildActor->GetName());
+			UE_LOG(LogCS, Warning, TEXT("[CSButtonIndicator] ✘ 유효하지 않은 메쉬 항목 → %s"), *Owner->GetName());
 			continue;
 		}
 
@@ -115,22 +114,13 @@ void UCSButtonIndicatorComponent::CacheButtonMeshes()
 		Entry.OriginalMaterial = Mesh->GetMaterial(MaterialSlotIndex);
 		CachedButtonMeshes.Add(Entry);
 
-		UE_LOG(LogCS, Log, TEXT("[CSButtonIndicator] ✔ 버튼 메쉬 캐시 성공 → ChildActor: %s / Mesh: %s / OriginalMat: %s"),
-			*ChildActor->GetName(),
+		UE_LOG(LogCS, Log, TEXT("[CSButtonIndicator] ✔ 메쉬 캐시 → %s / 원본 머티리얼: %s"),
 			*Mesh->GetName(),
 			Entry.OriginalMaterial ? *Entry.OriginalMaterial->GetName() : TEXT("None"));
 	}
 
-	if (CachedButtonMeshes.Num() > 0)
-	{
-		UE_LOG(LogCS, Log, TEXT("[CSButtonIndicator] ✔ 총 %d개 버튼 메쉬 캐시 완료 → Owner: %s"),
-			CachedButtonMeshes.Num(), *Owner->GetName());
-	}
-	else
-	{
-		UE_LOG(LogCS, Warning, TEXT("[CSButtonIndicator] ✘ 캐시된 버튼 메쉬 없음 → Owner: %s (ChildActorComponent %d개 탐색)"),
-			*Owner->GetName(), Targets.Num());
-	}
+	UE_LOG(LogCS, Log, TEXT("[CSButtonIndicator] ✔ 총 %d개 캐시 완료 → %s"),
+		CachedButtonMeshes.Num(), *Owner->GetName());
 }
 
 void UCSButtonIndicatorComponent::SetButtonMaterials(UMaterialInterface* Material)
@@ -149,7 +139,7 @@ void UCSButtonIndicatorComponent::SetButtonMaterials(UMaterialInterface* Materia
 void UCSButtonIndicatorComponent::OnInteractionStarted()
 {
 	SetButtonMaterials(ActivatedMaterial);
-	UE_LOG(LogCS, Log, TEXT("CSButtonIndicatorComponent: Activated on %s"), *GetOwner()->GetName());
+	UE_LOG(LogCS, Log, TEXT("[CSButtonIndicator] ✔ 활성화 → %s"), *GetOwner()->GetName());
 }
 
 void UCSButtonIndicatorComponent::OnInteractionEnded()
@@ -161,5 +151,5 @@ void UCSButtonIndicatorComponent::OnInteractionEnded()
 			Entry.Mesh->SetMaterial(MaterialSlotIndex, Entry.OriginalMaterial);
 		}
 	}
-	UE_LOG(LogCS, Log, TEXT("CSButtonIndicatorComponent: Deactivated on %s"), *GetOwner()->GetName());
+	UE_LOG(LogCS, Log, TEXT("[CSButtonIndicator] ✔ 비활성화 → %s"), *GetOwner()->GetName());
 }
