@@ -34,4 +34,14 @@ void UCSMeshPulledByBlackhole::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	}
 }
 
+void UCSMeshPulledByBlackhole::NotifyInteractionStarted()
+{
+	OnInteractionStarted.Broadcast();
+}
+
+void UCSMeshPulledByBlackhole::NotifyInteractionEnded()
+{
+	OnInteractionEnded.Broadcast();
+}
+
 

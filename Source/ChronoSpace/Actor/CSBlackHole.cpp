@@ -106,9 +106,35 @@ void ACSBlackHole::Destroyed()
 			Mesh->SetCollisionResponseToChannel(ECC_Camera, ECR_Block);
 			Mesh->SetPhysicsLinearVelocity(FVector::ZeroVector, false);
 			Mesh->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector, false);
+
+			AActor* MeshOwner = Mesh->GetOwner();
+			if (MeshOwner)
+			{
+				if (UCSMeshPulledByBlackhole* Comp = MeshOwner->FindComponentByClass<UCSMeshPulledByBlackhole>())
+				{
+					Comp->NotifyInteractionEnded();
+				}
+			}
 		}
 	}
 	StaticMeshesInSphereTrigger.Empty();
+
+	// EventHorizon 안에만 있고 바깥 트리거에서 EndOverlap이 오지 않은 메쉬들 처리
+	for (auto It = StaticMeshesInEventHorizon.CreateIterator(); It; ++It)
+	{
+		UStaticMeshComponent* Mesh = It->Get();
+		if (IsValid(Mesh))
+		{
+			AActor* MeshOwner = Mesh->GetOwner();
+			if (MeshOwner)
+			{
+				if (UCSMeshPulledByBlackhole* Comp = MeshOwner->FindComponentByClass<UCSMeshPulledByBlackhole>())
+				{
+					Comp->NotifyInteractionEnded();
+				}
+			}
+		}
+	}
 	StaticMeshesInEventHorizon.Empty();
 
 	// BlackHole OFF Sound
@@ -184,6 +210,14 @@ void ACSBlackHole::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComponen
 		StaticMeshComp->SetEnableGravity(false);
 		StaticMeshComp->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 		StaticMeshesInSphereTrigger.Add(StaticMeshComp);
+
+		if (OtherActor)
+		{
+			if (UCSMeshPulledByBlackhole* Comp = OtherActor->FindComponentByClass<UCSMeshPulledByBlackhole>())
+			{
+				Comp->NotifyInteractionStarted();
+			}
+		}
 	}
 }
 
@@ -204,6 +238,18 @@ void ACSBlackHole::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedComponent,
 		StaticMeshComp->SetEnableGravity(true);
 		StaticMeshComp->SetCollisionResponseToChannel(ECC_Camera, ECR_Block);
 		StaticMeshesInSphereTrigger.Remove(StaticMeshComp);
+
+		if (OtherActor)
+		{
+			if (UCSMeshPulledByBlackhole* Comp = OtherActor->FindComponentByClass<UCSMeshPulledByBlackhole>())
+			{
+				// EventHorizon 안에 있으면 아직 상호작용 중 → 종료 알림 생략
+				if (!StaticMeshesInEventHorizon.Contains(StaticMeshComp))
+				{
+					Comp->NotifyInteractionEnded();
+				}
+			}
+		}
 	}
 }
 

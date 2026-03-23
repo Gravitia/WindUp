@@ -30,3 +30,13 @@ void UCSMeshAffectedByGravityCore::BeginPlay()
 	MeshComp->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 }
 
+void UCSMeshAffectedByGravityCore::NotifyInteractionStarted()
+{
+	OnInteractionStarted.Broadcast();
+}
+
+void UCSMeshAffectedByGravityCore::NotifyInteractionEnded()
+{
+	OnInteractionEnded.Broadcast();
+}
+

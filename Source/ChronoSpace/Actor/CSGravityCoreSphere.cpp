@@ -118,11 +118,16 @@ void ACSGravityCoreSphere::OnTriggerBeginOverlap(UPrimitiveComponent* Overlapped
 	{
 		if ( bCheckMeshHaveComponent && OtherActor->FindComponentByClass<UCSMeshAffectedByGravityCore>() == nullptr ) return;
 
-		TargetStaticMeshComp->SetPhysicsMaxAngularVelocityInDegrees(180.f); 
+		TargetStaticMeshComp->SetPhysicsMaxAngularVelocityInDegrees(180.f);
 		TargetStaticMeshComp->SetAngularDamping(2.0f);
 
 		TargetStaticMeshComp->SetEnableGravity(false);
 		StaticMeshesInSphereTrigger.Add(TargetStaticMeshComp);
+
+		if (UCSMeshAffectedByGravityCore* Comp = OtherActor->FindComponentByClass<UCSMeshAffectedByGravityCore>())
+		{
+			Comp->NotifyInteractionStarted();
+		}
 	}
 }
 
@@ -138,6 +143,11 @@ void ACSGravityCoreSphere::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedCo
 
 		TargetStaticMeshComp->SetEnableGravity(true);
 		StaticMeshesInSphereTrigger.Remove(TargetStaticMeshComp);
+
+		if (UCSMeshAffectedByGravityCore* Comp = OtherActor->FindComponentByClass<UCSMeshAffectedByGravityCore>())
+		{
+			Comp->NotifyInteractionEnded();
+		}
 	}
 }
 
