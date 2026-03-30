@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Actor/CSConveyorPlatform.h"
@@ -51,9 +51,13 @@ void ACSConveyorPlatform::Tick(float DeltaSeconds)
         D += TotalLength;
     }
 
-    FVector Loc = Manager->GetActorLocation();
-    Loc.Y += D;
-    Loc.Z += ZOffset; // Ãß°¡
-
-    SetActorLocation(Loc, false, nullptr, ETeleportType::None);
+    // Use manager's transform to calculate world position and rotation
+    FVector LocalOffset(0.f, D, ZOffset);
+    FTransform TargetTransform = Manager->GetActorTransform();
+    
+    // Position: Manager Location + (Manager Rotation * LocalOffset)
+    FVector WorldLoc = TargetTransform.TransformPosition(LocalOffset);
+    
+    // Update both location and rotation
+    SetActorLocationAndRotation(WorldLoc, TargetTransform.GetRotation(), false, nullptr, ETeleportType::None);
 }
