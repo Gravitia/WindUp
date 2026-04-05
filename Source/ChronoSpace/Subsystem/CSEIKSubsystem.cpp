@@ -184,8 +184,8 @@ void UCSEIKSubsystem::CreateSessionInternal()
 	Settings.bUseLobbiesVoiceChatIfAvailable = false;
 	Settings.bIsDedicated = false;
 	Settings.Set(SEARCH_KEYWORDS, FString(ActiveSessionName.ToString()), EOnlineDataAdvertisementType::ViaOnlineService);
-	Settings.Set(FName(TEXT("MAPNAME")), PendingMapName, EOnlineDataAdvertisementType::ViaOnlineService);
-	Settings.Set(FName(TEXT("ROOMNAME")), PendingRoomName, EOnlineDataAdvertisementType::ViaOnlineService);
+	Settings.Set(FName(TEXT("MAPNAME")), PendingMapName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+	Settings.Set(FName(TEXT("ROOMNAME")), PendingRoomName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 
 	bOperationInFlight = true;
 	if (!Session->CreateSession(0, ActiveSessionName, Settings))
