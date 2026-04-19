@@ -49,6 +49,10 @@ SourceArt/**/*.tga
 Binaries/*
 Plugins/*/Binaries/*
 
+# Share source plugin binaries so collaborators don't need to rebuild
+!Plugins/AdvancedSessions/Binaries/**
+!Plugins/AdvancedSteamSessions/Binaries/**
+
 # Builds
 Build/*
 

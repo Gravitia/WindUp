@@ -70,6 +70,10 @@
 		{
 			"Name": "Fab",
 			"Enabled": false
+		},
+		{
+			"Name": "SteamSockets",
+			"Enabled": true
 		}
 	]
 }
