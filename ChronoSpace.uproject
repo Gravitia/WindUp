@@ -35,11 +35,6 @@
 			"Enabled": true
 		},
 		{
-			"Name": "EOSIntegrationKit",
-			"Enabled": false,
-			"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/product/dba0aa05bdd144e69405653a387ad63e"
-		},
-		{
 			"Name": "OnlineSubsystemSteam",
 			"Enabled": true
 		},
@@ -50,6 +45,14 @@
 		{
 			"Name": "AdvancedSteamSessions",
 			"Enabled": true
+		},
+		{
+			"Name": "EOSIntegrationKit",
+			"Enabled": false
+		},
+		{
+			"Name": "OnlineSubsystemEIK",
+			"Enabled": false
 		},
 		{
 			"Name": "BlockoutToolsPlugin",
