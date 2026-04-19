@@ -20,10 +20,10 @@ void UCSEIKSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 void UCSEIKSubsystem::Deinitialize()
 {
-    IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get(TEXT("EIK"));
+    IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get(TEXT("Steam"));
     if (!Subsystem)
     {
-        UE_LOG(LogCS, Error, TEXT("No EIK Subsystem"));
+        UE_LOG(LogCS, Error, TEXT("No Steam Subsystem"));
         return;
     }
 
@@ -41,10 +41,10 @@ void UCSEIKSubsystem::Deinitialize()
 
 void UCSEIKSubsystem::LoginWithDeviceId()
 {
-    IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get(TEXT("EIK"));
+    IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get(TEXT("Steam"));
     if (!Subsystem)
     {
-        UE_LOG(LogCS, Error, TEXT("No EIK Subsystem"));
+        UE_LOG(LogCS, Error, TEXT("No Steam Subsystem"));
         return;
     }
 
@@ -84,10 +84,10 @@ void UCSEIKSubsystem::OnLoginComplete(int32 LocalUserNum, bool bWasSuccessful, c
 
 void UCSEIKSubsystem::CreateSession()
 {
-    IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get(TEXT("EIK"));
+    IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get(TEXT("Steam"));
     if (!Subsystem)
     {
-        UE_LOG(LogCS, Error, TEXT("No EIK Subsystem"));
+        UE_LOG(LogCS, Error, TEXT("No Steam Subsystem"));
         return;
     }
 
@@ -119,7 +119,7 @@ void UCSEIKSubsystem::CreateSession()
 
 void UCSEIKSubsystem::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful)
 {
-    IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get(TEXT("EIK"));
+    IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get(TEXT("Steam"));
     IOnlineSessionPtr Session = Subsystem->GetSessionInterface();
     Session->ClearOnCreateSessionCompleteDelegate_Handle(OnCreateSessionCompleteDelegateHandle);
 
@@ -144,7 +144,7 @@ void UCSEIKSubsystem::OnCreateSessionComplete(FName SessionName, bool bWasSucces
 
 void UCSEIKSubsystem::OnStartSessionComplete(FName SessionName, bool bWasSuccessful)
 {
-    IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get(TEXT("EIK"));
+    IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get(TEXT("Steam"));
     IOnlineSessionPtr Session = Subsystem->GetSessionInterface();
     Session->ClearOnStartSessionCompleteDelegate_Handle(OnStartSessionCompleteDelegateHandle);
 
@@ -167,10 +167,10 @@ void UCSEIKSubsystem::OnStartSessionComplete(FName SessionName, bool bWasSuccess
 
 void UCSEIKSubsystem::FindSessions()
 {
-    IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get(TEXT("EIK"));
+    IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get(TEXT("Steam"));
     if (!Subsystem)
     {
-        UE_LOG(LogCS, Error, TEXT("No EIK Subsystem"));
+        UE_LOG(LogCS, Error, TEXT("No Steam Subsystem"));
         return;
     }
 
@@ -197,7 +197,7 @@ void UCSEIKSubsystem::FindSessions()
 
 void UCSEIKSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
 {
-    IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get(TEXT("EIK"));
+    IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get(TEXT("Steam"));
     IOnlineSessionPtr Session = Subsystem->GetSessionInterface();
     Session->ClearOnFindSessionsCompleteDelegate_Handle(OnFindSessionCompleteDelegateHandle);
 
@@ -223,10 +223,10 @@ void UCSEIKSubsystem::JoinSessionForBlueprint(FBlueprintSessionResult& SearchRes
 
 void UCSEIKSubsystem::JoinSession(const FOnlineSessionSearchResult& SearchResult)
 {
-    IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get(TEXT("EIK"));
+    IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get(TEXT("Steam"));
     if (!Subsystem)
     {
-        UE_LOG(LogCS, Error, TEXT("No EIK Subsystem"));
+        UE_LOG(LogCS, Error, TEXT("No Steam Subsystem"));
         return;
     }
 
@@ -248,7 +248,7 @@ void UCSEIKSubsystem::JoinSession(const FOnlineSessionSearchResult& SearchResult
 
 void UCSEIKSubsystem::OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result)
 {
-    IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get(TEXT("EIK"));
+    IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get(TEXT("Steam"));
     IOnlineSessionPtr Session = Subsystem->GetSessionInterface();
     Session->ClearOnJoinSessionCompleteDelegate_Handle(OnJoinSessionCompleteDelegateHandle);
 
