@@ -13,7 +13,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerLogin);
 
 
 /**
- * 
+ *
  */
 UCLASS()
 class CHRONOSPACE_API ACSGameMode : public AGameModeBase
@@ -44,15 +44,12 @@ protected:
 
 private:
     class ACSGameState* GetCSGameState() const;
-    
+
 
 // Split Screen
 public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Split Screen")
     bool bAutoEnableSplitScreen = true;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Split Screen")
-    TSubclassOf<APawn> DummySpectatorPawnClass;
 
     UPROPERTY() // GC 보호
     TObjectPtr< class ACSCameraViewProxy > ServerCamProxy = nullptr;
@@ -60,27 +57,15 @@ public:
     UPROPERTY()
     TMap< TObjectPtr< APlayerController >, TObjectPtr< ACSCameraViewProxy > > ClientCamProxies;
 
-    TObjectPtr< class ACSSpectatorPawn > DummySpectatorPawn;
-
 private:
     TArray< TObjectPtr< APlayerController > > ConnectedPlayers;
-    TObjectPtr< class ACSPlayerController > DummyPlayerController;
-
-    void CreateDummyLocalPlayer();
-    void AttachDummySpectatorToClient(APlayerController* RemoteClient);
-    void SyncDummyRotationWithProxy();
-    void SetupOnlineSplitScreen();
 
     /** PostLogin/SeamlessTravel 공통: 플레이어별 CameraViewProxy 생성 */
     void CreateProxiesForPlayer(APlayerController* NewPlayer);
 
-    /** PostLogin/SeamlessTravel 공통: SplitScreen 조건 확인 + 설정 */
+    /** PostLogin/SeamlessTravel 공통: SplitScreen 조건 확인 + Subsystem Enable */
     void TrySplitScreenSetup();
 
-    /** Logout: 나간 플레이어의 Proxy/Dummy 리소스 정리 */
+    /** Logout: 나간 플레이어의 Proxy 리소스 정리 */
     void CleanupSplitScreenForPlayer(APlayerController* ExitingPlayer);
-
-    FTimerHandle SyncTimerHandle;
-    FTimerHandle RotationSyncTimerHandle;
-
 };
