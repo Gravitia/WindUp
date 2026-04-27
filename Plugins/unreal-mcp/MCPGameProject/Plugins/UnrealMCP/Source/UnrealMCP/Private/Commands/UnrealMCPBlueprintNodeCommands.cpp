@@ -8,6 +8,7 @@
 #include "K2Node_Event.h"
 #include "K2Node_CallFunction.h"
 #include "K2Node_VariableGet.h"
+#include "K2Node_VariableSet.h"
 #include "K2Node_InputAction.h"
 #include "K2Node_Self.h"
 #include "Kismet2/BlueprintEditorUtils.h"
@@ -875,7 +876,7 @@ TSharedPtr<FJsonObject> FUnrealMCPBlueprintNodeCommands::HandleFindBlueprintNode
     FString NodeType;
     if (!Params->TryGetStringField(TEXT("node_type"), NodeType))
     {
-        return FUnrealMCPCommonUtils::CreateErrorResponse(TEXT("Missing 'node_type' parameter"));
+        NodeType = TEXT("All");
     }
 
     // Find the blueprint
@@ -892,33 +893,92 @@ TSharedPtr<FJsonObject> FUnrealMCPBlueprintNodeCommands::HandleFindBlueprintNode
         return FUnrealMCPCommonUtils::CreateErrorResponse(TEXT("Failed to get event graph"));
     }
 
-    // Create a JSON array for the node GUIDs
+    // Create JSON arrays for compact IDs and richer node details.
     TArray<TSharedPtr<FJsonValue>> NodeGuidArray;
+    TArray<TSharedPtr<FJsonValue>> NodesArray;
+
+    auto AddNodeResult = [&NodeGuidArray, &NodesArray](UEdGraphNode* Node, const FString& Type, const FString& Name)
+    {
+        if (!Node)
+        {
+            return;
+        }
+
+        NodeGuidArray.Add(MakeShared<FJsonValueString>(Node->NodeGuid.ToString()));
+
+        TSharedPtr<FJsonObject> NodeObj = MakeShared<FJsonObject>();
+        NodeObj->SetStringField(TEXT("node_id"), Node->NodeGuid.ToString());
+        NodeObj->SetStringField(TEXT("node_type"), Type);
+        NodeObj->SetStringField(TEXT("name"), Name);
+        NodeObj->SetNumberField(TEXT("node_pos_x"), Node->NodePosX);
+        NodeObj->SetNumberField(TEXT("node_pos_y"), Node->NodePosY);
+        NodesArray.Add(MakeShared<FJsonValueObject>(NodeObj));
+    };
     
     // Filter nodes by the exact requested type
-    if (NodeType == TEXT("Event"))
+    if (NodeType == TEXT("Event") || NodeType == TEXT("All"))
     {
         FString EventName;
         if (!Params->TryGetStringField(TEXT("event_name"), EventName))
         {
-            return FUnrealMCPCommonUtils::CreateErrorResponse(TEXT("Missing 'event_name' parameter for Event node search"));
+            Params->TryGetStringField(TEXT("event_type"), EventName);
         }
         
-        // Look for nodes with exact event name (e.g., ReceiveBeginPlay)
+        // If event_name is omitted, return all event nodes.
         for (UEdGraphNode* Node : EventGraph->Nodes)
         {
             UK2Node_Event* EventNode = Cast<UK2Node_Event>(Node);
-            if (EventNode && EventNode->EventReference.GetMemberName() == FName(*EventName))
+            if (EventNode)
             {
-                UE_LOG(LogTemp, Display, TEXT("Found event node with name %s: %s"), *EventName, *EventNode->NodeGuid.ToString());
-                NodeGuidArray.Add(MakeShared<FJsonValueString>(EventNode->NodeGuid.ToString()));
+                const FString FoundEventName = EventNode->EventReference.GetMemberName().ToString();
+                if (EventName.IsEmpty() || FoundEventName == EventName)
+                {
+                    UE_LOG(LogTemp, Display, TEXT("Found event node with name %s: %s"), *FoundEventName, *EventNode->NodeGuid.ToString());
+                    AddNodeResult(EventNode, TEXT("Event"), FoundEventName);
+                }
             }
         }
     }
-    // Add other node types as needed (InputAction, etc.)
+    if (NodeType == TEXT("Function") || NodeType == TEXT("All"))
+    {
+        for (UEdGraphNode* Node : EventGraph->Nodes)
+        {
+            UK2Node_CallFunction* FunctionNode = Cast<UK2Node_CallFunction>(Node);
+            if (FunctionNode)
+            {
+                AddNodeResult(FunctionNode, TEXT("Function"), FunctionNode->FunctionReference.GetMemberName().ToString());
+            }
+        }
+    }
+    if (NodeType == TEXT("Variable") || NodeType == TEXT("All"))
+    {
+        for (UEdGraphNode* Node : EventGraph->Nodes)
+        {
+            if (UK2Node_VariableGet* VariableGetNode = Cast<UK2Node_VariableGet>(Node))
+            {
+                AddNodeResult(VariableGetNode, TEXT("VariableGet"), VariableGetNode->VariableReference.GetMemberName().ToString());
+            }
+            else if (UK2Node_VariableSet* VariableSetNode = Cast<UK2Node_VariableSet>(Node))
+            {
+                AddNodeResult(VariableSetNode, TEXT("VariableSet"), VariableSetNode->VariableReference.GetMemberName().ToString());
+            }
+        }
+    }
+    if (NodeType == TEXT("InputAction") || NodeType == TEXT("All"))
+    {
+        for (UEdGraphNode* Node : EventGraph->Nodes)
+        {
+            UK2Node_InputAction* InputActionNode = Cast<UK2Node_InputAction>(Node);
+            if (InputActionNode)
+            {
+                AddNodeResult(InputActionNode, TEXT("InputAction"), InputActionNode->InputActionName.ToString());
+            }
+        }
+    }
     
     TSharedPtr<FJsonObject> ResultObj = MakeShared<FJsonObject>();
     ResultObj->SetArrayField(TEXT("node_guids"), NodeGuidArray);
+    ResultObj->SetArrayField(TEXT("nodes"), NodesArray);
     
     return ResultObj;
 } 

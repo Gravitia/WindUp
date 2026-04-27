@@ -20,11 +20,14 @@
 #include "Engine/Selection.h"
 #include "EditorAssetLibrary.h"
 #include "AssetRegistry/AssetRegistryModule.h"
+#include "AssetRegistry/AssetData.h"
 #include "Engine/BlueprintGeneratedClass.h"
 #include "BlueprintNodeSpawner.h"
 #include "BlueprintActionDatabase.h"
 #include "Dom/JsonObject.h"
 #include "Dom/JsonValue.h"
+#include "Misc/Paths.h"
+#include "Modules/ModuleManager.h"
 
 // JSON Utilities
 TSharedPtr<FJsonObject> FUnrealMCPCommonUtils::CreateErrorResponse(const FString& Message)
@@ -153,8 +156,96 @@ UBlueprint* FUnrealMCPCommonUtils::FindBlueprint(const FString& BlueprintName)
 
 UBlueprint* FUnrealMCPCommonUtils::FindBlueprintByName(const FString& BlueprintName)
 {
-    FString AssetPath = TEXT("/Game/Blueprints/") + BlueprintName;
-    return LoadObject<UBlueprint>(nullptr, *AssetPath);
+    const FString NormalizedObjectPath = NormalizeBlueprintObjectPath(BlueprintName);
+    if (!NormalizedObjectPath.IsEmpty())
+    {
+        if (UBlueprint* Blueprint = LoadObject<UBlueprint>(nullptr, *NormalizedObjectPath))
+        {
+            return Blueprint;
+        }
+    }
+
+    // Backward-compatible fallback for existing examples that pass only "MyActor".
+    const FString ShortName = FPaths::GetBaseFilename(BlueprintName);
+    const FString LegacyObjectPath = FString::Printf(TEXT("/Game/Blueprints/%s.%s"), *ShortName, *ShortName);
+    if (UBlueprint* Blueprint = LoadObject<UBlueprint>(nullptr, *LegacyObjectPath))
+    {
+        return Blueprint;
+    }
+
+    // Last resort: search project assets by asset name so Blueprints outside /Game/Blueprints work.
+    FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry"));
+    TArray<FAssetData> AssetDataList;
+    AssetRegistryModule.Get().GetAssetsByClass(UBlueprint::StaticClass()->GetClassPathName(), AssetDataList, true);
+
+    for (const FAssetData& AssetData : AssetDataList)
+    {
+        if (AssetData.AssetName.ToString() == ShortName)
+        {
+            return Cast<UBlueprint>(AssetData.GetAsset());
+        }
+    }
+
+    return nullptr;
+}
+
+FString FUnrealMCPCommonUtils::NormalizeBlueprintObjectPath(const FString& BlueprintName)
+{
+    FString Input = BlueprintName;
+    Input.TrimStartAndEndInline();
+    Input.ReplaceInline(TEXT("\\"), TEXT("/"));
+
+    if (Input.IsEmpty())
+    {
+        return FString();
+    }
+
+    // Accept copy-reference style paths such as:
+    // Blueprint'/Game/Foo/BP_Bar.BP_Bar'
+    int32 QuoteStart = INDEX_NONE;
+    int32 QuoteEnd = INDEX_NONE;
+    if (Input.FindChar(TEXT('\''), QuoteStart) && Input.FindLastChar(TEXT('\''), QuoteEnd) && QuoteEnd > QuoteStart)
+    {
+        Input = Input.Mid(QuoteStart + 1, QuoteEnd - QuoteStart - 1);
+    }
+
+    while (Input.Contains(TEXT("//")))
+    {
+        Input.ReplaceInline(TEXT("//"), TEXT("/"));
+    }
+
+    FString PackagePath = Input;
+    FString ObjectName;
+
+    if (Input.Split(TEXT("."), &PackagePath, &ObjectName))
+    {
+        if (PackagePath.StartsWith(TEXT("/Game/")) && !ObjectName.IsEmpty())
+        {
+            return FString::Printf(TEXT("%s.%s"), *PackagePath, *ObjectName);
+        }
+    }
+
+    if (PackagePath.EndsWith(TEXT(".uasset")))
+    {
+        PackagePath.LeftChopInline(7);
+    }
+
+    if (PackagePath.StartsWith(TEXT("Content/")))
+    {
+        PackagePath = TEXT("/Game/") + PackagePath.RightChop(8);
+    }
+    else if (!PackagePath.StartsWith(TEXT("/Game/")))
+    {
+        PackagePath = TEXT("/Game/") + PackagePath;
+    }
+
+    while (PackagePath.Contains(TEXT("//")))
+    {
+        PackagePath.ReplaceInline(TEXT("//"), TEXT("/"));
+    }
+
+    ObjectName = FPaths::GetBaseFilename(PackagePath);
+    return FString::Printf(TEXT("%s.%s"), *PackagePath, *ObjectName);
 }
 
 UEdGraph* FUnrealMCPCommonUtils::FindOrCreateEventGraph(UBlueprint* Blueprint)

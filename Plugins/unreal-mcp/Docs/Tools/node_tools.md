@@ -217,21 +217,20 @@ Add a 'Get Self' node to a Blueprint's event graph.
 Find nodes in a Blueprint's event graph.
 
 **Parameters:**
-- `blueprint_name` (string) - Name of the target Blueprint
-- `node_type` (string, optional) - Type of node to find (Event, Function, Variable, etc.)
-- `event_type` (string, optional) - Specific event type to find (BeginPlay, Tick, etc.)
+- `blueprint_name` (string) - Name or path of the target Blueprint. Supports short names (`MyActor`), relative paths (`01_Blueprint/Game/BP_CSGameInstance`), full package paths (`/Game/01_Blueprint/Game/BP_CSGameInstance`), and object paths (`/Game/01_Blueprint/Game/BP_CSGameInstance.BP_CSGameInstance`).
+- `node_type` (string, optional) - Type of node to find (`Event`, `Function`, `Variable`, `InputAction`). If omitted, all supported node types are returned.
+- `event_name` or `event_type` (string, optional) - Specific event name to find. If omitted with `node_type: "Event"`, all event nodes are returned.
 
 **Returns:**
-- Response containing array of found node IDs and success status
+- Response containing `node_guids` and detailed `nodes` entries with node ID, type, name, and graph position.
 
 **Example:**
 ```json
 {
   "command": "find_blueprint_nodes",
   "params": {
-    "blueprint_name": "MyActor",
-    "node_type": "Event",
-    "event_type": "BeginPlay"
+    "blueprint_name": "/Game/01_Blueprint/Game/BP_CSGameInstance",
+    "node_type": "Event"
   }
 }
 ```

@@ -79,7 +79,11 @@ DerivedDataCache/*
 !Plugins/EOSIntegrationKit-Version5/Source/ThirdParty/EIKSDK/**/*.lib
 
 # Unreal MCP
-Python/unreal_mcp.log
+**/Python/unreal_mcp.log
+Plugins/unreal-mcp/MCPGameProject/Binaries/
+Plugins/unreal-mcp/MCPGameProject/Intermediate/
+Plugins/unreal-mcp/MCPGameProject/Plugins/UnrealMCP/Binaries/
+Plugins/unreal-mcp/MCPGameProject/Plugins/UnrealMCP/Intermediate/
 
 # Code-copy related files
 .codeignore
