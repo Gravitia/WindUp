@@ -77,3 +77,72 @@ DerivedDataCache/*
 !Plugins/EOSIntegrationKit-Version5/Source/ThirdParty/EIKSDK/**
 !Plugins/EOSIntegrationKit-Version5/Source/ThirdParty/EIKSDK/**/*.dll
 !Plugins/EOSIntegrationKit-Version5/Source/ThirdParty/EIKSDK/**/*.lib
+
+# Unreal MCP
+Python/unreal_mcp.log
+
+# Code-copy related files
+.codeignore
+*codeclip*
+
+# Python-generated files
+__pycache__/
+__pycache__.meta
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Compiled source files
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.dylib
+*.lib
+*.a
+*.exp
+*.pdb
+*.ilk
+*.aps
+*.ncb
+
+# Compiled Python files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Python virtual environments
+venv/
+ENV/
+.env
+.venv
+env/
+env.bak/
+venv.bak/
+
+# MCP specific files
+MCP/logs/
+MCP/temp/
+*.mcp.json
