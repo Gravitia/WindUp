@@ -32,7 +32,7 @@ void UCSSplitScreenSubsystem::SetupSplitScreenViewport()
 {
     if (!GEngine || !GEngine->GameViewport)
     {
-        UE_LOG(LogTemp, Error, TEXT("SS Cannot setup viewport - GEngine or GameViewport is null"));
+        UE_LOG(LogCS, Verbose, TEXT("SS Cannot setup viewport - GEngine or GameViewport is null"));
         return;
     }
 

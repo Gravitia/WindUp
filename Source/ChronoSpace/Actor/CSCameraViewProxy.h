@@ -40,6 +40,9 @@ public:
     UFUNCTION(BlueprintPure, Category = "SS|CameraProxy")
     FRepCamInfo& GetReplicatedCamera() { return RepCam; }
 
+    UFUNCTION(BlueprintPure, Category = "SS|CameraProxy")
+    APlayerState* GetSourcePlayerState() const { return SourcePlayerState; }
+
 protected:
     /** 복제되는 카메라 정보(서버가 채우고 클라가 읽음) */
     UPROPERTY(Replicated)
@@ -48,6 +51,9 @@ protected:
     /** 서버에서만 의미 있는 소스 PC (클라에 복제되지 않음) */
     UPROPERTY(Transient)
     TWeakObjectPtr<APlayerController> SourcePC;
+
+    UPROPERTY(Replicated)
+    TObjectPtr<APlayerState> SourcePlayerState;
 
 public:
     UFUNCTION(Server, Unreliable, WithValidation)

@@ -35,6 +35,11 @@ void ACSGameMode::BeginPlay()
 {
     Super::BeginPlay();
 
+    if (GetWorld() && GetWorld()->GetNetMode() == NM_DedicatedServer)
+    {
+        return;
+    }
+
     if (bAutoEnableSplitScreen)
     {
         UCSSplitScreenSubsystem* CSSplitSubsystem = GetGameInstance()->GetSubsystem<UCSSplitScreenSubsystem>();
@@ -549,6 +554,7 @@ void ACSGameMode::CreateProxiesForPlayer(APlayerController* NewPlayer)
             ClientProxy->SetReplicates(true);
             ClientProxy->SetReplicateMovement(false);
             ClientProxy->SetIsServerProxy(false);
+            ClientProxy->SetSourcePC(NewPlayer);
             ClientCamProxies.Add(NewPlayer, ClientProxy);
         }
     }
@@ -570,6 +576,7 @@ void ACSGameMode::CreateProxiesForPlayer(APlayerController* NewPlayer)
             ServerCamProxy->SetReplicates(true);
             ServerCamProxy->SetReplicateMovement(false);
             ServerCamProxy->SetIsServerProxy(true);
+            ServerCamProxy->SetSourcePC(NewPlayer);
             UE_LOG(LogCS, Log, TEXT("Created ServerCamProxy (ListenServer POV)"));
         }
     }

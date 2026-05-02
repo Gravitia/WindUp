@@ -14,8 +14,10 @@
 #include "Camera/CameraComponent.h"
 #include "EngineUtils.h"
 #include "HAL/PlatformMisc.h"
+#include "Kismet/GameplayStatics.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/Pawn.h"
+#include "GameFramework/PlayerState.h"
 #include "ChronoSpace.h"
 #include "GameFramework/SpringArmComponent.h"
 
@@ -454,39 +456,111 @@ void ACSPlayerController::SyncClientDummyWithRemotePlayer(ACSSpectatorPawn* Dumm
 		return;
 	}
 
-	// 1) 서버 프록시 찾기
-	ACSCameraViewProxy* Proxy = CachedProxy.Get();
-	if (!Proxy)
+	ACSCharacterPlayer* TargetCharacter = CachedRemoteCharacter.Get();
+	if (!TargetCharacter)
 	{
-		for (TActorIterator<ACSCameraViewProxy> It(GetWorld()); It; ++It)
+		for (TActorIterator<ACSCharacterPlayer> It(World); It; ++It)
 		{
-			if (!It->IsServerProxy()) continue;
-			Proxy = *It;
-			break;
+			if (*It && !(*It)->IsLocallyControlled())
+			{
+				TargetCharacter = *It;
+				CachedRemoteCharacter = TargetCharacter;
+				break;
+			}
 		}
+		if (!TargetCharacter) return;
+	}
+
+	ACSCameraViewProxy* Proxy = CachedProxy.Get();
+	const APlayerState* TargetPlayerState = TargetCharacter->GetPlayerState();
+	const APlayerController* LocalPC = UGameplayStatics::GetPlayerController(World, 0);
+
+	const auto IsUsableRemoteProxy = [TargetPlayerState, LocalPC](ACSCameraViewProxy* Candidate)
+	{
+		if (!Candidate)
+		{
+			return false;
+		}
+
+		if (Candidate->IsServerProxy())
+		{
+			return true;
+		}
+
+		if (Candidate->GetSourcePlayerState())
+		{
+			return Candidate->GetSourcePlayerState() == TargetPlayerState;
+		}
+
+		return Candidate->GetOwner() != LocalPC;
+	};
+
+	if (!IsUsableRemoteProxy(Proxy))
+	{
+		Proxy = nullptr;
+
+		for (TActorIterator<ACSCameraViewProxy> It(World); It; ++It)
+		{
+			ACSCameraViewProxy* Candidate = *It;
+			if (!Candidate || Candidate->IsServerProxy())
+			{
+				continue;
+			}
+
+			if (Candidate->GetSourcePlayerState())
+			{
+				if (Candidate->GetSourcePlayerState() == TargetPlayerState)
+				{
+					Proxy = Candidate;
+					break;
+				}
+
+				continue;
+			}
+
+			if (!Proxy && Candidate->GetOwner() != LocalPC)
+			{
+				Proxy = Candidate;
+			}
+		}
+
+		if (!Proxy)
+		{
+			for (TActorIterator<ACSCameraViewProxy> It(World); It; ++It)
+			{
+				if (It->IsServerProxy())
+				{
+					Proxy = *It;
+					break;
+				}
+			}
+		}
+
 		if (!Proxy) return;
 		CachedProxy = Proxy;
 	}
 
-	// 2) 최신 서버 카메라 데이터 가져오기
-	const FRepCamInfo& ServerCam = Proxy->GetReplicatedCamera();
+	const FRepCamInfo& RemoteCam = Proxy->GetReplicatedCamera();
 
-	// 3) 새 데이터 도착 시 바로 적용
-	if (!LastServerCamera.Location.Equals(ServerCam.Location, 0.001f) ||
-		!LastServerCamera.Rotation.Equals(ServerCam.Rotation, 0.001f))
+	if (LastServerCamera.Location.Equals(RemoteCam.Location, 0.001f) &&
+		LastServerCamera.Rotation.Equals(RemoteCam.Rotation, 0.001f))
 	{
-		// LastServerCamera = ServerCam; // 단순 복사도 가능
-
-		FCameraPredictionData CamData;
-		CamData.Location = ServerCam.Location;
-		CamData.Rotation = ServerCam.Rotation;
-		CamData.Velocity = FVector::ZeroVector;
-		CamData.AngularVelocity = FVector::ZeroVector;
-		CamData.FOV = ServerCam.FOV;
-		CamData.Timestamp = GetWorld()->GetTimeSeconds();
-
-		ApplyCamera(DummyPawn, CamData);
+		return;
 	}
+
+	LastServerCamera.Location = RemoteCam.Location;
+	LastServerCamera.Rotation = RemoteCam.Rotation;
+	LastServerCamera.FOV = RemoteCam.FOV;
+
+	FCameraPredictionData CamData;
+	CamData.Location = RemoteCam.Location;
+	CamData.Rotation = RemoteCam.Rotation;
+	CamData.Velocity = FVector::ZeroVector;
+	CamData.AngularVelocity = FVector::ZeroVector;
+	CamData.FOV = RemoteCam.FOV;
+	CamData.Timestamp = World->GetTimeSeconds();
+
+	ApplyCamera(DummyPawn, CamData);
 }
 
 

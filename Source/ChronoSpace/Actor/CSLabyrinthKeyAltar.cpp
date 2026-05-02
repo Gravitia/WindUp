@@ -113,6 +113,9 @@ void ACSLabyrinthKeyAltar::ChangeLevel()
 {
 	if ( HasAuthority() && GetWorld() )
 	{
-		GetWorld()->ServerTravel(TEXT("BaseMap?listen"));
+		const FString TravelUrl = GetWorld()->GetNetMode() == NM_DedicatedServer
+			? TEXT("BaseMap")
+			: TEXT("BaseMap?listen");
+		GetWorld()->ServerTravel(TravelUrl);
 	}
 }

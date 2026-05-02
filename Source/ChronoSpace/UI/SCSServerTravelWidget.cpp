@@ -86,7 +86,9 @@ FReply SCSServerTravelWidget::OnStageTravelClicked(const FString& StageName)
 
     if (World && World->GetNetMode() != NM_Client)
     {
-        const FString Command = FString::Printf(TEXT("%s?listen"), *StageName);
+        const FString Command = World->GetNetMode() == NM_DedicatedServer
+            ? StageName
+            : FString::Printf(TEXT("%s?listen"), *StageName);
         World->ServerTravel(Command);
         UE_LOG(LogTemp, Log, TEXT("Server Travel: %s"), *Command);
     }

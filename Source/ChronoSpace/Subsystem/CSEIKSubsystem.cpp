@@ -8,11 +8,28 @@
 #include "OnlineSessionSettings.h"
 #include "Online/OnlineSessionNames.h"
 #include "Kismet/GameplayStatics.h"
+#include "Engine/World.h"
 #include "ChronoSpace.h"
+
+namespace
+{
+	constexpr int32 MaxPublicConnections = 2;
+	const TCHAR* DefaultSessionMap = TEXT("/Game/02_Map/L_Stage_01_01");
+	const TCHAR* DefaultSessionMapName = TEXT("L_Stage_01_01");
+
+	FString BuildServerTravelUrl(UWorld* World, const FString& MapPath)
+	{
+		if (!World || World->GetNetMode() == NM_DedicatedServer)
+		{
+			return MapPath;
+		}
+
+		return MapPath + TEXT("?listen");
+	}
+}
 
 void UCSEIKSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
-    return;
     Super::Initialize(Collection);
 
     // LoginWithDeviceId();
@@ -24,6 +41,7 @@ void UCSEIKSubsystem::Deinitialize()
     if (!Subsystem)
     {
         UE_LOG(LogCS, Error, TEXT("No EIK Subsystem"));
+        Super::Deinitialize();
         return;
     }
 
@@ -31,6 +49,7 @@ void UCSEIKSubsystem::Deinitialize()
     if (!Identity.IsValid())
     {
         UE_LOG(LogCS, Error, TEXT("Invalid IOnlineIdentityPtr"));
+        Super::Deinitialize();
         return;
     }
 
@@ -105,14 +124,17 @@ void UCSEIKSubsystem::CreateSession()
 
     OnCreateSessionCompleteDelegateHandle = Session->AddOnCreateSessionCompleteDelegate_Handle(OnCreateSessionCompleteDelegate);
 
+    UWorld* World = GetWorld();
+    const bool bIsDedicatedServer = World && World->GetNetMode() == NM_DedicatedServer;
+
     FOnlineSessionSettings Settings;
     Settings.bIsLANMatch = false;
-    Settings.NumPublicConnections = 2;
+    Settings.NumPublicConnections = MaxPublicConnections;
     Settings.bShouldAdvertise = true;
-    Settings.bUsesPresence = true;
+    Settings.bUsesPresence = !bIsDedicatedServer;
     Settings.bAllowJoinInProgress = true;
-    Settings.bIsDedicated = false;
-    Settings.Set(FName("MAPNAME"), FString("L_StageSize"), EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+    Settings.bIsDedicated = bIsDedicatedServer;
+    Settings.Set(FName("MAPNAME"), FString(DefaultSessionMapName), EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 
     Session->CreateSession(0, NAME_GameSession, Settings);
 }
@@ -160,8 +182,9 @@ void UCSEIKSubsystem::OnStartSessionComplete(FName SessionName, bool bWasSuccess
 
     if (World && World->GetAuthGameMode())
     {
-        UE_LOG(LogCS, Log, TEXT("ServerTravel - L_StageSize"));
-        World->ServerTravel("/Game/02_Map/L_StageSize?listen");
+        const FString TravelUrl = BuildServerTravelUrl(World, DefaultSessionMap);
+        UE_LOG(LogCS, Log, TEXT("ServerTravel - %s"), *TravelUrl);
+        World->ServerTravel(TravelUrl);
     }
 }
 
@@ -184,7 +207,6 @@ void UCSEIKSubsystem::FindSessions()
     SessionSearch = MakeShareable(new FOnlineSessionSearch);
     SessionSearch->MaxSearchResults = 20;
     SessionSearch->bIsLanQuery = false;
-    SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
 
     OnFindSessionCompleteDelegate = FOnFindSessionsCompleteDelegate::CreateUObject(
         this,

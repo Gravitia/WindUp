@@ -5,6 +5,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerController.h"
+#include "GameFramework/PlayerState.h"
 
 // Sets default values
 ACSCameraViewProxy::ACSCameraViewProxy()
@@ -29,6 +30,7 @@ void ACSCameraViewProxy::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 
     DOREPLIFETIME(ACSCameraViewProxy, bIsServerProxy);
     DOREPLIFETIME(ACSCameraViewProxy, RepCam);
+    DOREPLIFETIME(ACSCameraViewProxy, SourcePlayerState);
 }
 
 void ACSCameraViewProxy::SetSourcePC(APlayerController* InPC)
@@ -40,6 +42,7 @@ void ACSCameraViewProxy::SetSourcePC(APlayerController* InPC)
     }
 
     SourcePC = InPC;
+    SourcePlayerState = InPC ? InPC->PlayerState : nullptr;
 }
 
 void ACSCameraViewProxy::Tick(float DeltaSeconds)
