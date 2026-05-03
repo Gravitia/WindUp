@@ -11,20 +11,21 @@ public class ChronoSpace : ModuleRules
 
         PublicIncludePaths.AddRange(new string[] { "ChronoSpace" });
 
-        PublicDependencyModuleNames.AddRange(new string[] { 
-			"Core", 
-			"CoreUObject", 
-			"Engine", 
-			"InputCore", 
-			"EnhancedInput", 
-			"NavigationSystem", 
-			"UMG", 
+        PublicDependencyModuleNames.AddRange(new string[] {
+			"Core",
+			"CoreUObject",
+			"Engine",
+			"InputCore",
+			"EnhancedInput",
+			"NavigationSystem",
+			"UMG",
 			"GameplayTasks",
-			"Slate", 
+			"Slate",
 			"SlateCore",
 			"OnlineSubsystem",
 			"OnlineSubsystemUtils",
-            "Niagara"
+            "Niagara",
+            "RenderCore"
         });
 
 		PrivateDependencyModuleNames.AddRange(new string[] 
