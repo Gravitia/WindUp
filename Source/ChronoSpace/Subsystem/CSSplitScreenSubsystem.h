@@ -8,6 +8,7 @@
 #include "CSSplitScreenSubsystem.generated.h"
 
 class ACSCameraViewProxy;
+class ACSCharacterPlayer;
 class UCSViewFamilyViewportClient;
 
 /**
@@ -66,15 +67,41 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Split Screen|Smoothing")
     float LocationInterpSpeed = 25.f;
 
+    /** OLD 시스템 (RInterpTo 45 + SpringArm RotationLag 60) 의 직렬 합성과 동등한 속도 */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Split Screen|Smoothing")
-    float RotationInterpSpeed = 20.f;
+    float RotationInterpSpeed = 45.f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Split Screen|Smoothing")
     float FOVInterpSpeed = 12.f;
 
+    /** SpringArm 길이 보간 속도 — 줌 인/아웃 시 카메라가 부드럽게 따라옴 */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Split Screen|Smoothing")
+    float ArmLengthInterpSpeed = 30.f;
+
+    /**
+     * Anchor (원격 캐릭터 위치) 보간 속도.
+     * UE 의 CharacterMovement NetSmoothing 은 *Mesh* 에만 적용되고 Capsule 은 step-up 점프함.
+     * 이 보간이 그 step 을 흡수해 캐릭터 이동 시 떨림을 제거한다.
+     * 60 = 약 16ms lag (거의 즉시).
+     */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Split Screen|Smoothing")
+    float AnchorInterpSpeed = 60.f;
+
     /** 새 RepCam 도착 시 위치 차이가 이 값(cm)을 넘으면 보간 없이 즉시 스냅 (텔레포트/리스폰 대응) */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Split Screen|Smoothing")
     float SnapDistance = 1500.f;
+
+    /** 보조 뷰 카메라 충돌 처리 (벽/지형 뚫림 방지) */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Split Screen|Collision")
+    bool bDoCollisionTest = true;
+
+    /** Sphere sweep 반지름 (USpringArmComponent::ProbeSize 기본값과 동일) */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Split Screen|Collision")
+    float ProbeSize = 12.f;
+
+    /** Sweep 채널 — OLD 시스템과 동일한 ECC_Camera 가 기본. 필요시 CCHANNEL_CSSPECTATOR 로 변경 */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Split Screen|Collision")
+    TEnumAsByte<ECollisionChannel> ProbeChannel = ECC_Camera;
 
     UPROPERTY(BlueprintReadOnly, Category = "Split Screen")
     bool bSplitScreenActive = false;
@@ -86,21 +113,29 @@ private:
     /** 다른 플레이어의 카메라 정보를 들고 있는 Proxy (로컬 플레이어 시점에서 *상대*) */
     TWeakObjectPtr<ACSCameraViewProxy> CachedRemoteProxy;
 
+    /** 원격 캐릭터 — anchor 위치 (CharacterMovement Replication NetSmoothing 적용된 부드러운 신호) */
+    TWeakObjectPtr<ACSCharacterPlayer> CachedRemoteCharacter;
+
     /** Fullscreen 트랜지션 상태 — 0=split, 1=fullscreen */
     float CurrentAlpha = 0.f;
     float TargetAlpha = 0.f;
 
     /** 보조 뷰 카메라 보간 상태 */
     bool bHasSmoothedSecondary = false;
+    FVector  SmoothedAnchorLocation = FVector::ZeroVector;
     FVector  SmoothedSecondaryLocation = FVector::ZeroVector;
     FRotator SmoothedSecondaryRotation = FRotator::ZeroRotator;
     float    SmoothedSecondaryFOV = 90.f;
+    float    SmoothedArmLength = 0.f;
 
     /** ViewportClient 캐싱 시도 — 실패 시 false */
     bool ResolveViewportClient();
 
     /** 로컬에서 *상대* 가 되는 Proxy 를 찾음 (NetMode 별 분기) */
     ACSCameraViewProxy* ResolveRemoteProxy() const;
+
+    /** 로컬에서 *상대* 캐릭터를 찾음 (anchor 용) */
+    ACSCharacterPlayer* ResolveRemoteCharacter() const;
 
     /** 매 프레임 보조 뷰 카메라 푸시 */
     void PushSecondaryCamera();

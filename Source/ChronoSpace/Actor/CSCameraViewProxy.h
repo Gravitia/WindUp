@@ -19,6 +19,10 @@ struct FRepCamInfo
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     float FOV = 90.f;
+
+    /** 송신측 SpringArm 의 TargetArmLength. 수신측이 anchor + rotation 으로 카메라 위치 재구성에 사용 */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float ArmLength = 0.f;
 };
 
 UCLASS()

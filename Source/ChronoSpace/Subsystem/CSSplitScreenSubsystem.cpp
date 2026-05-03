@@ -4,11 +4,15 @@
 
 #include "UI/CSViewFamilyViewportClient.h"
 #include "Actor/CSCameraViewProxy.h"
+#include "Character/CSCharacterPlayer.h"
 #include "Engine/Engine.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
 #include "EngineUtils.h"
 #include "GameFramework/PlayerController.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "CollisionQueryParams.h"
 #include "DrawDebugHelpers.h"
 #include "ChronoSpace.h"
 
@@ -38,6 +42,7 @@ void UCSSplitScreenSubsystem::Deinitialize()
     }
     CachedViewportClient.Reset();
     CachedRemoteProxy.Reset();
+    CachedRemoteCharacter.Reset();
     Super::Deinitialize();
 }
 
@@ -122,6 +127,23 @@ ACSCameraViewProxy* UCSSplitScreenSubsystem::ResolveRemoteProxy() const
     return nullptr;
 }
 
+ACSCharacterPlayer* UCSSplitScreenSubsystem::ResolveRemoteCharacter() const
+{
+    UWorld* World = GetGameInstance() ? GetGameInstance()->GetWorld() : nullptr;
+    if (!World) return nullptr;
+
+    // 원격 플레이어 캐릭터 = IsLocallyControlled() == false 인 ACSCharacterPlayer
+    // CharacterMovement Replication 의 NetSmoothing 이 적용된 부드러운 위치 신호를 anchor 로 사용
+    for (TActorIterator<ACSCharacterPlayer> It(World); It; ++It)
+    {
+        ACSCharacterPlayer* Char = *It;
+        if (!Char) continue;
+        if (Char->IsLocallyControlled()) continue;
+        return Char;
+    }
+    return nullptr;
+}
+
 void UCSSplitScreenSubsystem::PushSecondaryCamera()
 {
     UCSViewFamilyViewportClient* VC = CachedViewportClient.Get();
@@ -144,10 +166,27 @@ void UCSSplitScreenSubsystem::PushSecondaryCamera()
         return;
     }
 
+    // 원격 캐릭터 (anchor) 찾기
+    ACSCharacterPlayer* RemoteChar = CachedRemoteCharacter.Get();
+    if (!RemoteChar)
+    {
+        RemoteChar = ResolveRemoteCharacter();
+        if (RemoteChar)
+        {
+            CachedRemoteCharacter = RemoteChar;
+        }
+    }
+    if (!RemoteChar)
+    {
+        VC->ClearSecondaryView();
+        bHasSmoothedSecondary = false;
+        return;
+    }
+
     const FRepCamInfo& TargetCam = Proxy->GetReplicatedCamera();
 
-    // 유효성 체크 — Location 이 모두 0 이고 Rotation 이 0 이면 아직 미수신으로 간주
-    if (TargetCam.Location.IsNearlyZero() && TargetCam.Rotation.IsNearlyZero())
+    // 유효성 체크 — 회전과 ArmLength 모두 0 이면 아직 미수신
+    if (TargetCam.Rotation.IsNearlyZero() && TargetCam.ArmLength < KINDA_SMALL_NUMBER)
     {
         VC->ClearSecondaryView();
         bHasSmoothedSecondary = false;
@@ -157,26 +196,98 @@ void UCSSplitScreenSubsystem::PushSecondaryCamera()
     UWorld* World = GetGameInstance() ? GetGameInstance()->GetWorld() : nullptr;
     const float DT = (World ? World->GetDeltaSeconds() : 0.016f);
 
-    // 첫 수신이거나 거리가 크면 즉시 스냅 (텔레포트/리스폰 대응)
-    const float DistFromCurrent = FVector::Dist(SmoothedSecondaryLocation, TargetCam.Location);
-    if (!bHasSmoothedSecondary || DistFromCurrent > SnapDistance)
+    // ===== anchor 계산 =====
+    // 핵심: UE CharacterMovement NetSmoothing 은 Mesh 에만 적용되고 Capsule(RootComponent) 는
+    // server snapshot 시각마다 step-up 으로 점프한다. SpringArm 이 RootComponent 에 attach 되어
+    // 있으므로 GetComponentLocation() 도 step-up 신호.
+    //
+    // 해결: Mesh 의 World location 에서 Mesh.RelativeLocation 을 빼면 NetSmoothing 이 적용된
+    // *부드러운 ActorLocation* 이 나온다. 그 위에 SpringArm.RelativeLocation 을 적용하면
+    // 부드러운 SpringArm 부착점이 됨.
+    USpringArmComponent* RemoteArm = RemoteChar->FindComponentByClass<USpringArmComponent>();
+    USkeletalMeshComponent* RemoteMesh = RemoteChar->GetMesh();
+
+    FVector RawAnchor;
+    if (RemoteMesh && RemoteArm)
     {
-        SmoothedSecondaryLocation = TargetCam.Location;
+        const FQuat ActorQuat = RemoteChar->GetActorQuat();
+        const FVector SmoothActorLoc = RemoteMesh->GetComponentLocation()
+            - ActorQuat.RotateVector(RemoteMesh->GetRelativeLocation());
+        RawAnchor = SmoothActorLoc + ActorQuat.RotateVector(RemoteArm->GetRelativeLocation());
+    }
+    else if (RemoteArm)
+    {
+        RawAnchor = RemoteArm->GetComponentLocation();
+    }
+    else
+    {
+        RawAnchor = RemoteChar->GetActorLocation();
+    }
+
+    // ===== 보간 (Anchor / 회전 / FOV / ArmLength) =====
+    const float TgtFOV = (TargetCam.FOV > KINDA_SMALL_NUMBER) ? TargetCam.FOV : 90.f;
+    // ArmLength 가 0 이면 (구버전 클라이언트 등) 원격 캐릭터의 로컬 SpringArm 값으로 fallback
+    const float TgtArm = (TargetCam.ArmLength > KINDA_SMALL_NUMBER)
+        ? TargetCam.ArmLength
+        : (RemoteArm ? RemoteArm->TargetArmLength : 0.f);
+
+    // 첫 수신이거나 거리가 크면 즉시 스냅 (텔레포트/리스폰 대응)
+    const float AnchorJump = FVector::Dist(SmoothedAnchorLocation, RawAnchor);
+    if (!bHasSmoothedSecondary || AnchorJump > SnapDistance)
+    {
+        SmoothedAnchorLocation = RawAnchor;
         SmoothedSecondaryRotation = TargetCam.Rotation;
-        SmoothedSecondaryFOV = (TargetCam.FOV > KINDA_SMALL_NUMBER) ? TargetCam.FOV : 90.f;
+        SmoothedSecondaryFOV = TgtFOV;
+        SmoothedArmLength = TgtArm;
         bHasSmoothedSecondary = true;
     }
     else
     {
-        SmoothedSecondaryLocation = FMath::VInterpTo(SmoothedSecondaryLocation, TargetCam.Location, DT, LocationInterpSpeed);
+        // Anchor 추가 평활 — NetSmoothing 이 disabled 인 환경에서도 떨림 흡수
+        SmoothedAnchorLocation = FMath::VInterpTo(SmoothedAnchorLocation, RawAnchor, DT, AnchorInterpSpeed);
         SmoothedSecondaryRotation = FMath::RInterpTo(SmoothedSecondaryRotation, TargetCam.Rotation, DT, RotationInterpSpeed);
-        const float TgtFOV = (TargetCam.FOV > KINDA_SMALL_NUMBER) ? TargetCam.FOV : 90.f;
         SmoothedSecondaryFOV = FMath::FInterpTo(SmoothedSecondaryFOV, TgtFOV, DT, FOVInterpSpeed);
+        SmoothedArmLength = FMath::FInterpTo(SmoothedArmLength, TgtArm, DT, ArmLengthInterpSpeed);
     }
 
-    UE_LOG(LogCS, VeryVerbose, TEXT("SecondaryView Target=(L:%s R:%s FOV:%.1f) Smoothed=(L:%s R:%s FOV:%.1f)"),
-        *TargetCam.Location.ToCompactString(), *TargetCam.Rotation.ToCompactString(), TargetCam.FOV,
-        *SmoothedSecondaryLocation.ToCompactString(), *SmoothedSecondaryRotation.ToCompactString(), SmoothedSecondaryFOV);
+    // ===== 카메라 target 위치 (충돌 처리 전) =====
+    const FVector CamTarget = SmoothedAnchorLocation - SmoothedSecondaryRotation.Vector() * SmoothedArmLength;
+
+    // ===== Sphere sweep — 벽/지형 뚫림 방지 =====
+    // 수신측 자체 환경에서 sweep 하므로 송신측 환경에 의존하지 않음.
+    FVector CamLoc = CamTarget;
+    if (bDoCollisionTest && World && SmoothedArmLength > KINDA_SMALL_NUMBER)
+    {
+        FCollisionQueryParams Params(SCENE_QUERY_STAT(SecondaryViewSpringArm), false);
+        Params.AddIgnoredActor(RemoteChar);
+        // 로컬 플레이어도 ignore (1인칭 시 자기 캡슐 가림 방지)
+        if (UGameInstance* GIRef = GetGameInstance())
+        {
+            if (ULocalPlayer* LP = GIRef->GetFirstGamePlayer())
+            {
+                if (APlayerController* LocalPC = LP->PlayerController)
+                {
+                    if (APawn* LocalPawn = LocalPC->GetPawn())
+                    {
+                        Params.AddIgnoredActor(LocalPawn);
+                    }
+                }
+            }
+        }
+
+        FHitResult Hit;
+        if (World->SweepSingleByChannel(Hit, SmoothedAnchorLocation, CamTarget, FQuat::Identity,
+            ProbeChannel, FCollisionShape::MakeSphere(ProbeSize), Params))
+        {
+            CamLoc = Hit.Location;
+        }
+    }
+
+    SmoothedSecondaryLocation = CamLoc;
+
+    UE_LOG(LogCS, VeryVerbose, TEXT("SecondaryView Anchor=%s Rot=%s Arm=%.1f FOV=%.1f -> CamLoc=%s"),
+        *SmoothedAnchorLocation.ToCompactString(), *SmoothedSecondaryRotation.ToCompactString(),
+        SmoothedArmLength, SmoothedSecondaryFOV, *SmoothedSecondaryLocation.ToCompactString());
 
 #if !UE_BUILD_SHIPPING
     if (World && CVarCSSplitScreenDebug.GetValueOnGameThread() != 0)
@@ -303,6 +414,7 @@ void UCSSplitScreenSubsystem::DisableSplitScreen()
         VC->ClearSecondaryView();
     }
     CachedRemoteProxy.Reset();
+    CachedRemoteCharacter.Reset();
     bHasSmoothedSecondary = false;
     UE_LOG(LogCS, Log, TEXT("CSSplitScreenSubsystem: DisableSplitScreen"));
 }

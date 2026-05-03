@@ -5,11 +5,15 @@
 #include "Net/UnrealNetwork.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerController.h"
+#include "GameFramework/Pawn.h"
+#include "GameFramework/SpringArmComponent.h"
 
 // Sets default values
 ACSCameraViewProxy::ACSCameraViewProxy()
 {
     PrimaryActorTick.bCanEverTick = true;
+    // PCM CameraCache 는 PostUpdateWork 후 갱신되므로 같은 그룹에서 샘플해야 1프레임 stale 제거
+    PrimaryActorTick.TickGroup = TG_PostUpdateWork;
 
     bReplicates = true;
     bAlwaysRelevant = true;   // 어디서나 항상 관련
@@ -79,6 +83,15 @@ void ACSCameraViewProxy::Tick(float DeltaSeconds)
                 RepCam.Rotation = POV.Rotation;
                 RepCam.FOV = POV.FOV;
 
+                // ArmLength 캡처 — 수신측이 anchor + rotation 으로 카메라 위치 재구성에 사용
+                if (APawn* Pawn = PC->GetPawn())
+                {
+                    if (USpringArmComponent* Arm = Pawn->FindComponentByClass<USpringArmComponent>())
+                    {
+                        RepCam.ArmLength = Arm->TargetArmLength;
+                    }
+                }
+
                 UE_LOG(LogTemp, VeryVerbose, TEXT("SS Server: Server Proxy - RepCam: %s"),
                     *RepCam.Rotation.ToString());
             }
@@ -87,11 +100,12 @@ void ACSCameraViewProxy::Tick(float DeltaSeconds)
     else
     {
         ClientSendTimer += DeltaSeconds;
-        const float SendInterval = 1.f / 30.f;
+        const float SendInterval = 1.f / 60.f;  // 30Hz → 60Hz 송신: 도착 jitter 흡수
 
         if (ClientSendTimer >= SendInterval)
         {
-            ClientSendTimer = 0.f;
+            // 누적 오차 방지 (was = 0.f). hitch 시에도 한 번만 송신되도록 fmod
+            ClientSendTimer = FMath::Fmod(ClientSendTimer, SendInterval);
 
             APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
             if (!PC || !PC->IsLocalController() || !PC->PlayerCameraManager)
@@ -112,10 +126,19 @@ void ACSCameraViewProxy::Tick(float DeltaSeconds)
             LocalCam.Rotation = POV.Rotation;
             LocalCam.FOV = POV.FOV;
 
+            // ArmLength 캡처
+            if (APawn* Pawn = PC->GetPawn())
+            {
+                if (USpringArmComponent* Arm = Pawn->FindComponentByClass<USpringArmComponent>())
+                {
+                    LocalCam.ArmLength = Arm->TargetArmLength;
+                }
+            }
+
             ServerUpdateClientCamera(LocalCam);
 
-            UE_LOG(LogTemp, VeryVerbose, TEXT("Client: Sending camera rotation (30Hz): %s"),
-                *LocalCam.Rotation.ToString());
+            UE_LOG(LogTemp, VeryVerbose, TEXT("Client: Sending camera (60Hz) Rot=%s Arm=%.1f"),
+                *LocalCam.Rotation.ToString(), LocalCam.ArmLength);
         }
     }
 }
