@@ -62,6 +62,20 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Split Screen", meta = (ClampMin = "0.05", ClampMax = "5.0"))
     float TransitionDuration = 0.5f;
 
+    /** 보조 뷰 카메라 보간 속도 (FInterpTo Speed). 클수록 빠르게 따라잡고 작을수록 부드럽다. */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Split Screen|Smoothing")
+    float LocationInterpSpeed = 25.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Split Screen|Smoothing")
+    float RotationInterpSpeed = 20.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Split Screen|Smoothing")
+    float FOVInterpSpeed = 12.f;
+
+    /** 새 RepCam 도착 시 위치 차이가 이 값(cm)을 넘으면 보간 없이 즉시 스냅 (텔레포트/리스폰 대응) */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Split Screen|Smoothing")
+    float SnapDistance = 1500.f;
+
     UPROPERTY(BlueprintReadOnly, Category = "Split Screen")
     bool bSplitScreenActive = false;
 
@@ -75,6 +89,12 @@ private:
     /** Fullscreen 트랜지션 상태 — 0=split, 1=fullscreen */
     float CurrentAlpha = 0.f;
     float TargetAlpha = 0.f;
+
+    /** 보조 뷰 카메라 보간 상태 */
+    bool bHasSmoothedSecondary = false;
+    FVector  SmoothedSecondaryLocation = FVector::ZeroVector;
+    FRotator SmoothedSecondaryRotation = FRotator::ZeroRotator;
+    float    SmoothedSecondaryFOV = 90.f;
 
     /** ViewportClient 캐싱 시도 — 실패 시 false */
     bool ResolveViewportClient();

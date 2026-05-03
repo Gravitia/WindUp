@@ -62,4 +62,8 @@ private:
 
 	/** 보조 뷰의 ViewState (TSR / Lumen ScreenProbe / AutoExposure 히스토리) */
 	FSceneViewStateReference SecondaryViewState;
+
+	/** HUD / Console / OnScreenDebug 등 PostRender 단계용 캐시 UCanvas */
+	UPROPERTY(Transient)
+	TObjectPtr<class UCanvas> DebugCanvasObject;
 };

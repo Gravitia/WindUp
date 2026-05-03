@@ -9,7 +9,14 @@
 #include "Engine/World.h"
 #include "EngineUtils.h"
 #include "GameFramework/PlayerController.h"
+#include "DrawDebugHelpers.h"
 #include "ChronoSpace.h"
+
+static TAutoConsoleVariable<int32> CVarCSSplitScreenDebug(
+    TEXT("cs.SplitScreen.DebugDraw"),
+    0,
+    TEXT("0=off, 1=draw secondary camera position (yellow sphere) and forward (red line) every Tick"),
+    ECVF_Cheat);
 
 UCSSplitScreenSubsystem::UCSSplitScreenSubsystem()
 {
@@ -40,11 +47,15 @@ bool UCSSplitScreenSubsystem::ResolveViewportClient()
     {
         return true;
     }
-    if (!GEngine || !GEngine->GameViewport)
+    // PIE 멀티 윈도우 안전성: GEngine->GameViewport 는 전역 단일이므로 잘못된 PIE 의 VC 를 잡을 수 있음.
+    // GameInstance 별 GetGameViewportClient() 를 사용해 *이 Subsystem 이 속한 PIE* 의 VC 를 정확히 찾는다.
+    UGameInstance* GI = GetGameInstance();
+    if (!GI)
     {
         return false;
     }
-    UCSViewFamilyViewportClient* VC = Cast<UCSViewFamilyViewportClient>(GEngine->GameViewport);
+    UGameViewportClient* GVC = GI->GetGameViewportClient();
+    UCSViewFamilyViewportClient* VC = Cast<UCSViewFamilyViewportClient>(GVC);
     if (!VC)
     {
         return false;
@@ -128,21 +139,110 @@ void UCSSplitScreenSubsystem::PushSecondaryCamera()
 
     if (!Proxy)
     {
-        // 상대 Proxy 가 아직 도착하지 않음 → 보조 뷰 비활성
         VC->ClearSecondaryView();
+        bHasSmoothedSecondary = false;
         return;
     }
 
-    const FRepCamInfo& Cam = Proxy->GetReplicatedCamera();
+    const FRepCamInfo& TargetCam = Proxy->GetReplicatedCamera();
 
-    // 유효성 체크 — Location 이 모두 0 이면 아직 미수신으로 간주
-    if (Cam.Location.IsNearlyZero() && Cam.Rotation.IsNearlyZero())
+    // 유효성 체크 — Location 이 모두 0 이고 Rotation 이 0 이면 아직 미수신으로 간주
+    if (TargetCam.Location.IsNearlyZero() && TargetCam.Rotation.IsNearlyZero())
     {
         VC->ClearSecondaryView();
+        bHasSmoothedSecondary = false;
         return;
     }
 
-    VC->SetSecondaryView(Cam.Location, Cam.Rotation, Cam.FOV);
+    UWorld* World = GetGameInstance() ? GetGameInstance()->GetWorld() : nullptr;
+    const float DT = (World ? World->GetDeltaSeconds() : 0.016f);
+
+    // 첫 수신이거나 거리가 크면 즉시 스냅 (텔레포트/리스폰 대응)
+    const float DistFromCurrent = FVector::Dist(SmoothedSecondaryLocation, TargetCam.Location);
+    if (!bHasSmoothedSecondary || DistFromCurrent > SnapDistance)
+    {
+        SmoothedSecondaryLocation = TargetCam.Location;
+        SmoothedSecondaryRotation = TargetCam.Rotation;
+        SmoothedSecondaryFOV = (TargetCam.FOV > KINDA_SMALL_NUMBER) ? TargetCam.FOV : 90.f;
+        bHasSmoothedSecondary = true;
+    }
+    else
+    {
+        SmoothedSecondaryLocation = FMath::VInterpTo(SmoothedSecondaryLocation, TargetCam.Location, DT, LocationInterpSpeed);
+        SmoothedSecondaryRotation = FMath::RInterpTo(SmoothedSecondaryRotation, TargetCam.Rotation, DT, RotationInterpSpeed);
+        const float TgtFOV = (TargetCam.FOV > KINDA_SMALL_NUMBER) ? TargetCam.FOV : 90.f;
+        SmoothedSecondaryFOV = FMath::FInterpTo(SmoothedSecondaryFOV, TgtFOV, DT, FOVInterpSpeed);
+    }
+
+    UE_LOG(LogCS, VeryVerbose, TEXT("SecondaryView Target=(L:%s R:%s FOV:%.1f) Smoothed=(L:%s R:%s FOV:%.1f)"),
+        *TargetCam.Location.ToCompactString(), *TargetCam.Rotation.ToCompactString(), TargetCam.FOV,
+        *SmoothedSecondaryLocation.ToCompactString(), *SmoothedSecondaryRotation.ToCompactString(), SmoothedSecondaryFOV);
+
+#if !UE_BUILD_SHIPPING
+    if (World && CVarCSSplitScreenDebug.GetValueOnGameThread() != 0)
+    {
+        // 노란 구체: 보조 뷰 카메라의 월드 위치
+        DrawDebugSphere(World, SmoothedSecondaryLocation, 25.f, 12, FColor::Yellow, false, 0.f, 0, 0.5f);
+        // 빨간 선: 카메라 정면 방향 (200 유닛)
+        const FVector Forward = SmoothedSecondaryRotation.Vector();
+        DrawDebugLine(World, SmoothedSecondaryLocation, SmoothedSecondaryLocation + Forward * 200.f,
+            FColor::Red, false, 0.f, 0, 1.f);
+
+        // (1) 받는 쪽 — 보조 카메라에서 가장 가까운 플레이어 폰까지의 거리
+        float NearestDist = TNumericLimits<float>::Max();
+        FVector NearestCharLoc = FVector::ZeroVector;
+        for (FActorIterator It(World); It; ++It)
+        {
+            APawn* Pawn = Cast<APawn>(*It);
+            if (!Pawn || !Pawn->IsPlayerControlled()) continue;
+            const float D = FVector::Dist(SmoothedSecondaryLocation, Pawn->GetActorLocation());
+            if (D < NearestDist) { NearestDist = D; NearestCharLoc = Pawn->GetActorLocation(); }
+        }
+        if (NearestDist < TNumericLimits<float>::Max())
+        {
+            DrawDebugLine(World, SmoothedSecondaryLocation, NearestCharLoc, FColor::Cyan, false, 0.f, 0, 0.5f);
+        }
+
+        // (2) 원본 쪽 — 이 머신의 LocalPlayer 의 실제 캐릭터→카메라 거리
+        // 이게 SpringArm 충돌-단축 후의 *현재* 값. 이걸 다른 머신이 그대로 받아야 정상.
+        APlayerController* LocalPC_ForDiag = nullptr;
+        for (FConstPlayerControllerIterator It = World->GetPlayerControllerIterator(); It; ++It)
+        {
+            if (APlayerController* PC = It->Get())
+            {
+                if (PC->IsLocalController()) { LocalPC_ForDiag = PC; break; }
+            }
+        }
+
+        float LocalCharCamDist = -1.f;
+        if (LocalPC_ForDiag && LocalPC_ForDiag->GetPawn() && LocalPC_ForDiag->PlayerCameraManager)
+        {
+            const FVector LCharLoc = LocalPC_ForDiag->GetPawn()->GetActorLocation();
+            const FVector LCamLoc = LocalPC_ForDiag->PlayerCameraManager->GetCameraCacheView().Location;
+            LocalCharCamDist = FVector::Dist(LCharLoc, LCamLoc);
+
+            // 자홍 구체: 로컬 카메라 위치
+            DrawDebugSphere(World, LCamLoc, 25.f, 12, FColor::Magenta, false, 0.f, 0, 0.5f);
+            // 자홍 선: 로컬 캐릭터 ↔ 로컬 카메라
+            DrawDebugLine(World, LCharLoc, LCamLoc, FColor::Magenta, false, 0.f, 0, 1.f);
+        }
+
+        if (GEngine)
+        {
+            const intptr_t BaseKey = reinterpret_cast<intptr_t>(this);
+            const FString NetTag = (World->GetNetMode() == NM_Client) ? TEXT("CLIENT") : TEXT("SERVER");
+
+            GEngine->AddOnScreenDebugMessage((int32)(BaseKey + 0), 0.f, FColor::Yellow,
+                FString::Printf(TEXT("[%s] SecondaryCam→NearestPawn = %.1f cm  (수신값)"), *NetTag, NearestDist));
+
+            GEngine->AddOnScreenDebugMessage((int32)(BaseKey + 1), 0.f, FColor::Magenta,
+                FString::Printf(TEXT("[%s] LocalChar→LocalCam = %.1f cm  (이 머신의 PCM 캐시 = 송신할 값)"),
+                    *NetTag, LocalCharCamDist));
+        }
+    }
+#endif
+
+    VC->SetSecondaryView(SmoothedSecondaryLocation, SmoothedSecondaryRotation, SmoothedSecondaryFOV);
 }
 
 void UCSSplitScreenSubsystem::Tick(float DeltaTime)
@@ -203,6 +303,7 @@ void UCSSplitScreenSubsystem::DisableSplitScreen()
         VC->ClearSecondaryView();
     }
     CachedRemoteProxy.Reset();
+    bHasSmoothedSecondary = false;
     UE_LOG(LogCS, Log, TEXT("CSSplitScreenSubsystem: DisableSplitScreen"));
 }
 

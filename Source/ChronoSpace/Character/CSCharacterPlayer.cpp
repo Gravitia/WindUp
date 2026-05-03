@@ -287,7 +287,7 @@ void ACSCharacterPlayer::SetData()
 	CameraBoom->TargetArmLength = Data->TargetArmLength;
 	CameraBoom->SetRelativeLocation(Data->CameraOffset);
 
-	if ( ZoomComponent ) 
+	if ( ZoomComponent )
 	{
 		ZoomComponent->Init(CameraBoom, Data->TargetArmLength);
 	}
