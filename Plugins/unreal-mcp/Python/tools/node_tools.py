@@ -426,5 +426,191 @@ def register_blueprint_node_tools(mcp: FastMCP):
             error_msg = f"Error finding nodes: {e}"
             logger.error(error_msg)
             return {"success": False, "message": error_msg}
+
+    @mcp.tool()
+    def dump_blueprint_graph(
+        ctx: Context,
+        blueprint_name: str,
+        graph_name: str = "",
+        include_pins: bool = True,
+        include_links: bool = True
+    ) -> Dict[str, Any]:
+        """
+        Dump Blueprint graphs as JSON, including nodes, pins, defaults, and links.
+
+        Args:
+            blueprint_name: Name of the target Blueprint
+            graph_name: Optional graph name filter
+            include_pins: Include pin details for each node
+            include_links: Include pin link targets
+
+        Returns:
+            JSON description of the Blueprint graph structure
+        """
+        from unreal_mcp_server import get_unreal_connection
+
+        try:
+            params = {
+                "blueprint_name": blueprint_name,
+                "graph_name": graph_name,
+                "include_pins": include_pins,
+                "include_links": include_links
+            }
+
+            unreal = get_unreal_connection()
+            if not unreal:
+                logger.error("Failed to connect to Unreal Engine")
+                return {"success": False, "message": "Failed to connect to Unreal Engine"}
+
+            logger.info(f"Dumping Blueprint graph for '{blueprint_name}'")
+            response = unreal.send_command("dump_blueprint_graph", params)
+            if not response:
+                logger.error("No response from Unreal Engine")
+                return {"success": False, "message": "No response from Unreal Engine"}
+
+            return response
+
+        except Exception as e:
+            error_msg = f"Error dumping Blueprint graph: {e}"
+            logger.error(error_msg)
+            return {"success": False, "message": error_msg}
+
+    @mcp.tool()
+    def set_blueprint_pin_default(
+        ctx: Context,
+        blueprint_name: str,
+        node_id: str,
+        default_value: str,
+        pin_id: str = "",
+        pin_name: str = ""
+    ) -> Dict[str, Any]:
+        """
+        Set the default value for a Blueprint node pin.
+
+        Args:
+            blueprint_name: Name of the target Blueprint
+            node_id: GUID of the node that owns the pin
+            default_value: New default value as Unreal's pin default string
+            pin_id: Optional pin GUID
+            pin_name: Optional pin name, used when pin_id is omitted
+
+        Returns:
+            Response containing the changed pin
+        """
+        from unreal_mcp_server import get_unreal_connection
+
+        try:
+            params = {
+                "blueprint_name": blueprint_name,
+                "node_id": node_id,
+                "pin_id": pin_id,
+                "pin_name": pin_name,
+                "default_value": default_value
+            }
+
+            unreal = get_unreal_connection()
+            if not unreal:
+                logger.error("Failed to connect to Unreal Engine")
+                return {"success": False, "message": "Failed to connect to Unreal Engine"}
+
+            response = unreal.send_command("set_blueprint_pin_default", params)
+            if not response:
+                logger.error("No response from Unreal Engine")
+                return {"success": False, "message": "No response from Unreal Engine"}
+
+            return response
+
+        except Exception as e:
+            error_msg = f"Error setting Blueprint pin default: {e}"
+            logger.error(error_msg)
+            return {"success": False, "message": error_msg}
+
+    @mcp.tool()
+    def move_blueprint_node(
+        ctx: Context,
+        blueprint_name: str,
+        node_id: str,
+        position_x: int,
+        position_y: int
+    ) -> Dict[str, Any]:
+        """
+        Move a Blueprint node in its graph.
+
+        Args:
+            blueprint_name: Name of the target Blueprint
+            node_id: GUID of the node to move
+            position_x: New X position
+            position_y: New Y position
+
+        Returns:
+            Response containing the new node position
+        """
+        from unreal_mcp_server import get_unreal_connection
+
+        try:
+            params = {
+                "blueprint_name": blueprint_name,
+                "node_id": node_id,
+                "position_x": position_x,
+                "position_y": position_y
+            }
+
+            unreal = get_unreal_connection()
+            if not unreal:
+                logger.error("Failed to connect to Unreal Engine")
+                return {"success": False, "message": "Failed to connect to Unreal Engine"}
+
+            response = unreal.send_command("move_blueprint_node", params)
+            if not response:
+                logger.error("No response from Unreal Engine")
+                return {"success": False, "message": "No response from Unreal Engine"}
+
+            return response
+
+        except Exception as e:
+            error_msg = f"Error moving Blueprint node: {e}"
+            logger.error(error_msg)
+            return {"success": False, "message": error_msg}
+
+    @mcp.tool()
+    def delete_blueprint_node(
+        ctx: Context,
+        blueprint_name: str,
+        node_id: str
+    ) -> Dict[str, Any]:
+        """
+        Delete a Blueprint node by GUID.
+
+        Args:
+            blueprint_name: Name of the target Blueprint
+            node_id: GUID of the node to delete
+
+        Returns:
+            Response containing the deleted node information
+        """
+        from unreal_mcp_server import get_unreal_connection
+
+        try:
+            params = {
+                "blueprint_name": blueprint_name,
+                "node_id": node_id
+            }
+
+            unreal = get_unreal_connection()
+            if not unreal:
+                logger.error("Failed to connect to Unreal Engine")
+                return {"success": False, "message": "Failed to connect to Unreal Engine"}
+
+            response = unreal.send_command("delete_blueprint_node", params)
+            if not response:
+                logger.error("No response from Unreal Engine")
+                return {"success": False, "message": "No response from Unreal Engine"}
+
+            return response
+
+        except Exception as e:
+            error_msg = f"Error deleting Blueprint node: {e}"
+            logger.error(error_msg)
+            return {"success": False, "message": error_msg}
     
     logger.info("Blueprint node tools registered successfully")
