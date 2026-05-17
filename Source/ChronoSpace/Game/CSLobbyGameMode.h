@@ -18,4 +18,7 @@ class CHRONOSPACE_API ACSLobbyGameMode : public AGameModeBase
 
 public:
 	ACSLobbyGameMode();
+
+protected:
+	virtual void HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer) override;
 };
