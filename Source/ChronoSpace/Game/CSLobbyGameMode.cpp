@@ -6,5 +6,10 @@
 ACSLobbyGameMode::ACSLobbyGameMode()
 {
 	PlayerControllerClass = ACSLobbyPlayerController::StaticClass();
+	DefaultPawnClass = nullptr;
 	bUseSeamlessTravel = false;
+}
+
+void ACSLobbyGameMode::HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer)
+{
 }
