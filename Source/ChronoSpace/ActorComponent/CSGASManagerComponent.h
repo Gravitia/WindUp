@@ -65,8 +65,6 @@ protected:
 	void HandleGASInputReleased(int32 InputId);
 	// ********************************************************
 
-	bool IsPlayer1();
-
 	UPROPERTY(EditAnywhere, Category = GAS)
 	TObjectPtr<class UAbilitySystemComponent> ASC;
 

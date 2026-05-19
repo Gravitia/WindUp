@@ -40,7 +40,7 @@ void UCSGASManagerComponent::SetGASAbilities()
 		if ( UE_BUILD_SHIPPING )
 		{
 			TSet< EAbilityIndex > BannedAbilities;
-			if (Cast<APawn>(GetOwner())->IsLocallyControlled()) // 서버
+			if (Cast<APawn>(GetOwner())->IsLocallyControlled()) // 서버, 애초에 SetGASAbilities 자체가 서버만 실행됨
 				BannedAbilities = AbilitiesPlayer1Banned;
 			else
 				BannedAbilities = AbilitiesPlayer2Banned;
@@ -100,35 +100,11 @@ void UCSGASManagerComponent::SetupGASInputComponent(UEnhancedInputComponent* Inp
 	InputComponent->BindAction(SprintAction, ETriggerEvent::Triggered, this, &UCSGASManagerComponent::GASInputPressed, static_cast<int32>(EAbilityIndex::Sprint));
 	InputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &UCSGASManagerComponent::GASInputReleased, static_cast<int32>(EAbilityIndex::Sprint));
 
-	// 쉬핑 빌드에선 플레이어 2만 중력 코어 사용 가능
-	if ( UE_BUILD_SHIPPING ) 
-	{
-		if ( !IsPlayer1() )
-		{
-			InputComponent->BindAction(GravityCoreAction, ETriggerEvent::Triggered, this, &UCSGASManagerComponent::GASInputPressed, static_cast<int32>(EAbilityIndex::GravityCore));
-			InputComponent->BindAction(GravityCoreAction, ETriggerEvent::Completed, this, &UCSGASManagerComponent::GASInputReleased, static_cast<int32>(EAbilityIndex::GravityCore));
-		}
-	}
-	else
-	{
-		InputComponent->BindAction(GravityCoreAction, ETriggerEvent::Triggered, this, &UCSGASManagerComponent::GASInputPressed, static_cast<int32>(EAbilityIndex::GravityCore));
-		InputComponent->BindAction(GravityCoreAction, ETriggerEvent::Completed, this, &UCSGASManagerComponent::GASInputReleased, static_cast<int32>(EAbilityIndex::GravityCore));
-	}
+	InputComponent->BindAction(GravityCoreAction, ETriggerEvent::Triggered, this, &UCSGASManagerComponent::GASInputPressed, static_cast<int32>(EAbilityIndex::GravityCore));
+	InputComponent->BindAction(GravityCoreAction, ETriggerEvent::Completed, this, &UCSGASManagerComponent::GASInputReleased, static_cast<int32>(EAbilityIndex::GravityCore));
 
-	// 플레이어 1만 블랙홀 사용 가능
-	if ( UE_BUILD_SHIPPING && IsPlayer1() )
-	{
-		if ( IsPlayer1() )
-		{
-			InputComponent->BindAction(ProjectileBlackHoleAction, ETriggerEvent::Triggered, this, &UCSGASManagerComponent::GASInputPressed, static_cast<int32>(EAbilityIndex::ProjectileBlackHole));
-			InputComponent->BindAction(ProjectileBlackHoleAction, ETriggerEvent::Completed, this, &UCSGASManagerComponent::GASInputReleased, static_cast<int32>(EAbilityIndex::ProjectileBlackHole));
-		}
-	}
-	else
-	{
-		InputComponent->BindAction(ProjectileBlackHoleAction, ETriggerEvent::Triggered, this, &UCSGASManagerComponent::GASInputPressed, static_cast<int32>(EAbilityIndex::ProjectileBlackHole)); 
-		InputComponent->BindAction(ProjectileBlackHoleAction, ETriggerEvent::Completed, this, &UCSGASManagerComponent::GASInputReleased, static_cast<int32>(EAbilityIndex::ProjectileBlackHole)); 
-	} 
+	InputComponent->BindAction(ProjectileBlackHoleAction, ETriggerEvent::Triggered, this, &UCSGASManagerComponent::GASInputPressed, static_cast<int32>(EAbilityIndex::ProjectileBlackHole)); 
+	InputComponent->BindAction(ProjectileBlackHoleAction, ETriggerEvent::Completed, this, &UCSGASManagerComponent::GASInputReleased, static_cast<int32>(EAbilityIndex::ProjectileBlackHole)); 
 
 	if ( ASC )
 	{
@@ -202,12 +178,6 @@ void UCSGASManagerComponent::HandleGASInputReleased(int32 InputId)
 		}
 	}
 }
-
-bool UCSGASManagerComponent::IsPlayer1()
-{
-	return GetOwner() ? Cast<APawn>(GetOwner())->IsLocallyControlled() : false;
-}
-
 
 void UCSGASManagerComponent::OnWindUpStarted(const FInputActionValue& Value)
 {
