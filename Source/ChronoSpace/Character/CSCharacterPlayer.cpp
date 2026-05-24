@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Character/CSCharacterPlayer.h"
@@ -256,6 +256,15 @@ void ACSCharacterPlayer::SetDead()
 	}
 
 	VFXComponent->PlayWorldVFX(EWorldVFX::EFFECT_DEAD_0);
+
+	if (DeathSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			this,
+			DeathSound,
+			GetActorLocation()
+		);
+	}
 }
 
 void ACSCharacterPlayer::SetRevive()
