@@ -87,6 +87,11 @@ void ACSPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 void ACSPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
+
+	if (!IsValid(InputComponent))
+		return;
+
+	InputComponent->BindAction("ToggleOption", IE_Pressed, this, &ACSPlayerController::ToggleOption);
 }
 
 void ACSPlayerController::SetupInputMode()
@@ -108,7 +113,6 @@ void ACSPlayerController::InitializeUI()
 		}
 	}
 }
-
 
 void ACSPlayerController::CreateGameUI()
 {
@@ -209,4 +213,36 @@ void ACSPlayerController::Client_ApplyRespawnView_Implementation(const FRotator&
 	{
 		P->SetActorRotation(Rot);
 	}
+}
+
+void ACSPlayerController::ToggleOption()
+{
+	check(OptionWidgetClass != nullptr);
+
+	if (bIsMenuOpen) CloseOption();
+	else OpenOption();
+}
+
+void ACSPlayerController::OpenOption()
+{
+	OptionWidget = CreateWidget(this, OptionWidgetClass);
+	OptionWidget->AddToViewport(100);
+	
+	if (OptionWidget == nullptr)
+		return;
+
+	FInputModeGameAndUI UIInputMode; 
+	UIInputMode.SetWidgetToFocus(OptionWidget->TakeWidget());
+	SetInputMode(UIInputMode); 
+	bShowMouseCursor = true; 
+	bIsMenuOpen = true; 
+}
+
+void ACSPlayerController::CloseOption()
+{
+	if (OptionWidget == nullptr)
+		return;
+
+	OptionWidget->RemoveFromParent();
+	bIsMenuOpen = false;
 }

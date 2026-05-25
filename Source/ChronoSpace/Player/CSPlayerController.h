@@ -76,4 +76,19 @@ public:
 public:
 	UFUNCTION(Client, Reliable)
 	void Client_ApplyRespawnView(const FRotator& Rot);
+
+// Option Menu
+public:
+	void ToggleOption();
+	void OpenOption();
+	virtual void CloseOption();
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")
+	TSubclassOf<class UUserWidget> OptionWidgetClass;
+
+	UPROPERTY()
+	TObjectPtr<class UUserWidget> OptionWidget;
+
+	bool bIsMenuOpen;
 };
