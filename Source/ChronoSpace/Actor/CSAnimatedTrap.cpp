@@ -121,9 +121,9 @@ void ACSAnimatedTrap::ApplyAnimation()
 
 	for (FAnimTrapEntry& Entry : AnimEntries)
 	{
-		if (!Entry.CachedComp || Entry.Period <= 0.0f) continue;
+		if (!Entry.CachedComp) continue;
 
-		const float Alpha = CalcAlpha(Elapsed, Entry.Period, Entry.HoldTime);
+		const float Alpha = CalcAlpha(Elapsed, Entry);
 
 		if (Entry.AnimType == EAnimTrapType::Translate)
 		{
@@ -204,43 +204,79 @@ FRotator ACSAnimatedTrap::MakeAxisRotator(EAnimTrapAxis Axis, float Deg)
 }
 
 /**
- * HoldTime == 0 → 기존 sin 파형 (연속 진동)
- * HoldTime >  0 → 내려가기 → 대기 → 올라오기 (cos ease-in/out)
+ *  Sine      : sin(2π·t/Period) 연속 진동
+ *  HoldPause : 0 → -1 (cos ease-out) → hold → -1 → 0 (cos ease-in)
+ *  Impulse   : 0 → -1 (cubic ease-out, 빠름) → hold → -1 → 0 (cos ease-in/out, 느림)
  *
- *  파형 (예: Amplitude 양수, 내려가는 방향):
- *   0  ___         ___
- *      |  \       /
- *      |   \     /
- *  -1  |    \___/
- *      |    hold
- *      +---time------->
+ *  파형 (Amplitude 양수, 내려가는 방향):
+ *
+ *   HoldPause                Impulse
+ *   0 ___        ___         0 |\__              ___
+ *     |  \      /              | |  \           /
+ *     |   \    /               | |   \         /
+ *  -1 |    \__/             -1 | |    \_______/
+ *         hold                  attack hold  release
  */
-float ACSAnimatedTrap::CalcAlpha(float Elapsed, float Period, float HoldTime)
+float ACSAnimatedTrap::CalcAlpha(float Elapsed, const FAnimTrapEntry& Entry)
 {
-	if (HoldTime <= 0.0f)
+	switch (Entry.WaveShape)
 	{
-		// 기존 연속 sin 파형
-		return FMath::Sin(2.0f * PI * Elapsed / Period);
+	case EAnimTrapWave::Sine:
+	{
+		if (Entry.Period <= 0.0f) return 0.0f;
+		return FMath::Sin(2.0f * PI * Elapsed / Entry.Period);
 	}
 
-	const float HalfPeriod  = Period * 0.5f;
-	const float TotalCycle  = Period + HoldTime;
-	const float t           = FMath::Fmod(Elapsed, TotalCycle);
+	case EAnimTrapWave::HoldPause:
+	{
+		if (Entry.Period <= 0.0f) return 0.0f;
 
-	if (t < HalfPeriod)
-	{
-		// 내려가기 (0 → -1, cos ease-out)
-		return -0.5f * (1.0f - FMath::Cos(PI * t / HalfPeriod));
+		const float HalfPeriod = Entry.Period * 0.5f;
+		const float TotalCycle = Entry.Period + Entry.HoldTime;
+		const float t          = FMath::Fmod(Elapsed, TotalCycle);
+
+		if (t < HalfPeriod)
+		{
+			return -0.5f * (1.0f - FMath::Cos(PI * t / HalfPeriod));
+		}
+		else if (t < HalfPeriod + Entry.HoldTime)
+		{
+			return -1.0f;
+		}
+		else
+		{
+			const float t2 = t - HalfPeriod - Entry.HoldTime;
+			return -0.5f * (1.0f + FMath::Cos(PI * t2 / HalfPeriod));
+		}
 	}
-	else if (t < HalfPeriod + HoldTime)
+
+	case EAnimTrapWave::Impulse:
 	{
-		// 끝점 대기
-		return -1.0f;
+		const float Snap       = FMath::Max(Entry.SnapTime,   KINDA_SMALL_NUMBER);
+		const float Return     = FMath::Max(Entry.ReturnTime, KINDA_SMALL_NUMBER);
+		const float TotalCycle = Snap + Entry.HoldTime + Return;
+		const float t          = FMath::Fmod(Elapsed, TotalCycle);
+
+		if (t < Snap)
+		{
+			// 0 → -1, cubic ease-out (빠르게 도착)
+			const float u  = t / Snap;
+			const float iu = 1.0f - u;
+			return -(1.0f - iu * iu * iu);
+		}
+		else if (t < Snap + Entry.HoldTime)
+		{
+			return -1.0f;
+		}
+		else
+		{
+			// -1 → 0, cos ease-in/out (천천히 복귀)
+			const float t2 = t - Snap - Entry.HoldTime;
+			const float u  = t2 / Return;
+			return -0.5f * (1.0f + FMath::Cos(PI * u));
+		}
 	}
-	else
-	{
-		// 올라오기 (-1 → 0, cos ease-in)
-		const float t2 = t - HalfPeriod - HoldTime;
-		return -0.5f * (1.0f + FMath::Cos(PI * t2 / HalfPeriod));
 	}
+
+	return 0.0f;
 }

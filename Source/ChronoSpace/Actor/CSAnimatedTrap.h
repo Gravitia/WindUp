@@ -23,6 +23,14 @@ enum class EAnimTrapAxis : uint8
 	X, Y, Z
 };
 
+UENUM(BlueprintType)
+enum class EAnimTrapWave : uint8
+{
+	Sine       UMETA(DisplayName = "연속 사인파"),
+	HoldPause  UMETA(DisplayName = "끝점 대기 (대칭)"),
+	Impulse    UMETA(DisplayName = "임펄스 (빠른 진입 → 느린 복귀)")
+};
+
 /* ─────────────────────────────────────────────
  *  하나의 컴포넌트 움직임 설정
  * ───────────────────────────────────────────── */
@@ -44,16 +52,28 @@ struct FAnimTrapEntry
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	EAnimTrapAxis AnimAxis = EAnimTrapAxis::Z;
 
+	/** 파형 종류 */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	EAnimTrapWave WaveShape = EAnimTrapWave::Sine;
+
 	/** 진폭 — Translate: cm, Rotate: degree */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float Amplitude = 200.0f;
 
-	/** 왕복 1회 소요 시간 (초) — 이동 구간만의 시간 */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	/** [Sine / HoldPause] 왕복 1회 소요 시간 (초) — 이동 구간만의 시간 */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (EditCondition = "WaveShape != EAnimTrapWave::Impulse", EditConditionHides))
 	float Period = 2.0f;
 
-	/** 끝점에서 대기 시간 (초). 0이면 멈춤 없이 연속 진동 */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	/** [Impulse] a → b 진입 시간 (초). 짧을수록 즉각적 */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (EditCondition = "WaveShape == EAnimTrapWave::Impulse", EditConditionHides))
+	float SnapTime = 0.05f;
+
+	/** [Impulse] b → a 복귀 시간 (초). 길수록 천천히 돌아옴 */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (EditCondition = "WaveShape == EAnimTrapWave::Impulse", EditConditionHides))
+	float ReturnTime = 1.0f;
+
+	/** 끝점 b에서 대기 시간 (초). HoldPause / Impulse에서 사용 */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (EditCondition = "WaveShape != EAnimTrapWave::Sine", EditConditionHides))
 	float HoldTime = 0.0f;
 
 	/* ── 런타임 캐시 (에디터 비노출) ── */
@@ -130,6 +150,6 @@ private:
 	static FVector  GetAxisVector(EAnimTrapAxis Axis);
 	static FRotator MakeAxisRotator(EAnimTrapAxis Axis, float Deg);
 
-	/** HoldTime 포함 파형 계산. 반환값 범위 [-1, 1] */
-	static float CalcAlpha(float Elapsed, float Period, float HoldTime);
+	/** WaveShape에 따른 파형 계산. 반환값 범위 [-1, 1] */
+	static float CalcAlpha(float Elapsed, const FAnimTrapEntry& Entry);
 };
