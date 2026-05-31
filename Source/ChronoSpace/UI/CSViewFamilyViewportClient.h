@@ -27,6 +27,7 @@ public:
 	UCSViewFamilyViewportClient(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
 	virtual void Draw(FViewport* InViewport, FCanvas* SceneCanvas) override;
+	virtual void BeginDestroy() override;
 
 	/** Subsystem 이 매 프레임 호출 — 보조 뷰 카메라 갱신 */
 	void SetSecondaryView(const FVector& InLocation, const FRotator& InRotation, float InFOV);
@@ -42,6 +43,10 @@ public:
 
 	/** true 면 메인=우측 / 보조=좌측 (기존 구현 호환). 기본 true. */
 	void SetSwapLeftRight(bool bInSwap) { bSwapLeftRight = bInSwap; }
+
+	/** 메인/보조 뷰 위에 동시에 적용되는 검정 페이드. PlayerCameraManager 와 독립. */
+	void StartFade(float TargetAlpha, float Duration);
+	float GetFadeAlpha() const { return FadeAlpha; }
 
 private:
 	/** 좌/우 뷰 사각형 계산 (FullscreenAlpha 적용 + Swap) */
@@ -66,4 +71,13 @@ private:
 	/** HUD / Console / OnScreenDebug 등 PostRender 단계용 캐시 UCanvas */
 	UPROPERTY(Transient)
 	TObjectPtr<class UCanvas> DebugCanvasObject;
+
+	void TickFade(float DeltaSeconds);
+	void DrawFadeOverlay(FViewport* InViewport);
+	void OnPostLoadMap(UWorld* LoadedWorld);
+
+	float FadeAlpha = 0.f;
+	float FadeTargetAlpha = 0.f;
+	float FadeSpeed = 1.f;
+	FDelegateHandle PostLoadMapHandle;
 };

@@ -12,17 +12,63 @@
 #include "SceneView.h"
 #include "RendererInterface.h"
 #include "Modules/ModuleManager.h"
+#include "CanvasItem.h"
 #include "CanvasTypes.h"
 #include "Engine/Canvas.h"
 #include "Engine/Console.h"
 #include "LegacyScreenPercentageDriver.h"
 #include "UnrealClient.h"
 #include "Math/InverseRotationMatrix.h"
+#include "UObject/UObjectGlobals.h"
 #include "ChronoSpace.h"
 
 UCSViewFamilyViewportClient::UCSViewFamilyViewportClient(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
+	PostLoadMapHandle = FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &UCSViewFamilyViewportClient::OnPostLoadMap);
+}
+
+void UCSViewFamilyViewportClient::BeginDestroy()
+{
+	if (PostLoadMapHandle.IsValid())
+	{
+		FCoreUObjectDelegates::PostLoadMapWithWorld.Remove(PostLoadMapHandle);
+		PostLoadMapHandle.Reset();
+	}
+	Super::BeginDestroy();
+}
+
+void UCSViewFamilyViewportClient::StartFade(float TargetAlpha, float Duration)
+{
+	FadeTargetAlpha = FMath::Clamp(TargetAlpha, 0.f, 1.f);
+	FadeSpeed = (Duration > KINDA_SMALL_NUMBER) ? (1.f / Duration) : 1000.f;
+}
+
+void UCSViewFamilyViewportClient::TickFade(float DeltaSeconds)
+{
+	if (!FMath::IsNearlyEqual(FadeAlpha, FadeTargetAlpha))
+	{
+		FadeAlpha = FMath::FInterpConstantTo(FadeAlpha, FadeTargetAlpha, DeltaSeconds, FadeSpeed);
+	}
+}
+
+void UCSViewFamilyViewportClient::DrawFadeOverlay(FViewport* InViewport)
+{
+	if (!InViewport || FadeAlpha <= KINDA_SMALL_NUMBER) return;
+
+	FCanvas* DebugCanvas = InViewport->GetDebugCanvas();
+	if (!DebugCanvas) return;
+
+	const FIntPoint Size = InViewport->GetSizeXY();
+	FCanvasTileItem Tile(FVector2D::ZeroVector, FVector2D(Size), FLinearColor(0.f, 0.f, 0.f, FadeAlpha));
+	Tile.BlendMode = SE_BLEND_Translucent;
+	DebugCanvas->DrawItem(Tile);
+}
+
+void UCSViewFamilyViewportClient::OnPostLoadMap(UWorld* /*LoadedWorld*/)
+{
+	FadeAlpha = 0.f;
+	FadeTargetAlpha = 0.f;
 }
 
 void UCSViewFamilyViewportClient::SetSecondaryView(const FVector& InLocation, const FRotator& InRotation, float InFOV)
@@ -149,10 +195,13 @@ void UCSViewFamilyViewportClient::AddSecondarySceneView(FSceneViewFamilyContext&
 
 void UCSViewFamilyViewportClient::Draw(FViewport* InViewport, FCanvas* SceneCanvas)
 {
+	TickFade(GetWorld() ? GetWorld()->DeltaTimeSeconds : 0.016f);
+
 	// 보조 뷰가 비활성이면 엔진 기본 Draw 사용 (싱글 뷰 / 메뉴 / 로비)
 	if (!bSecondaryActive)
 	{
 		Super::Draw(InViewport, SceneCanvas);
+		DrawFadeOverlay(InViewport);
 		return;
 	}
 
@@ -161,6 +210,7 @@ void UCSViewFamilyViewportClient::Draw(FViewport* InViewport, FCanvas* SceneCanv
 	if (!MyWorld || !GI || !InViewport || !SceneCanvas)
 	{
 		Super::Draw(InViewport, SceneCanvas);
+		DrawFadeOverlay(InViewport);
 		return;
 	}
 
@@ -168,6 +218,7 @@ void UCSViewFamilyViewportClient::Draw(FViewport* InViewport, FCanvas* SceneCanv
 	if (!MainLocalPlayer || !MainLocalPlayer->PlayerController || !MyWorld->Scene)
 	{
 		Super::Draw(InViewport, SceneCanvas);
+		DrawFadeOverlay(InViewport);
 		return;
 	}
 
@@ -175,6 +226,7 @@ void UCSViewFamilyViewportClient::Draw(FViewport* InViewport, FCanvas* SceneCanv
 	if (ViewportSize.X <= 0 || ViewportSize.Y <= 0)
 	{
 		Super::Draw(InViewport, SceneCanvas);
+		DrawFadeOverlay(InViewport);
 		return;
 	}
 
@@ -278,4 +330,6 @@ void UCSViewFamilyViewportClient::Draw(FViewport* InViewport, FCanvas* SceneCanv
 
 		DebugCanvasObject->PopSafeZoneTransform();
 	}
+
+	DrawFadeOverlay(InViewport);
 }
