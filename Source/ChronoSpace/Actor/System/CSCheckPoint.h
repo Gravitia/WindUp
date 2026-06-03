@@ -12,7 +12,7 @@ UCLASS()
 class CHRONOSPACE_API ACSCheckPoint : public AActor
 {
 	GENERATED_BODY()
-	
+
 public:
     ACSCheckPoint();
 
@@ -38,33 +38,4 @@ public:
     // === Debug Functions ===
     UFUNCTION(BlueprintCallable, Category = "Debug")
     void DebugNetworkInfo() const;
-
-    // === RPC Alternative (Optional) ===
-    UFUNCTION(Server, Reliable, Category = "CheckPoint")
-    void ServerActivateCheckpoint(APawn* Player);
-    
-// Save 
-public:
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Save Stage")
-    bool SaveStageClear = false;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Save Stage")
-    int32 CurrentChapterNumber;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Save Stage")
-    int32 CurrentStageNumber;
-    
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Move Next Stage")
-    bool MoveNextStage = false;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Move Next Stage")
-    int32 NextChapterNumber;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Move Next Stage")
-    int32 NextStageNumber;
-
-private:
-    class UCSGameProgressSubsystem* GetGameProgressSubsystem() const;
-
 };

@@ -6,84 +6,68 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "CSGameProgressSubsystem.generated.h"
 
+class UCSSaveGame;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGameLoaded);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGameSaved);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnNewGameStarted);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnStageCleared, int32, Chapter, int32, Stage);
+
 /**
- * 
+ * Facade for save/load and stage progression.
+ * Auto-saves to disk after every progress mutation.
+ * Host-only in multiplayer; clients ignore mutation calls.
  */
 UCLASS()
 class CHRONOSPACE_API UCSGameProgressSubsystem : public UGameInstanceSubsystem
 {
-	GENERATED_BODY()
-	
+    GENERATED_BODY()
 
 public:
-    UCSGameProgressSubsystem();
-
-protected:
     virtual void Initialize(FSubsystemCollectionBase& Collection) override;
     virtual void Deinitialize() override;
 
-    // Current save game object
-    UPROPERTY(BlueprintReadOnly, Category = "Save Game")
-    class UCSSaveGame* CurrentSaveGame;
-
-    // Default save slot name
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Save Settings")
-    FString DefaultSaveSlotName = TEXT("ChronoSpaceSave");
-
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Save Settings")
-    int32 DefaultUserIndex = 0;
-
-public:
-    // === Core Save/Load Functions ===
-    UFUNCTION(BlueprintCallable, Category = "Save System")
+    // === Save / Load ===
+    UFUNCTION(BlueprintCallable, Category = "Save")
     bool SaveGame();
 
-    UFUNCTION(BlueprintCallable, Category = "Save System")
+    UFUNCTION(BlueprintCallable, Category = "Save")
     bool LoadGame();
 
-    UFUNCTION(BlueprintCallable, Category = "Save System")
+    UFUNCTION(BlueprintCallable, Category = "Save")
     bool NewGame();
 
-    UFUNCTION(BlueprintCallable, Category = "Save System")
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Save")
     bool DoesSaveExist() const;
 
-    // === Stage Management ===
-    UFUNCTION(BlueprintCallable, Category = "Stage Management")
-    void ClearStage(int32 ChapterNumber, int32 StageNumber);
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Save")
+    UCSSaveGame* GetSaveGame() const { return CurrentSaveGame; }
 
-    UFUNCTION(BlueprintCallable, Category = "Stage Management")
-    bool IsStageCleared(int32 ChapterNumber, int32 StageNumber) const;
+    // === Stage Progress ===
+    UFUNCTION(BlueprintCallable, Category = "Progress")
+    void MarkStageCleared(int32 Chapter, int32 Stage);
 
-    UFUNCTION(BlueprintCallable, Category = "Stage Management")
-    bool IsStageUnlocked(int32 ChapterNumber, int32 StageNumber) const;
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Progress")
+    bool IsStageCleared(int32 Chapter, int32 Stage) const;
 
-    // === Continue System ===
-    UFUNCTION(BlueprintCallable, Category = "Continue")
-    void SetLastPlayedStage(int32 ChapterNumber, int32 StageNumber);
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Progress")
+    bool IsStageUnlocked(int32 Chapter, int32 Stage) const;
 
-    UFUNCTION(BlueprintCallable, Category = "Continue")
+    // === Last Played ===
+    UFUNCTION(BlueprintCallable, Category = "Progress")
+    void SetLastPlayedStage(int32 Chapter, int32 Stage);
+
+    UFUNCTION(BlueprintCallable, Category = "Progress")
     void GetLastPlayedStage(int32& OutChapter, int32& OutStage) const;
 
-    // === Statistics ===
-    UFUNCTION(BlueprintCallable, Category = "Statistics")
-    void IncrementDeathCount();
+    // === Stats ===
+    UFUNCTION(BlueprintCallable, Category = "Progress")
+    void IncrementTotalDeaths();
 
-    // === UI Integration ===
-    UFUNCTION(BlueprintCallable, Category = "UI")
-    bool LoadGameFromUI();
-
-    UFUNCTION(BlueprintCallable, Category = "UI")
-    bool NewGameFromUI();
-
-    UFUNCTION(BlueprintCallable, Category = "UI")
-    UCSSaveGame* GetSaveGameObject() const { return CurrentSaveGame; }
+    UFUNCTION(BlueprintCallable, Category = "Progress")
+    void IncrementStageDeath(int32 Chapter, int32 Stage);
 
     // === Events ===
-    DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGameLoaded);
-    DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGameSaved);
-    DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnNewGameStarted);
-    DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnStageCleared, int32, ChapterNumber, int32, StageNumber);
-
     UPROPERTY(BlueprintAssignable, Category = "Progress Events")
     FOnGameLoaded OnGameLoaded;
 
@@ -96,8 +80,21 @@ public:
     UPROPERTY(BlueprintAssignable, Category = "Progress Events")
     FOnStageCleared OnStageCleared;
 
+protected:
+    UPROPERTY(EditDefaultsOnly, Category = "Save")
+    FString SaveSlotName = TEXT("ChronoSpaceSave");
+
+    UPROPERTY(EditDefaultsOnly, Category = "Save")
+    int32 UserIndex = 0;
+
+    // Number of stages per chapter (data-driven, no hardcoded "5").
+    UPROPERTY(EditDefaultsOnly, Category = "Progress")
+    TMap<int32, int32> StagesPerChapter;
+
+    UPROPERTY()
+    TObjectPtr<UCSSaveGame> CurrentSaveGame;
+
 private:
-    void CreateNewSaveGame();
-    bool IsMultiplayerClient() const;
-    class ACSGameState* GetCSGameState() const;
+    bool IsClient() const;
+    void CreateNewSaveGameObject();
 };
