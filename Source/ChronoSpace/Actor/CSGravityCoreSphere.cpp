@@ -94,14 +94,19 @@ void ACSGravityCoreSphere::ProcessForStaticMesh(float DeltaTime)
 			continue;
 		}
 
+		if ( IsValid( Mesh->GetOwner() ) )
+		{
+			if ( UCSMeshAffectedByGravityCore* MeshAffectedByGravityCore = Mesh->GetOwner()->FindComponentByClass<UCSMeshAffectedByGravityCore>(); IsValid( MeshAffectedByGravityCore ) )
+			{
+				if ( !MeshAffectedByGravityCore->IsEnable() )
+					continue;
+			}
+		}
+
 		FVector Power(1000.0f, 1000.0f, 1000.0f);
 		const FVector MeshLocation = Mesh->GetComponentLocation();
 		const FVector ToBH = CoreLocation - MeshLocation;
 		const float Distance = ToBH.Size();
-
-		/*float MeshMass = FMath::Max(Mesh->GetMass(), 100.0f);
-
-		Power *= (MeshMass / 100);*/
 
 		const FVector Direction = ToBH.GetSafeNormal();
 		Mesh->AddImpulse(Direction * Power * 30 * DeltaTime, NAME_None, true);
@@ -139,8 +144,8 @@ void ACSGravityCoreSphere::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedCo
 	UStaticMeshComponent* TargetStaticMeshComp = Cast<UStaticMeshComponent>(OtherComp);
 	if (TargetStaticMeshComp)
 	{
-		if (bCheckMeshHaveComponent && OtherActor->FindComponentByClass<UCSMeshAffectedByGravityCore>())
-
+		if (bCheckMeshHaveComponent && OtherActor->FindComponentByClass<UCSMeshAffectedByGravityCore>() == nullptr) return;
+		
 		TargetStaticMeshComp->SetEnableGravity(true);
 		StaticMeshesInSphereTrigger.Remove(TargetStaticMeshComp);
 
@@ -148,6 +153,8 @@ void ACSGravityCoreSphere::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedCo
 		{
 			Comp->NotifyInteractionEnded();
 		}
+
+		UE_LOG(LogCS, Log, TEXT("ACSGravityCoreSphere - OnTriggerEndOverlap"));
 	}
 }
 

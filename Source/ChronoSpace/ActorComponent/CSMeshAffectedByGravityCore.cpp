@@ -3,6 +3,7 @@
 
 #include "ActorComponent/CSMeshAffectedByGravityCore.h"
 #include "Physics/CSCollision.h"
+#include "ChronoSpace.h"
 
 UCSMeshAffectedByGravityCore::UCSMeshAffectedByGravityCore()
 {
@@ -38,5 +39,23 @@ void UCSMeshAffectedByGravityCore::NotifyInteractionStarted()
 void UCSMeshAffectedByGravityCore::NotifyInteractionEnded()
 {
 	OnInteractionEnded.Broadcast();
+}
+
+void UCSMeshAffectedByGravityCore::SetEnable( bool bInEnable )
+{
+	AActor* Owner = GetOwner();
+	if (!Owner) return;
+
+	UStaticMeshComponent* MeshComp = Owner->FindComponentByClass<UStaticMeshComponent>();
+	if (!IsValid(MeshComp)) return;
+
+	bEnable = bInEnable;
+
+	MeshComp->SetCollisionObjectType(
+		bEnable ? CCHANNEL_CSGRAVITY_CORE_AFFECTED : ECC_WorldDynamic
+	);
+
+	MeshComp->SetGenerateOverlapEvents(true);
+	MeshComp->UpdateOverlaps();
 }
 

@@ -27,4 +27,13 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Interaction")
 	FOnGravityCoreInteractionEnded OnInteractionEnded;
+
+	UFUNCTION( BlueprintCallable )
+	void SetEnable( bool bInEnable );
+
+	UFUNCTION( BlueprintCallable )
+	bool IsEnable() { return bEnable; }
+
+protected:
+	bool bEnable{ true };
 };
