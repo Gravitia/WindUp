@@ -6,13 +6,15 @@
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/PlayerController.h"
+#include "GameFramework/PawnMovementComponent.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
 #include "TimerManager.h"
-#include "Misc/PackageName.h"
-#include "UObject/UObjectGlobals.h"
+#include "Blueprint/UserWidget.h"
 #include "Net/UnrealNetwork.h"
 #include "Subsystem/CSGameProgressSubsystem.h"
+#include "Settings/CSStageDataSettings.h"
+#include "UI/CSStageSelectWidget.h"
 #include "UI/CSViewFamilyViewportClient.h"
 
 ACSStagePortal::ACSStagePortal()
@@ -37,6 +39,10 @@ ACSStagePortal::ACSStagePortal()
     Light2->SetupAttachment(RootComponent);
     Light2->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     Light2->SetVisibility(false);
+
+    // Default to the fully code-built widget so the portal works with no UMG setup.
+    // Override in the placed actor to use a custom Blueprint reparented to UCSStageSelectWidget.
+    StageSelectWidgetClass = UCSStageSelectWidget::StaticClass();
 }
 
 void ACSStagePortal::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -69,20 +75,10 @@ void ACSStagePortal::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor*
     PlayerCount = PlayersInTrigger.Num();
     ApplyLightVisibility();
 
-    if (PlayerCount == 1)
+    if (PlayerCount >= RequiredPlayerCount && !bUIOpen)
     {
-        PreloadTargetLevel();
-    }
-
-    if (PlayerCount >= RequiredPlayerCount)
-    {
-        bTransitionStarted = true;
-        MulticastStartTransition();
-
-        FTimerHandle TravelTimer;
-        GetWorldTimerManager().SetTimer(TravelTimer, this,
-            &ACSStagePortal::RecordProgressAndTravel,
-            FMath::Max(FadeDuration, 0.01f), false);
+        bUIOpen = true;
+        MulticastOpenStageSelect();
     }
 }
 
@@ -97,15 +93,18 @@ void ACSStagePortal::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* O
     PlayersInTrigger.Remove(Character);
     PlayerCount = PlayersInTrigger.Num();
     ApplyLightVisibility();
+
+    // Players broke the gathering before choosing — take the menu back down.
+    if (bUIOpen && PlayerCount < RequiredPlayerCount)
+    {
+        bUIOpen = false;
+        MulticastCloseStageSelect();
+    }
 }
 
 void ACSStagePortal::OnRep_PlayerCount()
 {
     ApplyLightVisibility();
-    if (PlayerCount >= 1)
-    {
-        PreloadTargetLevel();
-    }
 }
 
 void ACSStagePortal::ApplyLightVisibility()
@@ -114,8 +113,21 @@ void ACSStagePortal::ApplyLightVisibility()
     Light2->SetVisibility(PlayerCount >= 2);
 }
 
-void ACSStagePortal::MulticastStartTransition_Implementation()
+void ACSStagePortal::MulticastOpenStageSelect_Implementation()
 {
+    OpenStageSelectUI();
+}
+
+void ACSStagePortal::MulticastCloseStageSelect_Implementation()
+{
+    CloseStageSelectUI();
+}
+
+void ACSStagePortal::MulticastBeginTransition_Implementation()
+{
+    // Take the menu down but keep input locked — we're about to travel.
+    RemoveStageSelectWidget();
+
     UWorld* World = GetWorld();
     if (!World) return;
 
@@ -133,9 +145,156 @@ void ACSStagePortal::MulticastStartTransition_Implementation()
     }
 }
 
-void ACSStagePortal::RecordProgressAndTravel()
+void ACSStagePortal::OpenStageSelectUI()
 {
-    if (!HasAuthority()) return;
+    if (ActiveWidget) return;
+
+    if (!StageSelectWidgetClass)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("ACSStagePortal: StageSelectWidgetClass is not set"));
+        return;
+    }
+
+    UWorld* World = GetWorld();
+    if (!World) return;
+
+    APlayerController* PC = World->GetFirstPlayerController();
+    if (!PC || !PC->IsLocalController()) return;
+
+    ActiveWidget = CreateWidget<UCSStageSelectWidget>(PC, StageSelectWidgetClass);
+    if (!ActiveWidget) return;
+
+    TArray<FCSStageOption> Options;
+    BuildStageOptions(Options);
+
+    ActiveWidget->Setup(this, Options);
+    ActiveWidget->AddToViewport();
+
+    // Stop the pawn cleanly: release any held keys (so EnhancedInput fires its
+    // "released" events instead of leaving movement stuck), kill residual motion,
+    // and block game input while the menu is up. Without this the character keeps
+    // walking forward into/out of the trigger.
+    PC->FlushPressedKeys();
+    if (APawn* Pawn = PC->GetPawn())
+    {
+        Pawn->DisableInput(PC);
+        if (UPawnMovementComponent* Move = Pawn->GetMovementComponent())
+        {
+            Move->StopMovementImmediately();
+        }
+    }
+
+    PC->SetShowMouseCursor(true);
+    PC->SetInputMode(FInputModeUIOnly());
+}
+
+void ACSStagePortal::CloseStageSelectUI()
+{
+    RemoveStageSelectWidget();
+
+    UWorld* World = GetWorld();
+    if (!World) return;
+
+    if (APlayerController* PC = World->GetFirstPlayerController())
+    {
+        if (APawn* Pawn = PC->GetPawn())
+        {
+            Pawn->EnableInput(PC);
+        }
+        PC->SetShowMouseCursor(false);
+        PC->SetInputMode(FInputModeGameOnly());
+    }
+}
+
+void ACSStagePortal::RemoveStageSelectWidget()
+{
+    if (ActiveWidget)
+    {
+        ActiveWidget->RemoveFromParent();
+        ActiveWidget = nullptr;
+    }
+}
+
+bool ACSStagePortal::ShouldAllowAllStages() const
+{
+#if UE_BUILD_SHIPPING
+    return false;
+#else
+    return bDebugUnlockAllStages;
+#endif
+}
+
+void ACSStagePortal::BuildStageOptions(TArray<FCSStageOption>& OutOptions) const
+{
+    OutOptions.Reset();
+
+    const UCSStageDataSettings* Data = UCSStageDataSettings::Get();
+    if (!Data) return;
+
+    int32 NextChapter = 0, NextStage = 0;
+    const bool bHasNext = Data->GetNextStage(CurrentChapter, CurrentStage, NextChapter, NextStage);
+
+    if (ShouldAllowAllStages())
+    {
+        // Debug: offer every stage in the table.
+        for (const FCSChapterDef& Chapter : Data->Chapters)
+        {
+            for (const FCSStageDef& Stage : Chapter.Stages)
+            {
+                FCSStageOption Option;
+                Option.Chapter = Chapter.Chapter;
+                Option.Stage = Stage.Stage;
+                Option.DisplayName = Data->GetStageDisplayName(Chapter.Chapter, Stage.Stage);
+                Option.bSelectable = true;
+                Option.bIsNextStage = bHasNext && Chapter.Chapter == NextChapter && Stage.Stage == NextStage;
+                OutOptions.Add(Option);
+            }
+        }
+    }
+    else if (bHasNext)
+    {
+        // Normal play: the only destination is the next stage.
+        FCSStageOption Option;
+        Option.Chapter = NextChapter;
+        Option.Stage = NextStage;
+        Option.DisplayName = Data->GetStageDisplayName(NextChapter, NextStage);
+        Option.bSelectable = true;
+        Option.bIsNextStage = true;
+        OutOptions.Add(Option);
+    }
+    // else: no next stage (end of game) and not debugging — empty list.
+}
+
+void ACSStagePortal::HandleTravelRequest(int32 Chapter, int32 Stage)
+{
+    if (!HasAuthority() || bTransitionStarted) return;
+
+    // Validate the choice against what we'd actually offer.
+    TArray<FCSStageOption> Options;
+    BuildStageOptions(Options);
+    const bool bValid = Options.ContainsByPredicate([Chapter, Stage](const FCSStageOption& O)
+    {
+        return O.Chapter == Chapter && O.Stage == Stage && O.bSelectable;
+    });
+    if (!bValid)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("ACSStagePortal: rejected travel request to C%d_S%d (not a valid option)"),
+            Chapter, Stage);
+        return;
+    }
+
+    const UCSStageDataSettings* Data = UCSStageDataSettings::Get();
+    const FString URL = Data ? Data->GetStageTravelURL(Chapter, Stage) : FString();
+    if (URL.IsEmpty())
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("ACSStagePortal: C%d_S%d has no mapped level; aborting travel"), Chapter, Stage);
+        return;
+    }
+
+    bTransitionStarted = true;
+    PendingTravelURL = URL;
 
     if (UCSGameProgressSubsystem* Progress = GetProgressSubsystem())
     {
@@ -143,40 +302,24 @@ void ACSStagePortal::RecordProgressAndTravel()
         {
             Progress->MarkStageCleared(CurrentChapter, CurrentStage);
         }
-        if (bUpdateLastPlayed)
-        {
-            Progress->SetLastPlayedStage(NextChapter, NextStage);
-        }
+        Progress->SetLastPlayedStage(Chapter, Stage);
     }
 
-    if (TargetLevelName.IsEmpty())
-    {
-        UE_LOG(LogTemp, Warning, TEXT("ACSStagePortal: TargetLevelName is empty, skipping travel"));
-        return;
-    }
+    MulticastBeginTransition();
+
+    FTimerHandle TravelTimer;
+    GetWorldTimerManager().SetTimer(TravelTimer, this,
+        &ACSStagePortal::DoServerTravel, FMath::Max(FadeDuration, 0.01f), false);
+}
+
+void ACSStagePortal::DoServerTravel()
+{
+    if (!HasAuthority()) return;
 
     if (UWorld* World = GetWorld())
     {
-        World->ServerTravel(TargetLevelName, false);
+        World->ServerTravel(PendingTravelURL, false);
     }
-}
-
-void ACSStagePortal::PreloadTargetLevel()
-{
-    if (bPreloadStarted || TargetLevelName.IsEmpty()) return;
-    bPreloadStarted = true;
-
-    FString PackageName = TargetLevelName;
-    if (!FPackageName::IsValidLongPackageName(PackageName))
-    {
-        FString Resolved;
-        if (FPackageName::SearchForPackageOnDisk(TargetLevelName, nullptr, &Resolved))
-        {
-            PackageName = Resolved;
-        }
-    }
-
-    LoadPackageAsync(PackageName, FLoadPackageAsyncDelegate(), 0, PKG_ContainsMap);
 }
 
 UCSGameProgressSubsystem* ACSStagePortal::GetProgressSubsystem() const

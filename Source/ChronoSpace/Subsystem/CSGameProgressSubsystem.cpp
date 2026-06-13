@@ -3,6 +3,7 @@
 
 #include "Subsystem/CSGameProgressSubsystem.h"
 #include "Save/CSSaveGame.h"
+#include "Settings/CSStageDataSettings.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
 
@@ -110,23 +111,35 @@ bool UCSGameProgressSubsystem::IsStageCleared(int32 Chapter, int32 Stage) const
 
 bool UCSGameProgressSubsystem::IsStageUnlocked(int32 Chapter, int32 Stage) const
 {
-    if (Chapter <= 1 && Stage <= 1) return true;
+    const UCSStageDataSettings* Data = UCSStageDataSettings::Get();
+    if (!Data) return false;
 
-    if (Stage > 1)
+    // The very first stage of the game is always available.
+    int32 FirstChapter, FirstStage;
+    if (Data->GetFirstStage(FirstChapter, FirstStage)
+        && Chapter == FirstChapter && Stage == FirstStage)
     {
-        return IsStageCleared(Chapter, Stage - 1);
+        return true;
     }
 
-    // First stage of a later chapter — unlocked when previous chapter's last stage is cleared.
-    const int32 PrevChapter = Chapter - 1;
-    const int32* PrevLastStage = StagesPerChapter.Find(PrevChapter);
-    if (!PrevLastStage)
+    // Any other stage is unlocked once the stage that leads into it is cleared.
+    // Across a chapter boundary, the "previous" stage is the prior chapter's last
+    // stage, so clearing a chapter's finale unlocks the next chapter automatically.
+    int32 PrevChapter, PrevStage;
+    if (!Data->GetPrevStage(Chapter, Stage, PrevChapter, PrevStage))
     {
-        UE_LOG(LogTemp, Warning,
-            TEXT("CSGameProgress: StagesPerChapter has no entry for chapter %d"), PrevChapter);
         return false;
     }
-    return IsStageCleared(PrevChapter, *PrevLastStage);
+    return IsStageCleared(PrevChapter, PrevStage);
+}
+
+bool UCSGameProgressSubsystem::GetNextStage(int32 Chapter, int32 Stage, int32& OutChapter, int32& OutStage) const
+{
+    OutChapter = Chapter;
+    OutStage = Stage;
+
+    const UCSStageDataSettings* Data = UCSStageDataSettings::Get();
+    return Data && Data->GetNextStage(Chapter, Stage, OutChapter, OutStage);
 }
 
 void UCSGameProgressSubsystem::SetLastPlayedStage(int32 Chapter, int32 Stage)
@@ -150,22 +163,6 @@ void UCSGameProgressSubsystem::GetLastPlayedStage(int32& OutChapter, int32& OutS
         OutChapter = 1;
         OutStage   = 1;
     }
-}
-
-void UCSGameProgressSubsystem::IncrementTotalDeaths()
-{
-    if (!CurrentSaveGame || IsClient()) return;
-    CurrentSaveGame->TotalDeaths++;
-    SaveGame();
-}
-
-void UCSGameProgressSubsystem::IncrementStageDeath(int32 Chapter, int32 Stage)
-{
-    if (!CurrentSaveGame || IsClient()) return;
-    FStageRecord& Record = CurrentSaveGame->FindOrAddRecord(Chapter, Stage);
-    Record.DeathCount++;
-    CurrentSaveGame->TotalDeaths++;
-    SaveGame();
 }
 
 bool UCSGameProgressSubsystem::IsClient() const

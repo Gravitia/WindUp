@@ -7,6 +7,7 @@
 #include "Engine/World.h"
 #include "Game/CSGameMode.h"
 #include "Subsystem/CSSplitScreenSubsystem.h"
+#include "Actor/CSStagePortal.h"
 #include "TimerManager.h"
 #include "GameFramework/Pawn.h"
 #include "ChronoSpace.h"
@@ -17,6 +18,14 @@ ACSPlayerController::ACSPlayerController()
 	bShowMouseCursor = false;
 	bEnableClickEvents = false;
 	bEnableMouseOverEvents = false;
+}
+
+void ACSPlayerController::ServerRequestStagePortalTravel_Implementation(ACSStagePortal* Portal, int32 Chapter, int32 Stage)
+{
+	if (Portal)
+	{
+		Portal->HandleTravelRequest(Chapter, Stage);
+	}
 }
 
 void ACSPlayerController::BeginPlay()

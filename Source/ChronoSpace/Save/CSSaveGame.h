@@ -20,9 +20,6 @@ struct FStageRecord
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stage")
     bool bCleared = false;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stage")
-    int32 DeathCount = 0;
-
     FStageRecord() = default;
     FStageRecord(int32 InChapter, int32 InStage)
         : Chapter(InChapter), Stage(InStage) {}
@@ -51,9 +48,6 @@ public:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Progress")
     int32 LastPlayedStage = 1;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
-    int32 TotalDeaths = 0;
 
     FStageRecord* FindRecord(int32 Chapter, int32 Stage);
     const FStageRecord* FindRecord(int32 Chapter, int32 Stage) const;

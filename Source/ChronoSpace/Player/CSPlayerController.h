@@ -8,6 +8,7 @@
 
 class UCSGameUIWidget;
 class SCSServerTravelWidget;
+class ACSStagePortal;
 
 /**
  *
@@ -76,6 +77,12 @@ public:
 public:
 	UFUNCTION(Client, Reliable)
 	void Client_ApplyRespawnView(const FRotator& Rot);
+
+// Stage Portal — forwards a client's stage-select choice to the (server-side) portal,
+// which is a world actor the client cannot RPC to directly.
+public:
+	UFUNCTION(Server, Reliable)
+	void ServerRequestStagePortalTravel(ACSStagePortal* Portal, int32 Chapter, int32 Stage);
 
 // Option Menu
 public:

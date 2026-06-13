@@ -53,19 +53,16 @@ public:
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Progress")
     bool IsStageUnlocked(int32 Chapter, int32 Stage) const;
 
+    // Stage that follows (Chapter, Stage) per the stage data table. False if there is none.
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Progress")
+    bool GetNextStage(int32 Chapter, int32 Stage, int32& OutChapter, int32& OutStage) const;
+
     // === Last Played ===
     UFUNCTION(BlueprintCallable, Category = "Progress")
     void SetLastPlayedStage(int32 Chapter, int32 Stage);
 
     UFUNCTION(BlueprintCallable, Category = "Progress")
     void GetLastPlayedStage(int32& OutChapter, int32& OutStage) const;
-
-    // === Stats ===
-    UFUNCTION(BlueprintCallable, Category = "Progress")
-    void IncrementTotalDeaths();
-
-    UFUNCTION(BlueprintCallable, Category = "Progress")
-    void IncrementStageDeath(int32 Chapter, int32 Stage);
 
     // === Events ===
     UPROPERTY(BlueprintAssignable, Category = "Progress Events")
@@ -86,10 +83,6 @@ protected:
 
     UPROPERTY(EditDefaultsOnly, Category = "Save")
     int32 UserIndex = 0;
-
-    // Number of stages per chapter (data-driven, no hardcoded "5").
-    UPROPERTY(EditDefaultsOnly, Category = "Progress")
-    TMap<int32, int32> StagesPerChapter;
 
     UPROPERTY()
     TObjectPtr<UCSSaveGame> CurrentSaveGame;
