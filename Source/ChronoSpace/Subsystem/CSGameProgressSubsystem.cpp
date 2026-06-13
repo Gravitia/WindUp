@@ -3,27 +3,21 @@
 
 #include "Subsystem/CSGameProgressSubsystem.h"
 #include "Save/CSSaveGame.h"
-#include "Game/CSGameState.h"
+#include "Settings/CSStageDataSettings.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
-
-UCSGameProgressSubsystem::UCSGameProgressSubsystem()
-{
-    CurrentSaveGame = nullptr;
-}
 
 void UCSGameProgressSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
     Super::Initialize(Collection);
 
-    // Try to load existing save game, or create new one
     if (DoesSaveExist())
     {
         LoadGame();
     }
     else
     {
-        CreateNewSaveGame();
+        CreateNewSaveGameObject();
     }
 
     UE_LOG(LogTemp, Log, TEXT("CSGameProgressSubsystem initialized"));
@@ -31,212 +25,159 @@ void UCSGameProgressSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 void UCSGameProgressSubsystem::Deinitialize()
 {
-    // Auto save before shutdown
-    if (CurrentSaveGame)
+    if (CurrentSaveGame && !IsClient())
     {
         SaveGame();
     }
-
     Super::Deinitialize();
-    UE_LOG(LogTemp, Log, TEXT("CSGameProgressSubsystem deinitialized"));
 }
 
 bool UCSGameProgressSubsystem::SaveGame()
 {
-    if (!CurrentSaveGame)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("No save game object to save"));
-        return false;
-    }
+    if (!CurrentSaveGame) return false;
+    if (IsClient()) return false;
 
-    // Only host/server can save in multiplayer
-    if (IsMultiplayerClient())
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Clients cannot save game data"));
-        return false;
-    }
-
-    bool bSaveSuccess = UGameplayStatics::SaveGameToSlot(CurrentSaveGame, DefaultSaveSlotName, DefaultUserIndex);
-
-    if (bSaveSuccess)
+    const bool bOk = UGameplayStatics::SaveGameToSlot(CurrentSaveGame, SaveSlotName, UserIndex);
+    if (bOk)
     {
         OnGameSaved.Broadcast();
-        UE_LOG(LogTemp, Log, TEXT("Game saved successfully"));
+        UE_LOG(LogTemp, Log, TEXT("CSGameProgress: saved to slot '%s'"), *SaveSlotName);
     }
     else
     {
-        UE_LOG(LogTemp, Error, TEXT("Failed to save game"));
+        UE_LOG(LogTemp, Error, TEXT("CSGameProgress: failed to save slot '%s'"), *SaveSlotName);
     }
-
-    return bSaveSuccess;
+    return bOk;
 }
 
 bool UCSGameProgressSubsystem::LoadGame()
 {
-    if (!DoesSaveExist())
+    if (!DoesSaveExist()) return false;
+
+    USaveGame* Loaded = UGameplayStatics::LoadGameFromSlot(SaveSlotName, UserIndex);
+    UCSSaveGame* Cast = ::Cast<UCSSaveGame>(Loaded);
+
+    if (!Cast)
     {
-        UE_LOG(LogTemp, Warning, TEXT("No save file exists"));
+        UE_LOG(LogTemp, Error, TEXT("CSGameProgress: load failed (corrupt or version mismatch)"));
         return false;
     }
 
-    USaveGame* LoadedGame = UGameplayStatics::LoadGameFromSlot(DefaultSaveSlotName, DefaultUserIndex);
-    CurrentSaveGame = Cast<UCSSaveGame>(LoadedGame);
-
-    if (CurrentSaveGame)
-    {
-        OnGameLoaded.Broadcast();
-        UE_LOG(LogTemp, Log, TEXT("Game loaded successfully"));
-        return true;
-    }
-    else
-    {
-        UE_LOG(LogTemp, Error, TEXT("Failed to load save game"));
-        CreateNewSaveGame(); // Fallback to new game
-        return false;
-    }
+    CurrentSaveGame = Cast;
+    OnGameLoaded.Broadcast();
+    UE_LOG(LogTemp, Log, TEXT("CSGameProgress: loaded slot '%s' (version %d)"),
+        *SaveSlotName, CurrentSaveGame->SaveVersion);
+    return true;
 }
 
 bool UCSGameProgressSubsystem::NewGame()
 {
-    CreateNewSaveGame();
-    SaveGame();
+    if (IsClient()) return false;
 
+    CreateNewSaveGameObject();
+    const bool bOk = SaveGame();
     OnNewGameStarted.Broadcast();
-    UE_LOG(LogTemp, Log, TEXT("New game started"));
-
-    return true;
+    return bOk;
 }
 
 bool UCSGameProgressSubsystem::DoesSaveExist() const
 {
-    return UGameplayStatics::DoesSaveGameExist(DefaultSaveSlotName, DefaultUserIndex);
+    return UGameplayStatics::DoesSaveGameExist(SaveSlotName, UserIndex);
 }
 
-void UCSGameProgressSubsystem::ClearStage(int32 ChapterNumber, int32 StageNumber)
+void UCSGameProgressSubsystem::MarkStageCleared(int32 Chapter, int32 Stage)
 {
-    if (!CurrentSaveGame)
+    if (!CurrentSaveGame || IsClient()) return;
+
+    FStageRecord& Record = CurrentSaveGame->FindOrAddRecord(Chapter, Stage);
+    const bool bWasNew = !Record.bCleared;
+    Record.bCleared = true;
+
+    if (bWasNew)
     {
-        UE_LOG(LogTemp, Warning, TEXT("No save game object for stage clear"));
-        return;
+        OnStageCleared.Broadcast(Chapter, Stage);
+        UE_LOG(LogTemp, Log, TEXT("CSGameProgress: stage cleared C%d_S%d"), Chapter, Stage);
     }
 
-    // Only host/server can clear stages in multiplayer
-    if (IsMultiplayerClient())
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Clients cannot clear stages"));
-        return;
-    }
-
-    bool bWasAlreadyCleared = CurrentSaveGame->IsStageCleared(ChapterNumber, StageNumber);
-
-    CurrentSaveGame->ClearStage(ChapterNumber, StageNumber);
-
-    if (!bWasAlreadyCleared)
-    {
-        OnStageCleared.Broadcast(ChapterNumber, StageNumber);
-        UE_LOG(LogTemp, Log, TEXT("Stage cleared: C%d_S%d"), ChapterNumber, StageNumber);
-    }
-
-    // Auto save after stage clear
     SaveGame();
 }
 
-bool UCSGameProgressSubsystem::IsStageCleared(int32 ChapterNumber, int32 StageNumber) const
+bool UCSGameProgressSubsystem::IsStageCleared(int32 Chapter, int32 Stage) const
 {
-    return CurrentSaveGame ? CurrentSaveGame->IsStageCleared(ChapterNumber, StageNumber) : false;
+    if (!CurrentSaveGame) return false;
+    const FStageRecord* Record = CurrentSaveGame->FindRecord(Chapter, Stage);
+    return Record && Record->bCleared;
 }
 
-bool UCSGameProgressSubsystem::IsStageUnlocked(int32 ChapterNumber, int32 StageNumber) const
+bool UCSGameProgressSubsystem::IsStageUnlocked(int32 Chapter, int32 Stage) const
 {
-    return CurrentSaveGame ? CurrentSaveGame->IsStageUnlocked(ChapterNumber, StageNumber) : false;
-}
+    const UCSStageDataSettings* Data = UCSStageDataSettings::Get();
+    if (!Data) return false;
 
-void UCSGameProgressSubsystem::SetLastPlayedStage(int32 ChapterNumber, int32 StageNumber)
-{
-    if (CurrentSaveGame)
+    // The very first stage of the game is always available.
+    int32 FirstChapter, FirstStage;
+    if (Data->GetFirstStage(FirstChapter, FirstStage)
+        && Chapter == FirstChapter && Stage == FirstStage)
     {
-        CurrentSaveGame->SetLastPlayedStage(ChapterNumber, StageNumber);
-        SaveGame(); // Auto save continue position
+        return true;
     }
+
+    // Any other stage is unlocked once the stage that leads into it is cleared.
+    // Across a chapter boundary, the "previous" stage is the prior chapter's last
+    // stage, so clearing a chapter's finale unlocks the next chapter automatically.
+    int32 PrevChapter, PrevStage;
+    if (!Data->GetPrevStage(Chapter, Stage, PrevChapter, PrevStage))
+    {
+        return false;
+    }
+    return IsStageCleared(PrevChapter, PrevStage);
+}
+
+bool UCSGameProgressSubsystem::GetNextStage(int32 Chapter, int32 Stage, int32& OutChapter, int32& OutStage) const
+{
+    OutChapter = Chapter;
+    OutStage = Stage;
+
+    const UCSStageDataSettings* Data = UCSStageDataSettings::Get();
+    return Data && Data->GetNextStage(Chapter, Stage, OutChapter, OutStage);
+}
+
+void UCSGameProgressSubsystem::SetLastPlayedStage(int32 Chapter, int32 Stage)
+{
+    if (!CurrentSaveGame || IsClient()) return;
+
+    CurrentSaveGame->LastPlayedChapter = Chapter;
+    CurrentSaveGame->LastPlayedStage = Stage;
+    SaveGame();
 }
 
 void UCSGameProgressSubsystem::GetLastPlayedStage(int32& OutChapter, int32& OutStage) const
 {
     if (CurrentSaveGame)
     {
-        CurrentSaveGame->GetLastPlayedStage(OutChapter, OutStage);
+        OutChapter = CurrentSaveGame->LastPlayedChapter;
+        OutStage   = CurrentSaveGame->LastPlayedStage;
     }
     else
     {
         OutChapter = 1;
-        OutStage = 1;
+        OutStage   = 1;
     }
 }
 
-void UCSGameProgressSubsystem::IncrementDeathCount()
+bool UCSGameProgressSubsystem::IsClient() const
 {
-    if (CurrentSaveGame)
-    {
-        CurrentSaveGame->IncrementDeathCount();
-        SaveGame(); // Auto save death count
-    }
+    const UWorld* World = GetWorld();
+    return World && World->GetNetMode() == NM_Client;
 }
 
-bool UCSGameProgressSubsystem::LoadGameFromUI()
+void UCSGameProgressSubsystem::CreateNewSaveGameObject()
 {
-    // Only host can load in multiplayer
-    if (IsMultiplayerClient())
+    CurrentSaveGame = Cast<UCSSaveGame>(
+        UGameplayStatics::CreateSaveGameObject(UCSSaveGame::StaticClass()));
+
+    if (!CurrentSaveGame)
     {
-        UE_LOG(LogTemp, Warning, TEXT("Only host can load game from UI"));
-        return false;
+        UE_LOG(LogTemp, Error, TEXT("CSGameProgress: failed to create save game object"));
     }
-
-    return LoadGame();
-}
-
-bool UCSGameProgressSubsystem::NewGameFromUI()
-{
-    // Only host can start new game in multiplayer
-    if (IsMultiplayerClient())
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Only host can start new game from UI"));
-        return false;
-    }
-
-    return NewGame();
-}
-
-void UCSGameProgressSubsystem::CreateNewSaveGame()
-{
-    CurrentSaveGame = Cast<UCSSaveGame>(UGameplayStatics::CreateSaveGameObject(UCSSaveGame::StaticClass()));
-
-    if (CurrentSaveGame)
-    {
-        CurrentSaveGame->SaveSlotName = DefaultSaveSlotName;
-        UE_LOG(LogTemp, Log, TEXT("New save game created"));
-    }
-    else
-    {
-        UE_LOG(LogTemp, Error, TEXT("Failed to create new save game"));
-    }
-}
-
-bool UCSGameProgressSubsystem::IsMultiplayerClient() const
-{
-    UWorld* World = GetWorld();
-    if (World)
-    {
-        return World->GetNetMode() == NM_Client;
-    }
-    return false;
-}
-
-ACSGameState* UCSGameProgressSubsystem::GetCSGameState() const
-{
-    UWorld* World = GetWorld();
-    if (World)
-    {
-        return Cast<ACSGameState>(World->GetGameState());
-    }
-    return nullptr;
 }

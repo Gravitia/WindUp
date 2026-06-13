@@ -19,6 +19,7 @@ public class ChronoSpace : ModuleRules
 			"EnhancedInput",
 			"NavigationSystem",
 			"UMG",
+			"DeveloperSettings",
 			"GameplayTasks",
 			"Slate",
 			"SlateCore",
