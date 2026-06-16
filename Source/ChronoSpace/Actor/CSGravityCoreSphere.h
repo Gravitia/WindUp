@@ -62,5 +62,11 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Sphere")
 	float PullStrength = 4000.0f;
 
+	UPROPERTY(EditAnywhere, Category = "Sphere")
+	float PullDamping = 3.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Sphere")
+	float MaxPullSpeed = 1200.0f;
+
 	bool bCheckMeshHaveComponent = false;
 };

@@ -78,6 +78,7 @@ void ACSGravityCoreSphere::ProcessForStaticMesh(float DeltaTime)
 {
 	if( !IsValid(SphereTrigger) ) return;
 	const FVector CoreLocation = SphereTrigger->GetComponentLocation();
+	const FVector CoreVelocity = IsValid(GetOwner()) ? GetOwner()->GetVelocity() : FVector::ZeroVector;
 
 	for (auto It = StaticMeshesInSphereTrigger.CreateIterator(); It; ++It)
 	{
@@ -103,13 +104,28 @@ void ACSGravityCoreSphere::ProcessForStaticMesh(float DeltaTime)
 			}
 		}
 
-		FVector Power(1000.0f, 1000.0f, 1000.0f);
 		const FVector MeshLocation = Mesh->GetComponentLocation();
 		const FVector ToBH = CoreLocation - MeshLocation;
 		const float Distance = ToBH.Size();
+		if (Distance <= KINDA_SMALL_NUMBER)
+		{
+			continue;
+		}
 
 		const FVector Direction = ToBH.GetSafeNormal();
-		Mesh->AddImpulse(Direction * Power * 30 * DeltaTime, NAME_None, true);
+		const float DistanceAlpha = FMath::Clamp((Distance - MeshRadius) / GravityInfluenceRange, 0.01f, 1.0f);
+		const FVector MeshVelocity = Mesh->GetPhysicsLinearVelocity();
+		const FVector RelativeVelocity = MeshVelocity - CoreVelocity;
+		const FVector PullAcceleration = Direction * PullStrength * DistanceAlpha;
+		const FVector DampingAcceleration = -RelativeVelocity * PullDamping;
+
+		Mesh->AddForce(PullAcceleration + DampingAcceleration, NAME_None, true);
+
+		const FVector CurrentRelativeVelocity = Mesh->GetPhysicsLinearVelocity() - CoreVelocity;
+		if (CurrentRelativeVelocity.SizeSquared() > FMath::Square(MaxPullSpeed))
+		{
+			Mesh->SetPhysicsLinearVelocity(CoreVelocity + CurrentRelativeVelocity.GetClampedToMaxSize(MaxPullSpeed), false);
+		}
 	}
 }
 
@@ -147,6 +163,9 @@ void ACSGravityCoreSphere::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedCo
 		if (bCheckMeshHaveComponent && OtherActor->FindComponentByClass<UCSMeshAffectedByGravityCore>() == nullptr) return;
 		
 		TargetStaticMeshComp->SetEnableGravity(true);
+		//TargetStaticMeshComp->ClearAllPhysicsForces();
+		TargetStaticMeshComp->SetPhysicsLinearVelocity(FVector::ZeroVector, false);
+		TargetStaticMeshComp->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector, false);
 		StaticMeshesInSphereTrigger.Remove(TargetStaticMeshComp);
 
 		if (UCSMeshAffectedByGravityCore* Comp = OtherActor->FindComponentByClass<UCSMeshAffectedByGravityCore>())
