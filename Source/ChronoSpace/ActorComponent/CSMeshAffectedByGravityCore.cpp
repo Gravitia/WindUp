@@ -2,6 +2,7 @@
 
 
 #include "ActorComponent/CSMeshAffectedByGravityCore.h"
+#include "Components/StaticMeshComponent.h"
 #include "Physics/CSCollision.h"
 #include "ChronoSpace.h"
 
@@ -27,6 +28,17 @@ void UCSMeshAffectedByGravityCore::BeginPlay()
 		UE_LOG(LogTemp, Warning, TEXT("No StaticMeshComponent found on %s"), *Owner->GetName()); 
 		return;
 	}
+
+	Owner->SetReplicates(true);
+	Owner->SetReplicateMovement(true);
+	MeshComp->SetIsReplicated(true);
+
+	if (!Owner->HasAuthority())
+	{
+		MeshComp->SetSimulatePhysics(false);
+		MeshComp->SetEnableGravity(false);
+	}
+
 	MeshComp->SetCollisionObjectType(CCHANNEL_CSGRAVITY_CORE_AFFECTED);
 	MeshComp->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 }
