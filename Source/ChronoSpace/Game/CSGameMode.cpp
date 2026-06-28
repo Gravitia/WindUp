@@ -17,6 +17,7 @@
 #include "TimerManager.h"
 #include "Components/CapsuleComponent.h"
 #include "Subsystem/CSSplitScreenSubsystem.h"
+#include "Subsystem/CSPlayerSlotSubsystem.h"
 #include "ChronoSpace.h"
 
 ACSGameMode::ACSGameMode()
@@ -44,17 +45,24 @@ void ACSGameMode::PostLogin(APlayerController* NewPlayer)
 {
     ConnectedPlayers.AddUnique(NewPlayer);
 
-    if (ACSPlayerState* CSPS = NewPlayer->GetPlayerState<ACSPlayerState>())
+    // Resolve the slot identity-first (UCSPlayerSlotSubsystem keys by UniqueNetId
+    // and survives non-seamless ServerTravel), then stamp it onto the PlayerState
+    // BEFORE Super::PostLogin — Super invokes RestartPlayer ->
+    // GetDefaultPawnClassForController, which needs the slot at that moment.
+    // If PS is null at this point (rare race on EOS reconnects), the fallback
+    // in GetDefaultPawnClassForController will ask the subsystem directly.
+    if (UCSPlayerSlotSubsystem* SlotSub = GetGameInstance()->GetSubsystem<UCSPlayerSlotSubsystem>())
     {
-        const int32 PlayerIndex = ConnectedPlayers.IndexOfByKey(NewPlayer);
-
-        if (PlayerIndex == 0)
+        const ECSPlayerSlot AssignedSlot = SlotSub->EnsureSlotForController(NewPlayer);
+        if (ACSPlayerState* CSPS = NewPlayer->GetPlayerState<ACSPlayerState>())
         {
-            CSPS->SetPlayerSlot(ECSPlayerSlot::Player0);
+            CSPS->SetPlayerSlot(AssignedSlot);
         }
         else
         {
-            CSPS->SetPlayerSlot(ECSPlayerSlot::Player1);
+            UE_LOG(LogCS, Warning,
+                TEXT("ACSGameMode::PostLogin: PlayerState null for %s; pawn class will fall back to subsystem lookup"),
+                *NewPlayer->GetName());
         }
     }
 
@@ -122,6 +130,19 @@ void ACSGameMode::Logout(AController* Exiting)
 
         CleanupSplitScreenForPlayer(PC);
         ConnectedPlayers.Remove(PC);
+
+        // Only release the slot for real disconnects, not for the transient
+        // Logout that happens while the world is being torn down for a
+        // ServerTravel — otherwise the player would lose their slot mid-travel
+        // and re-receive whatever the lowest-free is on the new map.
+        const bool bTravelling = GetWorld() && GetWorld()->bIsTearingDown;
+        if (!bTravelling)
+        {
+            if (UCSPlayerSlotSubsystem* SlotSub = GetGameInstance()->GetSubsystem<UCSPlayerSlotSubsystem>())
+            {
+                SlotSub->ReleaseSlotForController(PC);
+            }
+        }
     }
 
     Super::Logout(Exiting);
@@ -134,24 +155,38 @@ UClass* ACSGameMode::GetDefaultPawnClassForController_Implementation(AController
         return Super::GetDefaultPawnClassForController_Implementation(InController);
     }
 
-    if (const APlayerController* PC = Cast<APlayerController>(InController))
-    {
-        if (const ULocalPlayer* LP = PC->GetLocalPlayer())
-        {
-            const int32 Id = LP->GetControllerId();
-            if (Id == 0 && PawnClassPlayer0) return PawnClassPlayer0;
-            if (Id == 1 && PawnClassPlayer1) return PawnClassPlayer1;
-        }
-    }
+    // Single source of truth for "which character": ECSPlayerSlot.
+    // Primary: PlayerState (set in PostLogin from the slot subsystem).
+    // Fallback: ask the subsystem directly, in case PlayerState hasn't attached
+    //          yet on this controller (EOS reconnect race during RestartPlayer).
+    ECSPlayerSlot Slot = ECSPlayerSlot::Player0;
+    bool bSlotResolved = false;
 
     if (const ACSPlayerState* CSPS = InController->GetPlayerState<ACSPlayerState>())
     {
-        switch (CSPS->GetPlayerSlot())
+        Slot = CSPS->GetPlayerSlot();
+        bSlotResolved = true;
+    }
+    else if (APlayerController* PC = Cast<APlayerController>(InController))
+    {
+        if (UCSPlayerSlotSubsystem* SlotSub = GetGameInstance()->GetSubsystem<UCSPlayerSlotSubsystem>())
+        {
+            Slot = SlotSub->EnsureSlotForController(PC);
+            bSlotResolved = true;
+            UE_LOG(LogCS, Warning,
+                TEXT("GetDefaultPawnClassForController: PlayerState missing on %s, resolved via subsystem -> %s"),
+                *PC->GetName(),
+                Slot == ECSPlayerSlot::Player0 ? TEXT("Player0") : TEXT("Player1"));
+        }
+    }
+
+    if (bSlotResolved)
+    {
+        switch (Slot)
         {
         case ECSPlayerSlot::Player0:
             if (PawnClassPlayer0) return PawnClassPlayer0;
             break;
-
         case ECSPlayerSlot::Player1:
             if (PawnClassPlayer1) return PawnClassPlayer1;
             break;

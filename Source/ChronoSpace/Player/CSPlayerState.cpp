@@ -29,7 +29,7 @@ void ACSPlayerState::BeginPlay()
 
 	if (ASC)
 	{
-		// Health º¯È­ µ¨¸®°ÔÀÌÆ® ¹ÙÀÎµù
+		// Health ï¿½ï¿½È­ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ï¿½Îµï¿½
 		ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetHealthAttribute())
 			.AddUObject(this, &ACSPlayerState::HealthChanged);
 
@@ -44,6 +44,12 @@ void ACSPlayerState::GetLifetimeReplicatedProps(
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
     DOREPLIFETIME(ACSPlayerState, PersonalRespawnPoint);
+    DOREPLIFETIME(ACSPlayerState, PlayerSlot);
+}
+
+void ACSPlayerState::OnRep_PlayerSlot()
+{
+    OnPlayerSlotChanged.Broadcast(PlayerSlot);
 }
 
 

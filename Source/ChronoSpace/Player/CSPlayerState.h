@@ -34,7 +34,7 @@ public:
 
 	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
-	// Health °ü·Ã ÇÔ¼öµé
+	// Health ï¿½ï¿½ï¿½ï¿½ ï¿½Ô¼ï¿½ï¿½ï¿½
 	UFUNCTION(BlueprintCallable, Category = "Health")
 	float GetHealth() const;
 
@@ -44,7 +44,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Health")
 	float GetHealthPercent() const;
 
-	// µ¨¸®°ÔÀÌÆ®
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®
 	UPROPERTY(BlueprintAssignable, Category = "Health")
 	FOnHealthChanged OnHealthChanged;
 
@@ -66,16 +66,25 @@ protected:
 
 	virtual void BeginPlay() override;
 
-	// Health º¯È­ ÄÝ¹é
+	// Health ï¿½ï¿½È­ ï¿½Ý¹ï¿½
 	virtual void HealthChanged(const FOnAttributeChangeData& Data);
 	virtual void MaxHealthChanged(const FOnAttributeChangeData& Data);
 
-// Character Mesh 
+// Character Mesh
 public:
 	void SetPlayerSlot(ECSPlayerSlot InSlot) { PlayerSlot = InSlot; }
 	ECSPlayerSlot GetPlayerSlot() const { return PlayerSlot; }
 
+	UFUNCTION()
+	void OnRep_PlayerSlot();
+
+	DECLARE_EVENT_OneParam(ACSPlayerState, FPlayerSlotChanged, ECSPlayerSlot);
+	FPlayerSlotChanged OnPlayerSlotChanged;
+
 protected:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	// Replicated so clients can read who-is-who (e.g. HUD, character-tinted UI).
+	// Authority is the server; UCSPlayerSlotSubsystem persists the per-NetId
+	// assignment across non-seamless ServerTravel so the slot stays stable.
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_PlayerSlot)
 	ECSPlayerSlot PlayerSlot = ECSPlayerSlot::Player0;
 };
