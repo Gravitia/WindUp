@@ -11,6 +11,7 @@
 #include "AbilitySystemComponent.h"
 #include "GameplayEffect.h"
 #include "Engine/World.h"
+#include "Engine/OverlapResult.h"
 #include "TimerManager.h"
 #include "ChronoSpace.h"
 #include "Abilities/GameplayAbilityTargetTypes.h"
@@ -18,14 +19,14 @@
 
 UCSGA_WindUp::UCSGA_WindUp()
 {
-    // ¾îºô¸®Æ¼ ±âº» ¼³Á¤
+    // ï¿½ï¿½ï¿½ï¿½ï¿½Æ¼ ï¿½âº» ï¿½ï¿½ï¿½ï¿½
     NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::ServerOnly;
     InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 
-    // ÀÔ·Â À¯Áö Å¸ÀÔÀ¸·Î ¼³Á¤ (G Å°¸¦ ´©¸£°í ÀÖ´Â µ¿¾È Áö¼Ó)
+    // ï¿½Ô·ï¿½ ï¿½ï¿½ï¿½ï¿½ Å¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (G Å°ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ö´ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)
     bRetriggerInstancedAbility = false;
 
-    // ÃÊ±âÈ­
+    // ï¿½Ê±ï¿½È­
     CurrentTargetPlayer = nullptr;
     CurrentParticleComponent = nullptr;
     CurrentAudioComponent = nullptr;
@@ -43,7 +44,7 @@ void UCSGA_WindUp::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 
     UE_LOG(LogCS, Log, TEXT("WindUp Ability Activated - Charging for %f seconds"), WindUpDuration);
 
-    // ±ÙÃ³ ÇÃ·¹ÀÌ¾î Ã£±â
+    // ï¿½ï¿½Ã³ ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ Ã£ï¿½ï¿½
     ACharacter* TargetPlayer = FindNearbyPlayer();
 
     if (TargetPlayer)
@@ -53,28 +54,28 @@ void UCSGA_WindUp::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 
         UE_LOG(LogCS, Log, TEXT("WindUp started on target: %s"), *TargetPlayer->GetName());
 
-        // 1ÃÊ ÈÄ WindUp ¿Ï·á Å¸ÀÌ¸Ó ½ÃÀÛ
+        // 1ï¿½ï¿½ ï¿½ï¿½ WindUp ï¿½Ï·ï¿½ Å¸ï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ï¿½
         GetWorld()->GetTimerManager().SetTimer(
             WindUpCompleteTimerHandle,
             this,
             &UCSGA_WindUp::OnWindUpComplete,
             WindUpDuration,
-            false  // ÇÑ¹ø¸¸ ½ÇÇà
+            false  // ï¿½Ñ¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         );
 
-        // °Å¸® Ã¼Å© Å¸ÀÌ¸Ó ½ÃÀÛ (ÁÖ±âÀûÀ¸·Î °Å¸® È®ÀÎ)
+        // ï¿½Å¸ï¿½ Ã¼Å© Å¸ï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Å¸ï¿½ È®ï¿½ï¿½)
         GetWorld()->GetTimerManager().SetTimer(
             DistanceCheckTimerHandle,
             this,
             &UCSGA_WindUp::CheckDistanceToTarget,
             DistanceCheckInterval,
-            true  // ¹Ýº¹ ½ÇÇà
+            true  // ï¿½Ýºï¿½ ï¿½ï¿½ï¿½ï¿½
         );
     }
     else
     {
         UE_LOG(LogCS, Warning, TEXT("No nearby player found for WindUp"));
-        // ±ÙÃ³¿¡ ÆÀ¿øÀÌ ¾øÀ¸¸é ¾îºô¸®Æ¼ Á¾·á
+        // ï¿½ï¿½Ã³ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Æ¼ ï¿½ï¿½ï¿½ï¿½
         EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
     }
 }
@@ -84,7 +85,7 @@ void UCSGA_WindUp::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGa
 {
     UE_LOG(LogCS, Log, TEXT("WindUp Ability Ended (Cancelled: %s)"), bWasCancelled ? TEXT("YES") : TEXT("NO"));
 
-    // ¸ðµç Å¸ÀÌ¸Ó Á¤¸®
+    // ï¿½ï¿½ï¿½ Å¸ï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ï¿½
     if (GetWorld())
     {
         if (WindUpCompleteTimerHandle.IsValid())
@@ -97,7 +98,7 @@ void UCSGA_WindUp::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGa
         }
     }
 
-    // ÀÌÆåÆ® Á¤¸®
+    // ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½
     StopWindUpEffect();
 
     CurrentTargetPlayer = nullptr;
@@ -109,7 +110,7 @@ void UCSGA_WindUp::InputPressed(const FGameplayAbilitySpecHandle Handle, const F
     const FGameplayAbilityActivationInfo ActivationInfo)
 {
     UE_LOG(LogCS, Log, TEXT("WindUp Input Pressed"));
-    // GAS°¡ ÀÚµ¿À¸·Î TryActivateAbility¸¦ È£ÃâÇÕ´Ï´Ù
+    // GASï¿½ï¿½ ï¿½Úµï¿½ï¿½ï¿½ï¿½ï¿½ TryActivateAbilityï¿½ï¿½ È£ï¿½ï¿½ï¿½Õ´Ï´ï¿½
 }
 
 void UCSGA_WindUp::InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
@@ -117,7 +118,7 @@ void UCSGA_WindUp::InputReleased(const FGameplayAbilitySpecHandle Handle, const 
 {
     UE_LOG(LogCS, Log, TEXT("WindUp Input Released - Ability cancelled"));
 
-    // Å°¸¦ ³õÀ¸¸é ¾îºô¸®Æ¼ Ãë¼Ò (1ÃÊ Àü¿¡ ³õÀ¸¸é Èú¸µ ¾ÈµÊ)
+    // Å°ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Æ¼ ï¿½ï¿½ï¿½ (1ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Èµï¿½)
     if (IsActive())
     {
         EndAbility(Handle, ActorInfo, ActivationInfo, true, true); // bWasCancelled = true
@@ -133,14 +134,14 @@ bool UCSGA_WindUp::CanActivateAbility(const FGameplayAbilitySpecHandle Handle, c
         return false;
     }
 
-    // Ãß°¡ Á¶°Ç Ã¼Å©
+    // ï¿½ß°ï¿½ ï¿½ï¿½ï¿½ï¿½ Ã¼Å©
     ACharacter* OwnerCharacter = Cast<ACharacter>(ActorInfo->AvatarActor.Get());
     if (!OwnerCharacter)
     {
         return false;
     }
 
-    // ±ÙÃ³¿¡ ÇÃ·¹ÀÌ¾î°¡ ÀÖ´ÂÁö Ã¼Å©
+    // ï¿½ï¿½Ã³ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾î°¡ ï¿½Ö´ï¿½ï¿½ï¿½ Ã¼Å©
     UCSGA_WindUp* NonConstThis = const_cast<UCSGA_WindUp*>(this);
     ACharacter* NearbyPlayer = NonConstThis->FindNearbyPlayer();
 
@@ -164,7 +165,7 @@ void UCSGA_WindUp::OnWindUpComplete()
         return;
     }
 
-    // ¸¶Áö¸· °Å¸® Ã¼Å©
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Å¸ï¿½ Ã¼Å©
     ACharacter* OwnerCharacter = Cast<ACharacter>(GetAvatarActorFromActorInfo());
     if (OwnerCharacter)
     {
@@ -177,12 +178,12 @@ void UCSGA_WindUp::OnWindUpComplete()
         }
     }
 
-    // Èú¸µ Àû¿ë!
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½!
     ApplyHealingEffect(CurrentTargetPlayer);
 
     UE_LOG(LogCS, Log, TEXT("WindUp healing successfully applied to %s"), *CurrentTargetPlayer->GetName());
 
-    // ¾îºô¸®Æ¼ Á¾·á
+    // ï¿½ï¿½ï¿½ï¿½ï¿½Æ¼ ï¿½ï¿½ï¿½ï¿½
     EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
@@ -205,12 +206,12 @@ void UCSGA_WindUp::CheckDistanceToTarget()
     if (Distance > WindUpRange)
     {
         UE_LOG(LogCS, Log, TEXT("WindUp cancelled - target too far away: %f"), Distance);
-        // ¹üÀ§¸¦ ¹þ¾î³ª¸é ¾îºô¸®Æ¼ Ãë¼Ò
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½î³ªï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Æ¼ ï¿½ï¿½ï¿½
         EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
         return;
     }
 
-    // °Å¸®°¡ ±¦ÂúÀ¸¸é °è¼Ó ÁøÇà
+    // ï¿½Å¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     UE_LOG(LogCS, VeryVerbose, TEXT("Distance check OK: %f"), Distance);
 }
 
@@ -228,10 +229,10 @@ ACharacter* UCSGA_WindUp::FindNearbyPlayer()
         return nullptr;
     }
 
-    // ±¸Ã¼ ¹üÀ§ ³» ¾×ÅÍµé¸¸ °Ë»ö
+    // ï¿½ï¿½Ã¼ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½Íµé¸¸ ï¿½Ë»ï¿½
     TArray<FOverlapResult> OverlapResults;
     FCollisionQueryParams QueryParams;
-    QueryParams.AddIgnoredActor(OwnerCharacter); // ÀÚ½Å Á¦¿Ü
+    QueryParams.AddIgnoredActor(OwnerCharacter); // ï¿½Ú½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
     bool bHit = World->OverlapMultiByObjectType(
         OverlapResults,
@@ -247,7 +248,7 @@ ACharacter* UCSGA_WindUp::FindNearbyPlayer()
         return nullptr;
     }
 
-    // °¡Àå °¡±î¿î ÇÃ·¹ÀÌ¾î Ã£±â
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ Ã£ï¿½ï¿½
     ACharacter* ClosestPlayer = nullptr;
     float ClosestDistance = WindUpRange + 1.0f;
 
@@ -260,7 +261,7 @@ ACharacter* UCSGA_WindUp::FindNearbyPlayer()
             continue;
         }
 
-        // ÇÃ·¹ÀÌ¾î ÄÁÆ®·Ñ·¯°¡ ÀÖ´Â Ä³¸¯ÅÍ¸¸
+        // ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ ï¿½ï¿½Æ®ï¿½Ñ·ï¿½ï¿½ï¿½ ï¿½Ö´ï¿½ Ä³ï¿½ï¿½ï¿½Í¸ï¿½
         if (!Character->GetController() || !Character->GetController()->IsA<APlayerController>())
         {
             continue;
@@ -285,7 +286,7 @@ void UCSGA_WindUp::StartWindUpEffect(ACharacter* TargetPlayer)
         return;
     }
 
-    // ÆÄÆ¼Å¬ ÀÌÆåÆ® ½ÃÀÛ
+    // ï¿½ï¿½Æ¼Å¬ ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½
     if (WindUpParticleEffect)
     {
         CurrentParticleComponent = UGameplayStatics::SpawnEmitterAttached(
@@ -299,7 +300,7 @@ void UCSGA_WindUp::StartWindUpEffect(ACharacter* TargetPlayer)
         );
     }
 
-    // »ç¿îµå ÀÌÆåÆ® ½ÃÀÛ
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½
     if (WindUpSound)
     {
         CurrentAudioComponent = UGameplayStatics::SpawnSoundAttached(
@@ -312,7 +313,7 @@ void UCSGA_WindUp::StartWindUpEffect(ACharacter* TargetPlayer)
         );
     }
 
-    // ¾Ö´Ï¸ÞÀÌ¼Ç Àç»ý (½ÃÀüÀÚ)
+    // ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½ ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½)
     if (WindUpAnimation)
     {
         ACharacter* OwnerCharacter = Cast<ACharacter>(GetAvatarActorFromActorInfo());
@@ -331,21 +332,21 @@ void UCSGA_WindUp::StartWindUpEffect(ACharacter* TargetPlayer)
 
 void UCSGA_WindUp::StopWindUpEffect()
 {
-    // ÆÄÆ¼Å¬ ÀÌÆåÆ® Á¤Áö
+    // ï¿½ï¿½Æ¼Å¬ ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½
     if (CurrentParticleComponent)
     {
         CurrentParticleComponent->DestroyComponent();
         CurrentParticleComponent = nullptr;
     }
 
-    // »ç¿îµå ÀÌÆåÆ® Á¤Áö
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½
     if (CurrentAudioComponent)
     {
         CurrentAudioComponent->Stop();
         CurrentAudioComponent = nullptr;
     }
 
-    // ¾Ö´Ï¸ÞÀÌ¼Ç Á¤Áö
+    // ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½ ï¿½ï¿½ï¿½ï¿½
     if (WindUpAnimation)
     {
         ACharacter* OwnerCharacter = Cast<ACharacter>(GetAvatarActorFromActorInfo());
@@ -398,8 +399,8 @@ void UCSGA_WindUp::ApplyHealingEffect(ACharacter* TargetPlayer)
 
     if (SpecHandle.IsValid())
     {
-        // HealingAmount¸¦ GameplayEffectÀÇ Magnitude¿¡ ¼³Á¤ÇÒ ¼öµµ ÀÖ½À´Ï´Ù
-        // ¶Ç´Â GameplayEffect¿¡¼­ Á÷Á¢ °ªÀ» ¼³Á¤
+        // HealingAmountï¿½ï¿½ GameplayEffectï¿½ï¿½ Magnitudeï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ö½ï¿½ï¿½Ï´ï¿½
+        // ï¿½Ç´ï¿½ GameplayEffectï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
         FActiveGameplayEffectHandle ActiveHandle = TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
     }

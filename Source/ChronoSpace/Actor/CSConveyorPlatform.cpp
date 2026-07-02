@@ -109,7 +109,8 @@ void ACSConveyorPlatform::DetachRidersOnWrap()
         }
 
         // base를 끊으면 플랫폼의 wrap 이동량이 캐릭터에게 전달되지 않아 제자리에 남는다.
-        Character->SetBase(nullptr);
+        // UE 5.8에서 SetBase에 FMovementBaseInterfaceData* 오버로드가 추가되어 nullptr이 모호해졌으므로 명시적으로 캐스팅한다.
+        Character->SetBase(static_cast<UPrimitiveComponent*>(nullptr));
 
         if (UCharacterMovementComponent* CMC = Character->GetCharacterMovement())
         {

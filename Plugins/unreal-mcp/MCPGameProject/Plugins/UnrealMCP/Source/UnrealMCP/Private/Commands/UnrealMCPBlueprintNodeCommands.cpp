@@ -522,7 +522,7 @@ TSharedPtr<FJsonObject> FUnrealMCPBlueprintNodeCommands::HandleAddBlueprintFunct
         UClass* TargetClass = nullptr;
         
         // First try without a prefix
-        TargetClass = FindObject<UClass>(ANY_PACKAGE, *Target);
+        TargetClass = FindFirstObject<UClass>(*Target);
         UE_LOG(LogTemp, Display, TEXT("Tried to find class '%s': %s"), 
                *Target, TargetClass ? TEXT("Found") : TEXT("Not found"));
         
@@ -530,7 +530,7 @@ TSharedPtr<FJsonObject> FUnrealMCPBlueprintNodeCommands::HandleAddBlueprintFunct
         if (!TargetClass && !Target.StartsWith(TEXT("U")))
         {
             FString TargetWithPrefix = FString(TEXT("U")) + Target;
-            TargetClass = FindObject<UClass>(ANY_PACKAGE, *TargetWithPrefix);
+            TargetClass = FindFirstObject<UClass>(*TargetWithPrefix);
             UE_LOG(LogTemp, Display, TEXT("Tried to find class '%s': %s"), 
                    *TargetWithPrefix, TargetClass ? TEXT("Found") : TEXT("Not found"));
         }
@@ -545,7 +545,7 @@ TSharedPtr<FJsonObject> FUnrealMCPBlueprintNodeCommands::HandleAddBlueprintFunct
             
             for (const FString& ClassName : PossibleClassNames)
             {
-                TargetClass = FindObject<UClass>(ANY_PACKAGE, *ClassName);
+                TargetClass = FindFirstObject<UClass>(*ClassName);
                 if (TargetClass)
                 {
                     UE_LOG(LogTemp, Display, TEXT("Found class using alternative name '%s'"), *ClassName);
@@ -558,7 +558,7 @@ TSharedPtr<FJsonObject> FUnrealMCPBlueprintNodeCommands::HandleAddBlueprintFunct
         if (!TargetClass && Target == TEXT("UGameplayStatics"))
         {
             // For UGameplayStatics, use a direct reference to known class
-            TargetClass = FindObject<UClass>(ANY_PACKAGE, TEXT("UGameplayStatics"));
+            TargetClass = FindFirstObject<UClass>(TEXT("UGameplayStatics"));
             if (!TargetClass)
             {
                 // Try loading it from its known package
@@ -705,7 +705,7 @@ TSharedPtr<FJsonObject> FUnrealMCPBlueprintNodeCommands::HandleAddBlueprintFunct
                             const FString& ClassName = StringVal;
                             
                             // TODO: This likely won't work in UE5.5+, so don't rely on it.
-                            UClass* Class = FindObject<UClass>(ANY_PACKAGE, *ClassName);
+                            UClass* Class = FindFirstObject<UClass>(*ClassName);
 
                             if (!Class)
                             {

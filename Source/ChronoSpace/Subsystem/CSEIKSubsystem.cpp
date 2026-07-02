@@ -10,6 +10,12 @@
 #include "Kismet/GameplayStatics.h"
 #include "ChronoSpace.h"
 
+// UE 5.8에서 엔진의 SEARCH_PRESENCE 매크로가 제거되었다. EIK는 여전히 "PRESENCESEARCH"
+// 키로 presence 검색을 구분하므로, 기존 동작을 유지하기 위해 로컬에서 재정의한다.
+#ifndef SEARCH_PRESENCE
+#define SEARCH_PRESENCE FName(TEXT("PRESENCESEARCH"))
+#endif
+
 void UCSEIKSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
     return;
