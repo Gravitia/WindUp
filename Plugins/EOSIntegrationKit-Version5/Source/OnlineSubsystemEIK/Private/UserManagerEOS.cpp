@@ -117,7 +117,8 @@ static inline EOS_EExternalCredentialType ToEOS_EExternalCredentialType(FName OS
 	{
 		return EOS_EExternalCredentialType::EOS_ECT_XBL_XSTS_TOKEN;
 	}
-	else if (OSSName == SWITCH_SUBSYSTEM)
+	#if PLATFORM_SWITCH
+	else if (OSSName == FName(TEXT("SWITCH")))
 	{
 		if (AccountCredentials.Type == TEXT("NintendoAccount"))
 		{
@@ -128,6 +129,7 @@ static inline EOS_EExternalCredentialType ToEOS_EExternalCredentialType(FName OS
 			return EOS_EExternalCredentialType::EOS_ECT_NINTENDO_NSA_ID_TOKEN;
 		}
 	}
+	#endif
 	else if (OSSName == APPLE_SUBSYSTEM)
 	{
 		return EOS_EExternalCredentialType::EOS_ECT_APPLE_ID_TOKEN;

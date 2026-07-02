@@ -658,7 +658,7 @@ void FEOSVoiceChatUser::LeaveChannel(const FString& ChannelName, const FOnVoiceC
 	LeaveChannelInternal(ChannelName, Delegate);
 }
 
-void FEOSVoiceChatUser::Set3DPosition(const FString& ChannelName, const FVector& SpeakerPosition, const FVector& ListenerPosition, const FVector& ListenerForwardDirection, const FVector& ListenerUpDirection)
+void FEOSVoiceChatUser::Set3DPosition(const FString& ChannelName, const FVector& Position)
 {
 #if EOS_VOICE_TODO
 	FChannelSession& ChannelSession = GetChannelSessionGT(ChannelName);
@@ -883,7 +883,7 @@ void FEOSVoiceChatUser::StopRecording(FDelegateHandle Handle)
 #endif
 }
 
-FDelegateHandle FEOSVoiceChatUser::RegisterOnVoiceChatAfterCaptureAudioReadDelegate(const FOnVoiceChatAfterCaptureAudioReadDelegate::FDelegate& Delegate)
+FDelegateHandle FEOSVoiceChatUser::RegisterOnVoiceChatAfterCaptureAudioReadDelegate(const FOnVoiceChatAfterCaptureAudioReadDelegate2::FDelegate& Delegate)
 {
 	FScopeLock Lock(&BeforeCaptureAudioSentLock);
 
@@ -897,7 +897,7 @@ void FEOSVoiceChatUser::UnregisterOnVoiceChatAfterCaptureAudioReadDelegate(FDele
 	OnVoiceChatAfterCaptureAudioReadDelegate.Remove(Handle);
 }
 
-FDelegateHandle FEOSVoiceChatUser::RegisterOnVoiceChatBeforeCaptureAudioSentDelegate(const FOnVoiceChatBeforeCaptureAudioSentDelegate::FDelegate& Delegate)
+FDelegateHandle FEOSVoiceChatUser::RegisterOnVoiceChatBeforeCaptureAudioSentDelegate(const FOnVoiceChatBeforeCaptureAudioSentDelegate2::FDelegate& Delegate)
 {
 	FScopeLock Lock(&BeforeCaptureAudioSentLock);
 
@@ -911,18 +911,30 @@ void FEOSVoiceChatUser::UnregisterOnVoiceChatBeforeCaptureAudioSentDelegate(FDel
 	OnVoiceChatBeforeCaptureAudioSentDelegate.Remove(Handle);
 }
 
-FDelegateHandle FEOSVoiceChatUser::RegisterOnVoiceChatBeforeRecvAudioRenderedDelegate(const FOnVoiceChatBeforeRecvAudioRenderedDelegate::FDelegate& Delegate)
+FDelegateHandle FEOSVoiceChatUser::RegisterOnVoiceChatBeforeRecvMixedAudioRenderedDelegate(const FOnVoiceChatBeforeRecvAudioRenderedDelegate::FDelegate& Delegate)
 {
 	FScopeLock Lock(&BeforeRecvAudioRenderedLock);
 
 	return OnVoiceChatBeforeRecvAudioRenderedDelegate.Add(Delegate);
 }
 
-void FEOSVoiceChatUser::UnregisterOnVoiceChatBeforeRecvAudioRenderedDelegate(FDelegateHandle Handle)
+void FEOSVoiceChatUser::UnregisterOnVoiceChatBeforeRecvMixedAudioRenderedDelegate(FDelegateHandle Handle)
 {
 	FScopeLock Lock(&BeforeRecvAudioRenderedLock);
 
 	OnVoiceChatBeforeRecvAudioRenderedDelegate.Remove(Handle);
+}
+
+FDelegateHandle FEOSVoiceChatUser::RegisterOnVoiceChatBeforeRecvUnmixedAudioRenderedDelegate(const FOnVoiceChatBeforeRecvAudioRenderedDelegate::FDelegate& Delegate)
+{
+	FScopeLock Lock(&BeforeRecvAudioRenderedLock);
+	return OnVoiceChatBeforeRecvUnmixedAudioRenderedDelegate.Add(Delegate);
+}
+
+void FEOSVoiceChatUser::UnregisterOnVoiceChatBeforeRecvUnmixedAudioRenderedDelegate(FDelegateHandle Handle)
+{
+	FScopeLock Lock(&BeforeRecvAudioRenderedLock);
+	OnVoiceChatBeforeRecvUnmixedAudioRenderedDelegate.Remove(Handle);
 }
 
 FDelegateHandle FEOSVoiceChatUser::RegisterOnVoiceChatDataReceivedDelegate(const FOnVoiceChatDataReceivedDelegate::FDelegate& Delegate)
@@ -2378,9 +2390,9 @@ void FEOSVoiceChatUser::OnChannelAudioBeforeSend(const EOS_RTCAudio_AudioBeforeS
 			FScopeLock Lock(&BeforeCaptureAudioSentLock);
 
 			// Allow any processes to modify audio through DSP effects processing
-			OnVoiceChatAfterCaptureAudioReadDelegate.Broadcast(WriteableSamples, Buffer->SampleRate, Buffer->Channels);
+			OnVoiceChatAfterCaptureAudioReadDelegate.Broadcast(FString(), WriteableSamples, Buffer->SampleRate, Buffer->Channels);
 
-			OnVoiceChatBeforeCaptureAudioSentDelegate.Broadcast(Samples, Buffer->SampleRate, Buffer->Channels, bSpeaking);
+			OnVoiceChatBeforeCaptureAudioSentDelegate.Broadcast(FString(), Samples, Buffer->SampleRate, Buffer->Channels, bSpeaking);
 		}
 		else
 		{
@@ -2501,6 +2513,7 @@ void FEOSVoiceChatUser::OnChannelAudioBeforeRender(const EOS_RTCAudio_AudioBefor
 #else
 			//presumably, we still want to call the callback, passing the empty buffer
 			OnVoiceChatBeforeRecvAudioRenderedDelegate.Broadcast(Samples, Buffer->SampleRate, Buffer->Channels, bIsSilence, ChannelName, PlayerName);
+			OnVoiceChatBeforeRecvUnmixedAudioRenderedDelegate.Broadcast(Samples, Buffer->SampleRate, Buffer->Channels, bIsSilence, ChannelName, PlayerName);
 #endif
 		}
 		else

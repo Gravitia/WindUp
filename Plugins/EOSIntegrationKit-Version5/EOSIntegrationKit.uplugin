@@ -10,7 +10,7 @@
 	"DocsURL": "https://eik.betide.studio/",
 	"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/product/dba0aa05bdd144e69405653a387ad63e",
 	"SupportURL": "https://discord.gg/betidestudio",
-	"EngineVersion": "5.5.0",
+	"EngineVersion": "5.8.0",
 	"CanContainContent": true,
 	"Installed": true,
 	"Modules": [
@@ -122,6 +122,10 @@
 		},
 		{
 			"Name": "Synthesis",
+			"Enabled": true
+		},
+		{
+			"Name": "VoiceChat",
 			"Enabled": true
 		}
 	],
