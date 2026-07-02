@@ -1,6 +1,6 @@
 {
 	"FileVersion": 3,
-	"EngineAssociation": "5.5",
+	"EngineAssociation": "{ACFC0E16-4785-312E-607C-4181188C524F}",
 	"Category": "",
 	"Description": "",
 	"Modules": [
@@ -58,6 +58,14 @@
 		},
 		{
 			"Name": "Fab",
+			"Enabled": false
+		},
+		{
+			"Name": "Bridge",
+			"Enabled": false
+		},
+		{
+			"Name": "MetaHumanSDK",
 			"Enabled": false
 		}
 	]

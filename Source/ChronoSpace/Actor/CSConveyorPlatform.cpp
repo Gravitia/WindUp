@@ -109,7 +109,7 @@ void ACSConveyorPlatform::DetachRidersOnWrap()
         }
 
         // base를 끊으면 플랫폼의 wrap 이동량이 캐릭터에게 전달되지 않아 제자리에 남는다.
-        Character->SetBase(nullptr);
+		Character->SetBase(static_cast<UPrimitiveComponent*>(nullptr));
 
         if (UCharacterMovementComponent* CMC = Character->GetCharacterMovement())
         {

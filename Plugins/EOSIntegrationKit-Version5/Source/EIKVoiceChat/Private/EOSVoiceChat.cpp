@@ -642,9 +642,19 @@ FOnVoiceChatCallStatsUpdatedDelegate& FEOSVoiceChat::OnVoiceChatCallStatsUpdated
 	return GetVoiceChatUser().OnVoiceChatCallStatsUpdated();
 }
 
-void FEOSVoiceChat::Set3DPosition(const FString& ChannelName, const FVector& SpeakerPosition, const FVector& ListenerPosition, const FVector& ListenerForwardDirection, const FVector& ListenerUpDirection)
+FOnVoiceChatCallStatsUpdatedDelegate2& FEOSVoiceChat::OnVoiceChatCallStatsUpdated2()
 {
-	GetVoiceChatUser().Set3DPosition(ChannelName, SpeakerPosition, ListenerPosition, ListenerForwardDirection, ListenerUpDirection);
+	return GetVoiceChatUser().OnVoiceChatCallStatsUpdated2();
+}
+
+TOptional<FVoiceChatCallStats> FEOSVoiceChat::GetChannelCallStats(const FString& ChannelName) const
+{
+	return GetVoiceChatUser().GetChannelCallStats(ChannelName);
+}
+
+void FEOSVoiceChat::Set3DPosition(const FString& ChannelName, const FVector& Position)
+{
+	GetVoiceChatUser().Set3DPosition(ChannelName, Position);
 }
 
 TArray<FString> FEOSVoiceChat::GetChannels() const
@@ -772,7 +782,7 @@ void FEOSVoiceChat::StopRecording(FDelegateHandle Handle)
 	GetVoiceChatUser().StopRecording(Handle);
 }
 
-FDelegateHandle FEOSVoiceChat::RegisterOnVoiceChatAfterCaptureAudioReadDelegate(const FOnVoiceChatAfterCaptureAudioReadDelegate::FDelegate& Delegate)
+FDelegateHandle FEOSVoiceChat::RegisterOnVoiceChatAfterCaptureAudioReadDelegate(const FOnVoiceChatAfterCaptureAudioReadDelegate2::FDelegate& Delegate)
 {
 	return GetVoiceChatUser().RegisterOnVoiceChatAfterCaptureAudioReadDelegate(Delegate);
 }
@@ -782,7 +792,7 @@ void FEOSVoiceChat::UnregisterOnVoiceChatAfterCaptureAudioReadDelegate(FDelegate
 	GetVoiceChatUser().UnregisterOnVoiceChatAfterCaptureAudioReadDelegate(Handle);
 }
 
-FDelegateHandle FEOSVoiceChat::RegisterOnVoiceChatBeforeCaptureAudioSentDelegate(const FOnVoiceChatBeforeCaptureAudioSentDelegate::FDelegate& Delegate)
+FDelegateHandle FEOSVoiceChat::RegisterOnVoiceChatBeforeCaptureAudioSentDelegate(const FOnVoiceChatBeforeCaptureAudioSentDelegate2::FDelegate& Delegate)
 {
 	return GetVoiceChatUser().RegisterOnVoiceChatBeforeCaptureAudioSentDelegate(Delegate);
 }
@@ -792,14 +802,24 @@ void FEOSVoiceChat::UnregisterOnVoiceChatBeforeCaptureAudioSentDelegate(FDelegat
 	GetVoiceChatUser().UnregisterOnVoiceChatBeforeCaptureAudioSentDelegate(Handle);
 }
 
-FDelegateHandle FEOSVoiceChat::RegisterOnVoiceChatBeforeRecvAudioRenderedDelegate(const FOnVoiceChatBeforeRecvAudioRenderedDelegate::FDelegate& Delegate)
+FDelegateHandle FEOSVoiceChat::RegisterOnVoiceChatBeforeRecvMixedAudioRenderedDelegate(const FOnVoiceChatBeforeRecvAudioRenderedDelegate::FDelegate& Delegate)
 {
-	return GetVoiceChatUser().RegisterOnVoiceChatBeforeRecvAudioRenderedDelegate(Delegate);
+	return GetVoiceChatUser().RegisterOnVoiceChatBeforeRecvMixedAudioRenderedDelegate(Delegate);
 }
 
-void FEOSVoiceChat::UnregisterOnVoiceChatBeforeRecvAudioRenderedDelegate(FDelegateHandle Handle)
+void FEOSVoiceChat::UnregisterOnVoiceChatBeforeRecvMixedAudioRenderedDelegate(FDelegateHandle Handle)
 {
-	GetVoiceChatUser().UnregisterOnVoiceChatBeforeRecvAudioRenderedDelegate(Handle);
+	GetVoiceChatUser().UnregisterOnVoiceChatBeforeRecvMixedAudioRenderedDelegate(Handle);
+}
+
+FDelegateHandle FEOSVoiceChat::RegisterOnVoiceChatBeforeRecvUnmixedAudioRenderedDelegate(const FOnVoiceChatBeforeRecvAudioRenderedDelegate::FDelegate& Delegate)
+{
+	return GetVoiceChatUser().RegisterOnVoiceChatBeforeRecvUnmixedAudioRenderedDelegate(Delegate);
+}
+
+void FEOSVoiceChat::UnregisterOnVoiceChatBeforeRecvUnmixedAudioRenderedDelegate(FDelegateHandle Handle)
+{
+	GetVoiceChatUser().UnregisterOnVoiceChatBeforeRecvUnmixedAudioRenderedDelegate(Handle);
 }
 
 FDelegateHandle FEOSVoiceChat::RegisterOnVoiceChatDataReceivedDelegate(const FOnVoiceChatDataReceivedDelegate::FDelegate& Delegate)

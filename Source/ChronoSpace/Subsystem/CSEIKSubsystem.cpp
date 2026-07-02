@@ -184,7 +184,7 @@ void UCSEIKSubsystem::FindSessions()
     SessionSearch = MakeShareable(new FOnlineSessionSearch);
     SessionSearch->MaxSearchResults = 20;
     SessionSearch->bIsLanQuery = false;
-    SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
+    SessionSearch->QuerySettings.Set(FName(TEXT("PRESENCESEARCH")), true, EOnlineComparisonOp::Equals);
 
     OnFindSessionCompleteDelegate = FOnFindSessionsCompleteDelegate::CreateUObject(
         this,

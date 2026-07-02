@@ -10,6 +10,7 @@
 #endif
 #include "Interfaces/OnlineStoreInterfaceV2.h"
 #include "Interfaces/OnlinePurchaseInterface.h"
+#include "OnlineError.h"
 #include "OnlineSubsystemEOSTypes.h"
 
 #if WITH_EOS_SDK
@@ -39,6 +40,11 @@ public:
 
 // Begin IOnlinePurchase
 	virtual bool IsAllowedToPurchase(const FUniqueNetId& UserId) override { return true; }
+	virtual bool IsAllowedToPurchase(const FUniqueNetId& UserId, FOnlineError& Error) override
+	{
+		Error = FOnlineError(EOnlineErrorResult::Success);
+		return true;
+	}
 	virtual void Checkout(const FUniqueNetId& UserId, const FPurchaseCheckoutRequest& CheckoutRequest, const FOnPurchaseCheckoutComplete& Delegate) override;
 #if ENGINE_MAJOR_VERSION == 5
 	virtual void Checkout(const FUniqueNetId& UserId, const FPurchaseCheckoutRequest& CheckoutRequest, const FOnPurchaseReceiptlessCheckoutComplete& Delegate) override;
