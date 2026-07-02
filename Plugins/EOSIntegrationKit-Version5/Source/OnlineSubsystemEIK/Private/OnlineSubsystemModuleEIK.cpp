@@ -233,7 +233,7 @@ void FOnlineSubsystemEIKModule::ConfigureOnlineSubsystemEIK()
 
             // Update NetDriverDefinitions in [/Script/Engine.GameEngine] section
             FString NetDriverDefinitions = FString::Printf(
-                TEXT("!NetDriverDefinitions=ClearArray\n+NetDriverDefinitions=(DefName=\"GameNetDriver\",DriverClassName=\"OnlineSubsystemEIK.NetDriverEIK\",DriverClassNameFallback=\"OnlineSubsystemUtils.IpNetDriver\")\n")
+                TEXT("!NetDriverDefinitions=ClearArray\n+NetDriverDefinitions=(DefName=\"GameNetDriver\",DriverClassName=\"/Script/OnlineSubsystemEIK.NetDriverEIK\",DriverClassNameFallback=\"/Script/OnlineSubsystemUtils.IpNetDriver\")\n")
             );
             EngineIniText += NetDriverDefinitions;
             
