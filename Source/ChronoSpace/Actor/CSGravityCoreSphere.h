@@ -4,18 +4,22 @@
 
 #include "CoreMinimal.h"
 #include "Actor/CSGravityCore.h"
+#include "Interface/CSAbilitySource.h"
 #include "CSGravityCoreSphere.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
-class CHRONOSPACE_API ACSGravityCoreSphere : public ACSGravityCore
+class CHRONOSPACE_API ACSGravityCoreSphere : public ACSGravityCore, public ICSAbilitySource
 {
 	GENERATED_BODY()
-	
+
 public:
 	ACSGravityCoreSphere();
+
+	// ICSAbilitySource
+	virtual ECSAbilityType GetAbilityType() const override { return ECSAbilityType::GravityCore; }
 
 	FORCEINLINE float GetMeshRadius() { return MeshRadius; }
 	FORCEINLINE void SetCheckComponentInMesh(bool bInMeshHaveComponent) { bCheckMeshHaveComponent = bInMeshHaveComponent; }

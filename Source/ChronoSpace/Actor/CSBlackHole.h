@@ -4,15 +4,19 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Interface/CSAbilitySource.h"
 #include "CSBlackHole.generated.h"
 
 UCLASS()
-class CHRONOSPACE_API ACSBlackHole : public AActor
+class CHRONOSPACE_API ACSBlackHole : public AActor, public ICSAbilitySource
 {
 	GENERATED_BODY()
-	
+
 public:
 	ACSBlackHole();
+
+	// ICSAbilitySource
+	virtual ECSAbilityType GetAbilityType() const override { return ECSAbilityType::Blackhole; }
 
 	virtual void BeginPlay() override;
 
