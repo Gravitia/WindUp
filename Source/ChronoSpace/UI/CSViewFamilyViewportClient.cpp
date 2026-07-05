@@ -18,6 +18,7 @@
 #include "Engine/Console.h"
 #include "LegacyScreenPercentageDriver.h"
 #include "UnrealClient.h"
+#include "EngineUtils.h"
 #include "Math/InverseRotationMatrix.h"
 #include "UObject/UObjectGlobals.h"
 #include "ChronoSpace.h"
@@ -326,6 +327,18 @@ void UCSViewFamilyViewportClient::Draw(FViewport* InViewport, FCanvas* SceneCanv
 		if (GEngine)
 		{
 			GEngine->DrawOnscreenDebugMessages(MyWorld, InViewport, SceneCanvas, DebugCanvasObject, 40.0f, 100.0f);
+		}
+
+		// 5) Stats — stat fps / stat unit / stat game 등 stat 시스템 출력
+		{
+			FVector PlayerCameraLocation = FVector::ZeroVector;
+			FRotator PlayerCameraRotation = FRotator::ZeroRotator;
+			if (APlayerController* PC = MainLocalPlayer->PlayerController)
+			{
+				PC->GetPlayerViewPoint(PlayerCameraLocation, PlayerCameraRotation);
+			}
+			DrawStatsHUD(MyWorld, InViewport, DebugCanvas, DebugCanvasObject,
+			             DebugProperties, PlayerCameraLocation, PlayerCameraRotation);
 		}
 
 		DebugCanvasObject->PopSafeZoneTransform();
