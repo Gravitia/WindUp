@@ -12,6 +12,8 @@ UCSMeshPulledByBlackhole::UCSMeshPulledByBlackhole()
 
 void UCSMeshPulledByBlackhole::BeginPlay()
 {
+	Super::BeginPlay();
+
 	if ( !IsValid(GetWorld()) || !IsValid(GetOwner()) ) return;
 	UCSManagedActorSubsystem* Subsystem = GetWorld()->GetSubsystem< UCSManagedActorSubsystem >();
 
@@ -24,14 +26,17 @@ void UCSMeshPulledByBlackhole::BeginPlay()
 
 void UCSMeshPulledByBlackhole::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	if (!IsValid(GetWorld()) || !IsValid(GetOwner())) return;
-
-	UCSManagedActorSubsystem* Subsystem = GetWorld()->GetSubsystem< UCSManagedActorSubsystem >();
-
-	if ( IsValid(Subsystem) )
+	if (IsValid(GetWorld()) && IsValid(GetOwner()))
 	{
-		Subsystem->UnRegisterActorPulledByBlackHole( GetOwner() );
+		UCSManagedActorSubsystem* Subsystem = GetWorld()->GetSubsystem<UCSManagedActorSubsystem>();
+
+		if (IsValid(Subsystem))
+		{
+			Subsystem->UnRegisterActorPulledByBlackHole(GetOwner());
+		}
 	}
+
+	Super::EndPlay(EndPlayReason);
 }
 
 void UCSMeshPulledByBlackhole::NotifyInteractionStarted()
