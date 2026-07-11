@@ -45,12 +45,15 @@ void ACSMimicCharacter::SetDead()
 	// 분신은 죽지 않는다 - 의도적으로 아무것도 하지 않음
 }
 
-void ACSMimicCharacter::InitMimic(ACSCharacterPlayer* InSource, const FTransform& InSourceZoneTM, const FTransform& InTargetZoneTM)
+void ACSMimicCharacter::InitMimic(ACSCharacterPlayer* InSource, const FTransform& InSourceZoneTM, const FTransform& InTargetZoneTM,
+	EMimicMode InMode, float InDelaySeconds)
 {
 	if (!HasAuthority() || InSource == nullptr) return;
 
 	SourceCharacter = InSource;
 	MirrorQuat = InTargetZoneTM.GetRotation() * InSourceZoneTM.GetRotation().Inverse();
+	MimicMode = InMode;
+	DelaySeconds = FMath::Max(InDelaySeconds, 0.1f);
 
 	CopyAbilitiesFromSource();
 
@@ -89,8 +92,15 @@ void ACSMimicCharacter::Tick(float DeltaSeconds)
 
 	if (!HasAuthority() || !SourceCharacter.IsValid()) return;
 
-	MirrorMovement();
-	MirrorJump();
+	if (MimicMode == EMimicMode::Delayed)
+	{
+		TickDelayed();
+	}
+	else
+	{
+		MirrorMovement();
+		MirrorJump();
+	}
 }
 
 void ACSMimicCharacter::MirrorMovement()
@@ -98,20 +108,65 @@ void ACSMimicCharacter::MirrorMovement()
 	UCharacterMovementComponent* SourceMove = SourceCharacter->GetCharacterMovement();
 	if (SourceMove == nullptr) return;
 
-	const FVector SourceAccel = SourceMove->GetCurrentAcceleration();
+	ApplyMovement(SourceMove->GetCurrentAcceleration(), SourceMove->GetMaxAcceleration());
+}
+
+void ACSMimicCharacter::MirrorJump()
+{
+	ApplyJump(SourceCharacter->bPressedJump);
+}
+
+void ACSMimicCharacter::TickDelayed()
+{
+	UCharacterMovementComponent* SourceMove = SourceCharacter->GetCharacterMovement();
+	if (SourceMove == nullptr) return;
+
+	const double Now = GetWorld()->GetTimeSeconds();
+	const double ReplayTime = Now - DelaySeconds;
+
+	// 현재 입력 기록 (bPressedJump는 비트필드라 명시적 bool 변환 필요)
+	InputHistory.Add({ Now, SourceMove->GetCurrentAcceleration(), SourceCharacter->bPressedJump != 0 });
+
+	// 재생 시점보다 오래된 프레임 중 가장 최신 것만 남기고 제거
+	while (InputHistory.Num() >= 2 && InputHistory[1].Time <= ReplayTime)
+	{
+		InputHistory.RemoveAt(0);
+	}
+
+	// DelaySeconds 이전의 이동/점프 재생 (스폰 직후에는 기록이 없어 가만히 서 있는다)
+	if (InputHistory.Num() > 0 && InputHistory[0].Time <= ReplayTime)
+	{
+		const FMimicInputFrame& Frame = InputHistory[0];
+		ApplyMovement(Frame.Accel, SourceMove->GetMaxAcceleration());
+		ApplyJump(Frame.bJumpPressed);
+	}
+
+	// 능력 입력도 지연 재생
+	while (PendingAbilityInputs.Num() > 0 && PendingAbilityInputs[0].Time <= ReplayTime)
+	{
+		ApplyAbilityInput(PendingAbilityInputs[0].InputId, PendingAbilityInputs[0].bPressed);
+		PendingAbilityInputs.RemoveAt(0);
+	}
+}
+
+void ACSMimicCharacter::ApplyMovement(const FVector& SourceAccel, float MaxAccelIn)
+{
 	if (SourceAccel.IsNearlyZero()) return;
 
-	const FVector Direction = MirrorQuat.RotateVector(SourceAccel.GetSafeNormal());
-	const float MaxAccel = FMath::Max(SourceMove->GetMaxAcceleration(), 1.0f);
+	FVector Direction = MirrorQuat.RotateVector(SourceAccel.GetSafeNormal());
+	if (MimicMode == EMimicMode::Inverted)
+	{
+		Direction = -Direction;
+	}
+
+	const float MaxAccel = FMath::Max(MaxAccelIn, 1.0f);
 	const float InputScale = FMath::Clamp(SourceAccel.Size() / MaxAccel, 0.0f, 1.0f);
 
 	AddMovementInput(Direction, InputScale);
 }
 
-void ACSMimicCharacter::MirrorJump()
+void ACSMimicCharacter::ApplyJump(bool bSourceJumpPressed)
 {
-	const bool bSourceJumpPressed = SourceCharacter->bPressedJump;
-
 	if (bSourceJumpPressed && !bPrevJumpPressed)
 	{
 		Jump();
@@ -126,7 +181,21 @@ void ACSMimicCharacter::MirrorJump()
 
 void ACSMimicCharacter::MirrorAbilityInput(int32 InputId, bool bPressed)
 {
-	if (!HasAuthority() || MimicASC == nullptr) return;
+	if (!HasAuthority()) return;
+
+	// Delayed 모드는 큐에 쌓았다가 TickDelayed에서 지연 적용
+	if (MimicMode == EMimicMode::Delayed)
+	{
+		PendingAbilityInputs.Add({ GetWorld()->GetTimeSeconds(), InputId, bPressed });
+		return;
+	}
+
+	ApplyAbilityInput(InputId, bPressed);
+}
+
+void ACSMimicCharacter::ApplyAbilityInput(int32 InputId, bool bPressed)
+{
+	if (MimicASC == nullptr) return;
 
 	FGameplayAbilitySpec* Spec = MimicASC->FindAbilitySpecFromInputID(InputId);
 	if (Spec == nullptr) return;

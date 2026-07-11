@@ -156,7 +156,7 @@ void ACSMimicSourceZone::Occupy(ACSCharacterPlayer* Player)
 		ACSMimicCharacter* Mimic = GetWorld()->SpawnActor<ACSMimicCharacter>(MimicCharacterClass, SpawnLoc, SpawnQuat.Rotator(), Params);
 		if (Mimic)
 		{
-			Mimic->InitMimic(Player, SourceZoneTM, TargetZoneTM);
+			Mimic->InitMimic(Player, SourceZoneTM, TargetZoneTM, MimicMode, MimicDelaySeconds);
 			SpawnedMimics.Add(Mimic);
 		}
 	}

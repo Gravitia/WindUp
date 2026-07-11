@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Character/CSMimicCharacter.h"
 #include "CSMimicSourceZone.generated.h"
 
 /**
@@ -50,6 +51,14 @@ protected:
 	// 스폰할 분신 클래스 (플레이어 BP를 복제해 CSMimicCharacter로 리페어런팅한 BP를 지정)
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mimic")
 	TSubclassOf<class ACSMimicCharacter> MimicCharacterClass;
+
+	// 분신이 따라하는 방식 (그대로 / 반대로 / N초 지연)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mimic")
+	EMimicMode MimicMode = EMimicMode::Mirror;
+
+	// Delayed 모드: 몇 초 전 행동을 재생할지
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mimic", meta = (EditCondition = "MimicMode == EMimicMode::Delayed", ClampMin = "0.1"))
+	float MimicDelaySeconds = 3.0f;
 
 	// 플레이어 진입 감지용 박스
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mimic")
