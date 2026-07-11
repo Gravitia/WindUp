@@ -30,6 +30,7 @@ public:
 	virtual void Landed(const FHitResult& Hit) override;
 
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+	FORCEINLINE class UCSGASManagerComponent* GetGASManagerComponent() const { return GASManagerComponent; }
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GAS") 

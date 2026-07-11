@@ -31,14 +31,20 @@ enum class EAbilityIndex : int32
 	ScaleLarge = 202,
 };
 
+// 서버에서 처리된 능력 입력 알림 (InputId, bPressed)
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnServerGASInputDelegate, int32 /*InputId*/, bool /*bPressed*/);
+
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class CHRONOSPACE_API UCSGASManagerComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:	
+public:
 	UCSGASManagerComponent();
+
+	// 서버 전용: 능력 입력이 처리될 때마다 알림 (분신 미러링 등에서 구독)
+	FOnServerGASInputDelegate OnServerGASInput;
 
 	void SetASC(class UAbilitySystemComponent* InASC, class ACSPlayerState* PS);
 

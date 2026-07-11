@@ -40,7 +40,7 @@ void UCSGASManagerComponent::SetGASAbilities()
 		if ( UE_BUILD_SHIPPING )
 		{
 			TSet< EAbilityIndex > BannedAbilities;
-			if (Cast<APawn>(GetOwner())->IsLocallyControlled()) // ¼­¹ö, ¾ÖÃÊ¿¡ SetGASAbilities ÀÚÃ¼°¡ ¼­¹ö¸¸ ½ÇÇàµÊ
+			if (Cast<APawn>(GetOwner())->IsLocallyControlled()) // ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½Ê¿ï¿½ SetGASAbilities ï¿½ï¿½Ã¼ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
 				BannedAbilities = AbilitiesPlayer1Banned;
 			else
 				BannedAbilities = AbilitiesPlayer2Banned;
@@ -131,6 +131,9 @@ void UCSGASManagerComponent::ServerGASInputPressed_Implementation(int32 InputId)
 
 void UCSGASManagerComponent::HandleGASInputPressed(int32 InputId)
 {
+	// ì„œë²„ì—ì„œë§Œ í˜¸ì¶œë˜ëŠ” ì§€ì  - ë¶„ì‹  ë¯¸ëŸ¬ë§ ë“± êµ¬ë…ìžì—ê²Œ ì•Œë¦¼
+	OnServerGASInput.Broadcast(InputId, true);
+
 	FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromInputID(InputId);
 
 	if (Spec)
@@ -168,6 +171,9 @@ void UCSGASManagerComponent::ServerGASInputReleased_Implementation(int32 InputId
 
 void UCSGASManagerComponent::HandleGASInputReleased(int32 InputId)
 {
+	// ì„œë²„ì—ì„œë§Œ í˜¸ì¶œë˜ëŠ” ì§€ì  - ë¶„ì‹  ë¯¸ëŸ¬ë§ ë“± êµ¬ë…ìžì—ê²Œ ì•Œë¦¼
+	OnServerGASInput.Broadcast(InputId, false);
+
 	FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromInputID(InputId);
 	if (Spec)
 	{
@@ -187,15 +193,15 @@ void UCSGASManagerComponent::OnWindUpStarted(const FInputActionValue& Value)
 	{
 		bWindUpActive = true;
 
-		// ¾îºô¸®Æ¼ È°¼ºÈ­
+		// ï¿½ï¿½ï¿½ï¿½ï¿½Æ¼ È°ï¿½ï¿½È­
 		GASInputPressed(static_cast<int32>(EAbilityIndex::WindUp));
 	}
 }
 
 void UCSGASManagerComponent::OnWindUpTriggered(const FInputActionValue& Value)
 {
-	// Hold »óÅÂ¿¡¼­ Áö¼ÓÀûÀ¸·Î È£ÃâµÊ
-	// ÇÊ¿ä½Ã Ãß°¡ ·ÎÁ÷ (¿¹: ÁøÇàµµ Ç¥½Ã)
+	// Hold ï¿½ï¿½ï¿½Â¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ È£ï¿½ï¿½ï¿½
+	// ï¿½Ê¿ï¿½ï¿½ ï¿½ß°ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½: ï¿½ï¿½ï¿½àµµ Ç¥ï¿½ï¿½)
 	UE_LOG(LogTemp, Verbose, TEXT("WindUp Triggered - Holding"));
 }
 
@@ -207,7 +213,7 @@ void UCSGASManagerComponent::OnWindUpCompleted(const FInputActionValue& Value)
 	{
 		bWindUpActive = false;
 
-		// ¾îºô¸®Æ¼ Á¾·á
+		// ï¿½ï¿½ï¿½ï¿½ï¿½Æ¼ ï¿½ï¿½ï¿½ï¿½
 		GASInputReleased(static_cast<int32>(EAbilityIndex::WindUp));
 	}
 }
