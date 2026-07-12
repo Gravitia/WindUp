@@ -4,6 +4,7 @@
 #include "Actor/CSAbilityReactorBase.h"
 #include "Components/SphereComponent.h"
 #include "Interface/CSAbilitySource.h"
+#include "Interface/CSReactorTarget.h"
 #include "Physics/CSCollision.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/Engine.h"
@@ -29,6 +30,7 @@ void ACSAbilityReactorBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(ACSAbilityReactorBase, bIsActivated);
+	DOREPLIFETIME(ACSAbilityReactorBase, bTriggerActive);
 }
 
 void ACSAbilityReactorBase::BeginPlay()
@@ -37,15 +39,24 @@ void ACSAbilityReactorBase::BeginPlay()
 
 	Trigger->SetSphereRadius(TriggerRadius, true);
 
-	// 짝을 한쪽에만 지정해도 서로 연결되도록 서버에서 역참조를 보정한다.
-	if (HasAuthority() && PairedReactor && PairedReactor->PairedReactor == nullptr)
-	{
-		PairedReactor->PairedReactor = this;
+	if (!HasAuthority()) return;
 
-		// 짝 로직도 지정 안 된 쪽에만 맞춰준다(기획자가 한쪽만 세팅해도 대칭 동작).
-		if (PairedReactor->PairLogic == ECSReactorPairLogic::None)
+	// [타겟 트리거] 링크된 리액터들의 상태 변화를 구독한다.
+	for (ACSAbilityReactorBase* Linked : LinkedReactors)
+	{
+		if (Linked && Linked != this)
 		{
-			PairedReactor->PairLogic = PairLogic;
+			Linked->OnReactorActivationChanged.AddUObject(this, &ACSAbilityReactorBase::HandleLinkedReactorChanged);
+		}
+	}
+
+	// 인터페이스 미구현 타겟은 미리 경고해서 배치 실수를 잡는다.
+	for (AActor* Target : TargetActors)
+	{
+		if (Target && !Target->GetClass()->ImplementsInterface(UCSReactorTarget::StaticClass()))
+		{
+			UE_LOG(LogCS, Warning, TEXT("[Reactor] %s : Target %s 이 ICSReactorTarget 을 구현하지 않음"),
+				*GetName(), *Target->GetName());
 		}
 	}
 }
@@ -110,34 +121,33 @@ void ACSAbilityReactorBase::RecomputeLocalCondition()
 	if (bNewLocal == bLocalCondition) return;
 
 	bLocalCondition = bNewLocal;
-
-	// 내 조건이 바뀌면 나와 짝 둘 다 최종 활성 여부를 다시 계산한다.
-	EvaluateActivation();
-	if (PairedReactor)
-	{
-		PairedReactor->EvaluateActivation();
-	}
+	ApplyActivationFromConditions();
 }
 
-void ACSAbilityReactorBase::EvaluateActivation()
+void ACSAbilityReactorBase::OnReactorTriggerChanged_Implementation(bool bActive)
 {
-	SetActivated(ComputeDesiredActivation());
+	// 그룹이 서버/클라 양쪽에서 타겟을 호출하지만, 리액터 상태는 서버에서만 바꾼다.
+	// (클라이언트는 bIsActivated 리플리케이션으로 따라온다)
+	if (!HasAuthority()) return;
+
+	bool bNewExternal = bActive;
+
+	// Latch(1회): 외부 트리거도 한번 켜지면 유지.
+	if (Mode == ECSReactorMode::Latch)
+	{
+		bNewExternal = bExternalCondition || bNewExternal;
+	}
+
+	if (bNewExternal == bExternalCondition) return;
+
+	bExternalCondition = bNewExternal;
+	ApplyActivationFromConditions();
 }
 
-bool ACSAbilityReactorBase::ComputeDesiredActivation() const
+void ACSAbilityReactorBase::ApplyActivationFromConditions()
 {
-	switch (PairLogic)
-	{
-	case ECSReactorPairLogic::RequiresBoth:
-		return bLocalCondition && (PairedReactor != nullptr && PairedReactor->bLocalCondition);
-
-	case ECSReactorPairLogic::Either:
-		return bLocalCondition || (PairedReactor != nullptr && PairedReactor->bLocalCondition);
-
-	case ECSReactorPairLogic::None:
-	default:
-		return bLocalCondition;
-	}
+	// 능력 오버랩(bLocalCondition)과 외부 트리거(bExternalCondition) 중 하나라도 참이면 활성.
+	SetActivated(bLocalCondition || bExternalCondition);
 }
 
 void ACSAbilityReactorBase::SetActivated(bool bNewActivated)
@@ -148,6 +158,12 @@ void ACSAbilityReactorBase::SetActivated(bool bNewActivated)
 
 	// RepNotify 는 서버 자신에겐 호출되지 않으므로 서버에서 직접 반응을 실행한다.
 	HandleActivationChanged();
+
+	// 나를 링크한 대표 리액터 등 구독자에게 통지. (서버 전용)
+	OnReactorActivationChanged.Broadcast(this, bIsActivated);
+
+	// 내 상태가 바뀌면 내 조합(타겟 트리거)도 재평가.
+	EvaluateTrigger();
 }
 
 void ACSAbilityReactorBase::OnRep_IsActivated()
@@ -173,10 +189,82 @@ void ACSAbilityReactorBase::ResetReactor()
 
 	OverlapRefCount = 0;
 	bLocalCondition = false;
+	bExternalCondition = false;
 
-	EvaluateActivation();
-	if (PairedReactor)
+	SetActivated(false);
+
+	// 조합 래치도 무시하고 현재 상태 그대로 재평가.
+	EvaluateTrigger(true);
+}
+
+void ACSAbilityReactorBase::HandleLinkedReactorChanged(ACSAbilityReactorBase* /*Reactor*/, bool /*bActivated*/)
+{
+	EvaluateTrigger();
+}
+
+void ACSAbilityReactorBase::EvaluateTrigger(bool bIgnoreLatch)
+{
+	if (!HasAuthority()) return;
+
+	// 통지할 타겟이 없는 리액터는 조합 판정도 하지 않는다. (감지 전용)
+	if (TargetActors.Num() == 0) return;
+
+	int32 ValidCount = 1;
+	int32 ActiveCount = bIsActivated ? 1 : 0;
+	for (const ACSAbilityReactorBase* Linked : LinkedReactors)
 	{
-		PairedReactor->EvaluateActivation();
+		if (Linked && Linked != this)
+		{
+			++ValidCount;
+			if (Linked->IsActivated())
+			{
+				++ActiveCount;
+			}
+		}
+	}
+
+	bool bDesired = (TriggerLogic == ECSReactorGroupLogic::All) ? (ActiveCount == ValidCount) : (ActiveCount > 0);
+
+	if (bTriggerLatch && !bIgnoreLatch)
+	{
+		bDesired = bTriggerActive || bDesired;
+	}
+
+	SetTriggerActive(bDesired);
+}
+
+void ACSAbilityReactorBase::SetTriggerActive(bool bNewActive)
+{
+	if (bTriggerActive == bNewActive) return;
+
+	bTriggerActive = bNewActive;   // 서버에서 값 변경 → 클라로 리플리케이트
+
+	// RepNotify 는 서버 자신에겐 호출되지 않으므로 서버에서 직접 실행한다.
+	HandleTriggerStateChanged();
+}
+
+void ACSAbilityReactorBase::OnRep_TriggerActive()
+{
+	HandleTriggerStateChanged();
+}
+
+void ACSAbilityReactorBase::HandleTriggerStateChanged()
+{
+	if (bReactorDebug)
+	{
+		UE_LOG(LogCS, Log, TEXT("[Reactor %s] Trigger %s"), *GetName(), bTriggerActive ? TEXT("ACTIVATED") : TEXT("deactivated"));
+	}
+
+	NotifyTargets(bTriggerActive);
+}
+
+void ACSAbilityReactorBase::NotifyTargets(bool bActive)
+{
+	for (AActor* Target : TargetActors)
+	{
+		if (IsValid(Target) && Target != this && Target->GetClass()->ImplementsInterface(UCSReactorTarget::StaticClass()))
+		{
+			ICSReactorTarget::Execute_OnReactorTriggerChanged(Target, bActive);
+		}
 	}
 }

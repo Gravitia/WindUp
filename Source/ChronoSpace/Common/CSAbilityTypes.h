@@ -34,15 +34,13 @@ enum class ECSReactorMode : uint8
 };
 
 /**
- * 짝(Pair) 연동 방식.
- *  - None         : 단독. 자기 조건만으로 활성.
- *  - RequiresBoth : 짝과 둘 다 조건 충족해야 활성 (AND). 2스위치 퍼즐.
- *  - Either       : 짝 중 하나라도 조건 충족하면 활성 (OR).
+ * 리액터 그룹(ACSReactorGroup)의 조합 방식.
+ *  - All : 그룹의 모든 리액터가 활성이어야 그룹 활성 (AND). 2인 협동 스위치 퍼즐.
+ *  - Any : 하나라도 활성이면 그룹 활성 (OR).
  */
 UENUM(BlueprintType)
-enum class ECSReactorPairLogic : uint8
+enum class ECSReactorGroupLogic : uint8
 {
-	None          UMETA(DisplayName = "Alone"),
-	RequiresBoth  UMETA(DisplayName = "Pair - Both (AND)"),
-	Either        UMETA(DisplayName = "Pair - Either (OR)"),
+	All  UMETA(DisplayName = "All (AND)"),
+	Any  UMETA(DisplayName = "Any (OR)"),
 };
