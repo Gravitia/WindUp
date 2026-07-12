@@ -6,6 +6,8 @@
 #include "GameFramework/GameUserSettings.h"
 #include "CSUserSettings.generated.h"
 
+class USoundMix;
+
 /**
  * 
  */
@@ -17,24 +19,52 @@ class CHRONOSPACE_API UCSUserSettings : public UGameUserSettings
 public:
 	UCSUserSettings();
 
-	virtual void ApplySettings(bool bForce = false) override;
+	UFUNCTION(BlueprintPure, Category = "Settings")
+	static UCSUserSettings* GetCSUserSettings();
+
+	virtual void LoadSettings(bool bForceReload = false) override;
+	virtual void ApplyNonResolutionSettings() override;
 
 // Sound
 public:
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintPure)
 	FORCEINLINE float GetMasterVolume() { return MasterVolume; }
 
 	UFUNCTION(BlueprintCallable)
 	void SetMasterVolume(float InMasterVolume);
 
+	UFUNCTION(BlueprintPure)
+	FORCEINLINE float GetMusicVolume() { return MusicVolume; }
+
 	UFUNCTION(BlueprintCallable)
-	FORCEINLINE float GetBGMVolume() { return BGMVolume; }
+	void SetMusicVolume(float InMusicVolume);
+
+	UFUNCTION(BlueprintPure)
+	FORCEINLINE float GetEffectsVolume() { return EffectsVolume; }
+
+	UFUNCTION(BlueprintCallable)
+	void SetEffectsVolume(float InEffectsVolume);
+
+	UFUNCTION(BlueprintPure)
+	FORCEINLINE float GetUIVolume() { return UIVolume; }
+
+	UFUNCTION(BlueprintCallable)
+	void SetUIVolume(float InUIVolume);
+
+	UFUNCTION(BlueprintPure)
+	FORCEINLINE float GetAmbientVolume() { return AmbientVolume; }
+
+	UFUNCTION(BlueprintCallable)
+	void SetAmbientVolume(float InAmbientVolume);
+
+	UFUNCTION(BlueprintPure)
+	FORCEINLINE float GetBGMVolume() { return GetMusicVolume(); }
 
 	UFUNCTION(BlueprintCallable)
 	void SetBGMVolume(float InBGMVolume);
 
-	UFUNCTION(BlueprintCallable)
-	FORCEINLINE float GetSFXVolume() { return SFXVolume; }
+	UFUNCTION(BlueprintPure)
+	FORCEINLINE float GetSFXVolume() { return GetEffectsVolume(); }
 
 	UFUNCTION(BlueprintCallable)
 	void SetSFXVolume(float InSFXVolume);
@@ -44,8 +74,32 @@ protected:
 	float MasterVolume;
 
 	UPROPERTY(Config)
+	float MusicVolume;
+
+	UPROPERTY(Config)
+	float EffectsVolume;
+
+	UPROPERTY(Config)
+	float UIVolume;
+
+	UPROPERTY(Config)
+	float AmbientVolume;
+
+	UPROPERTY(Config)
 	float BGMVolume;
 
 	UPROPERTY(Config)
 	float SFXVolume;
+
+	UPROPERTY(Config)
+	int32 AudioSettingsVersion;
+
+	UPROPERTY(Transient)
+	TObjectPtr<USoundMix> RuntimeSoundMix;
+
+private:
+	bool MigrateLegacyAudioVolumeSettings();
+	void ApplyAudioVolumeSettings();
+
+	TSet<uint32> RuntimeSoundMixDeviceIds;
 };
