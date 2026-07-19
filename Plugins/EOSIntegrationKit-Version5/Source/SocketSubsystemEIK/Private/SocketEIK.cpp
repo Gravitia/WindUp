@@ -279,8 +279,14 @@ bool FSocketEOS::HasPendingData(uint32& PendingDataSize)
 	EOS_P2P_GetNextReceivedPacketSizeOptions Options = { };
 	Options.ApiVersion = EOS_P2P_GETNEXTRECEIVEDPACKETSIZE_API_LATEST;
 	Options.LocalUserId = LocalAddress.GetLocalUserId();
-	uint8 Channel = LocalAddress.GetChannel();
-	Options.RequestedChannel = &Channel;
+	// UE5.8 upgrade fix: report pending data on ANY channel, not only the bound one.
+	// After a non-seamless ServerTravel the reconnecting client rebuilds the host URL
+	// and can end up sending on a different channel than this socket bound
+	// (GetTypeHash(NetDriverName)). Filtering here made the listen server deaf to the
+	// reconnect handshake: EOS P2P showed "Connection established" but no UE packet
+	// was ever surfaced, so clients could never rejoin after a map change.
+	// Socket-name isolation is enforced in RecvFrom instead.
+	Options.RequestedChannel = nullptr;
 
 	EOS_EResult Result = EOS_P2P_GetNextReceivedPacketSize(SocketSubsystem.GetP2PHandle(), &Options, &PendingDataSize);
 	if (Result == EOS_EResult::EOS_NotFound)
@@ -452,12 +458,16 @@ bool FSocketEOS::RecvFrom(uint8* Data, int32 BufferSize, int32& BytesRead, FInte
 	Options.ApiVersion = EOS_P2P_RECEIVEPACKET_API_LATEST;
 	Options.LocalUserId = LocalAddress.GetLocalUserId();
 	Options.MaxDataSizeBytes = BufferSize;
-	uint8 Channel = LocalAddress.GetChannel();
-	Options.RequestedChannel = &Channel;
+	// See HasPendingData: accept packets on ANY channel so a travel-URL channel
+	// mismatch after non-seamless ServerTravel cannot silently drop the client's
+	// reconnect handshake. The actual channel is returned into 'Channel' below and
+	// propagated to the Source address, so replies go back on the sender's channel.
+	Options.RequestedChannel = nullptr;
+	uint8 Channel = 0;
 
 	EOS_ProductUserId RemoteUserId = nullptr;
 	EOS_P2P_SocketId SocketId;
-	
+
 	EOS_EResult Result = EOS_P2P_ReceivePacket(SocketSubsystem.GetP2PHandle(), &Options, &RemoteUserId, &SocketId, &Channel, Data, (uint32*)&BytesRead);
 	NP_LOG(TEXT("[%s] - EOS_P2P_ReceivePacket() for user (%s) and channel (%d) with result code = (%s)\r\n"), GetLogPrefix(), *MakeStringFromProductUserId(LocalAddress.GetLocalUserId()), Channel, ANSI_TO_TCHAR(EOS_EResult_ToString(Result)));
 	if (Result == EOS_EResult::EOS_NotFound)
@@ -473,6 +483,28 @@ bool FSocketEOS::RecvFrom(uint8* Data, int32 BufferSize, int32& BytesRead, FInte
 		// @todo joeg - map EOS codes to UE4's
 		SocketSubsystem.SetLastSocketError(ESocketErrors::SE_EINVAL);
 		return false;
+	}
+
+	// EOS_P2P_ReceivePacket cannot filter by SocketId, only by channel. Since we now
+	// receive on any channel, drop packets that belong to a different socket (another
+	// net driver, e.g. "BeaconSession") instead of feeding them to this driver.
+	if (FCStringAnsi::Stricmp(SocketId.SocketName, LocalAddress.GetSocketName()) != 0)
+	{
+		BytesRead = 0;
+		SocketSubsystem.SetLastSocketError(ESocketErrors::SE_EWOULDBLOCK);
+		return false;
+	}
+
+	if (Channel != LocalAddress.GetChannel())
+	{
+		static bool bLoggedChannelMismatch = false;
+		if (!bLoggedChannelMismatch)
+		{
+			bLoggedChannelMismatch = true;
+			UE_LOG(LogSocketSubsystemEOS, Log,
+				TEXT("Accepted P2P packet on channel %u while bound to channel %u (travel-URL channel mismatch workaround active)"),
+				Channel, LocalAddress.GetChannel());
+		}
 	}
 
 	FInternetAddrEOS& SourceAddress = static_cast<FInternetAddrEOS&>(Source);
