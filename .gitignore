@@ -145,3 +145,28 @@ venv.bak/
 MCP/logs/
 MCP/temp/
 *.mcp.json
+
+# ==========================================================================
+# Checked-in editor binaries (double-click .uproject workflow)
+# --------------------------------------------------------------------------
+# Development editor DLLs + .modules manifests are committed so teammates
+# can open the project by double-clicking ChronoSpace.uproject without
+# Visual Studio. Whoever changes C++ must rebuild and commit these files.
+# Everything else under Binaries/ (DebugGame, Shipping, PDBs, live-coding
+# patches) stays ignored. This block must stay at the END of .gitignore so
+# it wins over the global *.dll rules above (last match wins).
+# ==========================================================================
+!Binaries/Win64/
+Binaries/Win64/*
+!Binaries/Win64/UnrealEditor-ChronoSpace.dll
+!Binaries/Win64/UnrealEditor.modules
+!Binaries/Win64/ChronoSpaceEditor.target
+
+!Plugins/*/Binaries/Win64/
+Plugins/*/Binaries/Win64/*
+!Plugins/*/Binaries/Win64/UnrealEditor-*.dll
+!Plugins/*/Binaries/Win64/UnrealEditor.modules
+!Plugins/*/Binaries/Win64/EOSSDK-Win64-Shipping.dll
+# ...but never DebugGame variants, and not the disabled Steam sessions plugin
+Plugins/*/Binaries/Win64/UnrealEditor-*-Win64-DebugGame.dll
+Plugins/AdvancedSteamSessions/Binaries/

@@ -99,3 +99,11 @@ EIK_Example/.idea/.idea.EIK_Example/.idea/workspace.xml
 .Trashes
 /Source/ThirdParty/DiscordGameSDK/x86_64
 /Source/ThirdParty/DiscordGameSDK/aarch64
+
+# Checked-in editor binaries (double-click .uproject workflow) — see project root .gitignore
+!Binaries/Win64/
+Binaries/Win64/*
+!Binaries/Win64/UnrealEditor-*.dll
+Binaries/Win64/UnrealEditor-*-Win64-DebugGame.dll
+!Binaries/Win64/UnrealEditor.modules
+!Binaries/Win64/EOSSDK-Win64-Shipping.dll

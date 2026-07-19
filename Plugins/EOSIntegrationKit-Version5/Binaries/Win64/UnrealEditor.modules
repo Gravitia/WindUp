@@ -1,0 +1,16 @@
+{
+	"BuildId": "55116800",
+	"Modules": 
+	{
+		"DiscordGame": "UnrealEditor-DiscordGame.dll",
+		"EIKEditor": "UnrealEditor-EIKEditor.dll",
+		"EIKLoginMethods": "UnrealEditor-EIKLoginMethods.dll",
+		"EIKShared": "UnrealEditor-EIKShared.dll",
+		"EIKVoiceChat": "UnrealEditor-EIKVoiceChat.dll",
+		"EIKWeb": "UnrealEditor-EIKWeb.dll",
+		"EOSIntegrationKit": "UnrealEditor-EOSIntegrationKit.dll",
+		"OnlineServicesEIK": "UnrealEditor-OnlineServicesEIK.dll",
+		"OnlineSubsystemEIK": "UnrealEditor-OnlineSubsystemEIK.dll",
+		"SocketSubsystemEIK": "UnrealEditor-SocketSubsystemEIK.dll"
+	}
+}
