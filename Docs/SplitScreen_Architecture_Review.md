@@ -1,9 +1,24 @@
 # ChronoSpace — Split Screen 아키텍처 리뷰 & 개선안
 
-> 대상 엔진: **UE 5.5**
-> 작성 시점: 2026-04-26
+> 작성 시점: 2026-04-26 · 작성 당시 엔진: **UE 5.5** (현재 프로젝트는 **UE 5.8**)
 > 관점: **Unreal Client 시니어 엔지니어**
 > 범위: 현재 분할 화면 구현의 비용 분석, *It Takes Two* / *A Way Out* / *Split Fiction* 등 상용 코옵 타이틀의 구현 패턴, ViewportClient 레벨에서 프레임을 회수할 수 있는 현실적 옵션
+
+---
+
+## ⚠ 현재 상태 (2026-07-25 기준)
+
+**이 문서가 제안한 ViewFamily 방식이 이미 구현되었다.** 아래 §1 "현재 구현 진단"은 **개선 전 구조에 대한 기록**이며, 지금 코드와 다르다.
+
+| | 문서 작성 당시 (구) | 현재 (신) |
+|---|---|---|
+| 두 번째 뷰 | 더미 `LocalPlayer` + 더미 `PlayerController` + `ACSSpectatorPawn` 빙의 | 단일 `LocalPlayer` 위에서 두 번째 `FSceneView`를 ViewFamily에 직접 주입 |
+| 뷰포트 클라이언트 | `UCSGameViewportClient` (`LayoutPlayers()` 오버라이드) | [`UCSViewFamilyViewportClient`](../Source/ChronoSpace/UI/CSViewFamilyViewportClient.h) (`AddSecondarySceneView()`) |
+| 상태 | — | `ACSSpectatorPawn`, `UCSGameViewportClient` 및 `Source/ChronoSpace/Pawn/` 폴더는 **삭제됨** |
+
+살아있는 코드: [`CSViewFamilyViewportClient`](../Source/ChronoSpace/UI/CSViewFamilyViewportClient.h), [`CSSplitScreenSubsystem`](../Source/ChronoSpace/Subsystem/CSSplitScreenSubsystem.h), [`CSCameraViewProxy`](../Source/ChronoSpace/Actor/CSCameraViewProxy.h), [`CSSplitScreenTrigger`](../Source/ChronoSpace/Actor/CSSplitScreenTrigger.h)
+
+**읽는 법**: §2 이후의 비용 분석·상용 타이틀 패턴·cvar 튜닝(부록 C)은 여전히 유효하다. §1은 왜 구조를 바꿨는지에 대한 배경으로만 읽는다.
 
 ---
 
@@ -20,16 +35,18 @@
 
 ## 1. 현재 구현 진단
 
-### 1.1 뼈대 요약
+> **주의: 이 장은 개선 전(2026-04-26) 구조의 기록이다.** 아래 표의 `UCSGameViewportClient`, `ACSSpectatorPawn`, `CreateDummyLocalPlayer`는 현재 코드에 존재하지 않는다. 문서 상단의 "현재 상태" 표를 참고할 것.
+
+### 1.1 뼈대 요약 (개선 전)
 
 | 컴포넌트 | 파일 | 역할 |
 |----------|------|------|
-| `UCSGameViewportClient` | [CSGameViewportClient.cpp](../Source/ChronoSpace/UI/CSGameViewportClient.cpp) | `LayoutPlayers()` 오버라이드, P0/P1 좌우 스왑, 풀스크린↔분할 트랜지션 Lerp |
-| `UCSSplitScreenSubsystem` | [CSSplitScreenSubsystem.cpp](../Source/ChronoSpace/Subsystem/CSSplitScreenSubsystem.cpp) | `SetForceDisableSplitscreen()` 토글, 트랜지션 라우팅 |
-| `ACSGameMode::SetupOnlineSplitScreen` | [CSGameMode.cpp:480-509](../Source/ChronoSpace/Game/CSGameMode.cpp#L480-L509) | 리슨 서버에 더미 LocalPlayer 생성, 60 Hz 회전 동기화 타이머 시작 |
-| `ACSGameMode::CreateDummyLocalPlayer` | [CSGameMode.cpp:289-352](../Source/ChronoSpace/Game/CSGameMode.cpp#L289-L352) | `GameInstance->CreateLocalPlayer()` → 더미 PC + `ACSSpectatorPawn` 빙의 |
-| `ACSCameraViewProxy` | [CSCameraViewProxy.h](../Source/ChronoSpace/Actor/CSCameraViewProxy.h) | 원격 클라의 카메라(Loc/Rot/FOV) 만 60 Hz 로 리플리케이션 |
-| `ACSSpectatorPawn::SyncWithRemoteCamera` | [CSSpectatorPawn.h:53-68](../Source/ChronoSpace/Pawn/CSSpectatorPawn.h#L53-L68) | 더미 폰을 프록시 카메라 위치로 InterpTo |
+| `UCSGameViewportClient` | *(삭제됨 → [`CSViewFamilyViewportClient`](../Source/ChronoSpace/UI/CSViewFamilyViewportClient.h)로 대체)* | `LayoutPlayers()` 오버라이드, P0/P1 좌우 스왑, 풀스크린↔분할 트랜지션 Lerp |
+| `UCSSplitScreenSubsystem` | [CSSplitScreenSubsystem.cpp](../Source/ChronoSpace/Subsystem/CSSplitScreenSubsystem.cpp) | `SetForceDisableSplitscreen()` 토글, 트랜지션 라우팅 *(현재도 사용)* |
+| `ACSGameMode::SetupOnlineSplitScreen` | [CSGameMode.cpp](../Source/ChronoSpace/Game/CSGameMode.cpp) | 리슨 서버에 더미 LocalPlayer 생성, 60 Hz 회전 동기화 타이머 시작 *(더미 생성 로직 제거됨)* |
+| `ACSGameMode::CreateDummyLocalPlayer` | *(삭제됨)* | `GameInstance->CreateLocalPlayer()` → 더미 PC + `ACSSpectatorPawn` 빙의 |
+| `ACSCameraViewProxy` | [CSCameraViewProxy.h](../Source/ChronoSpace/Actor/CSCameraViewProxy.h) | 원격 클라의 카메라(Loc/Rot/FOV) 만 60 Hz 로 리플리케이션 *(현재도 사용)* |
+| `ACSSpectatorPawn::SyncWithRemoteCamera` | *(삭제됨)* | 더미 폰을 프록시 카메라 위치로 InterpTo |
 
 ### 1.2 동작 시나리오 — 온라인 코옵에서 분할 화면이 만들어지는 흐름
 
@@ -592,16 +609,16 @@ DumpGPU                     ; 더 자세한 캡처
 ## 부록 A. 참고 코드 위치
 
 - 현재 분할 화면 파이프라인:
-  - [Source/ChronoSpace/UI/CSGameViewportClient.h](../Source/ChronoSpace/UI/CSGameViewportClient.h) / [.cpp](../Source/ChronoSpace/UI/CSGameViewportClient.cpp)
+  - [Source/ChronoSpace/UI/CSViewFamilyViewportClient.h](../Source/ChronoSpace/UI/CSViewFamilyViewportClient.h) / [.cpp](../Source/ChronoSpace/UI/CSViewFamilyViewportClient.cpp) — `AddSecondarySceneView()`
   - [Source/ChronoSpace/Subsystem/CSSplitScreenSubsystem.h](../Source/ChronoSpace/Subsystem/CSSplitScreenSubsystem.h) / [.cpp](../Source/ChronoSpace/Subsystem/CSSplitScreenSubsystem.cpp)
-  - [Source/ChronoSpace/Game/CSGameMode.cpp](../Source/ChronoSpace/Game/CSGameMode.cpp) — `CreateDummyLocalPlayer`, `SetupOnlineSplitScreen`, `SyncDummyRotationWithProxy`
+  - [Source/ChronoSpace/Game/CSGameMode.cpp](../Source/ChronoSpace/Game/CSGameMode.cpp) — `SetupOnlineSplitScreen`
   - [Source/ChronoSpace/Actor/CSCameraViewProxy.h](../Source/ChronoSpace/Actor/CSCameraViewProxy.h)
-  - [Source/ChronoSpace/Pawn/CSSpectatorPawn.h](../Source/ChronoSpace/Pawn/CSSpectatorPawn.h)
   - [Source/ChronoSpace/Actor/CSSplitScreenTrigger.h](../Source/ChronoSpace/Actor/CSSplitScreenTrigger.h)
+  - *(삭제됨: `CSGameViewportClient`, `Pawn/CSSpectatorPawn`)*
 - 설정:
   - [Config/DefaultEngine.ini](../Config/DefaultEngine.ini) — `bUseSplitscreen`, `TwoPlayerSplitscreenLayout`, `GameViewportClientClassName`
 
-## 부록 B. 엔진 측 참고 (UE 5.5)
+## 부록 B. 엔진 측 참고
 
 - `Engine/Source/Runtime/Engine/Private/GameViewportClient.cpp` — `UGameViewportClient::Draw`, `LayoutPlayers`
 - `Engine/Source/Runtime/Engine/Public/SceneView.h` — `FSceneViewInitOptions`

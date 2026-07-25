@@ -145,6 +145,9 @@ venv.bak/
 MCP/logs/
 MCP/temp/
 *.mcp.json
+# 프로젝트 MCP 서버 설정은 팀 공용으로 커밋한다 (URL만 있고 토큰은 없음.
+# 인증은 각자 OAuth 로그인으로 처리된다)
+!.mcp.json
 
 # ==========================================================================
 # Checked-in editor binaries (double-click .uproject workflow)
@@ -170,3 +173,54 @@ Plugins/*/Binaries/Win64/*
 # ...but never DebugGame variants, and not the disabled Steam sessions plugin
 Plugins/*/Binaries/Win64/UnrealEditor-*-Win64-DebugGame.dll
 Plugins/AdvancedSteamSessions/Binaries/
+
+# ==========================================================================
+# Claude Code
+# .claude/ 는 기본적으로 전부 무시한다. 개인 설정/룰/스킬은 이름을 아무렇게나
+# 지어도 커밋되지 않는다.
+#
+# 팀과 공유할 룰/스킬은 아래에 직접 예외를 추가할 것. 폴더와 내용물 두 줄이 필요하다.
+#   !.claude/skills/<이름>/
+#   !.claude/skills/<이름>/**
+# ==========================================================================
+CLAUDE.local.md
+.claude/**
+
+# --- 공용 룰 ---
+!.claude/rules/
+!.claude/rules/01-unreal-assets.md
+!.claude/rules/02-generated-output.md
+!.claude/rules/03-project-layout.md
+!.claude/rules/04-multiplayer.md
+!.claude/rules/05-editor-workflow.md
+
+# --- 공용 스킬 ---
+!.claude/skills/
+!.claude/skills/unreal-mcp/
+!.claude/skills/unreal-mcp/**
+!.claude/skills/unreal-blueprint/
+!.claude/skills/unreal-blueprint/**
+!.claude/skills/unreal-asset/
+!.claude/skills/unreal-asset/**
+!.claude/skills/unreal-level-actor/
+!.claude/skills/unreal-level-actor/**
+!.claude/skills/unreal-umg/
+!.claude/skills/unreal-umg/**
+!.claude/skills/unreal-gas/
+!.claude/skills/unreal-gas/**
+!.claude/skills/unreal-data/
+!.claude/skills/unreal-data/**
+!.claude/skills/unreal-material/
+!.claude/skills/unreal-material/**
+!.claude/skills/unreal-animation/
+!.claude/skills/unreal-animation/**
+!.claude/skills/unreal-niagara/
+!.claude/skills/unreal-niagara/**
+!.claude/skills/unreal-ai/
+!.claude/skills/unreal-ai/**
+!.claude/skills/unreal-editor-debug/
+!.claude/skills/unreal-editor-debug/**
+!.claude/skills/unreal-test/
+!.claude/skills/unreal-test/**
+!.claude/skills/unreal-project-config/
+!.claude/skills/unreal-project-config/**

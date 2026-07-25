@@ -1,9 +1,21 @@
 # ChronoSpace — Listen Server → Dedicated Server 전환 가이드
 
-> 대상 엔진: **UE 5.5**
+> 작성일: 2026-04-26 · 작성 당시 엔진: **UE 5.5** (현재 프로젝트는 **UE 5.8**)
 > 대상 OSS: **EIK (EOS Integration Kit)**
-> 작성일: 2026-04-26
 > 범위: 빌드 타겟, 코드, 설정(.ini), 세션/네트워크, 빌드/배포, 코드 수정 포인트까지의 **End-to-End** 전환 절차
+
+---
+
+## ⚠ 현재 상태 (2026-07-25 기준)
+
+전환은 진행되었고, 분할 화면 스택은 이 문서가 예고한 대로 정리되었다.
+
+- **삭제됨**: `ACSSpectatorPawn`(`Source/ChronoSpace/Pawn/` 폴더째), `UCSGameViewportClient`
+- **대체됨**: 두 번째 뷰는 [`UCSViewFamilyViewportClient`](../Source/ChronoSpace/UI/CSViewFamilyViewportClient.h)가 ViewFamily에 `FSceneView`를 직접 주입하는 방식. 더미 `LocalPlayer`/`PlayerController`를 만들지 않는다.
+- **유지됨**: `CSCameraViewProxy`, `CSSplitScreenSubsystem`, `CSSplitScreenTrigger`, `CSEIKSubsystem`
+- **플러그인**: `AdvancedSteamSessions`는 현재 비활성화. 활성 경로는 EIK다.
+
+따라서 아래 §에서 "더미 LocalPlayer / SpectatorPawn" 을 다루는 서술은 **전환 전 구조에 대한 설명**으로 읽는다. 배경은 [SplitScreen_Architecture_Review.md](SplitScreen_Architecture_Review.md) 참고.
 
 ---
 
@@ -522,7 +534,7 @@ ChronoSpaceServer.exe %MAP% -port=%PORT% -log -nullrhi -unattended ^
 
 ### 9.2 인스턴스 1개의 자원 요구 (시작 추정치)
 
-UE 5.5 데디 일반적인 값 + 위 워크로드 보정:
+UE 5.5 기준 데디 일반값 + 위 워크로드 보정 (5.8에서 재측정 필요):
 
 | 자원 | 8인 매치 1개 (피크) | 8인 매치 1개 (평균) | 헤드룸 |
 |------|---------------------|---------------------|--------|
