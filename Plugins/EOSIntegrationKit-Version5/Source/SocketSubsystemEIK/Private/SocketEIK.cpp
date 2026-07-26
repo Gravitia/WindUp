@@ -106,19 +106,36 @@ bool FSocketEOS::Close()
 
 	if (LocalAddress.IsValid())
 	{
-		EOS_P2P_SocketId SocketId = { };
-		SocketId.ApiVersion = EOS_P2P_SOCKETID_API_LATEST;
-		FCStringAnsi::Strcpy(SocketId.SocketName, LocalAddress.GetSocketName());
+		// Travel fix (UE5.8): during non-seamless ServerTravel the old world's net
+		// driver and the pending net game's driver briefly coexist and share one
+		// EOS SocketId ("GameNetDriver"). EOS_P2P_CloseConnections closes EVERY
+		// peer connection on that socket id, so the old socket's (often deferred)
+		// close severed the freshly established travel connection and wedged EOS
+		// P2P signaling — the client then never received its PlayerController
+		// after travel. Only issue the socket-wide close when this is the last
+		// bound channel on the socket name.
+		if (SocketSubsystem.HasOtherChannelsBound(LocalAddress))
+		{
+			UE_LOG(LogSocketSubsystemEOS, Log,
+				TEXT("Skipping socket-wide close for (%s): socket id still in use by another bound channel"),
+				*LocalAddress.ToString(true));
+		}
+		else
+		{
+			EOS_P2P_SocketId SocketId = { };
+			SocketId.ApiVersion = EOS_P2P_SOCKETID_API_LATEST;
+			FCStringAnsi::Strcpy(SocketId.SocketName, LocalAddress.GetSocketName());
 
-		EOS_P2P_CloseConnectionsOptions Options = { };
-		Options.ApiVersion = EOS_P2P_CLOSECONNECTIONS_API_LATEST;
-		Options.LocalUserId = SocketSubsystem.GetLocalUserId();
-		Options.SocketId = &SocketId;
+			EOS_P2P_CloseConnectionsOptions Options = { };
+			Options.ApiVersion = EOS_P2P_CLOSECONNECTIONS_API_LATEST;
+			Options.LocalUserId = SocketSubsystem.GetLocalUserId();
+			Options.SocketId = &SocketId;
 
-		EOS_EResult Result = EOS_P2P_CloseConnections(SocketSubsystem.GetP2PHandle(), &Options);
+			EOS_EResult Result = EOS_P2P_CloseConnections(SocketSubsystem.GetP2PHandle(), &Options);
 
-		UE_LOG(LogSocketSubsystemEOS, Log, TEXT("Closing socket (%s) with result (%s)"), *LocalAddress.ToString(true), ANSI_TO_TCHAR(EOS_EResult_ToString(Result)));
-		NP_LOG(TEXT("[%s] - Closing socket (%s) with result (%s)\r\n"), GetLogPrefix(), *LocalAddress.ToString(true), ANSI_TO_TCHAR(EOS_EResult_ToString(Result)));
+			UE_LOG(LogSocketSubsystemEOS, Log, TEXT("Closing socket (%s) with result (%s)"), *LocalAddress.ToString(true), ANSI_TO_TCHAR(EOS_EResult_ToString(Result)));
+			NP_LOG(TEXT("[%s] - Closing socket (%s) with result (%s)\r\n"), GetLogPrefix(), *LocalAddress.ToString(true), ANSI_TO_TCHAR(EOS_EResult_ToString(Result)));
+		}
 
 		ClosedRemotes.Empty();
 	}
@@ -655,6 +672,19 @@ bool FSocketEOS::Close(const FInternetAddrEOS& RemoteAddress)
 #if WITH_EOS_SDK
 	// So we don't reopen a connection by sending to it
 	ClosedRemotes.Add(RemoteAddress);
+
+	// Travel fix (UE5.8): EOS multiplexes one transport per (peer, socket id).
+	// While two net drivers share the socket name during ServerTravel, closing
+	// this socket's connection to the peer would also cut the other driver's
+	// live connection to the same peer. ClosedRemotes above already stops this
+	// socket from talking to the peer, so skipping the SDK-level close is safe.
+	if (SocketSubsystem.HasOtherChannelsBound(LocalAddress))
+	{
+		UE_LOG(LogSocketSubsystemEOS, Log,
+			TEXT("Skipping peer close for (%s): socket id still in use by another bound channel"),
+			*RemoteAddress.ToString(true));
+		return true;
+	}
 
 	EOS_P2P_SocketId SocketId = { };
 	SocketId.ApiVersion = EOS_P2P_SOCKETID_API_LATEST;

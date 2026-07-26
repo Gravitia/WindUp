@@ -263,6 +263,30 @@ bool FSocketSubsystemEIK::BindChannel(const FInternetAddrEOS& Address)
 	return true;
 }
 
+bool FSocketSubsystemEIK::HasOtherChannelsBound(const FInternetAddrEOS& Address) const
+{
+	if (!Address.IsValid())
+	{
+		return false;
+	}
+
+	const FChannelSet* ExistingBoundPorts = BoundAddresses.Find(Address.GetSocketName());
+	if (!ExistingBoundPorts)
+	{
+		return false;
+	}
+
+	const uint8 OwnChannel = Address.GetChannel();
+	for (const uint8 BoundChannel : *ExistingBoundPorts)
+	{
+		if (BoundChannel != OwnChannel)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
 bool FSocketSubsystemEIK::UnbindChannel(const FInternetAddrEOS& Address)
 {
 	if (!Address.IsValid())

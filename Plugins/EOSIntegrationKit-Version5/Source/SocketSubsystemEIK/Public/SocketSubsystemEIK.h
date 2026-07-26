@@ -75,6 +75,15 @@ public:
 	bool BindChannel(const FInternetAddrEOS& Address);
 
 	/**
+	 * Returns true if any channel other than Address' own channel is still bound
+	 * on Address' socket name. Used to refcount socket-id-wide EOS operations:
+	 * during non-seamless travel two net drivers briefly share one socket name
+	 * ("GameNetDriver"), and a close issued by the dying driver's socket must not
+	 * sever the live driver's connection to the same peer.
+	 */
+	bool HasOtherChannelsBound(const FInternetAddrEOS& Address) const;
+
+	/**
 	 * Unbind a previously bound socket name and channel.
 	 *
 	 * @param Address The Address to unbind
