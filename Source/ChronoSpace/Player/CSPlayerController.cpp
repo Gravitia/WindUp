@@ -235,16 +235,17 @@ void ACSPlayerController::ToggleOption()
 void ACSPlayerController::OpenOption()
 {
 	OptionWidget = CreateWidget(this, OptionWidgetClass);
-	OptionWidget->AddToViewport(100);
-	
+
 	if (OptionWidget == nullptr)
 		return;
 
-	FInputModeGameAndUI UIInputMode; 
+	OptionWidget->AddToViewport(100);
+
+	FInputModeGameAndUI UIInputMode;
 	UIInputMode.SetWidgetToFocus(OptionWidget->TakeWidget());
-	SetInputMode(UIInputMode); 
-	bShowMouseCursor = true; 
-	bIsMenuOpen = true; 
+	SetInputMode(UIInputMode);
+	bShowMouseCursor = true;
+	bIsMenuOpen = true;
 }
 
 void ACSPlayerController::CloseOption()
@@ -253,5 +254,9 @@ void ACSPlayerController::CloseOption()
 		return;
 
 	OptionWidget->RemoveFromParent();
+	OptionWidget = nullptr;
+
+	SetupInputMode();
+	bShowMouseCursor = false;
 	bIsMenuOpen = false;
 }
