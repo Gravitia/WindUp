@@ -16,8 +16,9 @@ description: 언리얼 블루프린트를 만들거나 수정할 때 사용한�
 2. `list_graphs` → `get_graph`로 어떤 그래프가 있는지 파악한다.
 3. 그래프 내용을 읽을 때는 `read_graph_dsl`이 노드 단위 조회보다 훨씬 빠르다.
 4. 수정한다 (아래 참고).
-5. `compile_blueprint`로 컴파일한다. **생략하면 변경이 반영되지 않는다.**
-6. `AssetTools.save_assets`로 저장한다.
+5. `arrange_nodes`로 배치를 정리한다 (아래 "노드 배치는 정리하고 끝낸다").
+6. `compile_blueprint`로 컴파일한다. **생략하면 변경이 반영되지 않는다.**
+7. `AssetTools.save_assets`로 저장한다.
 
 ## 그래프 편집: DSL을 우선 쓴다
 
@@ -36,6 +37,28 @@ description: 언리얼 블루프린트를 만들거나 수정할 때 사용한�
 - 배치: `arrange_nodes`, `set_node_position`
 
 `create_node` 전에 `get_node_type_pins`로 핀 이름을 확인한다. 핀 이름은 추측하지 않는다.
+
+## 노드 배치는 정리하고 끝낸다
+
+노드를 추가했거나 exec 연결을 바꿨으면 컴파일 전에 `arrange_nodes`로 배치를 정리한다. 새로 만든 노드는 지정한 좌표에 그대로 놓이기 때문에, 정리하지 않으면 기존 노드와 겹치거나 연결선이 뒤로 꺾여서 사람이 열었을 때 읽을 수 없다. **동작에는 영향이 없지만 그래프를 실제로 보는 건 사람이다.**
+
+### 그래프 전체를 한 번에 넘기지 않는다
+
+`arrange_nodes`는 넘긴 노드 집합을 **그래프의 빈 아래쪽 공간으로 통째로 옮긴다.** 원래 y 위치를 유지하지 않는다. 그래서 이벤트 체인 단위로 나눠서, 원하는 순서대로 호출한다. 호출한 순서대로 위에서 아래로 쌓인다.
+
+권장 순서: `BeginPlay` → `Tick` → 오버랩/입력 이벤트 → 커스텀 이벤트 → 함수 그래프
+
+```
+find_nodes(graph, "", entry_points_only=True)   # 이벤트 노드 목록
+  → get_connected_subgraph(entry)               # 체인별 노드 수집
+  → arrange_nodes(체인 노드들)                   # 순서대로 호출
+```
+
+`get_connected_subgraph`는 **어떤 연결로든** 닿는 노드를 전부 반환한다. 두 이벤트가 같은 하위 체인(타임라인, 공용 연출 등)을 공유하면 양쪽에서 같은 집합이 나오므로, 이미 처리한 노드는 기록해두고 건너뛴다. 안 그러면 같은 집합을 두 번 옮긴다.
+
+체인이 여러 개거나 블루프린트가 여러 개면 `ProgrammaticToolset.execute_tool_script`로 묶어서 돌린다. `get_connected_subgraph` 출력이 노드당 수백 자라 그냥 호출하면 컨텍스트를 크게 먹는다.
+
+정리한 뒤에는 체인별 y 범위가 겹치지 않는지 확인한다.
 
 ## 변수
 

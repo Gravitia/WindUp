@@ -4,9 +4,10 @@
 
 1. **읽고 나서 쓴다.** 그래프, 테이블, 위젯 트리, 나이아가라 스택은 현재 구조를 먼저 조회한다. 구조를 모른 채 쓰면 조용히 깨진다.
 2. **프로퍼티 이름을 추측하지 않는다.** `ObjectTools.list_properties`로 확인하고 쓴다. 틀린 이름의 `set_properties`는 에러 없이 실패한다.
-3. 블루프린트를 고쳤으면 `BlueprintTools.compile_blueprint`로 컴파일한다.
-4. `AssetTools.save_assets`로 저장한다. 저장하지 않으면 에디터를 닫을 때 사라진다.
-5. 수정 결과를 **다시 읽어 확인한다.** 그래프는 `read_graph_dsl`이 빠르다.
+3. 그래프에 노드를 추가하거나 연결을 바꿨으면 **`BlueprintTools.arrange_nodes`로 배치를 정리한다.** 자세한 건 `unreal-blueprint` 스킬을 본다.
+4. 블루프린트를 고쳤으면 `BlueprintTools.compile_blueprint`로 컴파일한다.
+5. `AssetTools.save_assets`로 저장한다. 저장하지 않으면 에디터를 닫을 때 사라진다.
+6. 수정 결과를 **다시 읽어 확인한다.** 그래프는 `read_graph_dsl`이 빠르다.
 
 ## 보고
 
