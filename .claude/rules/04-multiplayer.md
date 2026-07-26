@@ -1,6 +1,6 @@
-# 멀티플레이 · 데디케이티드 서버
+# 멀티플레이 · 리슨 서버
 
-이 프로젝트는 데디케이티드 서버 구성이다. 게임플레이 코드를 쓸 때 싱글플레이를 가정하지 않는다.
+이 프로젝트는 리슨 서버 구성이다. 게임플레이 코드를 쓸 때 싱글플레이를 가정하지 않는다.
 
 ## 항상 확인할 것
 
@@ -14,14 +14,6 @@
 
 PIE 로그를 볼 때 **서버 로그인지 클라이언트 로그인지 구분**한다. 구분하지 않고 읽으면 잘못된 결론에 도달한다.
 
-## 관련 문서 · 코드
-
-바꾸기 전에 읽는다.
-
-- `Docs/DedicatedServer_Migration.md`
-- `Docs/DedicatedServer_Runbook.md`
-- `Docs/SplitScreen_Architecture_Review.md`
-- `Source/ChronoSpace/Game`, `Source/ChronoSpace/Player`
 
 ## 세션 플러그인
 
