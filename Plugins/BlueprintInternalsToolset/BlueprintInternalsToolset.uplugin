@@ -1,0 +1,24 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "Blueprint Internals Toolset",
+	"Description": "MCP toolset exposing Blueprint internals that the standard toolsets cannot reach: Timeline track curves and custom event replication flags. These engine fields are declared as bare UPROPERTY(), so generic property tools cannot see them.",
+	"Category": "Other",
+	"EditorOnly": true,
+	"EnabledByDefault": true,
+	"Modules": [
+		{
+			"Name": "BlueprintInternalsToolset",
+			"Type": "Editor",
+			"LoadingPhase": "PostEngineInit",
+			"TargetAllowList": [ "Editor" ]
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "ToolsetRegistry",
+			"Enabled": true
+		}
+	]
+}

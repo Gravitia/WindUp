@@ -59,5 +59,26 @@ call_tool(
 | 로그 확인, 콘솔 변수, PIE, 뷰포트, 에디터 UI 조작 | `unreal-editor-debug` | `EditorAppToolset`, `LogsToolset`, `SlateInspectorToolset` |
 | 자동화 테스트 실행 | `unreal-test` | `AutomationTestToolset` |
 | 프로젝트 설정·플러그인·게임 피처·피직스 에셋·PCG | `unreal-project-config` | `ConfigSettingsToolset`, `PluginToolset`, `GameFeaturesToolset` |
+| **타임라인 커브 키 값, 커스텀 이벤트 리플리케이션 플래그** | `unreal-blueprint` | `BlueprintInternalsToolset` |
 
 여러 툴을 한 흐름으로 묶어야 하면 `editor_toolset.toolsets.programmatic.ProgrammaticToolset`으로 배치 실행할 수 있다.
+
+## 프로젝트 자체 툴셋 — `BlueprintInternalsToolset`
+
+`Plugins/BlueprintInternalsToolset`은 이 프로젝트에서 만든 에디터 플러그인이다. 엔진 툴셋이 못 닿는 블루프린트 내부를 다룬다.
+
+**왜 필요한가.** 아래 필드들은 엔진에서 맨 `UPROPERTY()`로 선언돼 있어 `ObjectTools.get_properties`로도, Python으로도 **보이지 않는다.** 값을 못 읽는 게 아니라 툴에 노출이 안 된 것이다.
+
+- `UBlueprint::Timelines` → `FloatTracks`/`VectorTracks` → `CurveFloat` → `FloatCurve` (타임라인 커브 키)
+- `K2Node_Event::FunctionFlags` (커스텀 이벤트의 Replicates·Reliable)
+
+| 툴 | 용도 |
+|---|---|
+| `GetTimelines(Blueprint)` | 타임라인별 Length·LengthMode·AutoPlay/Loop/Replicated + 모든 트랙(Float·Vector·LinearColor·Event)의 키 (Time, Value, InterpMode) |
+| `SetTimelineKeyValue(Blueprint, TimelineName, TrackName, Component, KeyIndex, NewValue)` | 키 값 하나 수정. `Component`는 float이면 `""`, vector면 `"X"/"Y"/"Z"`, 컬러면 `"R"/"G"/"B"/"A"` |
+| `GetCustomEventReplication(Node)` | 커스텀 이벤트의 리플리케이션 모드·Reliable 조회 |
+| `SetCustomEventReplication(Node, Replication, bReliable)` | 설정. `Replication`은 `NotReplicated`/`Multicast`/`RunOnServer`/`RunOnOwningClient` |
+
+**타임라인 커브 값이 궁금하면 스크린샷으로 눈금을 읽지 말고 `GetTimelines`를 쓴다.** 외부 커브 애셋을 쓰는 트랙은 `SetTimelineKeyValue`가 일부러 거부한다 — 그 애셋을 쓰는 다른 곳까지 바뀌기 때문이다.
+
+쓰기 툴은 블루프린트를 structurally modified로 표시만 한다. **`compile_blueprint` → `save_assets`는 직접 해야 한다.**

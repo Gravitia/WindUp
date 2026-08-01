@@ -5148,6 +5148,18 @@
 			"Type": "RequiredResource"
 		},
 		{
+			"Path": "$(ProjectDir)/Plugins/BlueprintInternalsToolset/Binaries/Win64/UnrealEditor-BlueprintInternalsToolset.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/BlueprintInternalsToolset/Binaries/Win64/UnrealEditor-BlueprintInternalsToolset.pdb",
+			"Type": "SymbolFile"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/BlueprintInternalsToolset/Binaries/Win64/UnrealEditor.modules",
+			"Type": "RequiredResource"
+		},
+		{
 			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/EOSSDK-Win64-Shipping.dll",
 			"Type": "DynamicLibrary"
 		},
@@ -30234,6 +30246,10 @@
 			"Type": "UFS"
 		},
 		{
+			"Path": "$(ProjectDir)/Plugins/BlueprintInternalsToolset/BlueprintInternalsToolset.uplugin",
+			"Type": "UFS"
+		},
+		{
 			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/EOSSDK-Win64-Shipping.dll",
 			"Type": "NonUFS"
 		},
@@ -30290,6 +30306,7 @@
 		"BlockoutToolsPlugin",
 		"BlueprintFileUtils",
 		"BlueprintHeaderView",
+		"BlueprintInternalsToolset",
 		"BlueprintMaterialTextureNodes",
 		"Buoyancy",
 		"CLionSourceCodeAccess",

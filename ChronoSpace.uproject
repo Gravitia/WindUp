@@ -79,6 +79,10 @@
 		{
 			"Name": "AllToolsets",
 			"Enabled": true
+		},
+		{
+			"Name": "BlueprintInternalsToolset",
+			"Enabled": true
 		}
 	]
 }

@@ -8,6 +8,8 @@ description: 언리얼 블루프린트를 만들거나 수정할 때 사용한�
 주 툴셋: `editor_toolset.toolsets.blueprint.BlueprintTools`
 보조 툴셋: `editor_toolset.toolsets.object.ObjectTools` (프로퍼티/기본값), `editor_toolset.toolsets.asset.AssetTools` (저장)
 
+**타임라인 커브 키 값**과 **커스텀 이벤트의 리플리케이션 플래그**는 위 툴셋들로 접근할 수 없다. 프로젝트 자체 툴셋 `BlueprintInternalsToolset`을 쓴다 — 자세한 건 `unreal-mcp` 스킬의 해당 절을 본다.
+
 블루프린트 `.uasset`을 Read/Edit로 직접 건드리지 않는다. 공통 규칙은 `unreal-mcp` 스킬 참고.
 
 ## 표준 작업 순서
