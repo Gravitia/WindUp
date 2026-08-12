@@ -24,6 +24,134 @@
 	},
 	"BuildProducts": [
 		{
+			"Path": "$(ProjectDir)/Binaries/Win64/UnrealEditor-ChronoSpace.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(ProjectDir)/Binaries/Win64/UnrealEditor-ChronoSpace.pdb",
+			"Type": "SymbolFile"
+		},
+		{
+			"Path": "$(ProjectDir)/Binaries/Win64/UnrealEditor.modules",
+			"Type": "RequiredResource"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/AdvancedSessions/Binaries/Win64/UnrealEditor-AdvancedSessions.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/AdvancedSessions/Binaries/Win64/UnrealEditor-AdvancedSessions.pdb",
+			"Type": "SymbolFile"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/AdvancedSessions/Binaries/Win64/UnrealEditor.modules",
+			"Type": "RequiredResource"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/BlueprintInternalsToolset/Binaries/Win64/UnrealEditor-BlueprintInternalsToolset.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/BlueprintInternalsToolset/Binaries/Win64/UnrealEditor-BlueprintInternalsToolset.pdb",
+			"Type": "SymbolFile"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/BlueprintInternalsToolset/Binaries/Win64/UnrealEditor.modules",
+			"Type": "RequiredResource"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/EOSSDK-Win64-Shipping.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/EOSSDK-Win64-Shipping.lib",
+			"Type": "RequiredResource"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor-DiscordGame.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor-DiscordGame.pdb",
+			"Type": "SymbolFile"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor-EIKEditor.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor-EIKEditor.pdb",
+			"Type": "SymbolFile"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor-EIKLoginMethods.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor-EIKLoginMethods.pdb",
+			"Type": "SymbolFile"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor-EIKShared.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor-EIKShared.pdb",
+			"Type": "SymbolFile"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor-EIKVoiceChat.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor-EIKVoiceChat.pdb",
+			"Type": "SymbolFile"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor-EIKWeb.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor-EIKWeb.pdb",
+			"Type": "SymbolFile"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor-EOSIntegrationKit.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor-EOSIntegrationKit.pdb",
+			"Type": "SymbolFile"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor-OnlineServicesEIK.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor-OnlineServicesEIK.pdb",
+			"Type": "SymbolFile"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor-OnlineSubsystemEIK.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor-OnlineSubsystemEIK.pdb",
+			"Type": "SymbolFile"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor-SocketSubsystemEIK.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor-SocketSubsystemEIK.pdb",
+			"Type": "SymbolFile"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor.modules",
+			"Type": "RequiredResource"
+		},
+		{
 			"Path": "$(EngineDir)/Binaries/Win64/AgentInterface.dll",
 			"Type": "DynamicLibrary"
 		},
@@ -41,6 +169,10 @@
 		},
 		{
 			"Path": "$(EngineDir)/Binaries/Win64/D3D12/x64/d3d12SDKLayers.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Binaries/Win64/EOSSDK-Win64-Shipping.dll",
 			"Type": "DynamicLibrary"
 		},
 		{
@@ -2212,6 +2344,30 @@
 			"Type": "RequiredResource"
 		},
 		{
+			"Path": "$(EngineDir)/Plugins/Animation/RigLogic/Binaries/Win64/UnrealEditor-RigLogicDeveloper.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Animation/RigLogic/Binaries/Win64/UnrealEditor-RigLogicEditor.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Animation/RigLogic/Binaries/Win64/UnrealEditor-RigLogicLib.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Animation/RigLogic/Binaries/Win64/UnrealEditor-RigLogicLibTest.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Animation/RigLogic/Binaries/Win64/UnrealEditor-RigLogicModule.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Animation/RigLogic/Binaries/Win64/UnrealEditor.modules",
+			"Type": "RequiredResource"
+		},
+		{
 			"Path": "$(EngineDir)/Plugins/Animation/SkeletalMeshModelingTools/Binaries/Win64/UnrealEditor-SkeletalMeshModelingTools.dll",
 			"Type": "DynamicLibrary"
 		},
@@ -2265,6 +2421,26 @@
 		},
 		{
 			"Path": "$(EngineDir)/Plugins/BlueprintFileUtils/Binaries/Win64/UnrealEditor.modules",
+			"Type": "RequiredResource"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Bridge/Binaries/Win64/UnrealEditor-Bridge.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Bridge/Binaries/Win64/UnrealEditor-Bridge.pdb",
+			"Type": "SymbolFile"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Bridge/Binaries/Win64/UnrealEditor-MegascansPlugin.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Bridge/Binaries/Win64/UnrealEditor-MegascansPlugin.pdb",
+			"Type": "SymbolFile"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Bridge/Binaries/Win64/UnrealEditor.modules",
 			"Type": "RequiredResource"
 		},
 		{
@@ -4188,6 +4364,22 @@
 			"Type": "RequiredResource"
 		},
 		{
+			"Path": "$(EngineDir)/Plugins/MetaHuman/MetaHumanSDK/Binaries/Win64/UnrealEditor-InterchangeDNA.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/MetaHuman/MetaHumanSDK/Binaries/Win64/UnrealEditor-MetaHumanSDKEditor.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/MetaHuman/MetaHumanSDK/Binaries/Win64/UnrealEditor-MetaHumanSDKRuntime.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/MetaHuman/MetaHumanSDK/Binaries/Win64/UnrealEditor.modules",
+			"Type": "RequiredResource"
+		},
+		{
 			"Path": "$(EngineDir)/Plugins/MovieScene/ActorSequence/Binaries/Win64/UnrealEditor-ActorSequence.dll",
 			"Type": "DynamicLibrary"
 		},
@@ -4281,6 +4473,14 @@
 		},
 		{
 			"Path": "$(EngineDir)/Plugins/NNE/NNERuntimeORT/Binaries/Win64/UnrealEditor.modules",
+			"Type": "RequiredResource"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Online/EOSShared/Binaries/Win64/UnrealEditor-EOSShared.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Online/EOSShared/Binaries/Win64/UnrealEditor.modules",
 			"Type": "RequiredResource"
 		},
 		{
@@ -5122,137 +5322,33 @@
 		{
 			"Path": "$(EngineDir)/Plugins/XGEController/Binaries/Win64/UnrealEditor.modules",
 			"Type": "RequiredResource"
-		},
-		{
-			"Path": "$(ProjectDir)/Binaries/Win64/UnrealEditor-ChronoSpace.dll",
-			"Type": "DynamicLibrary"
-		},
-		{
-			"Path": "$(ProjectDir)/Binaries/Win64/UnrealEditor-ChronoSpace.pdb",
-			"Type": "SymbolFile"
-		},
-		{
-			"Path": "$(ProjectDir)/Binaries/Win64/UnrealEditor.modules",
-			"Type": "RequiredResource"
-		},
-		{
-			"Path": "$(ProjectDir)/Plugins/AdvancedSessions/Binaries/Win64/UnrealEditor-AdvancedSessions.dll",
-			"Type": "DynamicLibrary"
-		},
-		{
-			"Path": "$(ProjectDir)/Plugins/AdvancedSessions/Binaries/Win64/UnrealEditor-AdvancedSessions.pdb",
-			"Type": "SymbolFile"
-		},
-		{
-			"Path": "$(ProjectDir)/Plugins/AdvancedSessions/Binaries/Win64/UnrealEditor.modules",
-			"Type": "RequiredResource"
-		},
-		{
-			"Path": "$(ProjectDir)/Plugins/BlueprintInternalsToolset/Binaries/Win64/UnrealEditor-BlueprintInternalsToolset.dll",
-			"Type": "DynamicLibrary"
-		},
-		{
-			"Path": "$(ProjectDir)/Plugins/BlueprintInternalsToolset/Binaries/Win64/UnrealEditor-BlueprintInternalsToolset.pdb",
-			"Type": "SymbolFile"
-		},
-		{
-			"Path": "$(ProjectDir)/Plugins/BlueprintInternalsToolset/Binaries/Win64/UnrealEditor.modules",
-			"Type": "RequiredResource"
-		},
-		{
-			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/EOSSDK-Win64-Shipping.dll",
-			"Type": "DynamicLibrary"
-		},
-		{
-			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/EOSSDK-Win64-Shipping.lib",
-			"Type": "RequiredResource"
-		},
-		{
-			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor-DiscordGame.dll",
-			"Type": "DynamicLibrary"
-		},
-		{
-			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor-DiscordGame.pdb",
-			"Type": "SymbolFile"
-		},
-		{
-			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor-EIKEditor.dll",
-			"Type": "DynamicLibrary"
-		},
-		{
-			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor-EIKEditor.pdb",
-			"Type": "SymbolFile"
-		},
-		{
-			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor-EIKLoginMethods.dll",
-			"Type": "DynamicLibrary"
-		},
-		{
-			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor-EIKLoginMethods.pdb",
-			"Type": "SymbolFile"
-		},
-		{
-			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor-EIKShared.dll",
-			"Type": "DynamicLibrary"
-		},
-		{
-			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor-EIKShared.pdb",
-			"Type": "SymbolFile"
-		},
-		{
-			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor-EIKVoiceChat.dll",
-			"Type": "DynamicLibrary"
-		},
-		{
-			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor-EIKVoiceChat.pdb",
-			"Type": "SymbolFile"
-		},
-		{
-			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor-EIKWeb.dll",
-			"Type": "DynamicLibrary"
-		},
-		{
-			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor-EIKWeb.pdb",
-			"Type": "SymbolFile"
-		},
-		{
-			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor-EOSIntegrationKit.dll",
-			"Type": "DynamicLibrary"
-		},
-		{
-			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor-EOSIntegrationKit.pdb",
-			"Type": "SymbolFile"
-		},
-		{
-			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor-OnlineServicesEIK.dll",
-			"Type": "DynamicLibrary"
-		},
-		{
-			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor-OnlineServicesEIK.pdb",
-			"Type": "SymbolFile"
-		},
-		{
-			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor-OnlineSubsystemEIK.dll",
-			"Type": "DynamicLibrary"
-		},
-		{
-			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor-OnlineSubsystemEIK.pdb",
-			"Type": "SymbolFile"
-		},
-		{
-			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor-SocketSubsystemEIK.dll",
-			"Type": "DynamicLibrary"
-		},
-		{
-			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor-SocketSubsystemEIK.pdb",
-			"Type": "SymbolFile"
-		},
-		{
-			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/UnrealEditor.modules",
-			"Type": "RequiredResource"
 		}
 	],
 	"RuntimeDependencies": [
+		{
+			"Path": "$(ProjectDir)/ChronoSpace.uproject",
+			"Type": "UFS"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/AdvancedSessions/AdvancedSessions.uplugin",
+			"Type": "UFS"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/BlueprintInternalsToolset/BlueprintInternalsToolset.uplugin",
+			"Type": "UFS"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/EOSSDK-Win64-Shipping.dll",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/EOSSDK-Win64-Shipping.lib",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/EOSIntegrationKit.uplugin",
+			"Type": "UFS"
+		},
 		{
 			"Path": "$(EngineDir)/Binaries/DotNET/OidcToken/win-x64/OidcToken.exe",
 			"Type": "NonUFS"
@@ -25906,6 +26002,10 @@
 			"Type": "NonUFS"
 		},
 		{
+			"Path": "$(EngineDir)/Binaries/Win64/EOSSDK-Win64-Shipping.dll",
+			"Type": "NonUFS"
+		},
+		{
 			"Path": "$(EngineDir)/Binaries/Win64/EpicWebHelper.exe",
 			"Type": "NonUFS"
 		},
@@ -29226,6 +29326,10 @@
 			"Type": "UFS"
 		},
 		{
+			"Path": "$(EngineDir)/Plugins/Animation/RigLogic/RigLogic.uplugin",
+			"Type": "UFS"
+		},
+		{
 			"Path": "$(EngineDir)/Plugins/Animation/SkeletalMeshModelingTools/SkeletalMeshModelingTools.uplugin",
 			"Type": "UFS"
 		},
@@ -29251,6 +29355,10 @@
 		},
 		{
 			"Path": "$(EngineDir)/Plugins/BlueprintFileUtils/BlueprintFileUtils.uplugin",
+			"Type": "UFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Bridge/Bridge.uplugin",
 			"Type": "UFS"
 		},
 		{
@@ -29930,6 +30038,10 @@
 			"Type": "UFS"
 		},
 		{
+			"Path": "$(EngineDir)/Plugins/MetaHuman/MetaHumanSDK/MetaHumanSDK.uplugin",
+			"Type": "UFS"
+		},
+		{
 			"Path": "$(EngineDir)/Plugins/MovieScene/ActorSequence/ActorSequence.uplugin",
 			"Type": "UFS"
 		},
@@ -29967,6 +30079,10 @@
 		},
 		{
 			"Path": "$(EngineDir)/Plugins/Online/Android/OnlineSubsystemGooglePlay/OnlineSubsystemGooglePlay.uplugin",
+			"Type": "UFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Online/EOSShared/EOSShared.uplugin",
 			"Type": "UFS"
 		},
 		{
@@ -30236,30 +30352,6 @@
 		{
 			"Path": "$(EngineDir)/Plugins/XGEController/XGEController.uplugin",
 			"Type": "UFS"
-		},
-		{
-			"Path": "$(ProjectDir)/ChronoSpace.uproject",
-			"Type": "UFS"
-		},
-		{
-			"Path": "$(ProjectDir)/Plugins/AdvancedSessions/AdvancedSessions.uplugin",
-			"Type": "UFS"
-		},
-		{
-			"Path": "$(ProjectDir)/Plugins/BlueprintInternalsToolset/BlueprintInternalsToolset.uplugin",
-			"Type": "UFS"
-		},
-		{
-			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/EOSSDK-Win64-Shipping.dll",
-			"Type": "NonUFS"
-		},
-		{
-			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/Binaries/Win64/EOSSDK-Win64-Shipping.lib",
-			"Type": "NonUFS"
-		},
-		{
-			"Path": "$(ProjectDir)/Plugins/EOSIntegrationKit-Version5/EOSIntegrationKit.uplugin",
-			"Type": "UFS"
 		}
 	],
 	"BuildPlugins": [
@@ -30308,6 +30400,7 @@
 		"BlueprintHeaderView",
 		"BlueprintInternalsToolset",
 		"BlueprintMaterialTextureNodes",
+		"Bridge",
 		"Buoyancy",
 		"CLionSourceCodeAccess",
 		"CableComponent",
@@ -30357,6 +30450,7 @@
 		"DerivedDataBuildController",
 		"DumpGPUServices",
 		"EOSIntegrationKit",
+		"EOSShared",
 		"EaseCurveTool",
 		"EditorDataStorage",
 		"EditorDataStorageFeatures",
@@ -30432,6 +30526,7 @@
 		"MeshModelingToolset",
 		"MeshModelingToolsetExp",
 		"MeshPainting",
+		"MetaHumanSDK",
 		"Metasound",
 		"MobileLauncherProfileWizard",
 		"MobilePatchingUtils",
@@ -30488,6 +30583,7 @@
 		"RenderTraceInsights",
 		"ResonanceAudio",
 		"RiderSourceCodeAccess",
+		"RigLogic",
 		"RigVM",
 		"RuntimeTelemetry",
 		"SQLiteCore",
@@ -30547,19 +30643,19 @@
 	"AdditionalProperties": [
 		{
 			"Name": "Uba",
-			"Value": "C:\\Program Files\\Epic Games\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealBuildAccelerator\\x64\\UbaDetours.dll"
+			"Value": "E:\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealBuildAccelerator\\x64\\UbaDetours.dll"
 		},
 		{
 			"Name": "Uba",
-			"Value": "C:\\Program Files\\Epic Games\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealBuildAccelerator\\x64\\UbaAgent.exe"
+			"Value": "E:\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealBuildAccelerator\\x64\\UbaAgent.exe"
 		},
 		{
 			"Name": "Uba",
-			"Value": "C:\\Program Files\\Epic Games\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealBuildAccelerator\\x64\\UbaHost.toml"
+			"Value": "E:\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealBuildAccelerator\\x64\\UbaHost.toml"
 		},
 		{
 			"Name": "Uba",
-			"Value": "C:\\Program Files\\Epic Games\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealBuildAccelerator\\x64\\UbaAgent.toml"
+			"Value": "E:\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealBuildAccelerator\\x64\\UbaAgent.toml"
 		},
 		{
 			"Name": "SDK",
