@@ -144,6 +144,24 @@ void ACSGameState::AddPlayerToDeathTracking(APawn* Player)
     }
 }
 
+void ACSGameState::TransferDeathTracking(APawn* OldPawn, APawn* NewPawn)
+{
+    if (!HasAuthority() || !NewPawn)
+        return;
+
+    // 예전엔 RespawnSinglePlayer 가 이 작업을 하지 않아 새 Pawn 의 엔트리가 없었고,
+    // HandlePlayerRevive 가 아무것도 못 해 첫 사망 이후 사망/부활 추적이 영구히 깨졌다.
+    if (FPlayerDeathState* OldState = OldPawn ? FindPlayerDeathState(OldPawn) : nullptr)
+    {
+        OldState->Player = NewPawn;
+        UE_LOG(LogTemp, Log, TEXT("Death tracking transferred: %s -> %s"), *GetNameSafe(OldPawn), *GetNameSafe(NewPawn));
+    }
+    else
+    {
+        AddPlayerToDeathTracking(NewPawn);
+    }
+}
+
 void ACSGameState::RemovePlayerFromDeathTracking(APawn* Player)
 {
     if (!HasAuthority() || !Player)

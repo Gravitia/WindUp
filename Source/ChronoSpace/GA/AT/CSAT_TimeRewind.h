@@ -35,7 +35,8 @@ protected:
     void FinishRewind();              // 되감기 종료
 
 private:
-    AActor* TargetActor;              // 되감기 대상 액터
+    UPROPERTY()
+    TObjectPtr<AActor> TargetActor;   // 되감기 대상 액터 (UPROPERTY 없으면 GC 가 추적하지 않아 댕글링)
     TArray<FCSF_CharacterFrameData> TransformFrames; // 저장된 프레임들
     int32 CurrentFrameIndex;          // 현재 이동 중인 프레임 인덱스
     float DurationPerFrame;           // 한 프레임당 이동 시간

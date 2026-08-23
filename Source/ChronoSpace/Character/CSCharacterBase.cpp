@@ -8,6 +8,7 @@
 #include "ActorComponent/CSCustomGravityDirComponent.h"
 #include "ActorComponent/CSVFXComponent.h"
 #include "Physics/CSCollision.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values
 ACSCharacterBase::ACSCharacterBase()
@@ -45,14 +46,48 @@ ACSCharacterBase::ACSCharacterBase()
 	VFXComponent = CreateDefaultSubobject<UCSVFXComponent>(TEXT("VFXComponent"));
 }
 
+void ACSCharacterBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ACSCharacterBase, bIsDead);
+}
+
 void ACSCharacterBase::SetDead()
+{
+	if (!HasAuthority() || bIsDead) return;
+
+	bIsDead = true;
+	OnRep_IsDead();	// 리슨 호스트는 OnRep 을 받지 않으므로 서버에서 직접 호출
+}
+
+void ACSCharacterBase::SetRevive()
+{
+	if (!HasAuthority() || !bIsDead) return;
+
+	bIsDead = false;
+	OnRep_IsDead();
+}
+
+void ACSCharacterBase::OnRep_IsDead()
+{
+	if (bIsDead)
+	{
+		HandleDead();
+	}
+	else
+	{
+		HandleRevive();
+	}
+}
+
+void ACSCharacterBase::HandleDead()
 {
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 	SetActorEnableCollision(false);
 	GetMesh()->SetVisibility(false);
 }
 
-void ACSCharacterBase::SetRevive()
+void ACSCharacterBase::HandleRevive()
 {
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
 	SetActorEnableCollision(true);

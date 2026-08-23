@@ -30,7 +30,8 @@ void UCSCustomGravityDirComponent::BeginPlay()
 
 	//SetComponentTickEnabled(false);
 
-	UCSCustomGravityDirComponent::OrgGravityDirection = FVector(0.0f, 0.0f, -1.0f);
+	// (removed 2026-08-23: 여기서 OrgGravityDirection 을 (0,0,-1) 로 리셋하던 줄 - 캐릭터 하나가 BeginPlay 할 때마다
+	//  (리스폰, 분신 스폰) 월드 전체 중력 스위치 상태가 되돌아갔다. 레벨 시작 시 1회 리셋은 ACSGameMode::BeginPlay 가 한다.)
 
 	if ( GetOwner() )
 	{
@@ -49,17 +50,26 @@ void UCSCustomGravityDirComponent::TickComponent(float DeltaTime, ELevelTick Tic
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	
+	// BlueprintSpawnableComponent 라 ACharacter 가 아닌 액터에 붙을 수 있다
+	if ( !OwnerCharacter || !OwnerCharacter->GetCharacterMovement() ) return;
+
 	if ( OwnerCharacter->HasAuthority() )
 	{
 		CheckGravity();
 	}
 	else
 	{
+		if ( TargetGravityDirection.IsNearlyZero() ) return;
+
 		FVector CurrentDir = OwnerCharacter->GetCharacterMovement()->GetGravityDirection().GetSafeNormal();
 
-		FVector SmoothedDir = FMath::VInterpTo(CurrentDir, TargetGravityDirection, DeltaTime, GravityInterpSpeed).GetSafeNormal();
+		// 방향 벡터는 선형 보간(VInterpTo + 정규화)이 아니라 회전 보간으로.
+		// 선형 보간은 정반대 방향(천장->바닥)에서 정규화하면 제자리라 한 틱도 진행하지 않았고,
+		// DeltaTime*Speed == 0.5 인 프레임엔 영벡터가 되어 SetGravityDirection 이 ensure 를 때렸다.
+		const float RotationRateDeg = GravityInterpSpeed * 90.0f;	// InterpSpeed 5 -> 450 deg/s (반전에 0.4초)
+		FVector SmoothedDir = FMath::VInterpNormalRotationTo(CurrentDir, TargetGravityDirection, DeltaTime, RotationRateDeg);
 
-		if ( !CurrentDir.Equals(SmoothedDir, KINDA_SMALL_NUMBER) )
+		if ( !SmoothedDir.IsNearlyZero() && !CurrentDir.Equals(SmoothedDir, KINDA_SMALL_NUMBER) )
 		{
 			OwnerCharacter->GetCharacterMovement()->SetGravityDirection(SmoothedDir);
 		}
@@ -120,7 +130,10 @@ void UCSCustomGravityDirComponent::OnActorEndOverlapCallback(AActor* OverlappedA
 		if (Core->Owner == GetOwner()) return;
 
 		CurrentGravityDirection = OrgGravityDirection;
-		Character->GetCharacterMovement()->SetGravityDirection(OrgGravityDirection);
+		if (Character && Character->GetCharacterMovement())
+		{
+			Character->GetCharacterMovement()->SetGravityDirection(OrgGravityDirection);
+		}
 		CurrentGravityCore = nullptr;
 
 		//SetComponentTickEnabled(false);
@@ -134,7 +147,10 @@ void UCSCustomGravityDirComponent::CheckGravity()
 
 	if (OwnerCharacter->HasAuthority() && CurrentGravityCore)
 	{
-		CurrentGravityDirection = GetDirection();
+		const FVector NewDir = GetDirection();
+		if (NewDir.IsNearlyZero()) return;	// 코어와 같은 위치면 방향이 없다 - 이전 값 유지 (SetGravityDirection(0) 은 ensure)
+
+		CurrentGravityDirection = NewDir;
 		OwnerCharacter->GetCharacterMovement()->SetGravityDirection(CurrentGravityDirection);
 	}
 }

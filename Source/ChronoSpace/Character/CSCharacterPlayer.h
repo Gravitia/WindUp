@@ -45,8 +45,9 @@ protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 public:
-	virtual void SetDead() override;
-	virtual void SetRevive() override;
+	// 로컬 연출 (입력 잠금/VFX/사운드) - 모든 머신에서 bIsDead 복제로 실행
+	virtual void HandleDead() override;
+	virtual void HandleRevive() override;
 
 protected:
 	UPROPERTY()
@@ -251,6 +252,11 @@ public:
 
 public:
 	float GetReviveTime();
+
+	// 리스폰으로 새로 스폰된 Pawn 에서 부활 연출(사운드) 재생 - 서버가 RespawnSinglePlayer 에서 호출.
+	// (구 Pawn 은 같은 틱에 파괴되어 bIsDead=false 복제가 클라에 닿지 않으므로 구 Pawn 의 SetRevive 로는 연출이 호스트에만 남는다)
+	UFUNCTION(NetMulticast, Unreliable)
+	void Multicast_PlayReviveEffects();
 
 
 	/* Respawn Sound */

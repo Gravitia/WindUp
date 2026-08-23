@@ -18,6 +18,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Subsystem/CSSplitScreenSubsystem.h"
 #include "Subsystem/CSPlayerSlotSubsystem.h"
+#include "ActorComponent/CSCustomGravityDirComponent.h"
 #include "ChronoSpace.h"
 
 ACSGameMode::ACSGameMode()
@@ -31,6 +32,10 @@ ACSGameMode::ACSGameMode()
 void ACSGameMode::BeginPlay()
 {
     Super::BeginPlay();
+
+    // 월드 기본 중력 방향은 레벨 시작 시 1회만 리셋 (이전 레벨의 중력 스위치 상태가 ServerTravel 을 넘어오지 않도록).
+    // 캐릭터 BeginPlay 마다 리셋하면 리스폰/분신 스폰 때마다 스위치 상태가 되돌아간다.
+    UCSCustomGravityDirComponent::OrgGravityDirection = FVector(0.0f, 0.0f, -1.0f);
 
     if (bAutoEnableSplitScreen)
     {
@@ -285,7 +290,15 @@ bool ACSGameMode::RespawnSinglePlayer(APawn* Player)
 
     if (ACSGameState* GS = GetCSGameState())
     {
+        // 사망 추적 키가 Pawn 이라 교체된 Pawn 으로 옮긴 뒤 부활 처리
+        GS->TransferDeathTracking(OldPawn, NewPawn);
         GS->HandlePlayerRevive(NewPawn);
+    }
+
+    // 부활 연출은 새 Pawn 위치에서 모든 머신에
+    if (ACSCharacterPlayer* NewCharacter = Cast<ACSCharacterPlayer>(NewPawn))
+    {
+        NewCharacter->Multicast_PlayReviveEffects();
     }
 
     UE_LOG(LogCS, Log, TEXT("RespawnSinglePlayer: %s -> %s"),

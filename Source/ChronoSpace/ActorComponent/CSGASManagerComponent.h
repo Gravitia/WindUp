@@ -150,4 +150,7 @@ protected:
 private:
 	// WindUp 상태 추적
 	bool bWindUpActive = false;
+
+	// 이미 바인딩한 InputComponent (중복 바인딩 방지)
+	TWeakObjectPtr<class UEnhancedInputComponent> BoundInputComponent;
 };

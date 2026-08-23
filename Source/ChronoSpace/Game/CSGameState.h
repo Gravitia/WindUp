@@ -84,6 +84,9 @@ public:
     UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Player Death")
     void RemovePlayerFromDeathTracking(APawn* Player);
 
+    // 리스폰으로 Pawn 이 교체될 때 추적 엔트리를 새 Pawn 으로 옮긴다 (bIsDead 유지). 엔트리가 없으면 새로 추가.
+    void TransferDeathTracking(APawn* OldPawn, APawn* NewPawn);
+
     // === 플레이어 상태 조회 ===
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Player State")
     bool AreAllPlayersDead() const;

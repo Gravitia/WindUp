@@ -50,8 +50,6 @@ void UCSGA_ProjectileBlackHole::ActivateAbility(const FGameplayAbilitySpecHandle
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	bIsPendingEndAbility = false;
-
 	check(BlackHoleDummyClass);
 
 	// GAS 컴포넌트 구조 상 서버는 이미 눌렸을 때 ActivateAbility 발동 안함
@@ -177,19 +175,10 @@ void UCSGA_ProjectileBlackHole::EndAbility(const FGameplayAbilitySpecHandle Hand
 		GetWorld()->GetTimerManager().ClearTimer(DurationTimerHandle);
 	}
 
-	// 카메라 복원 Lerp 시작 — Lerp 완료 후에 Super::EndAbility 호출
-	bool bNeedRestoreLerp = bCameraOffsetApplied;
+	// 카메라 복원 Lerp 는 어빌리티 수명과 분리해서 돌린다 (InstancedPerActor 라 인스턴스와 타이머는 살아 있다).
+	// 예전엔 Lerp 가 끝날 때까지 Super::EndAbility 를 미뤘는데, 엔진은 EndAbility 가 동기라고 가정하므로
+	// retrigger 경로에서 ActiveCount 가 누수되고 Spec->IsActive() 가 영구 true 가 됐다 (ClearAbility 불가).
 	RestoreCameraZOffset();
-
-	if (bNeedRestoreLerp && CameraOffsetLerpTimerHandle.IsValid())
-	{
-		// Lerp 실행 중이므로 Super::EndAbility 지연
-		bIsPendingEndAbility = true;
-		bPendingEndAbility_Replicate = bReplicateEndAbility;
-		bPendingEndAbility_WasCancelled = bWasCancelled;
-		UE_LOG(LogCS, Log, TEXT("ProjectileBlackHole EndAbility deferred (waiting for camera restore Lerp)"));
-		return;
-	}
 
 	UE_LOG(LogCS, Log, TEXT("ProjectileBlackHole Ended"));
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
@@ -476,14 +465,6 @@ void UCSGA_ProjectileBlackHole::UpdateCameraOffsetLerp()
 		}
 		CachedSpringArmComponent = nullptr;
 		CachedSpringArmRelativeLocation = FVector::ZeroVector;
-
-		// 지연된 EndAbility 처리
-		if (bIsPendingEndAbility)
-		{
-			bIsPendingEndAbility = false;
-			UE_LOG(LogCS, Log, TEXT("ProjectileBlackHole Ended (deferred, spring arm lost)"));
-			Super::EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, bPendingEndAbility_Replicate, bPendingEndAbility_WasCancelled);
-		}
 		return;
 	}
 
@@ -510,14 +491,6 @@ void UCSGA_ProjectileBlackHole::UpdateCameraOffsetLerp()
 		{
 			CachedSpringArmComponent = nullptr;
 			CachedSpringArmRelativeLocation = FVector::ZeroVector;
-		}
-
-		// 지연된 EndAbility 처리
-		if (bIsPendingEndAbility)
-		{
-			bIsPendingEndAbility = false;
-			UE_LOG(LogCS, Log, TEXT("ProjectileBlackHole Ended (deferred, after camera restore Lerp)"));
-			Super::EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, bPendingEndAbility_Replicate, bPendingEndAbility_WasCancelled);
 		}
 	}
 }

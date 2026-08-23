@@ -120,11 +120,13 @@ void ACSCharacterPlayer::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 
+	// AI 빙의(PlayerState 없음)나 다른 PlayerState 클래스면 건너뛴다 - 크래시 대신 GAS 없이 동작
 	ACSPlayerState* CSPS = GetPlayerState<ACSPlayerState>();
+	if (!CSPS) return;
 	
 	ASC = CSPS->GetAbilitySystemComponent();
 
-	GASManagerComponent->SetASC(CSPS->GetAbilitySystemComponent(), CSPS);
+	GASManagerComponent->SetASC(ASC, CSPS);
 	GASManagerComponent->SetGASAbilities();
 }
 
@@ -147,9 +149,13 @@ void ACSCharacterPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 void ACSCharacterPlayer::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
+	// 언포제스 시 PlayerState 가 null 로 바뀌어도 OnRep 이 호출된다
 	ACSPlayerState* CSPS = GetPlayerState<ACSPlayerState>();
+	if (!CSPS) return;
+
 	ASC = CSPS->GetAbilitySystemComponent();
 	GASManagerComponent->SetASC(ASC, CSPS);
+	// SetupGASInputComponent 는 같은 InputComponent 에 대해 멱등 (SetupPlayerInputComponent 와 순서 무관)
 	GASManagerComponent->SetupGASInputComponent(Cast<UEnhancedInputComponent>(InputComponent));
 }
 
@@ -233,9 +239,9 @@ void ACSCharacterPlayer::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 	DOREPLIFETIME(ACSCharacterPlayer, BlackHole);
 }
 
-void ACSCharacterPlayer::SetDead()
+void ACSCharacterPlayer::HandleDead()
 {
-	Super::SetDead();
+	Super::HandleDead();
 
 	APlayerController* PlayerController = Cast<APlayerController>(GetController()); 
 	if (PlayerController) 
@@ -255,9 +261,9 @@ void ACSCharacterPlayer::SetDead()
 	}
 }
 
-void ACSCharacterPlayer::SetRevive()
+void ACSCharacterPlayer::HandleRevive()
 {
-	Super::SetRevive();
+	Super::HandleRevive();
 
 	// Sound 
 
@@ -427,6 +433,14 @@ void ACSCharacterPlayer::OnMovementModeChanged(
 	if (!bPressedJump && !GetCharacterMovement()->IsFalling())
 	{
 		bCanCoyoteJump = false;    // 착지 시 안전하게 종료
+	}
+}
+
+void ACSCharacterPlayer::Multicast_PlayReviveEffects_Implementation()
+{
+	if (ReviveSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, ReviveSound, GetActorLocation());
 	}
 }
 

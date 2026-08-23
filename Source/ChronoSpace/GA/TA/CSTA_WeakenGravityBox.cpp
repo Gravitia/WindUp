@@ -8,8 +8,15 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/BoxComponent.h"
+#include "Net/UnrealNetwork.h"
 #include "ChronoSpace.h"
 
+
+void ACSTA_WeakenGravityBox::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+    DOREPLIFETIME(ACSTA_WeakenGravityBox, GravityCoef);
+}
 
 ACSTA_WeakenGravityBox::ACSTA_WeakenGravityBox()
 {

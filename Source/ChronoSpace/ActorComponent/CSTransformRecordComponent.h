@@ -18,6 +18,7 @@ public:
 
 public: 
 	const TArray<FCSF_CharacterFrameData>& GetTransformHistory() { return TransformHistory; }
+	int32 GetMaxHistorySize() const { return MaxHistorySize; }
 	
 protected:
 	virtual void BeginPlay() override;

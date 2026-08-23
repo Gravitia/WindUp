@@ -27,10 +27,14 @@ void UCSGASManagerComponent::SetASC(UAbilitySystemComponent* InASC, class ACSPla
 
 void UCSGASManagerComponent::SetGASAbilities()
 {
-	if (!GetOwner()->HasAuthority()) return;
+	if (!GetOwner()->HasAuthority() || !ASC) return;
 
+	// ASC 는 PlayerState 에 살고 Pawn 보다 오래 산다. PossessedBy 는 리스폰마다 다시 오므로
+	// 이미 부여된 클래스는 건너뛴다 (예전엔 리스폰할 때마다 스펙이 한 벌씩 누적됐다).
 	for (const auto& StartAbility : StartAbilities) 
 	{
+		if (!StartAbility || ASC->FindAbilitySpecFromClass(StartAbility)) continue;
+
 		FGameplayAbilitySpec StartSpec(StartAbility); 
 		ASC->GiveAbility(StartSpec); 
 	}
@@ -49,6 +53,8 @@ void UCSGASManagerComponent::SetGASAbilities()
 				continue;
 		}
 
+		if (!StartInputAbility.Value || ASC->FindAbilitySpecFromClass(StartInputAbility.Value)) continue;
+
 		FGameplayAbilitySpec StartSpec(StartInputAbility.Value); 
 		StartSpec.InputID = static_cast<int32>(StartInputAbility.Key); 
 		ASC->GiveAbility(StartSpec); 
@@ -58,6 +64,11 @@ void UCSGASManagerComponent::SetGASAbilities()
 void UCSGASManagerComponent::SetupGASInputComponent(UEnhancedInputComponent* InputComponent) 
 {
 	if (InputComponent == nullptr) return;
+
+	// 클라에서는 SetupPlayerInputComponent 와 OnRep_PlayerState 가 순서 보장 없이 둘 다 여기로 온다.
+	// 같은 InputComponent 에 두 번 바인딩하면 키 한 번에 Server RPC 가 2발 나가고 루즈 태그가 2번 쌓인다.
+	if (BoundInputComponent.Get() == InputComponent) return;
+	BoundInputComponent = InputComponent;
 
 	InputComponent->BindAction(ReverseGravityAction, ETriggerEvent::Triggered, this, &UCSGASManagerComponent::GASInputPressed, static_cast<int32>(EAbilityIndex::ReverseGravity));
 	InputComponent->BindAction(ReverseGravityAction, ETriggerEvent::Completed, this, &UCSGASManagerComponent::GASInputReleased, static_cast<int32>(EAbilityIndex::ReverseGravity));
@@ -103,7 +114,7 @@ void UCSGASManagerComponent::SetupGASInputComponent(UEnhancedInputComponent* Inp
 	InputComponent->BindAction(ProjectileBlackHoleAction, ETriggerEvent::Triggered, this, &UCSGASManagerComponent::GASInputPressed, static_cast<int32>(EAbilityIndex::ProjectileBlackHole)); 
 	InputComponent->BindAction(ProjectileBlackHoleAction, ETriggerEvent::Completed, this, &UCSGASManagerComponent::GASInputReleased, static_cast<int32>(EAbilityIndex::ProjectileBlackHole)); 
 
-	if ( ASC )
+	if ( ASC && !ASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag(FName("Ability.Movement"))) )
 	{
 		ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Ability.Movement")));
 	}

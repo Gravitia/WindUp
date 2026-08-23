@@ -23,6 +23,8 @@ public:
 
 	virtual void ConfirmTargetingAndContinue() override;
 
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 	FORCEINLINE void SetGravityCoef(float InGravityCoef) { GravityCoef = InGravityCoef; }
 
 protected:
@@ -38,6 +40,8 @@ protected:
 	void SaturationSetting();
 	void HandleSaturationSetting(float InGravityCoef);
 
-	UPROPERTY(EditAnywhere, Category = "GravityCoef")
+	// 서버가 SetGravityCoef 로 넣은 값(예: 0.5)이 클라 복제본에도 와야 한다. 복제 안 하면 클라는 기본 0.1 로
+	// GravityScale 을 곱해 서버와 5배 차이 -> 매 프레임 러버밴딩. (오버랩은 서버/클라 양쪽에서 각자 적용하는 구조)
+	UPROPERTY(EditAnywhere, Replicated, Category = "GravityCoef")
 	float GravityCoef = 0.1f;
 };

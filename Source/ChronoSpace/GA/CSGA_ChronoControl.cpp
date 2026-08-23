@@ -12,6 +12,9 @@
 
 UCSGA_ChronoControl::UCSGA_ChronoControl()
 {
+	// 형제 박스 어빌리티(ReverseGravity/WeakenGravity)와 동일하게 서버 전용.
+	// 미지정(=LocalPredicted)이면 원격 클라가 예측 스폰 + 서버 스폰 복제로 박스가 2개 생겼다.
+	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::ServerOnly;
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 }
 
