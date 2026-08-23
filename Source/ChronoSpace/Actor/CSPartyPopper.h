@@ -189,6 +189,7 @@ private:
 	bool bHasFired       = false;
 	bool bIsExploding    = false;
 	bool bLaunchPending  = false;  // DoLaunch 타이머 대기 중
+	bool bWasBeyondTriggerDistance = false;  // 거리 트리거 엣지 감지용 (서버 전용) — 직전 틱에 버튼이 TriggerDistance 밖이었는가
 
 	/* ════════════════════════════════════
 	 *  네트워크

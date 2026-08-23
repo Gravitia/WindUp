@@ -126,5 +126,8 @@ void ACSLabyrinthKey::BeginPlay()
 
 void ACSLabyrinthKey::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
+	// Super 를 빼면 AActor 기본 복제 프로퍼티와 BP 자식의 Replicated 변수가 등록되지 않는다.
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
 	DOREPLIFETIME(ACSLabyrinthKey, bIsActive);
 }

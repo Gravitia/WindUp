@@ -105,8 +105,9 @@ protected:
 	UFUNCTION(NetMulticast, Reliable)
 	void NetMulticastStartMovement(bool bMoveToTarget);
 
+	// 이동 완료 시 1회만 전송 - 클라 로컬 보간 결과를 서버 최종 위치로 스냅(드리프트 보정)
 	UFUNCTION(NetMulticast, Reliable)
-	void NetMulticastUpdateMovement(const TArray<FVector>& NewLocations, const TArray<FRotator>& NewRotations);
+	void NetMulticastFinishMovement(const TArray<FVector>& FinalLocations, const TArray<FRotator>& FinalRotations);
 
 	// 이동 로직
 	void StartMovement();

@@ -38,28 +38,30 @@ void ACSLabyrinthKeyActivator::SetLabyrinthKey()
 		}
 	}
 
-	int8 length = Keys.Num();
-
-	if ( length < MaxKeyCount )
+	// 아직 꺼져 있는 키만 후보로 모은다. (이미 켜진 키를 "충돌 켜짐"으로 판별하던 방식은
+	// 레벨에 충돌이 켜진 키가 하나라도 있으면 while 이 영원히 끝나지 않았다.)
+	TArray<ACSLabyrinthKey*> Candidates;
+	for (ACSLabyrinthKey* Key : Keys)
 	{
-		return;
+		if (IsValid(Key) && !Key->bIsActive)
+		{
+			Candidates.Add(Key);
+		}
 	}
 
-	//UE_LOG(LogCS, Log, TEXT("SetLabyrinthKey : %d"), length);
-
-	int32 ActivatedKeysCount = 0;
-	while ( ActivatedKeysCount < MaxKeyCount )
+	// 키가 부족하면 있는 만큼만 켠다. (예전엔 조기 return 으로 하나도 안 켜져 퍼즐이 풀 수 없었다.)
+	const int32 ToActivate = FMath::Min(MaxKeyCount, Candidates.Num());
+	if (Candidates.Num() < MaxKeyCount)
 	{
-		int8 Idx = FMath::RandRange(0, length);
+		UE_LOG(LogCS, Warning, TEXT("CSLabyrinthKeyActivator: keys available %d < MaxKeyCount %d - activating all available"), Candidates.Num(), MaxKeyCount);
+	}
 
-		if ( !Keys.IsValidIndex(Idx) || Keys[Idx]->GetActorEnableCollision() )
-		{
-			continue;
-		}
-
-		Keys[Idx]->SetActive(true);
-
-		++ActivatedKeysCount;
+	// 부분 Fisher-Yates 셔플: 앞에서 ToActivate 개를 무작위로 고른다. 종료 보장.
+	for (int32 i = 0; i < ToActivate; ++i)
+	{
+		const int32 SwapIdx = FMath::RandRange(i, Candidates.Num() - 1);
+		Candidates.Swap(i, SwapIdx);
+		Candidates[i]->SetActive(true);
 	}
 }
 

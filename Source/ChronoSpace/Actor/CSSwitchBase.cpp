@@ -52,14 +52,19 @@ ACSSwitchBase::ACSSwitchBase()
 
 void ACSSwitchBase::BeginInteraction()
 {
-	if ( !Data->InteractionPromptWidgetClass.IsValid() )
+	// Data 는 EditAnywhere 라 비어 있을 수 있다 - 비어 있으면 생성자 기본 위젯(BP_InteractionPrompt)을 그대로 쓴다.
+	// (예전 조건은 뒤집혀 있어서 "클래스가 아직 로드되지 않았을 때만" 적용했다 - 다른 스위치가 먼저 로드해 두면
+	//  이 스위치는 Data 의 위젯을 적용하지 않았다. 지금은 Data 에 위젯이 지정돼 있으면 항상 적용한다.)
+	if (Data && !Data->InteractionPromptWidgetClass.IsNull())
 	{
-		Data->InteractionPromptWidgetClass.LoadSynchronous();
-
-		InteractionPromptComponent->SetWidgetClass(Data->InteractionPromptWidgetClass.Get()); 
-		InteractionPromptComponent->SetWidgetSpace(EWidgetSpace::Screen);
-		InteractionPromptComponent->SetDrawSize(FVector2D(500.0f, 30.f));
-		InteractionPromptComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		UClass* WidgetClass = Data->InteractionPromptWidgetClass.LoadSynchronous();
+		if (WidgetClass && InteractionPromptComponent->GetWidgetClass() != WidgetClass)
+		{
+			InteractionPromptComponent->SetWidgetClass(WidgetClass);
+			InteractionPromptComponent->SetWidgetSpace(EWidgetSpace::Screen);
+			InteractionPromptComponent->SetDrawSize(FVector2D(500.0f, 30.f));
+			InteractionPromptComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		}
 	}
 
 	InteractionPromptComponent->SetVisibility(true);

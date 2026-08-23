@@ -151,18 +151,26 @@ void ACSTA_BlackHoleSphere::OnEventHorizonBeginOverlap(UPrimitiveComponent* Over
 		return;
 	}
 
+	// 텔레포트는 서버 권한. (클라 복제본은 WhiteHall 을 모르므로 원래도 아무 일 없었음)
+	if (!HasAuthority() || !IsValid(OtherActor))
+	{
+		return;
+	}
+
 	ACharacter* OverlapedCharacter = Cast<ACharacter>(OtherActor);
 	ACSCharacterPlayer* OverlapedCharacterPlayer = Cast<ACSCharacterPlayer>(OtherActor);
 
+	// 이 블랙홀을 쏜 플레이어의 화이트홀을 쓴다.
+	// (GetPlayerCharacter(0) 은 서버에서 항상 호스트 - 클라가 쏜 블랙홀이 호스트 화이트홀로 보내고, null 이면 크래시)
+	ACSCharacterPlayer* Player = Cast<ACSCharacterPlayer>(SourceActor);
+	ACSWhiteHall* WhiteHall = Player ? Player->GetWhiteHall() : nullptr;
 
-	ACSCharacterPlayer* Player = Cast<ACSCharacterPlayer>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-
-	if (ACSWhiteHall* WhiteHall = Player->GetWhiteHall())
+	if (IsValid(WhiteHall))
 	{
 		FVector NewLocation = WhiteHall->GetActorLocation();
 
 		OtherActor->SetActorLocation(NewLocation);
-		if ((GravitySphereTrigger->GetComponentLocation() - NewLocation).Size() > GravityInfluenceRange)
+		if (OverlapedCharacter && (GravitySphereTrigger->GetComponentLocation() - NewLocation).Size() > GravityInfluenceRange)
 		{
 			CharactersInSphereTrigger.Remove(OverlapedCharacter->GetFName());
 		}

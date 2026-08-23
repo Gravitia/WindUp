@@ -71,6 +71,9 @@ void ACSPartyPopper::Explode()
 {
 	if (!HasAuthority()) return;
 	if (bOneShot && bHasFired) return;
+	// 진행 중 재진입 금지. (bOneShot=false 면 위 가드가 항상 통과해 Tick 마다 Multicast_Explode(Reliable, ~3KB)가
+	//  나갔고, 클라 접속이 끊겼다. 서버 쪽도 타이머가 매 프레임 리셋돼 DoLaunch 가 영원히 오지 않았다.)
+	if (bIsExploding || bLaunchPending) return;
 
 	bHasFired = true;
 
@@ -122,14 +125,16 @@ void ACSPartyPopper::Tick(float DeltaTime)
 	}
 #endif
 
-	// ── 거리 트리거 체크 (서버만) ──
+	// ── 거리 트리거 체크 (서버만) — 경계를 "넘어가는 순간"에만 1회 발화 (엣지 트리거) ──
 	if (HasAuthority() && IsValid(LinkedButtonActor) && !(bOneShot && bHasFired))
 	{
 		const float Dist = FVector::Dist(GetActorLocation(), LinkedButtonActor->GetActorLocation());
-		if (Dist >= TriggerDistance)
+		const bool  bBeyond = (Dist >= TriggerDistance);
+		if (bBeyond && !bWasBeyondTriggerDistance)
 		{
 			Explode();
 		}
+		bWasBeyondTriggerDistance = bBeyond;
 	}
 
 	TickLid(DeltaTime);

@@ -87,9 +87,6 @@ void UCSGASManagerComponent::SetupGASInputComponent(UEnhancedInputComponent* Inp
 	InputComponent->BindAction(ScaleLargeAction, ETriggerEvent::Triggered, this, &UCSGASManagerComponent::GASInputPressed, static_cast<int32>(EAbilityIndex::ScaleLarge));
 	InputComponent->BindAction(ScaleLargeAction, ETriggerEvent::Completed, this, &UCSGASManagerComponent::GASInputReleased, static_cast<int32>(EAbilityIndex::ScaleLarge));
 
-	InputComponent->BindAction(ScaleLargeAction, ETriggerEvent::Triggered, this, &UCSGASManagerComponent::GASInputPressed, static_cast<int32>(EAbilityIndex::ScaleLarge));
-	InputComponent->BindAction(ScaleLargeAction, ETriggerEvent::Completed, this, &UCSGASManagerComponent::GASInputReleased, static_cast<int32>(EAbilityIndex::ScaleLarge));
-
 	InputComponent->BindAction(WindUpAction, ETriggerEvent::Started,
 		this, &UCSGASManagerComponent::OnWindUpStarted);
 	InputComponent->BindAction(WindUpAction, ETriggerEvent::Triggered,

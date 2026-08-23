@@ -28,11 +28,12 @@ ACSTA_ChronoControl::ACSTA_ChronoControl()
 
 void ACSTA_ChronoControl::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-    for (auto Act = ActorsInBoxTrigger.CreateIterator(); Act; ++Act)
+    // 순회 중 맵을 수정하지 않는다 - 복원만 하고 마지막에 한 번에 비운다.
+    for (const auto& Pair : ActorsInBoxTrigger)
     {
-        if (!IsValid(Act.Value())) continue;
+        if (!IsValid(Pair.Value)) continue;
 
-        ACharacter* RemainedCharacter = Cast<ACharacter>(Act.Value());
+        ACharacter* RemainedCharacter = Cast<ACharacter>(Pair.Value);
         if (RemainedCharacter)
         {
             // 시간 복원
@@ -42,9 +43,8 @@ void ACSTA_ChronoControl::EndPlay(const EEndPlayReason::Type EndPlayReason)
                 UE_LOG(LogTemp, Log, TEXT("CustomTimeDilation reset to 1.0 for actor: %s"), *RemainedCharacter->GetName());
             }
         }
-
-        ActorsInBoxTrigger.FindAndRemoveChecked(Act.Value()->GetFName());
     }
+    ActorsInBoxTrigger.Empty();
     Super::EndPlay(EndPlayReason);
 }
 
@@ -95,15 +95,12 @@ void ACSTA_ChronoControl::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedCom
     ACharacter* DetectedCharacter = Cast<ACharacter>(OtherActor);
     if (DetectedCharacter)
     {
-        // 시간 복원
-        if (DetectedCharacter->CustomTimeDilation == 1.0f)
+        // 이 박스가 직접 멈춘 액터만 복원한다. (다른 박스가 멈춘 액터를 우리가 풀어주지 않도록)
+        // BeginOverlap 에서 이미 멈춘 상태면 등록하지 않으므로, 등록 여부로 판단한다.
+        // 맵에 없는 키를 FindAndRemoveChecked 하면 check 크래시 - Remove 는 0 을 돌려준다.
+        if (ActorsInBoxTrigger.Remove(OtherActor->GetFName()) > 0)
         {
-            // 이미 시간이 정상 상태라면 다시 처리하지 않음
-            return;
+            DetectedCharacter->CustomTimeDilation = 1.0f;
         }
-
-        DetectedCharacter->CustomTimeDilation = 1.0f;
-
-        ActorsInBoxTrigger.FindAndRemoveChecked(OtherActor->GetFName());
     }
 }

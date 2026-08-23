@@ -123,7 +123,11 @@ void ACSCharacterPatrol::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedCo
 		if (OverlappedPlayer)
 		{
 			CharacterPlayer = OverlappedPlayer;
-			Cast<ACSAIController>(GetController())->ActiveMove(false);
+			// Destroy/SetDead 경로에서는 컨트롤러가 먼저 떨어진 뒤 오버랩 알림이 올 수 있다 - null 이면 건너뛴다.
+			if (ACSAIController* AIController = Cast<ACSAIController>(GetController()))
+			{
+				AIController->ActiveMove(false);
+			}
 			++OverlappedPlayerCount;
 		}
 	}	
@@ -146,7 +150,10 @@ void ACSCharacterPatrol::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedComp
 			}
 			else
 			{
-				Cast<ACSAIController>(GetController())->ActiveMove(true);
+				if (ACSAIController* AIController = Cast<ACSAIController>(GetController()))
+				{
+					AIController->ActiveMove(true);
+				}
 				CharacterPlayer = nullptr;
 			}
 		}

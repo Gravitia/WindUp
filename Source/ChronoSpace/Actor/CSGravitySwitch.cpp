@@ -48,7 +48,16 @@ void ACSGravitySwitch::Interact()
 
 void ACSGravitySwitch::NetMulticastSetGravity_Implementation(ACharacter* Char, FVector Gravity)
 {
-	Char->GetCharacterMovement()->SetGravityDirection(Gravity);
+	// RPC 액터 인자는 수신 클라에 아직 리플리케이트되지 않은 액터(리스폰 직후, 컬링)면 null 로 온다.
+	if (!IsValid(Char))
+	{
+		return;
+	}
+
+	if (UCharacterMovementComponent* Movement = Char->GetCharacterMovement())
+	{
+		Movement->SetGravityDirection(Gravity);
+	}
 }
 
 void ACSGravitySwitch::SetInteracted(bool bInInteracted)

@@ -155,21 +155,9 @@ void ACSCharacterPlayer::OnRep_PlayerState()
 
 void ACSCharacterPlayer::Landed(const FHitResult& Hit)
 {
-	// 풀무 로직 수정으로 인한 Landed 주석 처리 
-	/*
+	// Super 를 빼먹으면 BP OnLanded 이벤트와 LandedDelegate 가 영원히 발생하지 않는다.
 	Super::Landed(Hit);
-
-	// 밟은 Actor 가져오기
-	AActor* LandedActor = Hit.GetActor();
-	if (!LandedActor) return;
-
-	// Bellows인지 검사
-	ACSBellows* Bellows = Cast<ACSBellows>(LandedActor);
-	if (Bellows)
-	{
-		Bellows->NotifyPlayerLanded(this);
-	}
-	*/
+	// (removed 2026-08-23: 풀무(Bellows) NotifyPlayerLanded 호출 - 풀무가 오버랩으로 직접 감지하도록 바뀌어 불필요)
 }
  
 void ACSCharacterPlayer::BeginPlay()

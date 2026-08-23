@@ -41,8 +41,10 @@ void ACSMoveObjectSwitch::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	// 서버에서만 이동 로직 실행
-	if (HasAuthority() && bIsMoving)
+	// 서버와 클라가 같은 등속 보간을 각자 돈다. (이전: 서버가 매 틱 Reliable Multicast 로 위치 배열을 전송 -
+	// 클라 hitch 시 reliable 버퍼 오버플로로 접속이 끊겼다.) 시작은 NetMulticastStartMovement, 끝은
+	// NetMulticastFinishMovement 1회로 서버 최종 위치에 스냅한다. 목표/초기 트랜스폼은 MoveObjects 복제로 받는다.
+	if (bIsMoving)
 	{
 		UpdateMovement(DeltaTime);
 	}
@@ -282,14 +284,17 @@ void ACSMoveObjectSwitch::UpdateMovement(float DeltaTime)
 		NewRotations.Add(NewRotation);
 	}
 
-	// 클라이언트에 위치와 회전 정보 전송
-	NetMulticastUpdateMovement(NewLocations, NewRotations);
-
 	// 모든 오브젝트가 목표에 도달했으면 이동 완료
 	if (bAllReachedDestination)
 	{
 		bIsMoving = false;
-		UE_LOG(LogCS, Log, TEXT("Movement completed - All objects reached destination"));
+
+		// 서버만 최종 위치를 1회 전송 - 클라는 로컬 보간의 미세한 차이를 여기서 스냅한다.
+		if (HasAuthority())
+		{
+			NetMulticastFinishMovement(NewLocations, NewRotations);
+			UE_LOG(LogCS, Log, TEXT("Movement completed - All objects reached destination"));
+		}
 	}
 }
 
@@ -300,25 +305,25 @@ void ACSMoveObjectSwitch::NetMulticastStartMovement_Implementation(bool bInMoveT
 	bIsMoving = true;
 }
 
-void ACSMoveObjectSwitch::NetMulticastUpdateMovement_Implementation(const TArray<FVector>& NewLocations, const TArray<FRotator>& NewRotations)
+void ACSMoveObjectSwitch::NetMulticastFinishMovement_Implementation(const TArray<FVector>& FinalLocations, const TArray<FRotator>& FinalRotations)
 {
-	// 클라이언트에서 위치와 회전 업데이트
+	// 클라이언트: 로컬 보간을 멈추고 서버 최종 위치/회전으로 스냅
 	if (!HasAuthority())
 	{
-		for (int32 i = 0; i < MoveObjects.Num() && i < NewLocations.Num() && i < NewRotations.Num(); i++)
+		bIsMoving = false;
+
+		for (int32 i = 0; i < MoveObjects.Num() && i < FinalLocations.Num() && i < FinalRotations.Num(); i++)
 		{
 			if (IsValid(MoveObjects[i].TargetActor))
 			{
-				// 위치 업데이트
 				if (MoveObjects[i].bEnableLocationMovement)
 				{
-					MoveObjects[i].TargetActor->SetActorLocation(NewLocations[i]);
+					MoveObjects[i].TargetActor->SetActorLocation(FinalLocations[i]);
 				}
 
-				// 회전 업데이트
 				if (MoveObjects[i].bEnableRotationMovement)
 				{
-					MoveObjects[i].TargetActor->SetActorRotation(NewRotations[i]);
+					MoveObjects[i].TargetActor->SetActorRotation(FinalRotations[i]);
 				}
 			}
 		}
