@@ -2,272 +2,118 @@
 
 
 #include "Subsystem/CSEIKSubsystem.h"
-#include "OnlineSubsystem.h"
-#include "Interfaces/OnlineIdentityInterface.h"
-#include "Interfaces/OnlineSessionInterface.h"
-#include "OnlineSessionSettings.h"
-#include "Online/OnlineSessionNames.h"
-#include "Kismet/GameplayStatics.h"
+
+#include "Engine/GameInstance.h"
+#include "OnlineSubsystemUtils.h"
+#include "Subsystem/Online/CSOnlineSessionSubsystem.h"
+#include "Subsystem/Online/CSOnlineTypes.h"
 #include "ChronoSpace.h"
+
+namespace
+{
+	/** One shared warning body so every forwarder points at the same replacement doc. */
+	void LogDeprecated(const TCHAR* Old, const TCHAR* New)
+	{
+		UE_LOG(LogCS, Warning,
+			TEXT("[CSEIKSubsystem] %s is deprecated and forwards to UCSOnlineSessionSubsystem::%s. ")
+			TEXT("Re-wire the caller onto CSOnlineSessionSubsystem; this shim will be removed with the EIK backend."),
+			Old, New);
+	}
+}
 
 void UCSEIKSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
-    return;
-    Super::Initialize(Collection);
-
-    // LoginWithDeviceId();
+	// The old implementation had `return;` here, BEFORE Super::Initialize, so this subsystem
+	// never initialised at all. Nothing else belongs in this function now - the real online
+	// layer initialises in UCSOnlineSessionSubsystem.
+	Super::Initialize(Collection);
 }
 
 void UCSEIKSubsystem::Deinitialize()
 {
-    IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get(TEXT("EIK"));
-    if (!Subsystem)
-    {
-        UE_LOG(LogCS, Error, TEXT("No EIK Subsystem"));
-        return;
-    }
+	// The old implementation called Identity->Logout(0) and early-returned on failure, which
+	// skipped Super::Deinitialize(). Session and identity teardown is UCSOnlineSessionSubsystem's
+	// job; doing it here too would tear down a backend that subsystem still owns.
+	Super::Deinitialize();
+}
 
-    IOnlineIdentityPtr Identity = Subsystem->GetIdentityInterface();
-    if (!Identity.IsValid())
-    {
-        UE_LOG(LogCS, Error, TEXT("Invalid IOnlineIdentityPtr"));
-        return;
-    }
-
-    Identity->Logout(0);
-
-    Super::Deinitialize();
+UCSOnlineSessionSubsystem* UCSEIKSubsystem::GetOnline() const
+{
+	UGameInstance* GI = GetGameInstance();
+	return GI ? GI->GetSubsystem<UCSOnlineSessionSubsystem>() : nullptr;
 }
 
 void UCSEIKSubsystem::LoginWithDeviceId()
 {
-    IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get(TEXT("EIK"));
-    if (!Subsystem)
-    {
-        UE_LOG(LogCS, Error, TEXT("No EIK Subsystem"));
-        return;
-    }
+	LogDeprecated(TEXT("LoginWithDeviceId()"), TEXT("Login()"));
 
-    IOnlineIdentityPtr Identity = Subsystem->GetIdentityInterface();
-    if (!Identity.IsValid())
-    {
-        UE_LOG(LogCS, Error, TEXT("Invalid IOnlineIdentityPtr"));
-        return;
-    }
-
-    FString RandomID = FGuid::NewGuid().ToString();
-
-    FOnlineAccountCredentials Creds;
-    Creds.Type = TEXT("noeas_+_EIK_ECT_DEVICEID_ACCESS_TOKEN");
-    Creds.Id = RandomID;
-    Creds.Token = TEXT("");
-
-    Identity->OnLoginCompleteDelegates->AddUObject(
-        this,
-        &UCSEIKSubsystem::OnLoginComplete
-    );
-
-    Identity->Login(0, Creds);
-}
-
-void UCSEIKSubsystem::OnLoginComplete(int32 LocalUserNum, bool bWasSuccessful, const FUniqueNetId& UserId, const FString& Error)
-{
-    if (bWasSuccessful)
-    {
-        UE_LOG(LogCS, Log, TEXT("[UCSAuthSubsystem] DeviceID Login Success: %s"), *UserId.ToString());
-    }
-    else
-    {
-        UE_LOG(LogCS, Error, TEXT("[UCSAuthSubsystem] Login Failed: %s"), *Error);
-    }
+	if (UCSOnlineSessionSubsystem* Online = GetOnline())
+	{
+		Online->Login();
+	}
+	else
+	{
+		UE_LOG(LogCS, Error, TEXT("[CSEIKSubsystem] LoginWithDeviceId: UCSOnlineSessionSubsystem is unavailable."));
+	}
 }
 
 void UCSEIKSubsystem::CreateSession()
 {
-    IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get(TEXT("EIK"));
-    if (!Subsystem)
-    {
-        UE_LOG(LogCS, Error, TEXT("No EIK Subsystem"));
-        return;
-    }
+	LogDeprecated(TEXT("CreateSession()"), TEXT("HostSession()"));
 
-    IOnlineSessionPtr Session = Subsystem->GetSessionInterface();
-    if (!Session.IsValid())
-    {
-        UE_LOG(LogCS, Error, TEXT("Invalid IOnlineSessionPtr"));
-        return;
-    }
-
-    OnCreateSessionCompleteDelegate = FOnCreateSessionCompleteDelegate::CreateUObject(
-        this,
-        &UCSEIKSubsystem::OnCreateSessionComplete
-    );
-
-    OnCreateSessionCompleteDelegateHandle = Session->AddOnCreateSessionCompleteDelegate_Handle(OnCreateSessionCompleteDelegate);
-
-    FOnlineSessionSettings Settings;
-    Settings.bIsLANMatch = false;
-    Settings.NumPublicConnections = 2;
-    Settings.bShouldAdvertise = true;
-    Settings.bUsesPresence = true;
-    Settings.bAllowJoinInProgress = true;
-    Settings.bIsDedicated = false;
-    Settings.Set(FName("MAPNAME"), FString("L_StageSize"), EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
-
-    Session->CreateSession(0, NAME_GameSession, Settings);
-}
-
-void UCSEIKSubsystem::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful)
-{
-    IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get(TEXT("EIK"));
-    IOnlineSessionPtr Session = Subsystem->GetSessionInterface();
-    Session->ClearOnCreateSessionCompleteDelegate_Handle(OnCreateSessionCompleteDelegateHandle);
-
-    if (bWasSuccessful)
-    {
-        UE_LOG(LogCS, Log, TEXT("Create Session Success: %s"), *SessionName.ToString());
-
-        OnStartSessionCompleteDelegate = FOnStartSessionCompleteDelegate::CreateUObject(
-            this,
-            &UCSEIKSubsystem::OnStartSessionComplete
-        );
-        OnStartSessionCompleteDelegateHandle = Session->AddOnStartSessionCompleteDelegate_Handle(OnStartSessionCompleteDelegate);
-
-        Session->StartSession(NAME_GameSession);
-
-    }
-    else
-    {
-        UE_LOG(LogCS, Error, TEXT("Create Session Failed.."));
-    }
-}
-
-void UCSEIKSubsystem::OnStartSessionComplete(FName SessionName, bool bWasSuccessful)
-{
-    IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get(TEXT("EIK"));
-    IOnlineSessionPtr Session = Subsystem->GetSessionInterface();
-    Session->ClearOnStartSessionCompleteDelegate_Handle(OnStartSessionCompleteDelegateHandle);
-
-    if (!bWasSuccessful)
-    {
-        UE_LOG(LogCS, Error, TEXT("Start Session Failed"));
-        return;
-    }
-
-    UWorld* World = GetWorld();
-
-    //UE_LOG(LogCS, Log, TEXT("NetDriver: %s"), *World->GetNetDriver()->NetDriverName.ToString());
-
-    if (World && World->GetAuthGameMode())
-    {
-        UE_LOG(LogCS, Log, TEXT("ServerTravel - L_StageSize"));
-        World->ServerTravel("/Game/02_Map/L_StageSize?listen");
-    }
+	if (UCSOnlineSessionSubsystem* Online = GetOnline())
+	{
+		// Defaults now come from UCSOnlineSettings, so this hosts a configurable-size session on
+		// the configured map instead of the old hardcoded 2 players on /Game/02_Map/L_StageSize.
+		Online->HostSession(FCSHostSessionParams());
+	}
+	else
+	{
+		UE_LOG(LogCS, Error, TEXT("[CSEIKSubsystem] CreateSession: UCSOnlineSessionSubsystem is unavailable."));
+	}
 }
 
 void UCSEIKSubsystem::FindSessions()
 {
-    IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get(TEXT("EIK"));
-    if (!Subsystem)
-    {
-        UE_LOG(LogCS, Error, TEXT("No EIK Subsystem"));
-        return;
-    }
+	LogDeprecated(TEXT("FindSessions()"), TEXT("FindSessions()"));
 
-    IOnlineSessionPtr Session = Subsystem->GetSessionInterface();
-    if (!Session.IsValid())
-    {
-        UE_LOG(LogCS, Error, TEXT("Invalid IOnlineSessionPtr"));
-        return;
-    }
-
-    SessionSearch = MakeShareable(new FOnlineSessionSearch);
-    SessionSearch->MaxSearchResults = 20;
-    SessionSearch->bIsLanQuery = false;
-    SessionSearch->QuerySettings.Set(FName(TEXT("PRESENCESEARCH")), true, EOnlineComparisonOp::Equals);
-
-    OnFindSessionCompleteDelegate = FOnFindSessionsCompleteDelegate::CreateUObject(
-        this,
-        &UCSEIKSubsystem::OnFindSessionsComplete
-    );
-    OnFindSessionCompleteDelegateHandle = Session->AddOnFindSessionsCompleteDelegate_Handle(OnFindSessionCompleteDelegate);
-
-    Session->FindSessions(0, SessionSearch.ToSharedRef());
-}
-
-void UCSEIKSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
-{
-    IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get(TEXT("EIK"));
-    IOnlineSessionPtr Session = Subsystem->GetSessionInterface();
-    Session->ClearOnFindSessionsCompleteDelegate_Handle(OnFindSessionCompleteDelegateHandle);
-
-    if (bWasSuccessful && SessionSearch.IsValid())
-    {
-        for (const FOnlineSessionSearchResult& SearchResult : SessionSearch->SearchResults)
-        {
-            FString SessionName = SearchResult.GetSessionIdStr();
-            UE_LOG(LogCS, Log, TEXT("Find Session Success: %s"), *SessionName);
-            JoinSession(SearchResult);
-            break;
-        }
-    }
-    else
-    {
-        UE_LOG(LogCS, Error, TEXT("Find Session Failed.."));
-    }
+	if (UCSOnlineSessionSubsystem* Online = GetOnline())
+	{
+		// The old version auto-joined the first result and broke out of the loop, so a caller
+		// could never present a list. Results are now delivered via OnFindSessionsComplete.
+		Online->FindSessions(FCSFindSessionsParams());
+	}
+	else
+	{
+		UE_LOG(LogCS, Error, TEXT("[CSEIKSubsystem] FindSessions: UCSOnlineSessionSubsystem is unavailable."));
+	}
 }
 
 void UCSEIKSubsystem::JoinSessionForBlueprint(FBlueprintSessionResult& SearchResult)
 {
+	LogDeprecated(TEXT("JoinSessionForBlueprint()"), TEXT("JoinSessionByResult()"));
+
+	// This function previously had an EMPTY body - any Blueprint wired to it silently did nothing.
+	if (UCSOnlineSessionSubsystem* Online = GetOnline())
+	{
+		Online->JoinSessionNative(SearchResult.OnlineResult);
+	}
+	else
+	{
+		UE_LOG(LogCS, Error, TEXT("[CSEIKSubsystem] JoinSessionForBlueprint: UCSOnlineSessionSubsystem is unavailable."));
+	}
 }
 
 void UCSEIKSubsystem::JoinSession(const FOnlineSessionSearchResult& SearchResult)
 {
-    IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get(TEXT("EIK"));
-    if (!Subsystem)
-    {
-        UE_LOG(LogCS, Error, TEXT("No EIK Subsystem"));
-        return;
-    }
+	LogDeprecated(TEXT("JoinSession()"), TEXT("JoinSessionNative()"));
 
-    IOnlineSessionPtr Session = Subsystem->GetSessionInterface();
-    if (!Session.IsValid())
-    {
-        UE_LOG(LogCS, Error, TEXT("Invalid IOnlineSessionPtr"));
-        return;
-    }
-
-    OnJoinSessionCompleteDelegate = FOnJoinSessionCompleteDelegate::CreateUObject(
-        this,
-        &UCSEIKSubsystem::OnJoinSessionComplete
-    );
-    OnJoinSessionCompleteDelegateHandle = Session->AddOnJoinSessionCompleteDelegate_Handle(OnJoinSessionCompleteDelegate);
-
-    Session->JoinSession(0, NAME_GameSession, SearchResult);
-}
-
-void UCSEIKSubsystem::OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result)
-{
-    IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get(TEXT("EIK"));
-    IOnlineSessionPtr Session = Subsystem->GetSessionInterface();
-    Session->ClearOnJoinSessionCompleteDelegate_Handle(OnJoinSessionCompleteDelegateHandle);
-
-    FString ConnectInfo;
-    if (Session->GetResolvedConnectString(SessionName, ConnectInfo))
-    {
-        APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-        if (PC)
-        {
-            PC->ClientTravel(ConnectInfo, TRAVEL_Absolute);
-        }
-    }
-
-    if (Result == EOnJoinSessionCompleteResult::Success)
-    {
-        UE_LOG(LogCS, Log, TEXT("Join Session Success: %s"), *SessionName.ToString());
-    }
-    else
-    {
-        UE_LOG(LogCS, Error, TEXT("Join Session Failed: %d"), (int32)Result);
-    }
+	if (UCSOnlineSessionSubsystem* Online = GetOnline())
+	{
+		Online->JoinSessionNative(SearchResult);
+	}
+	else
+	{
+		UE_LOG(LogCS, Error, TEXT("[CSEIKSubsystem] JoinSession: UCSOnlineSessionSubsystem is unavailable."));
+	}
 }
