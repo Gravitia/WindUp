@@ -34,8 +34,7 @@ ACSFixedCameraVolume::ACSFixedCameraVolume()
 void ACSFixedCameraVolume::BeginPlay()
 {
 	Super::BeginPlay();
-	LocalTriggerCharacters.Empty();
-	LockedControllerByCharacter.Empty();
+	Occupants.Empty();
 }
 
 void ACSFixedCameraVolume::Tick(float DeltaTime)
@@ -74,15 +73,24 @@ void ACSFixedCameraVolume::OnTriggerBeginOverlap(UPrimitiveComponent* Overlapped
 	if (!Character) return;
 
 	APlayerController* PC = Cast<APlayerController>(Character->GetController());
-	if (!PC) return;
+
+	// 한 캐릭터가 여러 콜리전 컴포넌트로 겹치면 Begin/End 가 그 수만큼 온다
+	// (루트 캡슐 + Trigger(OverlapAll) + 중력코어 활성 시 GravityCoreSphere).
+	// SetIgnoreLookInput 은 스택 카운터라 진입/해제 횟수가 맞지 않으면 시점 입력이 영구히 잠긴다.
+	// 그래서 캐릭터 단위로 겹침 수를 세고, 첫 진입/마지막 이탈에서만 실제 처리를 한다.
+	FCSFixedCameraOccupant& Occupant = Occupants.FindOrAdd(Character);
+	if (Occupant.OverlapCount++ > 0)
+	{
+		return;
+	}
 
 	// ── 카메라 전환 (로컬 플레이어만) ──
-	if (Character->IsLocallyControlled())
+	if (PC && Character->IsLocallyControlled())
 	{
-		// 어떤 PC 를 잠갔는지 캐릭터별로 기억한다.
-		// 사망/언포제스로 EndOverlap 시점에 Character->GetController() 가 null 이면
-		// SetIgnoreLookInput(true) 가 풀리지 않아 시점 입력이 영구히 막혔다.
-		LockedControllerByCharacter.Add(Character, PC);
+		// 어떤 PC 를 잠갔는지 기억한다 - 사망/언포제스로 EndOverlap 시점에
+		// Character->GetController() 가 null 이어도 잠금을 풀 수 있어야 한다.
+		Occupant.LockedPC = PC;
+		Occupant.bLockedInput = true;
 
 		PC->SetViewTargetWithBlend(this, BlendTime);
 
@@ -105,7 +113,7 @@ void ACSFixedCameraVolume::OnTriggerBeginOverlap(UPrimitiveComponent* Overlapped
 	if (bUseSplitScreenTransition
 		&& UCSSplitScreenSubsystem::ShouldLocalViewRespondTo(Character, bFullScreenForEnteringPlayer, FixedFullScreenPlayerIndex))
 	{
-		LocalTriggerCharacters.Add(Character);
+		Occupant.bRequestedFullScreen = true;
 
 		if (UGameInstance* GI = GetGameInstance())
 		{
@@ -117,7 +125,7 @@ void ACSFixedCameraVolume::OnTriggerBeginOverlap(UPrimitiveComponent* Overlapped
 		}
 	}
 
-	UE_LOG(LogCS, Log, TEXT("FixedCameraVolume: %s entered → Fixed camera, ControlRotation locked"), *Character->GetName());
+	UE_LOG(LogCS, Log, TEXT("FixedCameraVolume: %s entered -> Fixed camera, ControlRotation locked"), *Character->GetName());
 }
 
 void ACSFixedCameraVolume::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
@@ -125,26 +133,26 @@ void ACSFixedCameraVolume::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedCo
 	ACharacter* Character = Cast<ACharacter>(OtherActor);
 	if (!Character) return;
 
-	APlayerController* PC = Cast<APlayerController>(Character->GetController());
-
-	// 진입 때 잠갔던 PC 를 되찾는다 (컨트롤러가 이미 떨어졌어도 입력 잠금은 풀어야 한다)
-	bool bWasLockedByUs = false;
-	if (TWeakObjectPtr<APlayerController>* Found = LockedControllerByCharacter.Find(Character))
+	FCSFixedCameraOccupant* Occupant = Occupants.Find(Character);
+	if (!Occupant)
 	{
-		if (!PC) PC = Found->Get();
-		bWasLockedByUs = true;
-		LockedControllerByCharacter.Remove(Character);
+		return;	// 우리가 진입 처리를 하지 않은 캐릭터
 	}
-	for (auto PurgeIt = LockedControllerByCharacter.CreateIterator(); PurgeIt; ++PurgeIt)
+
+	// 아직 다른 콜리전 컴포넌트가 겹쳐 있으면 실제 이탈이 아니다
+	if (--Occupant->OverlapCount > 0)
 	{
-		if (!PurgeIt->Key.IsValid())
-		{
-			PurgeIt.RemoveCurrent();
-		}
+		return;
+	}
+
+	APlayerController* PC = Cast<APlayerController>(Character->GetController());
+	if (!PC)
+	{
+		PC = Occupant->LockedPC.Get();	// 컨트롤러가 이미 떨어졌어도 잠금은 풀어야 한다
 	}
 
 	// ── 카메라 복원 (진입 때 우리가 잠근 경우) ──
-	if (PC && bWasLockedByUs)
+	if (PC && Occupant->bLockedInput)
 	{
 		PC->SetViewTargetWithBlend(Character, BlendTime);
 
@@ -185,33 +193,44 @@ void ACSFixedCameraVolume::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedCo
 
 		SavedControlRotations.Remove(PC);
 
+		// 진입에서 건 잠금과 정확히 1:1
 		PC->SetIgnoreLookInput(false);
 	}
 
-	const bool bWasLocalTrigger = (LocalTriggerCharacters.Remove(Character) > 0);
-	// 파괴된 캐릭터(사망 등)의 약참조는 Remove(nullptr) 로 지워지지 않는다.
-	// 인덱스/시리얼이 남아 있어 null 약참조와 같지 않기 때문 - 그대로 두면 Num() 이 0 이 되지 않아
-	// 볼륨을 나가도 스플릿으로 영영 복귀하지 못한다.
-	for (auto PurgeIt = LocalTriggerCharacters.CreateIterator(); PurgeIt; ++PurgeIt)
+	const bool bWasFullScreenRequester = Occupant->bRequestedFullScreen;
+	Occupants.Remove(Character);
+
+	// 파괴된 캐릭터 항목 정리 (약참조는 Remove(nullptr) 로 지워지지 않는다)
+	for (auto It = Occupants.CreateIterator(); It; ++It)
 	{
-		if (!PurgeIt->IsValid())
+		if (!It->Key.IsValid())
 		{
-			PurgeIt.RemoveCurrent();
+			It.RemoveCurrent();
 		}
 	}
 
 	// ── 스플릿 스크린 복원 (우리 화면을 바꾼 플레이어가 모두 나갔을 때) ──
-	if (bUseSplitScreenTransition && bWasLocalTrigger && LocalTriggerCharacters.Num() == 0)
+	bool bAnyRequesterLeft = false;
+	for (const auto& Pair : Occupants)
+	{
+		if (Pair.Value.bRequestedFullScreen)
+		{
+			bAnyRequesterLeft = true;
+			break;
+		}
+	}
+
+	if (bUseSplitScreenTransition && bWasFullScreenRequester && !bAnyRequesterLeft)
 	{
 		if (UGameInstance* GI = GetGameInstance())
 		{
 			if (UCSSplitScreenSubsystem* Subsystem = GI->GetSubsystem<UCSSplitScreenSubsystem>())
 			{
 				Subsystem->ReleaseFullScreen(this);
-				UE_LOG(LogCS, Log, TEXT("FixedCameraVolume: All players left → Split Screen transition"));
+				UE_LOG(LogCS, Log, TEXT("FixedCameraVolume: All players left -> Split Screen transition"));
 			}
 		}
 	}
 
-	UE_LOG(LogCS, Log, TEXT("FixedCameraVolume: %s exited → Restore 3rd-person camera"), *Character->GetName());
+	UE_LOG(LogCS, Log, TEXT("FixedCameraVolume: %s exited -> Restore 3rd-person camera"), *Character->GetName());
 }

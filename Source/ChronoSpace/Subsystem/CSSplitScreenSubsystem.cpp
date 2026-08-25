@@ -252,16 +252,14 @@ void UCSSplitScreenSubsystem::PushSecondaryCamera()
     }
 
     // ===== 카메라 target 위치 (충돌 처리 전) =====
-    // USpringArmComponent::UpdateDesiredArmLocation 과 같은 순서로 재구성한다.
-    //   ArmOrigin = 부착점 + TargetOffset
-    //   Desired   = ArmOrigin - Rot.Vector() * ArmLength + Rot 로 회전한 SocketOffset
-    // 예전엔 TargetOffset / SocketOffset 을 빼먹어서, 어깨 오프셋을 쓰는 카메라(3인칭 표준)에서
-    // 보조 뷰만 캐릭터가 화면 중앙에 오는 등 메인 뷰와 구도가 어긋났다.
-    // (오프셋 값은 클래스 기본값이라 모든 머신에서 같으므로 복제 없이 로컬에서 읽어도 된다)
     const FVector TargetOffset = RemoteArm ? RemoteArm->TargetOffset : FVector::ZeroVector;
     const FVector SocketOffset = RemoteArm ? RemoteArm->SocketOffset : FVector::ZeroVector;
-
     const FVector ArmOrigin = SmoothedAnchorLocation + TargetOffset;
+
+    // 카메라 위치는 반드시 "스무딩된 회전"에서 파생시킨다.
+    // 복제된 카메라 위치(TargetCam.Location)를 직접 쓰면 위치와 회전이 서로 다른 필터를 타게 되고,
+    // 시점을 돌리는 동안 카메라가 있는 곳과 보는 곳이 어긋나 화면이 미끄러지듯 흔들린다.
+    // (USpringArmComponent 도 같은 순서다: 회전을 먼저 정하고 그 회전으로 팔을 뻗는다)
     const FVector CamTarget = ArmOrigin
         - SmoothedSecondaryRotation.Vector() * SmoothedArmLength
         + FRotationMatrix(SmoothedSecondaryRotation).TransformVector(SocketOffset);
@@ -297,6 +295,8 @@ void UCSSplitScreenSubsystem::PushSecondaryCamera()
         }
     }
 
+    // 평활은 Anchor / Rotation 단계에서 이미 끝났다. 여기서 한 번 더 걸면
+    // 회전과 위치가 다른 지연을 갖게 되어 시점 회전 중 화면이 흔들린다.
     SmoothedSecondaryLocation = CamLoc;
 
     UE_LOG(LogCS, VeryVerbose, TEXT("SecondaryView Anchor=%s Rot=%s Arm=%.1f FOV=%.1f -> CamLoc=%s"),

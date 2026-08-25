@@ -27,7 +27,7 @@ ACSCameraZoomVolume::ACSCameraZoomVolume()
 void ACSCameraZoomVolume::BeginPlay()
 {
 	Super::BeginPlay();
-	LocalTriggerCharacters.Empty();
+	Occupants.Empty();
 }
 
 void ACSCameraZoomVolume::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepHitResult)
@@ -35,8 +35,14 @@ void ACSCameraZoomVolume::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedC
 	ACSCharacterPlayer* Player = Cast<ACSCharacterPlayer>(OtherActor);
 	if (!Player) return;
 
-	APlayerController* PC = Cast<APlayerController>(Player->GetController());
-	if (!PC) return;
+	// 한 캐릭터가 여러 콜리전 컴포넌트로 겹치면 Begin/End 가 그 수만큼 온다
+	// (루트 캡슐 + Trigger(OverlapAll) + 중력코어 활성 시 GravityCoreSphere).
+	// 캐릭터 단위로 겹침 수를 세서 첫 진입 / 마지막 이탈에서만 처리한다.
+	FCSZoomOccupant& Occupant = Occupants.FindOrAdd(Player);
+	if (Occupant.OverlapCount++ > 0)
+	{
+		return;
+	}
 
 	// ── 줌 적용 (로컬 플레이어만) ──
 	if (Player->IsLocallyControlled())
@@ -48,7 +54,7 @@ void ACSCameraZoomVolume::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedC
 	if (bUseSplitScreenTransition
 		&& UCSSplitScreenSubsystem::ShouldLocalViewRespondTo(Player, bFullScreenForEnteringPlayer, FixedFullScreenPlayerIndex))
 	{
-		LocalTriggerCharacters.Add(Player);
+		Occupant.bRequestedFullScreen = true;
 
 		if (UGameInstance* GI = GetGameInstance())
 		{
@@ -68,8 +74,14 @@ void ACSCameraZoomVolume::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedCom
 	ACSCharacterPlayer* Player = Cast<ACSCharacterPlayer>(OtherActor);
 	if (!Player) return;
 
-	APlayerController* PC = Cast<APlayerController>(Player->GetController());
-	if (!PC) return;
+	FCSZoomOccupant* Occupant = Occupants.Find(Player);
+	if (!Occupant) return;
+
+	// 아직 다른 콜리전 컴포넌트가 겹쳐 있으면 실제 이탈이 아니다
+	if (--Occupant->OverlapCount > 0)
+	{
+		return;
+	}
 
 	// ── 줌 복원 (로컬 플레이어만) ──
 	if (Player->IsLocallyControlled())
@@ -77,20 +89,26 @@ void ACSCameraZoomVolume::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedCom
 		Player->ZoomCamera(0.f, ZoomSpeed);
 	}
 
-	const bool bWasLocalTrigger = (LocalTriggerCharacters.Remove(Player) > 0);
-	// 파괴된 캐릭터(사망 등)의 약참조는 Remove(nullptr) 로 지워지지 않는다.
-	// 인덱스/시리얼이 남아 있어 null 약참조와 같지 않기 때문 - 그대로 두면 Num() 이 0 이 되지 않아
-	// 볼륨을 나가도 스플릿으로 영영 복귀하지 못한다.
-	for (auto PurgeIt = LocalTriggerCharacters.CreateIterator(); PurgeIt; ++PurgeIt)
+	const bool bWasLocalTrigger = Occupant->bRequestedFullScreen;
+	Occupants.Remove(Player);
+
+	// 파괴된 캐릭터(사망 등)의 약참조는 Remove(nullptr) 로 지워지지 않는다 - 직접 제거한다
+	for (auto PurgeIt = Occupants.CreateIterator(); PurgeIt; ++PurgeIt)
 	{
-		if (!PurgeIt->IsValid())
+		if (!PurgeIt->Key.IsValid())
 		{
 			PurgeIt.RemoveCurrent();
 		}
 	}
 
+	bool bAnyRequesterLeft = false;
+	for (const auto& Pair : Occupants)
+	{
+		if (Pair.Value.bRequestedFullScreen) { bAnyRequesterLeft = true; break; }
+	}
+
 	// ── 스플릿 스크린 복원 (우리 화면을 바꾼 플레이어가 모두 나갔을 때) ──
-	if (bUseSplitScreenTransition && bWasLocalTrigger && LocalTriggerCharacters.Num() == 0)
+	if (bUseSplitScreenTransition && bWasLocalTrigger && !bAnyRequesterLeft)
 	{
 		if (UGameInstance* GI = GetGameInstance())
 		{

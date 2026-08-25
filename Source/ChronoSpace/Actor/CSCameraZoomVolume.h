@@ -55,6 +55,12 @@ protected:
 
 private:
 	/** 트리거 안에 있는 플레이어 수 (스플릿 스크린 복원 판단용) */
-	// 이 머신의 화면을 풀스크린으로 만든 캐릭터들 (로컬 판정 - 머신마다 다르다)
-	TSet< TWeakObjectPtr<class ACharacter> > LocalTriggerCharacters;
+	/** 볼륨 안 캐릭터 1명분 상태 (겹침 수를 세어 Begin/End 중복을 흡수) */
+	struct FCSZoomOccupant
+	{
+		int32 OverlapCount = 0;
+		bool bRequestedFullScreen = false;
+	};
+
+	TMap< TWeakObjectPtr<class ACharacter>, FCSZoomOccupant > Occupants;
 };

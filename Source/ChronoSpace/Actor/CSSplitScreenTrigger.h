@@ -43,6 +43,6 @@ protected:
 
 private:
 	/** 트리거 안에 있는 플레이어 수 */
-	// 이 머신의 화면을 풀스크린으로 만든 캐릭터들 (로컬 판정 - 머신마다 다르다)
-	TSet< TWeakObjectPtr<class ACharacter> > LocalTriggerCharacters;
+	// 이 머신의 화면을 풀스크린으로 만든 캐릭터 -> 겹친 콜리전 컴포넌트 수
+	TMap< TWeakObjectPtr<class ACharacter>, int32 > OccupantOverlapCounts;
 };

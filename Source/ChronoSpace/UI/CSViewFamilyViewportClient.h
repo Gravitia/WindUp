@@ -53,7 +53,17 @@ private:
 	void ComputeViewRects(const FIntPoint& ViewportSize, FIntRect& OutMainRect, FIntRect& OutSecondaryRect) const;
 
 	/** 보조 뷰의 SceneView 를 ViewFamily 에 추가 */
-	void AddSecondarySceneView(class FSceneViewFamilyContext& ViewFamily, const FIntRect& ViewRect, bool bCameraCut);
+	class FSceneView* AddSecondarySceneView(class FSceneViewFamilyContext& ViewFamily, const FIntRect& ViewRect);
+
+	/** 엔진 Draw 가 매 프레임 하던 오디오 리스너 갱신 (분할 경로에서 빠져 있었다) */
+	void UpdateAudioListener(class UWorld* ListenerWorld, class APlayerController* PC, const class FSceneView* View);
+
+	/** 분할이 끝나면 LocalPlayer 의 Origin/Size 를 전체 뷰포트로 되돌린다 */
+	void RestoreMainLocalPlayerViewport();
+
+	/** HUD 를 그릴 씬 캔버스 (엔진의 CanvasObject 대응) */
+	UPROPERTY(Transient)
+	TObjectPtr<class UCanvas> SceneCanvasObject = nullptr;
 
 private:
 	bool bSecondaryActive = false;
@@ -68,8 +78,7 @@ private:
 	/** 분할 경계를 이 픽셀 배수로 스냅한다 (TSR 타일 / ScreenPercentage 반올림 정렬용) */
 	static constexpr int32 ViewRectAlignment = 8;
 
-	/** 직전 프레임의 메인 뷰 폭 - 경계가 움직이는 동안 임시 히스토리를 버리기 위해 비교한다 */
-	int32 LastMainRectWidth = INDEX_NONE;
+
 
 	float FullscreenAlpha = 0.f;
 	bool  bSwapLeftRight = true;

@@ -27,7 +27,7 @@ ACSSplitScreenTrigger::ACSSplitScreenTrigger()
 void ACSSplitScreenTrigger::BeginPlay()
 {
 	Super::BeginPlay();
-	LocalTriggerCharacters.Empty();
+	OccupantOverlapCounts.Empty();
 }
 
 void ACSSplitScreenTrigger::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepHitResult)
@@ -41,8 +41,14 @@ void ACSSplitScreenTrigger::OnTriggerBeginOverlap(UPrimitiveComponent* Overlappe
 		return;
 	}
 
-	// 카운트 대신 집합으로 추적한다 (사망/언포제스로 EndOverlap 에서 판정이 뒤집혀도 드리프트 없음)
-	LocalTriggerCharacters.Add(Character);
+	// 한 캐릭터가 여러 콜리전 컴포넌트로 겹치면 Begin/End 가 그 수만큼 온다
+	// (루트 캡슐 + Trigger(OverlapAll) + 중력코어 활성 시 GravityCoreSphere).
+	// 겹침 수를 세지 않으면 컴포넌트 하나만 빠져나가도 풀스크린이 풀린다.
+	int32& OverlapCount = OccupantOverlapCounts.FindOrAdd(Character);
+	if (OverlapCount++ > 0)
+	{
+		return;
+	}
 
 	if (UGameInstance* GI = GetGameInstance())
 	{
@@ -59,23 +65,30 @@ void ACSSplitScreenTrigger::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedC
 	ACharacter* Character = Cast<ACharacter>(OtherActor);
 	if (!Character) return;
 
-	if (LocalTriggerCharacters.Remove(Character) == 0)
+	int32* OverlapCount = OccupantOverlapCounts.Find(Character);
+	if (!OverlapCount)
 	{
 		return;	// 우리 화면을 바꾸지 않았던 캐릭터
 	}
-	// 파괴된 캐릭터(사망 등)의 약참조는 Remove(nullptr) 로 지워지지 않는다.
-	// 인덱스/시리얼이 남아 있어 null 약참조와 같지 않기 때문 - 그대로 두면 Num() 이 0 이 되지 않아
-	// 볼륨을 나가도 스플릿으로 영영 복귀하지 못한다.
-	for (auto PurgeIt = LocalTriggerCharacters.CreateIterator(); PurgeIt; ++PurgeIt)
+
+	// 아직 다른 콜리전 컴포넌트가 겹쳐 있으면 실제 이탈이 아니다
+	if (--(*OverlapCount) > 0)
 	{
-		if (!PurgeIt->IsValid())
+		return;
+	}
+	OccupantOverlapCounts.Remove(Character);
+
+	// 파괴된 캐릭터(사망 등)의 약참조는 Remove(nullptr) 로 지워지지 않는다 - 직접 제거한다
+	for (auto PurgeIt = OccupantOverlapCounts.CreateIterator(); PurgeIt; ++PurgeIt)
+	{
+		if (!PurgeIt->Key.IsValid())
 		{
 			PurgeIt.RemoveCurrent();
 		}
 	}
 
 	// 우리 화면을 풀스크린으로 만든 캐릭터가 모두 나가면 복원
-	if (LocalTriggerCharacters.Num() == 0)
+	if (OccupantOverlapCounts.Num() == 0)
 	{
 		if (UGameInstance* GI = GetGameInstance())
 		{

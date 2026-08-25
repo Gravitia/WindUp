@@ -78,11 +78,20 @@ private:
 	TMap<APlayerController*, FRotator> SavedControlRotations;
 
 	/** 트리거 안에 있는 플레이어 수 (스플릿 스크린 복원 판단용) */
-	// 이 머신의 화면을 풀스크린으로 만든 캐릭터들 (로컬 판정 - 머신마다 다르다)
-	TSet< TWeakObjectPtr<class ACharacter> > LocalTriggerCharacters;
+	/**
+	 * 볼륨 안에 있는 캐릭터 1명분 상태.
+	 * OverlapCount 를 세는 이유: 캐릭터 하나가 여러 콜리전 컴포넌트로 겹치면 Begin/End 가 그만큼 오는데,
+	 * SetIgnoreLookInput 은 스택 카운터라 횟수가 어긋나면 시점 입력이 영구히 잠긴다.
+	 */
+	struct FCSFixedCameraOccupant
+	{
+		TWeakObjectPtr<class APlayerController> LockedPC;
+		int32 OverlapCount = 0;
+		bool bLockedInput = false;
+		bool bRequestedFullScreen = false;
+	};
 
-	// 진입 때 시점 입력을 잠근 PC (캐릭터가 컨트롤러를 잃어도 EndOverlap 에서 풀 수 있게)
-	TMap< TWeakObjectPtr<class ACharacter>, TWeakObjectPtr<class APlayerController> > LockedControllerByCharacter;
+	TMap< TWeakObjectPtr<class ACharacter>, FCSFixedCameraOccupant > Occupants;
 
 	/** ControlRotation Lerp 상태 */
 	struct FControlRotationLerpState

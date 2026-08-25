@@ -19,6 +19,10 @@
 #include "Engine/Console.h"
 #include "LegacyScreenPercentageDriver.h"
 #include "UnrealClient.h"
+#include "SceneViewExtension.h"
+#include "AudioDevice.h"
+#include "AudioDeviceHandle.h"
+#include "Debug/DebugDrawService.h"
 #include "EngineUtils.h"
 #include "Math/InverseRotationMatrix.h"
 #include "UObject/UObjectGlobals.h"
@@ -85,6 +89,8 @@ void UCSViewFamilyViewportClient::SetSecondaryView(const FVector& InLocation, co
 void UCSViewFamilyViewportClient::ClearSecondaryView()
 {
 	bSecondaryActive = false;
+	// 분할 중 메인 사각형으로 좁혀 두었던 LocalPlayer 뷰포트를 전체로 되돌린다
+	RestoreMainLocalPlayerViewport();
 }
 
 void UCSViewFamilyViewportClient::ComputeViewRects(const FIntPoint& ViewportSize, FIntRect& OutMainRect, FIntRect& OutSecondaryRect) const
@@ -103,11 +109,17 @@ void UCSViewFamilyViewportClient::ComputeViewRects(const FIntPoint& ViewportSize
 		MainWidth = (MainWidth / ViewRectAlignment) * ViewRectAlignment;
 	}
 
-	// 두 뷰가 모두 보이는 동안에는 각 뷰가 최소 폭을 갖도록 (0 폭 뷰 / 극단적 종횡비 방지)
+	// 보조 뷰가 아주 좁아지면 슬리버를 렌더하지 않고 바로 풀스크린으로 넘긴다.
+	// (폭 16px 짜리 뷰는 종횡비가 극단적이라 화면이 뭉개지고, 전환 끝에서 툭 사라진다)
 	const int32 MinViewWidth = FMath::Min(ViewRectAlignment * 2, ViewportSize.X);
-	MainWidth = (SmoothedAlpha >= 1.f - KINDA_SMALL_NUMBER)
-		? ViewportSize.X
-		: FMath::Clamp(MainWidth, MinViewWidth, ViewportSize.X - MinViewWidth);
+	if (MainWidth > ViewportSize.X - MinViewWidth)
+	{
+		MainWidth = ViewportSize.X;
+	}
+	else if (MainWidth < MinViewWidth)
+	{
+		MainWidth = MinViewWidth;
+	}
 
 	if (!bSwapLeftRight)
 	{
@@ -122,12 +134,12 @@ void UCSViewFamilyViewportClient::ComputeViewRects(const FIntPoint& ViewportSize
 	}
 }
 
-void UCSViewFamilyViewportClient::AddSecondarySceneView(FSceneViewFamilyContext& ViewFamily, const FIntRect& ViewRect, bool bCameraCut)
+FSceneView* UCSViewFamilyViewportClient::AddSecondarySceneView(FSceneViewFamilyContext& ViewFamily, const FIntRect& ViewRect)
 {
 	UWorld* MyWorld = GetWorld();
 	if (!MyWorld || ViewRect.Width() <= 0 || ViewRect.Height() <= 0)
 	{
-		return;
+		return nullptr;
 	}
 
 	if (!SecondaryViewState.GetReference())
@@ -145,8 +157,7 @@ void UCSViewFamilyViewportClient::AddSecondarySceneView(FSceneViewFamilyContext&
 	ViewInit.OverlayColor = FLinearColor::Transparent;
 	ViewInit.FOV = SecondaryFOV;
 	ViewInit.DesiredFOV = SecondaryFOV;
-	// 경계가 움직인 프레임에는 히스토리를 버려 이음새 노이즈를 막는다
-	ViewInit.bInCameraCut = bCameraCut;
+
 
 	// View 행렬 (UE 표준 — ULocalPlayer::GetProjectionData 와 동일 패턴)
 	ViewInit.ViewOrigin = SecondaryLocation;
@@ -199,40 +210,73 @@ void UCSViewFamilyViewportClient::AddSecondarySceneView(FSceneViewFamilyContext&
 	SecondarySceneView->EndFinalPostprocessSettings(ViewInit);
 
 	ViewFamily.Views.Add(SecondarySceneView);
+	return SecondarySceneView;
+}
+
+void UCSViewFamilyViewportClient::UpdateAudioListener(UWorld* ListenerWorld, APlayerController* PC, const FSceneView* View)
+{
+	// 엔진 Draw 는 매 프레임 리스너를 갱신한다. 분할 경로가 Super::Draw 를 우회하면서 이게 빠져
+	// 분할이 켜진 순간의 위치에 3D 사운드가 얼어붙었다.
+	if (!ListenerWorld || !PC || !View) return;
+
+	FAudioDeviceHandle ListenerAudioDevice = ListenerWorld->GetAudioDevice();
+	if (!ListenerAudioDevice.IsValid()) return;
+
+	FVector Location;
+	FVector ProjFront;
+	FVector ProjRight;
+	PC->GetAudioListenerPosition(Location, ProjFront, ProjRight);
+
+	FTransform ListenerTransform(FRotationMatrix::MakeFromXY(ProjFront, ProjRight));
+	ListenerTransform.SetTranslation(Location);
+	ListenerTransform.NormalizeRotation();
+
+	const uint32 ViewportIndex = 0;
+	ListenerAudioDevice->SetListener(ListenerWorld, ViewportIndex, ListenerTransform, View->bCameraCut ? 0.f : ListenerWorld->GetDeltaSeconds());
+
+	FVector OverrideAttenuation;
+	if (PC->GetAudioListenerAttenuationOverridePosition(OverrideAttenuation))
+	{
+		ListenerAudioDevice->SetListenerAttenuationOverride(ViewportIndex, OverrideAttenuation);
+	}
+	else
+	{
+		ListenerAudioDevice->ClearListenerAttenuationOverride(ViewportIndex);
+	}
+}
+
+void UCSViewFamilyViewportClient::RestoreMainLocalPlayerViewport()
+{
+	// 분할 중에는 Origin/Size 를 메인 사각형으로 유지한다 (투영/디프로젝션 API 가 실제 렌더 영역과 맞도록).
+	// 분할이 끝나면 전체 뷰포트로 되돌린다.
+	if (UGameInstance* GI = GetGameInstance())
+	{
+		if (ULocalPlayer* LP = GI->GetFirstGamePlayer())
+		{
+			LP->Origin = FVector2D::ZeroVector;
+			LP->Size = FVector2D(1.f, 1.f);
+		}
+	}
 }
 
 void UCSViewFamilyViewportClient::Draw(FViewport* InViewport, FCanvas* SceneCanvas)
 {
 	TickFade(GetWorld() ? GetWorld()->DeltaTimeSeconds : 0.016f);
 
-	// 보조 뷰가 비활성이면 엔진 기본 Draw 사용 (싱글 뷰 / 메뉴 / 로비)
-	if (!bSecondaryActive)
-	{
-		Super::Draw(InViewport, SceneCanvas);
-		DrawFadeOverlay(InViewport);
-		return;
-	}
-
 	UWorld* MyWorld = GetWorld();
 	UGameInstance* GI = GetGameInstance();
-	if (!MyWorld || !GI || !InViewport || !SceneCanvas)
-	{
-		Super::Draw(InViewport, SceneCanvas);
-		DrawFadeOverlay(InViewport);
-		return;
-	}
+	ULocalPlayer* MainLocalPlayer = GI ? GI->GetFirstGamePlayer() : nullptr;
+	const FIntPoint ViewportSize = InViewport ? InViewport->GetSizeXY() : FIntPoint::ZeroValue;
 
-	ULocalPlayer* MainLocalPlayer = GI->GetFirstGamePlayer();
-	if (!MainLocalPlayer || !MainLocalPlayer->PlayerController || !MyWorld->Scene)
-	{
-		Super::Draw(InViewport, SceneCanvas);
-		DrawFadeOverlay(InViewport);
-		return;
-	}
+	// 보조 뷰가 비활성이거나 전제가 깨지면 엔진 기본 Draw 로 폴백 (싱글 뷰 / 메뉴 / 로비)
+	const bool bCanDrawSplit =
+		bSecondaryActive && MyWorld && GI && InViewport && SceneCanvas &&
+		MainLocalPlayer && MainLocalPlayer->PlayerController && MyWorld->Scene &&
+		ViewportSize.X > 0 && ViewportSize.Y > 0;
 
-	const FIntPoint ViewportSize = InViewport->GetSizeXY();
-	if (ViewportSize.X <= 0 || ViewportSize.Y <= 0)
+	if (!bCanDrawSplit)
 	{
+		RestoreMainLocalPlayerViewport();
 		Super::Draw(InViewport, SceneCanvas);
 		DrawFadeOverlay(InViewport);
 		return;
@@ -241,24 +285,12 @@ void UCSViewFamilyViewportClient::Draw(FViewport* InViewport, FCanvas* SceneCanv
 	FIntRect MainRect, SecondaryRect;
 	ComputeViewRects(ViewportSize, MainRect, SecondaryRect);
 
-	// 분할 경계가 움직인 프레임에는 임시 히스토리(TSR/모션블러)를 버린다.
-	// ViewRect 가 바뀌면 TSR 이 지난 프레임 히스토리를 다른 영역에서 리샘플하게 되고,
-	// 새로 드러난 경계 부근 픽셀에는 유효한 히스토리가 없어 색이 튀는 깨진 화소가 나타난다.
-	// (경계를 8px 로 스냅했으므로 전환 중에도 실제로 바뀌는 프레임은 몇 프레임뿐이다)
-	const bool bViewRectChanged = (LastMainRectWidth != INDEX_NONE) && (LastMainRectWidth != MainRect.Width());
-	LastMainRectWidth = MainRect.Width();
+	// (removed 2026-08-25: ViewRect 가 바뀐 프레임에 SetGameCameraCutThisFrame() 을 걸던 코드.
+	//  전환 중 경계는 프레임당 ~32px 씩 움직여 8px 스냅으로도 매 프레임 바뀌므로, 결과적으로
+	//  전환 내내 매 프레임 카메라 컷이 걸렸다 - 오토 노출이 매 프레임 리셋돼 화면이 깜빡이고
+	//  TSR 은 누적을 못 했다. 이음새 노이즈의 실제 원인은 r.ScreenPercentage=71 로 확인됐다.)
 
-	if (bViewRectChanged)
-	{
-		if (APlayerController* PC = MainLocalPlayer->PlayerController)
-		{
-			if (APlayerCameraManager* CamMgr = PC->PlayerCameraManager)
-			{
-				// CalcSceneView 가 이 값을 읽어 메인 뷰에 카메라 컷을 적용한다
-				CamMgr->SetGameCameraCutThisFrame();
-			}
-		}
-	}
+	APlayerController* MainPC = MainLocalPlayer->PlayerController;
 
 	// ===== ViewFamily 빌드 =====
 	FSceneViewFamilyContext ViewFamily(FSceneViewFamily::ConstructionValues(
@@ -267,17 +299,29 @@ void UCSViewFamilyViewportClient::Draw(FViewport* InViewport, FCanvas* SceneCanv
 
 	ViewFamily.DebugDPIScale = GetDPIScale();
 	ViewFamily.EngineShowFlags = EngineShowFlags;
-	ViewFamily.ViewMode = VMI_Lit;
+	// 콘솔 viewmode(wireframe / unlit 등)를 따르도록 - 예전엔 VMI_Lit 하드코딩이라 뷰모드가 먹지 않았다
+	ViewFamily.ViewMode = EViewModeIndex(ViewModeIndex);
+	ViewFamily.bIsMainViewFamily = true;
 
 	ViewFamily.Time = FGameTime::CreateUndilated(MyWorld->TimeSeconds, MyWorld->DeltaTimeSeconds);
 
-	// ===== 메인 뷰 (LocalPlayer 사용) =====
-	// LocalPlayer->Origin/Size 가 CalcSceneView 안에서 ViewRect 와 ProjectionMatrix 의 AspectRatio 산출에
-	// 사용된다. 분할 사각형에 맞춰 잠시 덮어썼다가 호출 후 복원한다.
+	// ===== SceneViewExtension 수집 =====
+	// FSR/DLSS/OCIO 같은 확장은 여기서 등록되지 않으면 분할 중 조용히 꺼진다.
+	if (GEngine && GEngine->ViewExtensions.IsValid())
 	{
-		const FVector2D SavedOrigin = MainLocalPlayer->Origin;
-		const FVector2D SavedSize = MainLocalPlayer->Size;
+		FSceneViewExtensionContext ViewExtensionContext(InViewport);
+		ViewFamily.ViewExtensions = GEngine->ViewExtensions->GatherActiveExtensions(ViewExtensionContext);
+		for (const FSceneViewExtensionRef& ViewExt : ViewFamily.ViewExtensions)
+		{
+			ViewExt->SetupViewFamily(ViewFamily);
+		}
+	}
 
+	// ===== 메인 뷰 (LocalPlayer 사용) =====
+	// LocalPlayer->Origin/Size 는 CalcSceneView 안에서 ViewRect 와 종횡비 산출에 쓰이고,
+	// ProjectWorldLocationToScreen / DeprojectMousePosition 등도 같은 값을 읽는다.
+	// 분할 중에는 계속 메인 사각형으로 유지해야 화면 좌표 변환이 실제 렌더 영역과 맞는다.
+	{
 		const float InvW = 1.f / FMath::Max(1.f, static_cast<float>(ViewportSize.X));
 		const float InvH = 1.f / FMath::Max(1.f, static_cast<float>(ViewportSize.Y));
 
@@ -285,19 +329,60 @@ void UCSViewFamilyViewportClient::Draw(FViewport* InViewport, FCanvas* SceneCanv
 		                                    static_cast<float>(MainRect.Min.Y) * InvH);
 		MainLocalPlayer->Size = FVector2D(static_cast<float>(MainRect.Width()) * InvW,
 		                                  static_cast<float>(MainRect.Height()) * InvH);
-
-		FVector OutViewLocation;
-		FRotator OutViewRotation;
-		MainLocalPlayer->CalcSceneView(&ViewFamily, OutViewLocation, OutViewRotation, InViewport);
-
-		MainLocalPlayer->Origin = SavedOrigin;
-		MainLocalPlayer->Size = SavedSize;
 	}
+
+	FVector OutViewLocation = FVector::ZeroVector;
+	FRotator OutViewRotation = FRotator::ZeroRotator;
+	FSceneView* MainSceneView = MainLocalPlayer->CalcSceneView(&ViewFamily, OutViewLocation, OutViewRotation, InViewport);
+
+	if (!MainSceneView)
+	{
+		// 투영 데이터 산출 실패 (PC 교체 직후 등). 뷰 0개로 렌더러에 넘기면 크래시/검은 화면.
+		RestoreMainLocalPlayerViewport();
+		Super::Draw(InViewport, SceneCanvas);
+		DrawFadeOverlay(InViewport);
+		return;
+	}
+
+	// 엔진 Draw 가 뷰마다 하던 갱신들
+	MainSceneView->CameraConstrainedViewRect = MainSceneView->UnscaledViewRect;
+	MainLocalPlayer->LastViewLocation = OutViewLocation;
+	AddStreamingViewInfo(*MyWorld, *MainSceneView);	// 텍스처 스트리밍 뷰 정보 (없으면 밉이 안 올라온다)
+	MyWorld->LastRenderTime = MyWorld->GetTimeSeconds();
+	UpdateAudioListener(MyWorld, MainPC, MainSceneView);
 
 	// ===== 보조 뷰 (LocalPlayer 없이 직접 빌드) =====
 	if (SecondaryRect.Width() > 0 && SecondaryRect.Height() > 0)
 	{
-		AddSecondarySceneView(ViewFamily, SecondaryRect, bViewRectChanged);
+		if (FSceneView* SecondarySceneView = AddSecondarySceneView(ViewFamily, SecondaryRect))
+		{
+			// CalcSceneView 가 메인 뷰에 대해 해 주는 일을 보조 뷰에는 직접 해 준다
+			for (const FSceneViewExtensionRef& ViewExt : ViewFamily.ViewExtensions)
+			{
+				ViewExt->SetupView(ViewFamily, *SecondarySceneView);
+			}
+
+			SecondarySceneView->CameraConstrainedViewRect = SecondarySceneView->UnscaledViewRect;
+			AddStreamingViewInfo(*MyWorld, *SecondarySceneView);
+		}
+	}
+
+	// ===== 카메라 컷 플래그 정리 =====
+	// 엔진 Draw 가 매 프레임 해 주던 일. 안 하면 SetGameCameraCutThisFrame() 이 영구히 true 로 남아
+	// TSR 이 계속 리셋되고 오디오 리스너 보간도 죽는다.
+	bool bAnyPlayerCameraCut = false;
+	if (APlayerCameraManager* CamMgr = MainPC->PlayerCameraManager)
+	{
+		bAnyPlayerCameraCut = CamMgr->bGameCameraCutThisFrame;
+		CamMgr->bGameCameraCutThisFrame = false;
+	}
+	InViewport->SetCameraCut(bAnyPlayerCameraCut);
+
+	// ===== FinalizeViews =====
+	{
+		TMap<ULocalPlayer*, FSceneView*> PlayerViewMap;
+		PlayerViewMap.Add(MainLocalPlayer, MainSceneView);
+		FinalizeViews(&ViewFamily, PlayerViewMap);
 	}
 
 	// ===== ScreenPercentage 인터페이스 등록 =====
@@ -312,57 +397,98 @@ void UCSViewFamilyViewportClient::Draw(FViewport* InViewport, FCanvas* SceneCanv
 
 	// ===== 렌더 큐잉 =====
 	SceneCanvas->Clear(FLinearColor::Black);
-	IRendererModule& RendererModule = FModuleManager::LoadModuleChecked<IRendererModule>(TEXT("Renderer"));
-	RendererModule.BeginRenderingViewFamily(SceneCanvas, &ViewFamily);
+
+	if (!bDisableWorldRendering && ViewFamily.Views.Num() > 0)
+	{
+		IRendererModule& RendererModule = FModuleManager::LoadModuleChecked<IRendererModule>(TEXT("Renderer"));
+		RendererModule.BeginRenderingViewFamily(SceneCanvas, &ViewFamily);
+	}
+
+	// 스크린샷 / 무비 캡처 (엔진 Draw 가 하던 단계)
+	ProcessScreenShots(InViewport);
 
 	// ===== PostRender 단계 (HUD / Console / OnScreenDebug 등) =====
-	// 엔진 표준 Draw() 가 BeginRenderingViewFamily 직후에 처리하던 일들을 직접 수행.
-	// PostRender(UCanvas*) 가상 메서드는 *transition / title-safe* 만 그리므로
-	// 콘솔 / HUD / OnScreenDebug 는 별도 호출이 필요하다.
-	if (FCanvas* DebugCanvas = InViewport->GetDebugCanvas())
+	// HUD 는 엔진과 동일하게 SceneCanvas 에 메인 뷰 사각형 기준으로 그린다.
+	// Canvas 에 SceneView 를 넣어야 Canvas Project / AHUD Project 가 동작한다 (없으면 전부 0 이 나온다).
+	FCanvas* DebugCanvas = InViewport->GetDebugCanvas();
+
+	if (!SceneCanvasObject)
 	{
-		if (!DebugCanvasObject)
-		{
-			DebugCanvasObject = NewObject<UCanvas>(GetTransientPackage());
-		}
+		SceneCanvasObject = NewObject<UCanvas>(GetTransientPackage());
+	}
+	if (!DebugCanvasObject)
+	{
+		DebugCanvasObject = NewObject<UCanvas>(GetTransientPackage());
+	}
 
-		DebugCanvasObject->Init(ViewportSize.X, ViewportSize.Y, nullptr, DebugCanvas);
-		DebugCanvasObject->ApplySafeZoneTransform();
+	if (DebugCanvas)
+	{
+		DebugCanvasObject->Init(ViewportSize.X, ViewportSize.Y, MainSceneView, DebugCanvas);
+	}
 
-		// 1) HUD — 메인 LocalPlayer 의 Canvas HUD 만 그린다 (UMG 는 Slate 가 별도 처리)
-		if (APlayerController* PC = MainLocalPlayer->PlayerController)
+	{
+		const FVector CanvasOrigin(FMath::TruncToFloat(static_cast<float>(MainSceneView->UnscaledViewRect.Min.X)),
+		                           FMath::TruncToFloat(static_cast<float>(MainSceneView->UnscaledViewRect.Min.Y)), 0.f);
+
+		SceneCanvasObject->Init(MainSceneView->UnscaledViewRect.Width(), MainSceneView->UnscaledViewRect.Height(), MainSceneView, SceneCanvas);
+
+		SceneCanvas->PushAbsoluteTransform(FTranslationMatrix(CanvasOrigin));
+		SceneCanvasObject->ApplySafeZoneTransform();
+
+		// 1) HUD - 메인 LocalPlayer 의 Canvas HUD (UMG 는 Slate 가 별도 처리)
+		if (AHUD* HUD = MainPC->GetHUD())
 		{
-			if (AHUD* HUD = PC->GetHUD())
+			DebugCanvasObject->SceneView = MainSceneView;
+			HUD->SetCanvas(SceneCanvasObject, DebugCanvasObject);
+			HUD->PostRender();
+
+			// PostRender 중 BP 브레이크포인트 등으로 포인터가 바뀔 수 있어 되돌린다
+			SceneCanvasObject->Canvas = SceneCanvas;
+			DebugCanvasObject->Canvas = DebugCanvas;
+
+			if (IsValid(MainPC))
 			{
-				HUD->SetCanvas(DebugCanvasObject, DebugCanvasObject);
-				HUD->PostRender();
 				HUD->SetCanvas(nullptr, nullptr);
 			}
 		}
 
-		// 2) PostRender — transition / title-safe
+		// 2) 디버그 드로잉 (DrawDebug 계열 / ShowFlag 기반)
+		if (DebugCanvas)
+		{
+			DebugCanvas->PushAbsoluteTransform(FTranslationMatrix(CanvasOrigin));
+			UDebugDrawService::Draw(ViewFamily.EngineShowFlags, InViewport, MainSceneView, DebugCanvas, DebugCanvasObject, MainPC);
+			DebugCanvas->PopTransform();
+		}
+
+		SceneCanvasObject->PopSafeZoneTransform();
+		SceneCanvas->PopTransform();
+	}
+
+	if (DebugCanvas)
+	{
+		DebugCanvasObject->ApplySafeZoneTransform();
+
+		// 3) PostRender - transition / title-safe
 		PostRender(DebugCanvasObject);
 
-		// 3) 콘솔 (`키 입력 후 화면에 보이는 입력창)
+		// 4) 콘솔 입력창
 		if (ViewportConsole)
 		{
 			ViewportConsole->PostRender_Console(DebugCanvasObject);
 		}
 
-		// 4) OnScreenDebugMessage — AddOnScreenDebugMessage / 디버그 그리기
+		// 5) OnScreenDebugMessage
 		if (GEngine)
 		{
-			GEngine->DrawOnscreenDebugMessages(MyWorld, InViewport, SceneCanvas, DebugCanvasObject, 40.0f, 100.0f);
+			GEngine->DrawOnscreenDebugMessages(MyWorld, InViewport, DebugCanvas, DebugCanvasObject, 40.0f, 100.0f);
 		}
 
-		// 5) Stats — stat fps / stat unit / stat game 등 stat 시스템 출력
+		// 6) Stats - stat fps / stat unit / stat game 등
 		{
 			FVector PlayerCameraLocation = FVector::ZeroVector;
 			FRotator PlayerCameraRotation = FRotator::ZeroRotator;
-			if (APlayerController* PC = MainLocalPlayer->PlayerController)
-			{
-				PC->GetPlayerViewPoint(PlayerCameraLocation, PlayerCameraRotation);
-			}
+			MainPC->GetPlayerViewPoint(PlayerCameraLocation, PlayerCameraRotation);
+
 			DrawStatsHUD(MyWorld, InViewport, DebugCanvas, DebugCanvasObject,
 			             DebugProperties, PlayerCameraLocation, PlayerCameraRotation);
 		}
