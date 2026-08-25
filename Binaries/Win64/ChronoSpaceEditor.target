@@ -172,10 +172,6 @@
 			"Type": "DynamicLibrary"
 		},
 		{
-			"Path": "$(EngineDir)/Binaries/Win64/EOSSDK-Win64-Shipping.dll",
-			"Type": "DynamicLibrary"
-		},
-		{
 			"Path": "$(EngineDir)/Binaries/Win64/NNEEditorOnnxTools.dll",
 			"Type": "DynamicLibrary"
 		},
@@ -2344,30 +2340,6 @@
 			"Type": "RequiredResource"
 		},
 		{
-			"Path": "$(EngineDir)/Plugins/Animation/RigLogic/Binaries/Win64/UnrealEditor-RigLogicDeveloper.dll",
-			"Type": "DynamicLibrary"
-		},
-		{
-			"Path": "$(EngineDir)/Plugins/Animation/RigLogic/Binaries/Win64/UnrealEditor-RigLogicEditor.dll",
-			"Type": "DynamicLibrary"
-		},
-		{
-			"Path": "$(EngineDir)/Plugins/Animation/RigLogic/Binaries/Win64/UnrealEditor-RigLogicLib.dll",
-			"Type": "DynamicLibrary"
-		},
-		{
-			"Path": "$(EngineDir)/Plugins/Animation/RigLogic/Binaries/Win64/UnrealEditor-RigLogicLibTest.dll",
-			"Type": "DynamicLibrary"
-		},
-		{
-			"Path": "$(EngineDir)/Plugins/Animation/RigLogic/Binaries/Win64/UnrealEditor-RigLogicModule.dll",
-			"Type": "DynamicLibrary"
-		},
-		{
-			"Path": "$(EngineDir)/Plugins/Animation/RigLogic/Binaries/Win64/UnrealEditor.modules",
-			"Type": "RequiredResource"
-		},
-		{
 			"Path": "$(EngineDir)/Plugins/Animation/SkeletalMeshModelingTools/Binaries/Win64/UnrealEditor-SkeletalMeshModelingTools.dll",
 			"Type": "DynamicLibrary"
 		},
@@ -2421,26 +2393,6 @@
 		},
 		{
 			"Path": "$(EngineDir)/Plugins/BlueprintFileUtils/Binaries/Win64/UnrealEditor.modules",
-			"Type": "RequiredResource"
-		},
-		{
-			"Path": "$(EngineDir)/Plugins/Bridge/Binaries/Win64/UnrealEditor-Bridge.dll",
-			"Type": "DynamicLibrary"
-		},
-		{
-			"Path": "$(EngineDir)/Plugins/Bridge/Binaries/Win64/UnrealEditor-Bridge.pdb",
-			"Type": "SymbolFile"
-		},
-		{
-			"Path": "$(EngineDir)/Plugins/Bridge/Binaries/Win64/UnrealEditor-MegascansPlugin.dll",
-			"Type": "DynamicLibrary"
-		},
-		{
-			"Path": "$(EngineDir)/Plugins/Bridge/Binaries/Win64/UnrealEditor-MegascansPlugin.pdb",
-			"Type": "SymbolFile"
-		},
-		{
-			"Path": "$(EngineDir)/Plugins/Bridge/Binaries/Win64/UnrealEditor.modules",
 			"Type": "RequiredResource"
 		},
 		{
@@ -4364,22 +4316,6 @@
 			"Type": "RequiredResource"
 		},
 		{
-			"Path": "$(EngineDir)/Plugins/MetaHuman/MetaHumanSDK/Binaries/Win64/UnrealEditor-InterchangeDNA.dll",
-			"Type": "DynamicLibrary"
-		},
-		{
-			"Path": "$(EngineDir)/Plugins/MetaHuman/MetaHumanSDK/Binaries/Win64/UnrealEditor-MetaHumanSDKEditor.dll",
-			"Type": "DynamicLibrary"
-		},
-		{
-			"Path": "$(EngineDir)/Plugins/MetaHuman/MetaHumanSDK/Binaries/Win64/UnrealEditor-MetaHumanSDKRuntime.dll",
-			"Type": "DynamicLibrary"
-		},
-		{
-			"Path": "$(EngineDir)/Plugins/MetaHuman/MetaHumanSDK/Binaries/Win64/UnrealEditor.modules",
-			"Type": "RequiredResource"
-		},
-		{
 			"Path": "$(EngineDir)/Plugins/MovieScene/ActorSequence/Binaries/Win64/UnrealEditor-ActorSequence.dll",
 			"Type": "DynamicLibrary"
 		},
@@ -4473,14 +4409,6 @@
 		},
 		{
 			"Path": "$(EngineDir)/Plugins/NNE/NNERuntimeORT/Binaries/Win64/UnrealEditor.modules",
-			"Type": "RequiredResource"
-		},
-		{
-			"Path": "$(EngineDir)/Plugins/Online/EOSShared/Binaries/Win64/UnrealEditor-EOSShared.dll",
-			"Type": "DynamicLibrary"
-		},
-		{
-			"Path": "$(EngineDir)/Plugins/Online/EOSShared/Binaries/Win64/UnrealEditor.modules",
 			"Type": "RequiredResource"
 		},
 		{
@@ -26002,10 +25930,6 @@
 			"Type": "NonUFS"
 		},
 		{
-			"Path": "$(EngineDir)/Binaries/Win64/EOSSDK-Win64-Shipping.dll",
-			"Type": "NonUFS"
-		},
-		{
 			"Path": "$(EngineDir)/Binaries/Win64/EpicWebHelper.exe",
 			"Type": "NonUFS"
 		},
@@ -29326,10 +29250,6 @@
 			"Type": "UFS"
 		},
 		{
-			"Path": "$(EngineDir)/Plugins/Animation/RigLogic/RigLogic.uplugin",
-			"Type": "UFS"
-		},
-		{
 			"Path": "$(EngineDir)/Plugins/Animation/SkeletalMeshModelingTools/SkeletalMeshModelingTools.uplugin",
 			"Type": "UFS"
 		},
@@ -29355,10 +29275,6 @@
 		},
 		{
 			"Path": "$(EngineDir)/Plugins/BlueprintFileUtils/BlueprintFileUtils.uplugin",
-			"Type": "UFS"
-		},
-		{
-			"Path": "$(EngineDir)/Plugins/Bridge/Bridge.uplugin",
 			"Type": "UFS"
 		},
 		{
@@ -30038,10 +29954,6 @@
 			"Type": "UFS"
 		},
 		{
-			"Path": "$(EngineDir)/Plugins/MetaHuman/MetaHumanSDK/MetaHumanSDK.uplugin",
-			"Type": "UFS"
-		},
-		{
 			"Path": "$(EngineDir)/Plugins/MovieScene/ActorSequence/ActorSequence.uplugin",
 			"Type": "UFS"
 		},
@@ -30079,10 +29991,6 @@
 		},
 		{
 			"Path": "$(EngineDir)/Plugins/Online/Android/OnlineSubsystemGooglePlay/OnlineSubsystemGooglePlay.uplugin",
-			"Type": "UFS"
-		},
-		{
-			"Path": "$(EngineDir)/Plugins/Online/EOSShared/EOSShared.uplugin",
 			"Type": "UFS"
 		},
 		{
@@ -30400,7 +30308,6 @@
 		"BlueprintHeaderView",
 		"BlueprintInternalsToolset",
 		"BlueprintMaterialTextureNodes",
-		"Bridge",
 		"Buoyancy",
 		"CLionSourceCodeAccess",
 		"CableComponent",
@@ -30450,7 +30357,6 @@
 		"DerivedDataBuildController",
 		"DumpGPUServices",
 		"EOSIntegrationKit",
-		"EOSShared",
 		"EaseCurveTool",
 		"EditorDataStorage",
 		"EditorDataStorageFeatures",
@@ -30526,7 +30432,6 @@
 		"MeshModelingToolset",
 		"MeshModelingToolsetExp",
 		"MeshPainting",
-		"MetaHumanSDK",
 		"Metasound",
 		"MobileLauncherProfileWizard",
 		"MobilePatchingUtils",
@@ -30583,7 +30488,6 @@
 		"RenderTraceInsights",
 		"ResonanceAudio",
 		"RiderSourceCodeAccess",
-		"RigLogic",
 		"RigVM",
 		"RuntimeTelemetry",
 		"SQLiteCore",
