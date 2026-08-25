@@ -9,7 +9,9 @@
 #include "Engine/GameViewportClient.h"
 #include "Game/CSGameMode.h"
 #include "Subsystem/CSSplitScreenSubsystem.h"
-#include "Actor/CSStagePortal.h"
+#include "Actor/CSStagePortal.h"
+#include "Actor/System/CSCheckPoint.h"
+#include "Actor/System/CSRespawnPoint.h"
 #include "TimerManager.h"
 #include "EngineUtils.h"
 #include "Engine/BlueprintGeneratedClass.h"
@@ -71,6 +73,17 @@ void ACSPlayerController::OnPossess(APawn* InPawn)
 	Super::OnPossess(InPawn);
 
 	SetupInputMode();
+
+	// 레벨 전환 직후엔 체크포인트 안에서 스폰되는 일이 잦은데, 스폰 시점의 폰은 아직 빙의 전이라
+	// PlayerState 가 없어 BeginOverlap 이 와도 버려진다. 그 뒤로는 이미 겹친 상태라 새 이벤트도 안 온다.
+	// 빙의가 끝난 지금 서 있는 체크포인트를 직접 찾아 적용한다.
+	if (HasAuthority())
+	{
+		ACSCheckPoint::ClaimCheckPointAtPawnLocation(InPawn);
+
+		// 체크포인트 밖에서 스폰됐으면 리스폰 지점이 계속 null 로 남는다. 가장 가까운 곳으로 채운다.
+		ACSRespawnPoint::EnsureRespawnPoint(InPawn);
+	}
 
 	if (GameUIWidget)
 	{

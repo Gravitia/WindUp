@@ -220,6 +220,10 @@ bool ACSGameMode::RespawnSinglePlayer(APawn* Player)
         return false;
     }
 
+    // 레벨 전환 등으로 아직 비어 있으면 여기서 한 번 더 채운다.
+    // 사망 시점이면 서브레벨까지 다 올라와 있으니 OnPossess 때보다 성공률이 높다.
+    ACSRespawnPoint::EnsureRespawnPoint(Player);
+
     ACSRespawnPoint* RespawnPoint = PS->GetPersonalRespawnPoint();
     if (!IsValid(RespawnPoint))
     {
