@@ -111,7 +111,7 @@ void ACSFixedCameraVolume::OnTriggerBeginOverlap(UPrimitiveComponent* Overlapped
 		{
 			if (UCSSplitScreenSubsystem* Subsystem = GI->GetSubsystem<UCSSplitScreenSubsystem>())
 			{
-				Subsystem->TransitionToFullScreen(0);
+				Subsystem->RequestFullScreen(this);
 				UE_LOG(LogCS, Log, TEXT("FixedCameraVolume: local player entered -> Full Screen transition"));
 			}
 		}
@@ -135,32 +135,70 @@ void ACSFixedCameraVolume::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedCo
 		bWasLockedByUs = true;
 		LockedControllerByCharacter.Remove(Character);
 	}
-	LockedControllerByCharacter.Remove(nullptr);
+	for (auto PurgeIt = LockedControllerByCharacter.CreateIterator(); PurgeIt; ++PurgeIt)
+	{
+		if (!PurgeIt->Key.IsValid())
+		{
+			PurgeIt.RemoveCurrent();
+		}
+	}
 
 	// ── 카메라 복원 (진입 때 우리가 잠근 경우) ──
 	if (PC && bWasLockedByUs)
 	{
 		PC->SetViewTargetWithBlend(Character, BlendTime);
 
-		// ControlRotation도 Lerp로 부드럽게 복원
-		if (FRotator* SavedRot = SavedControlRotations.Find(PC))
+		// ── 나갈 때의 ControlRotation ──
+		// 이동 방향은 ControlRotation 의 Yaw 기준이다. 예전엔 "진입 전 회전"으로 되돌려서,
+		// 볼륨 안에서 가던 방향으로 계속 가려 해도 나가는 순간 이동 방향이 튀었다.
+		// 기본 동작: 보고 있던 Yaw 를 그대로 유지하고 Pitch/Roll 만 진입 전 값으로 되돌린다
+		// (고정 카메라가 아래를 내려다보는 각이어도 3인칭 카메라가 기울어진 채로 남지 않게).
+		const FRotator* SavedRot = SavedControlRotations.Find(PC);
+		const FRotator CurrentRot = PC->GetControlRotation();
+
+		FRotator TargetRot = CurrentRot;
+		if (bRestoreControlRotationOnExit)
+		{
+			if (SavedRot) TargetRot = *SavedRot;
+		}
+		else
+		{
+			TargetRot.Pitch = SavedRot ? SavedRot->Pitch : 0.f;
+			TargetRot.Roll = SavedRot ? SavedRot->Roll : 0.f;
+		}
+
+		if (!TargetRot.Equals(CurrentRot, 0.01f))
 		{
 			FControlRotationLerpState LerpState;
-			LerpState.StartRotation = PC->GetControlRotation();
-			LerpState.TargetRotation = *SavedRot;
+			LerpState.StartRotation = CurrentRot;
+			LerpState.TargetRotation = TargetRot;
 			LerpState.Elapsed = 0.f;
 			LerpState.Duration = ControlRotationBlendTime;
 			LerpState.bIsLerping = true;
 			ControlRotationLerpStates.Add(PC, LerpState);
-
-			SavedControlRotations.Remove(PC);
 		}
+		else
+		{
+			// 목표가 현재와 같으면 진행 중이던 Lerp 만 멈춘다 (진입 Lerp 가 남아 되돌아가지 않게)
+			ControlRotationLerpStates.Remove(PC);
+		}
+
+		SavedControlRotations.Remove(PC);
 
 		PC->SetIgnoreLookInput(false);
 	}
 
 	const bool bWasLocalTrigger = (LocalTriggerCharacters.Remove(Character) > 0);
-	LocalTriggerCharacters.Remove(nullptr);
+	// 파괴된 캐릭터(사망 등)의 약참조는 Remove(nullptr) 로 지워지지 않는다.
+	// 인덱스/시리얼이 남아 있어 null 약참조와 같지 않기 때문 - 그대로 두면 Num() 이 0 이 되지 않아
+	// 볼륨을 나가도 스플릿으로 영영 복귀하지 못한다.
+	for (auto PurgeIt = LocalTriggerCharacters.CreateIterator(); PurgeIt; ++PurgeIt)
+	{
+		if (!PurgeIt->IsValid())
+		{
+			PurgeIt.RemoveCurrent();
+		}
+	}
 
 	// ── 스플릿 스크린 복원 (우리 화면을 바꾼 플레이어가 모두 나갔을 때) ──
 	if (bUseSplitScreenTransition && bWasLocalTrigger && LocalTriggerCharacters.Num() == 0)
@@ -169,7 +207,7 @@ void ACSFixedCameraVolume::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedCo
 		{
 			if (UCSSplitScreenSubsystem* Subsystem = GI->GetSubsystem<UCSSplitScreenSubsystem>())
 			{
-				Subsystem->TransitionToSplitScreen();
+				Subsystem->ReleaseFullScreen(this);
 				UE_LOG(LogCS, Log, TEXT("FixedCameraVolume: All players left → Split Screen transition"));
 			}
 		}

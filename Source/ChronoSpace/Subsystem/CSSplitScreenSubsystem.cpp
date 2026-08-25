@@ -383,6 +383,19 @@ void UCSSplitScreenSubsystem::PushSecondaryCamera()
 
 void UCSSplitScreenSubsystem::Tick(float DeltaTime)
 {
+    // 요청자가 파괴된 채 사라지면(볼륨 삭제, 레벨 언로드) 해제 호출이 오지 않는다.
+    // 마지막 요청자가 없어진 순간 스플릿으로 되돌린다 - 그러지 않으면 풀스크린에 갇힌다.
+    if (FullScreenRequesters.Num() > 0)
+    {
+        const int32 Removed = FullScreenRequesters.RemoveAll(
+            [](const TWeakObjectPtr<const UObject>& P) { return !P.IsValid(); });
+
+        if (Removed > 0 && FullScreenRequesters.Num() == 0)
+        {
+            TransitionToSplitScreen();
+        }
+    }
+
     if (!bSplitScreenActive)
     {
         return;
@@ -450,6 +463,29 @@ void UCSSplitScreenSubsystem::TransitionToFullScreen(int32 /*PlayerIndex*/)
     // 어느 플레이어 때문에 바꿀지는 호출측이 ShouldLocalViewRespondTo() 로 판단해야 한다.
     TargetAlpha = 1.f;
     UE_LOG(LogCS, Log, TEXT("CSSplitScreenSubsystem: TransitionToFullScreen"));
+}
+
+void UCSSplitScreenSubsystem::RequestFullScreen(const UObject* Requester)
+{
+    if (!Requester) return;
+
+    FullScreenRequesters.RemoveAll([](const TWeakObjectPtr<const UObject>& P) { return !P.IsValid(); });
+    FullScreenRequesters.AddUnique(TWeakObjectPtr<const UObject>(Requester));
+
+    TransitionToFullScreen(0);
+}
+
+void UCSSplitScreenSubsystem::ReleaseFullScreen(const UObject* Requester)
+{
+    FullScreenRequesters.RemoveAll([Requester](const TWeakObjectPtr<const UObject>& P)
+    {
+        return !P.IsValid() || P.Get() == Requester;
+    });
+
+    if (FullScreenRequesters.Num() == 0)
+    {
+        TransitionToSplitScreen();
+    }
 }
 
 bool UCSSplitScreenSubsystem::ShouldLocalViewRespondTo(const ACharacter* Character, bool bForEnteringPlayer, int32 FixedPlayerIndex)

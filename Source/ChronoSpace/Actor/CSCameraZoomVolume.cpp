@@ -54,7 +54,7 @@ void ACSCameraZoomVolume::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedC
 		{
 			if (UCSSplitScreenSubsystem* Subsystem = GI->GetSubsystem<UCSSplitScreenSubsystem>())
 			{
-				Subsystem->TransitionToFullScreen(0);
+				Subsystem->RequestFullScreen(this);
 				UE_LOG(LogCS, Log, TEXT("CameraZoomVolume: local player entered -> Full Screen transition"));
 			}
 		}
@@ -78,7 +78,16 @@ void ACSCameraZoomVolume::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedCom
 	}
 
 	const bool bWasLocalTrigger = (LocalTriggerCharacters.Remove(Player) > 0);
-	LocalTriggerCharacters.Remove(nullptr);
+	// 파괴된 캐릭터(사망 등)의 약참조는 Remove(nullptr) 로 지워지지 않는다.
+	// 인덱스/시리얼이 남아 있어 null 약참조와 같지 않기 때문 - 그대로 두면 Num() 이 0 이 되지 않아
+	// 볼륨을 나가도 스플릿으로 영영 복귀하지 못한다.
+	for (auto PurgeIt = LocalTriggerCharacters.CreateIterator(); PurgeIt; ++PurgeIt)
+	{
+		if (!PurgeIt->IsValid())
+		{
+			PurgeIt.RemoveCurrent();
+		}
+	}
 
 	// ── 스플릿 스크린 복원 (우리 화면을 바꾼 플레이어가 모두 나갔을 때) ──
 	if (bUseSplitScreenTransition && bWasLocalTrigger && LocalTriggerCharacters.Num() == 0)
@@ -87,7 +96,7 @@ void ACSCameraZoomVolume::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedCom
 		{
 			if (UCSSplitScreenSubsystem* Subsystem = GI->GetSubsystem<UCSSplitScreenSubsystem>())
 			{
-				Subsystem->TransitionToSplitScreen();
+				Subsystem->ReleaseFullScreen(this);
 				UE_LOG(LogCS, Log, TEXT("CameraZoomVolume: All players left → Split Screen transition"));
 			}
 		}

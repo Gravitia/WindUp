@@ -53,6 +53,14 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default|Camera Volume")
 	float ControlRotationBlendTime = 0.75f;
 
+	/**
+	 * 볼륨을 나갈 때 진입 전 회전으로 되돌릴지 여부.
+	 * false(기본) = 보고 있던 방향(Yaw)을 유지해 이동 방향이 끊기지 않는다. Pitch/Roll 만 되돌린다.
+	 * true = 진입 전 회전으로 완전히 복원 (이전 동작).
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default|Camera Volume")
+	bool bRestoreControlRotationOnExit = false;
+
 	/** true이면 진입 시 풀스크린, 퇴장 시 스플릿 스크린 전환 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default|Camera Volume")
 	bool bUseSplitScreenTransition = false;

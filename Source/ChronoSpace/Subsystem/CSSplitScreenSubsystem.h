@@ -48,6 +48,18 @@ public:
     void TransitionToFullScreen(int32 PlayerIndex);
 
     /**
+     * 풀스크린 "요청"을 등록/해제한다. 요청자가 하나라도 남아 있으면 풀스크린을 유지하고,
+     * 전부 사라졌을 때만 스플릿으로 돌아간다.
+     *
+     * 트리거들이 TransitionToFullScreen/TransitionToSplitScreen 을 직접 부르면
+     * 볼륨 A 에서 볼륨 B 로 겹쳐 이동할 때 A 의 EndOverlap 이 B 의 BeginOverlap 보다 늦게 도착해
+     * B 가 막 켠 풀스크린을 A 가 꺼버린다 (반대 순서면 나온 뒤에도 풀스크린이 남는다).
+     * 요청자가 파괴돼도 자동으로 정리된다.
+     */
+    void RequestFullScreen(const UObject* Requester);
+    void ReleaseFullScreen(const UObject* Requester);
+
+    /**
      * 이 머신의 화면이 이 캐릭터의 진입/이탈에 반응해야 하는지 판단한다.
      * TransitionToFullScreen 은 로컬 뷰만 바꾸므로, 원격 플레이어 때문에 내 화면이 바뀌면 안 된다.
      * bForEnteringPlayer=false 면 FixedPlayerIndex 와 로컬 플레이어의 ControllerId 를 비교한다.
@@ -126,6 +138,9 @@ private:
     /** Fullscreen 트랜지션 상태 — 0=split, 1=fullscreen */
     float CurrentAlpha = 0.f;
     float TargetAlpha = 0.f;
+
+    // 풀스크린을 요청 중인 트리거들. 비면 스플릿으로 복귀한다 (파괴된 요청자는 자동 정리)
+    TArray< TWeakObjectPtr<const UObject> > FullScreenRequesters;
 
     /** 보조 뷰 카메라 보간 상태 */
     bool bHasSmoothedSecondary = false;
