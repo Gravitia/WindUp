@@ -8,6 +8,7 @@
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/HUD.h"
+#include "Camera/PlayerCameraManager.h"
 #include "Camera/CameraTypes.h"
 #include "SceneView.h"
 #include "RendererInterface.h"
@@ -91,9 +92,22 @@ void UCSViewFamilyViewportClient::ComputeViewRects(const FIntPoint& ViewportSize
 	const float SmoothedAlpha = FMath::InterpEaseInOut(0.f, 1.f, FullscreenAlpha, 2.f);
 
 	const int32 HalfX = FMath::Max(1, ViewportSize.X / 2);
-	const int32 MainWidth = FMath::Clamp(
-		static_cast<int32>(FMath::Lerp(static_cast<float>(HalfX), static_cast<float>(ViewportSize.X), SmoothedAlpha)),
-		1, ViewportSize.X);
+	int32 MainWidth = static_cast<int32>(FMath::Lerp(static_cast<float>(HalfX), static_cast<float>(ViewportSize.X), SmoothedAlpha));
+
+	// 경계를 ViewRectAlignment 픽셀 배수로 스냅한다.
+	// TSR/업스케일은 타일 단위로 동작하고 ScreenPercentage 가 100% 가 아니면 각 뷰의 사각형이
+	// 따로 스케일·반올림되는데, 경계가 정렬돼 있지 않으면 두 뷰 사이에 아무도 쓰지 않는
+	// 1~2 픽셀 열이 생겨 화면 중앙에 노이즈(깨진 화소)로 보인다.
+	if (ViewRectAlignment > 1 && MainWidth < ViewportSize.X)
+	{
+		MainWidth = (MainWidth / ViewRectAlignment) * ViewRectAlignment;
+	}
+
+	// 두 뷰가 모두 보이는 동안에는 각 뷰가 최소 폭을 갖도록 (0 폭 뷰 / 극단적 종횡비 방지)
+	const int32 MinViewWidth = FMath::Min(ViewRectAlignment * 2, ViewportSize.X);
+	MainWidth = (SmoothedAlpha >= 1.f - KINDA_SMALL_NUMBER)
+		? ViewportSize.X
+		: FMath::Clamp(MainWidth, MinViewWidth, ViewportSize.X - MinViewWidth);
 
 	if (!bSwapLeftRight)
 	{
@@ -108,7 +122,7 @@ void UCSViewFamilyViewportClient::ComputeViewRects(const FIntPoint& ViewportSize
 	}
 }
 
-void UCSViewFamilyViewportClient::AddSecondarySceneView(FSceneViewFamilyContext& ViewFamily, const FIntRect& ViewRect)
+void UCSViewFamilyViewportClient::AddSecondarySceneView(FSceneViewFamilyContext& ViewFamily, const FIntRect& ViewRect, bool bCameraCut)
 {
 	UWorld* MyWorld = GetWorld();
 	if (!MyWorld || ViewRect.Width() <= 0 || ViewRect.Height() <= 0)
@@ -131,6 +145,8 @@ void UCSViewFamilyViewportClient::AddSecondarySceneView(FSceneViewFamilyContext&
 	ViewInit.OverlayColor = FLinearColor::Transparent;
 	ViewInit.FOV = SecondaryFOV;
 	ViewInit.DesiredFOV = SecondaryFOV;
+	// 경계가 움직인 프레임에는 히스토리를 버려 이음새 노이즈를 막는다
+	ViewInit.bInCameraCut = bCameraCut;
 
 	// View 행렬 (UE 표준 — ULocalPlayer::GetProjectionData 와 동일 패턴)
 	ViewInit.ViewOrigin = SecondaryLocation;
@@ -225,6 +241,25 @@ void UCSViewFamilyViewportClient::Draw(FViewport* InViewport, FCanvas* SceneCanv
 	FIntRect MainRect, SecondaryRect;
 	ComputeViewRects(ViewportSize, MainRect, SecondaryRect);
 
+	// 분할 경계가 움직인 프레임에는 임시 히스토리(TSR/모션블러)를 버린다.
+	// ViewRect 가 바뀌면 TSR 이 지난 프레임 히스토리를 다른 영역에서 리샘플하게 되고,
+	// 새로 드러난 경계 부근 픽셀에는 유효한 히스토리가 없어 색이 튀는 깨진 화소가 나타난다.
+	// (경계를 8px 로 스냅했으므로 전환 중에도 실제로 바뀌는 프레임은 몇 프레임뿐이다)
+	const bool bViewRectChanged = (LastMainRectWidth != INDEX_NONE) && (LastMainRectWidth != MainRect.Width());
+	LastMainRectWidth = MainRect.Width();
+
+	if (bViewRectChanged)
+	{
+		if (APlayerController* PC = MainLocalPlayer->PlayerController)
+		{
+			if (APlayerCameraManager* CamMgr = PC->PlayerCameraManager)
+			{
+				// CalcSceneView 가 이 값을 읽어 메인 뷰에 카메라 컷을 적용한다
+				CamMgr->SetGameCameraCutThisFrame();
+			}
+		}
+	}
+
 	// ===== ViewFamily 빌드 =====
 	FSceneViewFamilyContext ViewFamily(FSceneViewFamily::ConstructionValues(
 		InViewport, MyWorld->Scene, EngineShowFlags)
@@ -262,7 +297,7 @@ void UCSViewFamilyViewportClient::Draw(FViewport* InViewport, FCanvas* SceneCanv
 	// ===== 보조 뷰 (LocalPlayer 없이 직접 빌드) =====
 	if (SecondaryRect.Width() > 0 && SecondaryRect.Height() > 0)
 	{
-		AddSecondarySceneView(ViewFamily, SecondaryRect);
+		AddSecondarySceneView(ViewFamily, SecondaryRect, bViewRectChanged);
 	}
 
 	// ===== ScreenPercentage 인터페이스 등록 =====

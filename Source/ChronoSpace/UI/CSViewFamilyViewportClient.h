@@ -53,7 +53,7 @@ private:
 	void ComputeViewRects(const FIntPoint& ViewportSize, FIntRect& OutMainRect, FIntRect& OutSecondaryRect) const;
 
 	/** 보조 뷰의 SceneView 를 ViewFamily 에 추가 */
-	void AddSecondarySceneView(class FSceneViewFamilyContext& ViewFamily, const FIntRect& ViewRect);
+	void AddSecondarySceneView(class FSceneViewFamilyContext& ViewFamily, const FIntRect& ViewRect, bool bCameraCut);
 
 private:
 	bool bSecondaryActive = false;
@@ -64,6 +64,12 @@ private:
 
 	// SecondaryFOV 가 "가로 FOV" 로 정의된 기준 종횡비. 송신측 카메라 컴포넌트의 AspectRatio (기본 16:9).
 	float    SecondaryAspectRatio = 16.f / 9.f;
+
+	/** 분할 경계를 이 픽셀 배수로 스냅한다 (TSR 타일 / ScreenPercentage 반올림 정렬용) */
+	static constexpr int32 ViewRectAlignment = 8;
+
+	/** 직전 프레임의 메인 뷰 폭 - 경계가 움직이는 동안 임시 히스토리를 버리기 위해 비교한다 */
+	int32 LastMainRectWidth = INDEX_NONE;
 
 	float FullscreenAlpha = 0.f;
 	bool  bSwapLeftRight = true;
