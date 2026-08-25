@@ -45,6 +45,9 @@ private:
 	ECheckBoxState IsTeleportAllChecked() const;
 	void OnTeleportAllChanged(ECheckBoxState NewState);
 
+	ECheckBoxState IsShowCollisionChecked() const;
+	void OnShowCollisionChanged(ECheckBoxState NewState);
+
 	FText GetStatusText() const;
 
 	TWeakObjectPtr<ACSPlayerController> OwningPC;

@@ -11,7 +11,10 @@
 #include "Subsystem/CSSplitScreenSubsystem.h"
 #include "Actor/CSStagePortal.h"
 #include "TimerManager.h"
+#include "EngineUtils.h"
+#include "Engine/BlueprintGeneratedClass.h"
 #include "Components/InputComponent.h"
+#include "Components/ShapeComponent.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Pawn.h"
@@ -218,11 +221,75 @@ void ACSPlayerController::ServerDebugTeleport_Implementation(FVector Location, F
 #endif
 }
 
+int32 ACSPlayerController::SetShowBlueprintCollision(bool bEnable)
+{
+#if !UE_BUILD_SHIPPING
+	// 켜 뒀던 것부터 원래대로 되돌린다. 다시 켤 때 그 사이 스폰된 액터까지 새로 훑기 위해서이기도 하다.
+	for (const FCSDebugShapeVisibility& Shown : DebugShownShapes)
+	{
+		if (UShapeComponent* Shape = Shown.Component.Get())
+		{
+			Shape->SetHiddenInGame(Shown.bWasHiddenInGame);
+			Shape->SetVisibility(Shown.bWasVisible);
+		}
+	}
+	DebugShownShapes.Reset();
+
+	bShowBlueprintCollision = bEnable;
+
+	UWorld* World = GetWorld();
+	if (!bEnable || World == nullptr)
+	{
+		return 0;
+	}
+
+	for (TActorIterator<AActor> It(World); It; ++It)
+	{
+		AActor* Actor = *It;
+		if (!IsValid(Actor))
+		{
+			continue;
+		}
+
+		// 블루프린트로 만든 액터만 본다. C++ 액터까지 켜면 show collision 과 다를 게 없어진다.
+		if (Cast<UBlueprintGeneratedClass>(Actor->GetClass()) == nullptr)
+		{
+			continue;
+		}
+
+		// Box / Sphere / Capsule 은 전부 UShapeComponent 라 종류를 가릴 필요가 없다.
+		TInlineComponentArray<UShapeComponent*> Shapes(Actor);
+		for (UShapeComponent* Shape : Shapes)
+		{
+			if (!IsValid(Shape))
+			{
+				continue;
+			}
+
+			FCSDebugShapeVisibility Shown;
+			Shown.Component = Shape;
+			Shown.bWasHiddenInGame = Shape->bHiddenInGame != 0;
+			Shown.bWasVisible = Shape->GetVisibleFlag();
+			DebugShownShapes.Add(Shown);
+
+			Shape->SetHiddenInGame(false);
+			Shape->SetVisibility(true);
+		}
+	}
+
+	UE_LOG(LogCS, Log, TEXT("ShowBlueprintCollision: %d shape(s) shown"), DebugShownShapes.Num());
+	return DebugShownShapes.Num();
+#else
+	return 0;
+#endif
+}
+
 void ACSPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	GetWorldTimerManager().ClearTimer(UICreationTimerHandle);
 
 	CloseDebugTeleportPanel();
+	DebugShownShapes.Reset();
 
 	if (GameUIWidget)
 	{

@@ -158,6 +158,49 @@ void SCSDebugTeleportPanel::Construct(const FArguments& InArgs)
 					]
 				]
 
+				// --- 블루프린트 콜리전 표시 토글 ---
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				.Padding(0.f, 0.f, 0.f, 8.f)
+				[
+					SNew(SHorizontalBox)
+
+					+ SHorizontalBox::Slot()
+					.AutoWidth()
+					.VAlign(VAlign_Center)
+					[
+						SNew(SCheckBox)
+						.IsChecked(this, &SCSDebugTeleportPanel::IsShowCollisionChecked)
+						.OnCheckStateChanged(this, &SCSDebugTeleportPanel::OnShowCollisionChanged)
+					]
+
+					+ SHorizontalBox::Slot()
+					.FillWidth(1.f)
+					.VAlign(VAlign_Center)
+					.Padding(6.f, 0.f, 0.f, 0.f)
+					[
+						SNew(SVerticalBox)
+
+						+ SVerticalBox::Slot()
+						.AutoHeight()
+						[
+							SNew(STextBlock)
+							.Font(FCoreStyle::GetDefaultFontStyle("Regular", 10))
+							.ColorAndOpacity(FLinearColor::White)
+							.Text(FText::FromString(TEXT("Show BP collision")))
+						]
+
+						+ SVerticalBox::Slot()
+						.AutoHeight()
+						[
+							SNew(STextBlock)
+							.Font(FCoreStyle::GetDefaultFontStyle("Regular", 8))
+							.ColorAndOpacity(CSDebugTeleportPanel::SubtleColor)
+							.Text(FText::FromString(TEXT("Box / Sphere / Capsule on Blueprint actors")))
+						]
+					]
+				]
+
 				// --- 체크포인트 목록 ---
 				+ SVerticalBox::Slot()
 				.AutoHeight()
@@ -369,6 +412,30 @@ ECheckBoxState SCSDebugTeleportPanel::IsTeleportAllChecked() const
 void SCSDebugTeleportPanel::OnTeleportAllChanged(ECheckBoxState NewState)
 {
 	bTeleportAllPlayers = (NewState == ECheckBoxState::Checked);
+}
+
+ECheckBoxState SCSDebugTeleportPanel::IsShowCollisionChecked() const
+{
+	const ACSPlayerController* PC = OwningPC.Get();
+
+	// 패널을 닫았다 열어도 실제 상태를 그대로 비추도록 PC 쪽 값을 읽는다.
+	return (PC && PC->IsShowingBlueprintCollision()) ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+}
+
+void SCSDebugTeleportPanel::OnShowCollisionChanged(ECheckBoxState NewState)
+{
+	ACSPlayerController* PC = OwningPC.Get();
+	if (!PC)
+	{
+		return;
+	}
+
+	const bool bEnable = (NewState == ECheckBoxState::Checked);
+	const int32 ShapeCount = PC->SetShowBlueprintCollision(bEnable);
+
+	StatusText = bEnable
+		? FText::FromString(FString::Printf(TEXT("collision on: %d shape(s)"), ShapeCount))
+		: FText::FromString(TEXT("collision off"));
 }
 
 FText SCSDebugTeleportPanel::GetStatusText() const

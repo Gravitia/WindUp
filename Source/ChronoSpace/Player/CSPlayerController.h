@@ -10,6 +10,14 @@ class UCSGameUIWidget;
 class SCSServerTravelWidget;
 class ACSStagePortal;
 
+/** 디버그로 켜 준 셰이프 컴포넌트의 원래 표시 상태. 끌 때 그대로 되돌리기 위해 들고 있는다. */
+struct FCSDebugShapeVisibility
+{
+	TWeakObjectPtr<class UShapeComponent> Component;
+	bool bWasHiddenInGame = true;
+	bool bWasVisible = true;
+};
+
 /**
  *
  */
@@ -94,8 +102,20 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ServerDebugTeleport(FVector Location, FRotator Rotation, bool bAllPlayers);
 
+	/**
+	 * 블루프린트 액터에 달린 콜리전 셰이프(Box/Sphere/Capsule)를 게임 화면에 그린다.
+	 * show collision 과 달리 블루프린트로 만든 액터만 골라내므로 트리거만 보기에 좋다.
+	 * 순수하게 보는 쪽 연출이라 로컬에서만 처리한다 — 서버로 보내지 않는다.
+	 * @return 표시로 바꾼 셰이프 개수
+	 */
+	int32 SetShowBlueprintCollision(bool bEnable);
+	bool IsShowingBlueprintCollision() const { return bShowBlueprintCollision; }
+
 private:
 	TSharedPtr<class SCSDebugTeleportPanel> DebugTeleportPanel;
+
+	TArray<FCSDebugShapeVisibility> DebugShownShapes;
+	bool bShowBlueprintCollision = false;
 
 // Option Menu
 public:
