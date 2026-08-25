@@ -6,6 +6,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "PhysicsEngine/BodyInstance.h"
 #include "ActorComponent/CSMeshAffectedByGravityCore.h"
+#include "Character/CSCharacterBase.h"
 #include "Physics/CSCollision.h"
 #include "ChronoSpace.h"
 
@@ -64,7 +65,33 @@ void ACSGravityCoreSphere::BeginPlay()
 		UE_LOG(LogCS, Error, TEXT("StaticMesh failed to load in ACSGravityCoreSphere"));
 	}
 
-	UE_LOG(LogCS, Log, TEXT("ACSGravityCoreSphere BeginPlay: %s"), *Owner.GetName());
+	// AttachToActor 로 붙은 액터는 부모가 파괴돼도 "분리"될 뿐 파괴되지 않는다.
+	// 그래서 코어를 켠 채로 죽으면(리스폰이 구 Pawn 을 Destroy) 코어가 죽은 자리에 그대로 남았다.
+	// 소유 액터의 파괴를 구독해 같이 사라지게 한다. (bReplicates 라 서버에서 파괴하면 클라에서도 사라진다)
+	if (HasAuthority())
+	{
+		if (AActor* OwnerActor = GetOwner())
+		{
+			OwnerActor->OnDestroyed.AddDynamic(this, &ACSGravityCoreSphere::HandleOwnerDestroyed);
+		}
+	}
+
+	UE_LOG(LogCS, Log, TEXT("ACSGravityCoreSphere BeginPlay: %s"), *GetNameSafe(GetOwner()));
+}
+
+void ACSGravityCoreSphere::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (AActor* OwnerActor = GetOwner())
+	{
+		OwnerActor->OnDestroyed.RemoveDynamic(this, &ACSGravityCoreSphere::HandleOwnerDestroyed);
+	}
+
+	Super::EndPlay(EndPlayReason);
+}
+
+void ACSGravityCoreSphere::HandleOwnerDestroyed(AActor* DestroyedActor)
+{
+	Destroy();
 }
 
 void ACSGravityCoreSphere::Tick(float DeltaSeconds)
@@ -73,6 +100,17 @@ void ACSGravityCoreSphere::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 
 	if (!HasAuthority()) return;
+
+	// 사망 -> 리스폰 사이에 구 Pawn 은 ReviveDelay(기본 1초) 동안 살아 있다.
+	// 그동안 숨겨진 시체에 붙은 코어가 죽은 자리에 떠 있으므로 사망 시점에 바로 정리한다.
+	if (const ACSCharacterBase* OwnerCharacter = Cast<ACSCharacterBase>(GetOwner()))
+	{
+		if (OwnerCharacter->IsDead())
+		{
+			Destroy();
+			return;
+		}
+	}
 
 	//ProcessForCharacter(DeltaSeconds);
 	ProcessForStaticMesh(DeltaSeconds);

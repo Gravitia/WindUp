@@ -27,8 +27,12 @@ void UCSGA_GravityCore::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 
 	UE_LOG(LogCS, Log, TEXT("[NetMode: %d] UCSGA_GravityCore - ActivateAbility"), GetWorld()->GetNetMode());
 
-	if (GravityCore == nullptr)
+	// 어빌리티 인스턴스는 PlayerState 의 ASC 에 살아서 Pawn 보다 오래 산다.
+	// 죽어서 코어가 파괴되면 이 포인터는 GC 전까지 파괴 대기 상태로 남으므로 nullptr 비교로는 걸러지지 않는다
+	// (그래서 부활 직후 첫 입력이 코어를 켜지 않고 OffCore 로 빠졌다).
+	if (!IsValid(GravityCore))
 	{
+		GravityCore = nullptr;
 		OnCore();
 	}
 	else
@@ -48,12 +52,12 @@ void UCSGA_GravityCore::OnCore()
 	OwnerCharacter = Cast<ACharacter>(CurrentActorInfo->AvatarActor.Get());
 	if (!OwnerCharacter) return;
 	
-	// 기존 On 사운드가 남아있다면 정리
-	if (GravityCoreOnAudioComp)
+	// 기존 On 사운드가 남아있다면 정리 (캐릭터에 붙어 있으므로 사망 시 함께 파괴됐을 수 있다)
+	if (IsValid(GravityCoreOnAudioComp))
 	{
 		GravityCoreOnAudioComp->Stop();
-		GravityCoreOnAudioComp = nullptr;
 	}
+	GravityCoreOnAudioComp = nullptr;
 
 	if (OwnerCharacter && OwnerCharacter->GetCharacterMovement())
 	{
@@ -97,15 +101,14 @@ void UCSGA_GravityCore::OnCore()
 
 void UCSGA_GravityCore::OffCore()
 {
-
 	// On 사운드 강제 종료
-	if (GravityCoreOnAudioComp)
+	if (IsValid(GravityCoreOnAudioComp))
 	{
 		GravityCoreOnAudioComp->Stop();
-		GravityCoreOnAudioComp = nullptr;
 	}
+	GravityCoreOnAudioComp = nullptr;
 
-	if (GravityCore)
+	if (IsValid(GravityCore))
 	{
 		if (GravityCoreOffSound)
 		{
@@ -116,12 +119,12 @@ void UCSGA_GravityCore::OffCore()
 			);
 		}
 
-
 		GravityCore->Destroy();
-		GravityCore = nullptr;
 	}
+	GravityCore = nullptr;
 
-	if (ACSCharacterPlayer* CSCharacter = Cast<ACSCharacterPlayer>(OwnerCharacter))
+	// 캐시된 OwnerCharacter 는 리스폰 후 파괴된 구 Pawn 을 가리킬 수 있다 - 현재 아바타를 쓴다
+	if (ACSCharacterPlayer* CSCharacter = Cast<ACSCharacterPlayer>(CurrentActorInfo ? CurrentActorInfo->AvatarActor.Get() : nullptr))
 	{
 		CSCharacter->NetMulticastDestroyGravityCoreSphere();
 	}

@@ -34,8 +34,13 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	virtual void Tick(float DeltaSeconds) override;
+
+	/** 코어를 켠 캐릭터가 파괴되면 코어도 함께 파괴한다 (서버 전용) */
+	UFUNCTION()
+	void HandleOwnerDestroyed(AActor* DestroyedActor);
 
 	void ProcessForStaticMesh(float DeltaTime);
 
