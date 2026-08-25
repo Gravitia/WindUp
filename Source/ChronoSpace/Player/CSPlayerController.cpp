@@ -3,12 +3,17 @@
 
 #include "Player/CSPlayerController.h"
 #include "UI/CSGameUIWidget.h"
+#include "Debug/SCSDebugTeleportPanel.h"
 #include "Engine/Engine.h"
 #include "Engine/World.h"
+#include "Engine/GameViewportClient.h"
 #include "Game/CSGameMode.h"
 #include "Subsystem/CSSplitScreenSubsystem.h"
 #include "Actor/CSStagePortal.h"
 #include "TimerManager.h"
+#include "Components/InputComponent.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Pawn.h"
 #include "ChronoSpace.h"
 
@@ -80,9 +85,144 @@ void ACSPlayerController::OnRep_PlayerState()
 	}
 }
 
+void ACSPlayerController::ToggleDebugTeleportPanel()
+{
+#if !UE_BUILD_SHIPPING
+	if (DebugTeleportPanel.IsValid())
+	{
+		CloseDebugTeleportPanel();
+		return;
+	}
+
+	UGameViewportClient* ViewportClient = GetWorld() ? GetWorld()->GetGameViewport() : nullptr;
+	if (ViewportClient == nullptr)
+	{
+		return;
+	}
+
+	SAssignNew(DebugTeleportPanel, SCSDebugTeleportPanel)
+		.OwningPlayerController(this);
+
+	// 게임 UI(=100) 보다 위에 얹는다.
+	ViewportClient->AddViewportWidgetContent(DebugTeleportPanel.ToSharedRef(), 1000);
+
+	// 위젯을 포커스로 잡지 않는다. 그래야 0 키가 계속 PlayerController 로 들어와 다시 닫을 수 있다.
+	FInputModeGameAndUI InputMode;
+	InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+	InputMode.SetHideCursorDuringCapture(false);
+	SetInputMode(InputMode);
+	bShowMouseCursor = true;
+#endif
+}
+
+void ACSPlayerController::CloseDebugTeleportPanel()
+{
+#if !UE_BUILD_SHIPPING
+	if (!DebugTeleportPanel.IsValid())
+	{
+		return;
+	}
+
+	if (UGameViewportClient* ViewportClient = GetWorld() ? GetWorld()->GetGameViewport() : nullptr)
+	{
+		ViewportClient->RemoveViewportWidgetContent(DebugTeleportPanel.ToSharedRef());
+	}
+
+	DebugTeleportPanel.Reset();
+
+	// 옵션 메뉴가 떠 있는 상태에서 패널만 닫았다면 그쪽 입력 모드를 건드리지 않는다.
+	if (!bIsMenuOpen)
+	{
+		SetupInputMode();
+		bShowMouseCursor = false;
+	}
+#endif
+}
+
+void ACSPlayerController::ServerDebugTeleport_Implementation(FVector Location, FRotator Rotation, bool bAllPlayers)
+{
+#if !UE_BUILD_SHIPPING
+	UWorld* World = GetWorld();
+	if (World == nullptr)
+	{
+		return;
+	}
+
+	TArray<APlayerController*> Targets;
+
+	if (bAllPlayers)
+	{
+		for (FConstPlayerControllerIterator It = World->GetPlayerControllerIterator(); It; ++It)
+		{
+			if (APlayerController* PC = It->Get())
+			{
+				Targets.Add(PC);
+			}
+		}
+	}
+	else
+	{
+		Targets.Add(this);
+	}
+
+	// 같은 좌표에 겹쳐 놓으면 캡슐끼리 밀려나 어디로 튈지 모른다. 바라보는 방향 기준 좌우로 벌린다.
+	const FVector RightAxis = FRotationMatrix(Rotation).GetScaledAxis(EAxis::Y);
+	const float SpreadStep = 150.f;
+
+	for (int32 Index = 0; Index < Targets.Num(); ++Index)
+	{
+		APlayerController* PC = Targets[Index];
+		APawn* TargetPawn = PC ? PC->GetPawn() : nullptr;
+		if (!IsValid(TargetPawn))
+		{
+			continue;
+		}
+
+		const float SpreadAmount = (static_cast<float>(Index) - (Targets.Num() - 1) * 0.5f) * SpreadStep;
+
+		TargetPawn->SetActorLocationAndRotation(
+			Location + RightAxis * SpreadAmount,
+			Rotation,
+			false,
+			nullptr,
+			ETeleportType::TeleportPhysics
+		);
+
+		// RespawnSinglePlayer 와 같은 정리. 남아 있던 속도로 그대로 날아가는 걸 막는다.
+		if (ACharacter* TargetCharacter = Cast<ACharacter>(TargetPawn))
+		{
+			if (UCharacterMovementComponent* MovementComp = TargetCharacter->GetCharacterMovement())
+			{
+				MovementComp->StopMovementImmediately();
+				MovementComp->Velocity = FVector::ZeroVector;
+				MovementComp->SetMovementMode(MOVE_Walking);
+				MovementComp->bForceNextFloorCheck = true;
+				MovementComp->UpdateComponentVelocity();
+			}
+		}
+
+		TargetPawn->ForceNetUpdate();
+		TargetPawn->FlushNetDormancy();
+
+		PC->SetControlRotation(Rotation);
+		PC->ClientSetRotation(Rotation, true);
+
+		if (ACSPlayerController* CSPC = Cast<ACSPlayerController>(PC))
+		{
+			CSPC->Client_ApplyRespawnView(Rotation);
+		}
+	}
+
+	UE_LOG(LogCS, Log, TEXT("ServerDebugTeleport: %d pawn(s) -> %s"),
+		Targets.Num(), *Location.ToCompactString());
+#endif
+}
+
 void ACSPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	GetWorldTimerManager().ClearTimer(UICreationTimerHandle);
+
+	CloseDebugTeleportPanel();
 
 	if (GameUIWidget)
 	{
@@ -101,6 +241,11 @@ void ACSPlayerController::SetupInputComponent()
 		return;
 
 	InputComponent->BindAction("ToggleOption", IE_Pressed, this, &ACSPlayerController::ToggleOption);
+
+#if !UE_BUILD_SHIPPING
+	// 상단 숫자열 0. 넘버패드 0 은 EKeys::NumPadZero 라 여기에 걸리지 않는다.
+	InputComponent->BindKey(EKeys::Zero, IE_Pressed, this, &ACSPlayerController::ToggleDebugTeleportPanel);
+#endif
 }
 
 void ACSPlayerController::SetupInputMode()

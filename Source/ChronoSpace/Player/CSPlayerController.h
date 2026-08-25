@@ -84,6 +84,19 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ServerRequestStagePortalTravel(ACSStagePortal* Portal, int32 Chapter, int32 Stage);
 
+// Debug — 체크포인트 순간이동 패널 (상단 숫자열 0)
+public:
+	/** 패널을 열거나 닫는다. 0 키와 패널의 X 버튼이 여기로 들어온다. */
+	void ToggleDebugTeleportPanel();
+	void CloseDebugTeleportPanel();
+
+	/** 이동은 서버 권한이다. 패널을 누른 쪽이 클라이언트여도 서버가 옮긴다. */
+	UFUNCTION(Server, Reliable)
+	void ServerDebugTeleport(FVector Location, FRotator Rotation, bool bAllPlayers);
+
+private:
+	TSharedPtr<class SCSDebugTeleportPanel> DebugTeleportPanel;
+
 // Option Menu
 public:
 	void ToggleOption();
