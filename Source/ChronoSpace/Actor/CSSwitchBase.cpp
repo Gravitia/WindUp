@@ -7,6 +7,7 @@
 #include "Components/WidgetComponent.h"
 #include "Physics/CSCollision.h"
 #include "DataAsset/CSSwitchBaseData.h"
+#include "Net/UnrealNetwork.h"
 #include "ChronoSpace.h"
 
 // Sets default values
@@ -77,10 +78,26 @@ void ACSSwitchBase::EndInteraction()
 
 void ACSSwitchBase::Interact()
 {
+	// 상태 변경은 서버 권한. (호출처인 UCSPlayerInteractionComponent 는 서버에서만 부르지만
+	//  BP 에서 직접 부르면 클라에서만 토글되어 서버와 어긋난다)
+	if (!HasAuthority()) return;
+
 	UE_LOG(LogCS, Log, TEXT("[Netmode : %d] Interact"), GetWorld()->GetNetMode());
 	bIsInteracted = !bIsInteracted;
 
 	SetMaterial();
+}
+
+void ACSSwitchBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ACSSwitchBase, bIsInteracted);
+}
+
+void ACSSwitchBase::OnRep_IsInteracted()
+{
+	ApplyMaterial();
 }
 
 void ACSSwitchBase::BeginPlay()
@@ -92,14 +109,14 @@ void ACSSwitchBase::BeginPlay()
 
 void ACSSwitchBase::SetMaterial()
 {
-	NetMulticastSetMaterial(bIsInteracted);
+	// 값은 호출 전에 이미 바뀌어 있다. 복제는 엔진이 클라로 보내고, 호스트는 여기서 직접 적용한다.
+	ApplyMaterial();
 }
 
-void ACSSwitchBase::NetMulticastSetMaterial_Implementation(bool bInIsInteracted)
+void ACSSwitchBase::ApplyMaterial()
 {
 	if (Data == nullptr) return;
 
-	bIsInteracted = bInIsInteracted;
 	//UE_LOG(LogCS, Log, TEXT("[NetMode : %d] NetMulticastSetMaterial_Implementation, %d"), GetWorld()->GetNetMode(), bIsInteracted);
 	if (bIsInteracted)
 	{

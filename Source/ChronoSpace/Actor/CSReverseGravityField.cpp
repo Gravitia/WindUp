@@ -55,6 +55,9 @@ void ACSReverseGravityField::BeginPlay()
 
 	if (FieldMaterial)
 	{
+		// Tiling 원본값은 MID 를 만들기 전에 부모 머티리얼에서 읽는다 (MID 에서 읽으면 우리가 쓴 값이 돌아온다)
+		FieldMaterial->GetScalarParameterValue(FName(TEXT("Tiling")), BaseTiling);
+
 		FieldMID = UMaterialInstanceDynamic::Create(FieldMaterial, this);
 		FieldMesh->SetMaterial(0, FieldMID);
 	}
@@ -123,6 +126,18 @@ void ACSReverseGravityField::OnRep_FieldState()
 
 void ACSReverseGravityField::ApplyFieldState()
 {
+	// 서버 타이머가 0.25초마다 무조건 부르므로, 값이 그대로면 여기서 끝낸다
+	// (SetBoxExtent 는 바디 셋업을 재생성하고 오버랩을 다시 계산한다)
+	if (bHasApplied && bAppliedActive == bFieldActive
+		&& AppliedCenter.Equals(FieldCenter) && AppliedExtent.Equals(FieldExtent))
+	{
+		return;
+	}
+	bHasApplied = true;
+	AppliedCenter = FieldCenter;
+	AppliedExtent = FieldExtent;
+	bAppliedActive = bFieldActive;
+
 	SetActorLocation(FieldCenter);
 	FieldBox->SetBoxExtent(FieldExtent);
 	FieldBox->SetCollisionEnabled(bFieldActive ? ECollisionEnabled::QueryOnly : ECollisionEnabled::NoCollision);
@@ -136,9 +151,8 @@ void ACSReverseGravityField::ApplyFieldState()
 
 	if (FieldMID)
 	{
-		float OutBaseValue = 2.0f;
-		FieldMID->GetScalarParameterValue(FName(TEXT("Tiling")), OutBaseValue);
-		FieldMID->SetScalarParameterValue(FName(TEXT("Tiling")), OutBaseValue * MeshScale.X);
+		// 항상 원본값 기준으로 계산한다. 예전엔 MID 의 현재값(= 직전에 쓴 값)에 곱해서 호출할 때마다 지수적으로 커졌다.
+		FieldMID->SetScalarParameterValue(FName(TEXT("Tiling")), BaseTiling * MeshScale.X);
 	}
 }
 

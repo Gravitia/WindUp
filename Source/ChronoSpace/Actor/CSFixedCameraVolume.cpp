@@ -34,7 +34,8 @@ ACSFixedCameraVolume::ACSFixedCameraVolume()
 void ACSFixedCameraVolume::BeginPlay()
 {
 	Super::BeginPlay();
-	PlayersInTrigger = 0;
+	LocalTriggerCharacters.Empty();
+	LockedControllerByCharacter.Empty();
 }
 
 void ACSFixedCameraVolume::Tick(float DeltaTime)
@@ -75,11 +76,14 @@ void ACSFixedCameraVolume::OnTriggerBeginOverlap(UPrimitiveComponent* Overlapped
 	APlayerController* PC = Cast<APlayerController>(Character->GetController());
 	if (!PC) return;
 
-	PlayersInTrigger++;
-
 	// ── 카메라 전환 (로컬 플레이어만) ──
 	if (Character->IsLocallyControlled())
 	{
+		// 어떤 PC 를 잠갔는지 캐릭터별로 기억한다.
+		// 사망/언포제스로 EndOverlap 시점에 Character->GetController() 가 null 이면
+		// SetIgnoreLookInput(true) 가 풀리지 않아 시점 입력이 영구히 막혔다.
+		LockedControllerByCharacter.Add(Character, PC);
+
 		PC->SetViewTargetWithBlend(this, BlendTime);
 
 		// 컨트롤러 회전 저장
@@ -97,25 +101,18 @@ void ACSFixedCameraVolume::OnTriggerBeginOverlap(UPrimitiveComponent* Overlapped
 		PC->SetIgnoreLookInput(true);
 	}
 
-	// ── 스플릿 스크린 전환 (옵션) ──
-	if (bUseSplitScreenTransition)
+	// ── 스플릿 스크린 전환 (옵션) ── 이 머신의 화면만 바뀌므로 로컬 판정이 필요하다
+	if (bUseSplitScreenTransition
+		&& UCSSplitScreenSubsystem::ShouldLocalViewRespondTo(Character, bFullScreenForEnteringPlayer, FixedFullScreenPlayerIndex))
 	{
-		int32 TargetPlayerIndex = FixedFullScreenPlayerIndex;
-
-		if (bFullScreenForEnteringPlayer)
-		{
-			if (ULocalPlayer* LP = PC->GetLocalPlayer())
-			{
-				TargetPlayerIndex = LP->GetControllerId();
-			}
-		}
+		LocalTriggerCharacters.Add(Character);
 
 		if (UGameInstance* GI = GetGameInstance())
 		{
 			if (UCSSplitScreenSubsystem* Subsystem = GI->GetSubsystem<UCSSplitScreenSubsystem>())
 			{
-				Subsystem->TransitionToFullScreen(TargetPlayerIndex);
-				UE_LOG(LogCS, Log, TEXT("FixedCameraVolume: Player %d → Full Screen transition"), TargetPlayerIndex);
+				Subsystem->TransitionToFullScreen(0);
+				UE_LOG(LogCS, Log, TEXT("FixedCameraVolume: local player entered -> Full Screen transition"));
 			}
 		}
 	}
@@ -129,12 +126,19 @@ void ACSFixedCameraVolume::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedCo
 	if (!Character) return;
 
 	APlayerController* PC = Cast<APlayerController>(Character->GetController());
-	if (!PC) return;
 
-	PlayersInTrigger = FMath::Max(0, PlayersInTrigger - 1);
+	// 진입 때 잠갔던 PC 를 되찾는다 (컨트롤러가 이미 떨어졌어도 입력 잠금은 풀어야 한다)
+	bool bWasLockedByUs = false;
+	if (TWeakObjectPtr<APlayerController>* Found = LockedControllerByCharacter.Find(Character))
+	{
+		if (!PC) PC = Found->Get();
+		bWasLockedByUs = true;
+		LockedControllerByCharacter.Remove(Character);
+	}
+	LockedControllerByCharacter.Remove(nullptr);
 
-	// ── 카메라 복원 (로컬 플레이어만) ──
-	if (Character->IsLocallyControlled())
+	// ── 카메라 복원 (진입 때 우리가 잠근 경우) ──
+	if (PC && bWasLockedByUs)
 	{
 		PC->SetViewTargetWithBlend(Character, BlendTime);
 
@@ -155,8 +159,11 @@ void ACSFixedCameraVolume::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedCo
 		PC->SetIgnoreLookInput(false);
 	}
 
-	// ── 스플릿 스크린 복원 (모든 플레이어가 나갔을 때) ──
-	if (bUseSplitScreenTransition && PlayersInTrigger <= 0)
+	const bool bWasLocalTrigger = (LocalTriggerCharacters.Remove(Character) > 0);
+	LocalTriggerCharacters.Remove(nullptr);
+
+	// ── 스플릿 스크린 복원 (우리 화면을 바꾼 플레이어가 모두 나갔을 때) ──
+	if (bUseSplitScreenTransition && bWasLocalTrigger && LocalTriggerCharacters.Num() == 0)
 	{
 		if (UGameInstance* GI = GetGameInstance())
 		{

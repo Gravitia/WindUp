@@ -235,6 +235,16 @@ void ACSBellows::StartLinkedActorLerp()
     bLinkedMoved = true;
 }
 
+void ACSBellows::OnRep_LinkedMoved()
+{
+    // 이미 옮겨진 상태로 접속했는데 러프가 돌지 않는 경우(늦은 접속) 최종 위치로 맞춘다.
+    if (bLinkedMoved && !bLinkedLerping && IsValid(LinkedActor))
+    {
+        const FVector BellowsBackwardDir = -GetActorForwardVector();
+        LinkedActor->SetActorLocation(LinkedActor->GetActorLocation() + BellowsBackwardDir * LinkedMoveDistance);
+    }
+}
+
 void ACSBellows::TickLinkedActorLerp(float DeltaTime)
 {
     if (!bLinkedLerping || !LinkedActor)
@@ -285,4 +295,5 @@ void ACSBellows::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifeti
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
     DOREPLIFETIME(ACSBellows, BellowsState);
+    DOREPLIFETIME(ACSBellows, bLinkedMoved);
 }

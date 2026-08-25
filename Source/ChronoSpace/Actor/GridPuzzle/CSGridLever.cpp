@@ -11,6 +11,7 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Blueprint/UserWidget.h"
 #include "Physics/CSCollision.h"
+#include "Net/UnrealNetwork.h"
 #include "ChronoSpace.h"
 
 ACSGridLever::ACSGridLever()
@@ -150,12 +151,18 @@ void ACSGridLever::SpawnBox()
 	UE_LOG(LogCS, Log, TEXT("[GridLever] %s : spawned %s"), *GetName(), *NewBox->GetName());
 
 	bUsed = true;
-	NetMulticastSetLeverVisual(true);
+	OnRep_Used();	// 리슨 호스트는 OnRep 을 받지 않는다
 }
 
-void ACSGridLever::NetMulticastSetLeverVisual_Implementation(bool bInUsed)
+void ACSGridLever::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-	bUsed = bInUsed;
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ACSGridLever, bUsed);
+}
+
+void ACSGridLever::OnRep_Used()
+{
 	ApplyLeverColor();
 }
 

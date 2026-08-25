@@ -30,4 +30,11 @@ public:
 	// 회전 속도 (블루프린트에서 설정 가능)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rotation")
 	float RotationSpeed = 360.0f; // 초당 360도 회전
+
+private:
+	// 서버 시각 기준 결정론 회전용 (모든 머신이 같은 각도를 계산 - 복제 트래픽 0)
+	FRotator InitialRotation = FRotator::ZeroRotator;
+
+	/** GameState 의 서버 동기화 시각. GameState 가 아직 없으면 로컬 시간으로 폴백. */
+	float GetSynchronizedWorldTime() const;
 };

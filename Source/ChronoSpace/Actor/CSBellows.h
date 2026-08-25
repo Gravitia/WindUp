@@ -54,7 +54,14 @@ public:
 
 protected:
     bool bLinkedLerping = false;
+
+    // 늦게 접속한 클라도 "연결된 액터가 이미 옮겨졌는지"를 알아야 한다.
+    // 예전엔 비복제라 BellowsState 가 Idle 로 돌아온 뒤 접속하면 문이 닫힌 자리에 그대로 보였다.
+    UPROPERTY(ReplicatedUsing = OnRep_LinkedMoved)
     bool bLinkedMoved = false;
+
+    UFUNCTION()
+    void OnRep_LinkedMoved();
 
     FVector LinkedStartLoc = FVector::ZeroVector;
     FVector LinkedTargetLoc = FVector::ZeroVector;

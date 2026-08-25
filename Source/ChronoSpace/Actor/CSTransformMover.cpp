@@ -3,6 +3,7 @@
 #include "Components/SceneComponent.h"
 #include "Curves/CurveFloat.h"
 #include "GameFramework/GameStateBase.h"
+#include "Net/UnrealNetwork.h"
 
 ACSTransformMover::ACSTransformMover()
 {
@@ -25,6 +26,29 @@ void ACSTransformMover::BeginPlay()
 	Super::BeginPlay();
 
 	InitialMovingRootTransform = MovingRoot->GetComponentTransform();
+}
+
+void ACSTransformMover::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ACSTransformMover, MovementState);
+}
+
+void ACSTransformMover::OnRep_MovementState()
+{
+	if (MovementState.bActive)
+	{
+		// 이동 중에 접속한 클라 - 서버 시작 시각 기준으로 중간부터 이어서 재생한다
+		SetActorTickEnabled(true);
+		ApplyMovement();
+	}
+	else
+	{
+		// 이미 끝난 이동 - 최종 위치로 맞춘다 (문이 열린 채로 접속하면 열린 상태를 본다)
+		MovingRoot->SetWorldTransform(MovementState.TargetTransform);
+		SetActorTickEnabled(false);
+	}
 }
 
 void ACSTransformMover::Tick(float DeltaTime)
@@ -95,6 +119,7 @@ void ACSTransformMover::MulticastStartMovement_Implementation(
 	FName MovementKey,
 	const FTransform& StartTransform,
 	const FTransform& TargetTransform,
+	float ServerStartTime,
 	float Duration)
 {
 	if (HasAuthority())
@@ -105,7 +130,10 @@ void ACSTransformMover::MulticastStartMovement_Implementation(
 	MovementState.MovementKey = MovementKey;
 	MovementState.StartTransform = StartTransform;
 	MovementState.TargetTransform = TargetTransform;
-	MovementState.ServerStartTime = GetSynchronizedWorldTime();
+	// 서버가 시작한 시각을 그대로 쓴다.
+	// 예전엔 RPC 를 받은 순간의 시각을 썼기 때문에 클라가 RTT/2 만큼 뒤처져 움직이다가
+	// 종료 멀티캐스트에서 남은 거리를 한 번에 점프했다.
+	MovementState.ServerStartTime = ServerStartTime;
 	MovementState.Duration = Duration;
 	MovementState.bActive = true;
 
@@ -174,6 +202,7 @@ bool ACSTransformMover::StartMovement(
 		MovementKey,
 		MovementState.StartTransform,
 		MovementState.TargetTransform,
+		MovementState.ServerStartTime,
 		MovementState.Duration);
 	return true;
 }

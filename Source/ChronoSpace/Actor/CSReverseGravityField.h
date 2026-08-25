@@ -81,5 +81,14 @@ private:
 	UPROPERTY()
 	TObjectPtr<class UMaterialInstanceDynamic> FieldMID;
 
+	// 부모 머티리얼의 Tiling 원본값 (BeginPlay 에서 1회 캐시). MID 에서 읽으면 이전에 쓴 값이 나와 곱셈이 누적된다.
+	float BaseTiling = 2.0f;
+
+	// 마지막으로 적용한 상태 - 값이 안 바뀌었으면 SetBoxExtent 등 무거운 호출을 건너뛴다
+	FVector AppliedCenter = FVector(FLT_MAX);
+	FVector AppliedExtent = FVector(FLT_MAX);
+	bool bAppliedActive = false;
+	bool bHasApplied = false;
+
 	FTimerHandle UpdateTimerHandle;
 };

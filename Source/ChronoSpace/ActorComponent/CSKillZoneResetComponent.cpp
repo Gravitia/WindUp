@@ -65,17 +65,20 @@ void UCSKillZoneResetComponent::OnBeginOverlap(
     
     if (bIgnoreKillZone) return;
 
-    if (OtherActor->IsA(ACSKillZone::StaticClass()))
-    {
-        Owner->SetActorLocation(
-            StartLocation + RespawnOffset,
-            false,
-            nullptr,
-            ETeleportType::TeleportPhysics
-        );
-    }
+    // 킬존이 아니면 아무것도 하지 않는다.
+    // (예전엔 속도 리셋이 이 검사 밖에 있어서 블랙홀 스피어, 플레이어 트리거 등 아무 오버랩에서나
+    //  물리 프롭이 그 자리에 멈췄다 - 오버랩 박스가 WorldStatic/WorldDynamic 을 전부 감지한다.)
+    if (!OtherActor->IsA(ACSKillZone::StaticClass()))
+        return;
 
-    // 1) RootComponent가 물리 시뮬레이션 중이면
+    Owner->SetActorLocation(
+        StartLocation + RespawnOffset,
+        false,
+        nullptr,
+        ETeleportType::TeleportPhysics
+    );
+
+    // 되돌린 자리에서 이전 속도로 계속 날아가지 않도록 정지
     if (UPrimitiveComponent* PrimComp =
         Cast<UPrimitiveComponent>(Owner->GetRootComponent()))
     {

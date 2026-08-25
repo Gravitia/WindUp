@@ -90,6 +90,7 @@ void ACSClawMachine::Tick(float DeltaTime)
 		if (MoveClawTowards(HomeTransform.GetLocation(), RetractSpeed, DeltaTime))
 		{
 			State = EClawMachineState::Home;
+			TryGrabRemainingPlayer();
 		}
 		break;
 
@@ -98,7 +99,8 @@ void ACSClawMachine::Tick(float DeltaTime)
 		{
 			// 좌우 이동 시작 — 현재 z를 유지한 채 목적지 xy로
 			const FVector Current = GetActorLocation();
-			TargetLocation = FVector(Destination.X, Destination.Y, Current.Z);
+			const FVector DestWorld = GetDestinationWorld();
+			TargetLocation = FVector(DestWorld.X, DestWorld.Y, Current.Z);
 			State = EClawMachineState::Translating;
 		}
 		break;
@@ -107,7 +109,7 @@ void ACSClawMachine::Tick(float DeltaTime)
 		if (MoveClawTowards(TargetLocation, TranslateSpeed, DeltaTime))
 		{
 			// 내림 시작 — 목적지 z까지
-			TargetLocation = Destination;
+			TargetLocation = GetDestinationWorld();
 			State = EClawMachineState::Dropping;
 		}
 		break;
@@ -124,6 +126,7 @@ void ACSClawMachine::Tick(float DeltaTime)
 		if (MoveClawTowards(HomeTransform.GetLocation(), ReturnSpeed, DeltaTime))
 		{
 			State = EClawMachineState::Home;
+			TryGrabRemainingPlayer();
 		}
 		break;
 	}
@@ -132,6 +135,29 @@ void ACSClawMachine::Tick(float DeltaTime)
 /* ─────────────────────────────────────────────
  *  Trigger callbacks (서버 전용)
  * ───────────────────────────────────────────── */
+
+FVector ACSClawMachine::GetDestinationWorld() const
+{
+	// MakeEditWidget 프로퍼티는 액터 로컬 공간으로 저장된다 - 뷰포트에서 찍은 자리로 가려면 변환이 필요하다.
+	return HomeTransform.TransformPosition(Destination);
+}
+
+void ACSClawMachine::TryGrabRemainingPlayer()
+{
+	if (!HasAuthority() || State != EClawMachineState::Home) return;
+
+	// 여러 명이 트리거 안에 있을 때 한 명을 옮기고 돌아오면 남은 사람의 BeginOverlap 은 다시 오지 않는다.
+	TArray<AActor*> Overlapping;
+	Trigger->GetOverlappingActors(Overlapping, ACSCharacterPlayer::StaticClass());
+	for (AActor* Actor : Overlapping)
+	{
+		if (ACSCharacterPlayer* Player = Cast<ACSCharacterPlayer>(Actor))
+		{
+			StartDive(Player);
+			return;
+		}
+	}
+}
 
 void ACSClawMachine::OnTriggerBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -182,7 +208,7 @@ void ACSClawMachine::StartRetract()
 void ACSClawMachine::GrabPlayer()
 {
 	// 도착 시점에 잡으려던 플레이어가 사라졌으면 (방어적 처리)
-	if (!GrabbedPlayer)
+	if (!IsValid(GrabbedPlayer))
 	{
 		StartRetract();
 		return;
@@ -204,7 +230,7 @@ void ACSClawMachine::GrabPlayer()
 
 void ACSClawMachine::ReleasePlayer()
 {
-	if (!GrabbedPlayer) return;
+	if (!IsValid(GrabbedPlayer)) { GrabbedPlayer = nullptr; return; }
 
 	GrabbedPlayer->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 	if (UCharacterMovementComponent* Movement = GrabbedPlayer->GetCharacterMovement())

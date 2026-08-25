@@ -10,6 +10,14 @@
 /**
  *
  */
+/** 코어 영향을 받기 전의 물리 값 - 벗어날 때 그대로 되돌리기 위해 저장한다 */
+struct FCSGravityCoreMeshState
+{
+	float MaxAngularVelocityRad = 0.f;
+	float AngularDamping = 0.f;
+	bool bGravityEnabled = true;
+};
+
 UCLASS()
 class CHRONOSPACE_API ACSGravityCoreSphere : public ACSGravityCore, public ICSAbilitySource
 {
@@ -56,6 +64,9 @@ protected:
 
 	UPROPERTY()
 	TSet< TWeakObjectPtr<UStaticMeshComponent> > StaticMeshesInSphereTrigger;
+
+	// 진입 시 저장해 둔 원래 물리 값 (서버 전용)
+	TMap< TWeakObjectPtr<UStaticMeshComponent>, FCSGravityCoreMeshState > SavedMeshStates;
 
 	UPROPERTY(EditAnywhere, Category = "Sphere")
 	float GravityInfluenceRange = 400.0f;

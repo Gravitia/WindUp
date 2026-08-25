@@ -78,57 +78,63 @@ void ACSProjectileGuideActor::UpdateGuideLine(const FVector& StartLocation, cons
 
 void ACSProjectileGuideActor::CreateGuideMeshes(float Distance)
 {
-	// 기존 메시 컴포넌트 정리
-	ClearGuideMeshes();
-
 	if (!GuideMesh || !GuideSpline || Distance <= 0)
 	{
+		SetGuideVisible(false);
 		return;
 	}
 
-	// 필요한 세그먼트 수 계산
-	int32 NumSegments = FMath::CeilToInt(Distance / SegmentLength);
+	const int32 NumSegments = FMath::CeilToInt(Distance / SegmentLength);
+	const float SplineLength = GuideSpline->GetSplineLength();
 
-	for (int32 i = 0; i < NumSegments; i++)
+	// 부족한 만큼만 새로 만들고 나머지는 재사용한다.
+	// 예전엔 호출마다 전부 DestroyComponent -> NewObject -> RegisterComponent 를 반복했고,
+	// 이 함수는 조준하는 동안 매 프레임 불린다 (렌더 프록시 재생성 + GC 압박 + 프레임 스파이크).
+	while (GuideMeshComponents.Num() < NumSegments)
 	{
-		// 메시 컴포넌트 생성
-		UStaticMeshComponent* MeshComp = NewObject<UStaticMeshComponent>(this);
-		MeshComp->SetupAttachment(RootComponent);
-		MeshComp->SetStaticMesh(GuideMesh);
-		MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		UStaticMeshComponent* NewMeshComp = NewObject<UStaticMeshComponent>(this);
+		NewMeshComp->SetupAttachment(RootComponent);
+		NewMeshComp->SetStaticMesh(GuideMesh);
+		NewMeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 		if (GuideMaterial)
 		{
-			MeshComp->SetMaterial(0, GuideMaterial);
+			NewMeshComp->SetMaterial(0, GuideMaterial);
 		}
 
-		// 스플라인을 따라 위치/회전 설정
-		float Alpha = (float)i / (float)FMath::Max(1, NumSegments - 1);
-		FVector Location = GuideSpline->GetLocationAtDistanceAlongSpline(
-			Alpha * GuideSpline->GetSplineLength(),
-			ESplineCoordinateSpace::World
-		);
+		NewMeshComp->RegisterComponent();
+		GuideMeshComponents.Add(NewMeshComp);
+	}
 
-		FVector Direction = GuideSpline->GetDirectionAtDistanceAlongSpline(
-			Alpha * GuideSpline->GetSplineLength(),
-			ESplineCoordinateSpace::World
-		);
+	for (int32 i = 0; i < GuideMeshComponents.Num(); ++i)
+	{
+		UStaticMeshComponent* MeshComp = GuideMeshComponents[i];
+		if (!IsValid(MeshComp)) continue;
 
-		// 메시 위치/회전 설정
+		// 남는 세그먼트는 숨겨만 둔다 (다음 프레임에 다시 쓸 수 있게)
+		if (i >= NumSegments)
+		{
+			MeshComp->SetVisibility(false);
+			continue;
+		}
+
+		// 세그먼트 중심에 배치한다.
+		// 예전엔 i/(N-1) 로 양 끝 포함 균등 배치하면서 길이는 SegmentLength 로 스케일해
+		// 간격(Distance/(N-1))과 길이가 맞지 않아 겹치거나 벌어졌다.
+		const float SegmentActualLength = FMath::Max(FMath::Min(SegmentLength, Distance - (i * SegmentLength)), 1.0f);
+		const float CenterDistance = FMath::Clamp(i * SegmentLength + SegmentActualLength * 0.5f, 0.0f, SplineLength);
+
+		const FVector Location = GuideSpline->GetLocationAtDistanceAlongSpline(CenterDistance, ESplineCoordinateSpace::World);
+		const FVector Direction = GuideSpline->GetDirectionAtDistanceAlongSpline(CenterDistance, ESplineCoordinateSpace::World);
+
+		MeshComp->SetVisibility(true);
 		MeshComp->SetWorldLocation(Location);
 		MeshComp->SetWorldRotation(Direction.Rotation());
-
-		// 메시 스케일 설정 (길이는 세그먼트 길이, 두께는 설정값)
-		float SegmentActualLength = FMath::Min(SegmentLength, Distance - (i * SegmentLength));
 		MeshComp->SetWorldScale3D(FVector(
 			SegmentActualLength / 100.0f, // X축 (길이)
 			GuideThickness / 100.0f,      // Y축 (두께)
 			GuideThickness / 100.0f       // Z축 (두께)
 		));
-
-		// 컴포넌트 등록
-		MeshComp->RegisterComponent();
-		GuideMeshComponents.Add(MeshComp);
 	}
 }
 

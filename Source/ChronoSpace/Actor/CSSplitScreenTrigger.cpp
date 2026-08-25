@@ -27,7 +27,7 @@ ACSSplitScreenTrigger::ACSSplitScreenTrigger()
 void ACSSplitScreenTrigger::BeginPlay()
 {
 	Super::BeginPlay();
-	PlayersInTrigger = 0;
+	LocalTriggerCharacters.Empty();
 }
 
 void ACSSplitScreenTrigger::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepHitResult)
@@ -35,30 +35,21 @@ void ACSSplitScreenTrigger::OnTriggerBeginOverlap(UPrimitiveComponent* Overlappe
 	ACharacter* Character = Cast<ACharacter>(OtherActor);
 	if (!Character) return;
 
-	APlayerController* PC = Cast<APlayerController>(Character->GetController());
-	if (!PC) return;
-
-	PlayersInTrigger++;
-
-	// 풀스크린 전환 대상 플레이어 인덱스 결정
-	int32 TargetPlayerIndex = FixedFullScreenPlayerIndex;
-
-	if (bFullScreenForEnteringPlayer)
+	// 화면 전환은 이 머신의 뷰에만 적용된다 - 내 화면을 바꿔야 하는 캐릭터인지 먼저 판단한다.
+	if (!UCSSplitScreenSubsystem::ShouldLocalViewRespondTo(Character, bFullScreenForEnteringPlayer, FixedFullScreenPlayerIndex))
 	{
-		ULocalPlayer* LP = PC->GetLocalPlayer();
-		if (LP)
-		{
-			TargetPlayerIndex = LP->GetControllerId();
-		}
+		return;
 	}
 
-	// Subsystem을 통해 전환 요청
+	// 카운트 대신 집합으로 추적한다 (사망/언포제스로 EndOverlap 에서 판정이 뒤집혀도 드리프트 없음)
+	LocalTriggerCharacters.Add(Character);
+
 	if (UGameInstance* GI = GetGameInstance())
 	{
 		if (UCSSplitScreenSubsystem* Subsystem = GI->GetSubsystem<UCSSplitScreenSubsystem>())
 		{
-			Subsystem->TransitionToFullScreen(TargetPlayerIndex);
-			UE_LOG(LogCS, Log, TEXT("SplitScreenTrigger: Player %d entered → Full Screen transition"), TargetPlayerIndex);
+			Subsystem->TransitionToFullScreen(0);
+			UE_LOG(LogCS, Log, TEXT("SplitScreenTrigger: local player entered -> Full Screen transition"));
 		}
 	}
 }
@@ -68,13 +59,14 @@ void ACSSplitScreenTrigger::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedC
 	ACharacter* Character = Cast<ACharacter>(OtherActor);
 	if (!Character) return;
 
-	APlayerController* PC = Cast<APlayerController>(Character->GetController());
-	if (!PC) return;
+	if (LocalTriggerCharacters.Remove(Character) == 0)
+	{
+		return;	// 우리 화면을 바꾸지 않았던 캐릭터
+	}
+	LocalTriggerCharacters.Remove(nullptr);
 
-	PlayersInTrigger = FMath::Max(0, PlayersInTrigger - 1);
-
-	// 모든 플레이어가 트리거를 벗어나면 스플릿 스크린 복원
-	if (PlayersInTrigger <= 0)
+	// 우리 화면을 풀스크린으로 만든 캐릭터가 모두 나가면 복원
+	if (LocalTriggerCharacters.Num() == 0)
 	{
 		if (UGameInstance* GI = GetGameInstance())
 		{

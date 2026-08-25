@@ -75,7 +75,10 @@ protected:
 	 *  Config
 	 * ───────────────────────────────────────────── */
 
-	/** 플레이어를 옮길 목적지 (World 좌표 — 액터를 옮겨도 따라가지 않음) */
+	/**
+	 * 플레이어를 옮길 목적지. MakeEditWidget 이라 뷰포트 위젯으로 찍으면 이 값은 액터 로컬 좌표로 저장된다
+	 * (엔진 규약). 런타임에는 GetDestinationWorld() 로 월드 좌표로 변환해서 쓴다.
+	 */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ClawMachine", meta = (MakeEditWidget = true))
 	FVector Destination = FVector(0.0f, 0.0f, 0.0f);
 
@@ -148,4 +151,10 @@ protected:
 
 	/** Claw를 Goal로 Speed*DeltaTime만큼 이동. 도달 시 true */
 	bool MoveClawTowards(const FVector& Goal, float Speed, float DeltaTime);
+
+	/** Destination(액터 로컬) -> 월드 좌표. 기준은 BeginPlay 시점의 액터 트랜스폼. */
+	FVector GetDestinationWorld() const;
+
+	/** Home 복귀 직후 트리거에 남아 있는 플레이어가 있으면 이어서 집는다 (BeginOverlap 이 다시 오지 않으므로) */
+	void TryGrabRemainingPlayer();
 };

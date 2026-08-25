@@ -47,6 +47,13 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Split Screen")
     void TransitionToFullScreen(int32 PlayerIndex);
 
+    /**
+     * 이 머신의 화면이 이 캐릭터의 진입/이탈에 반응해야 하는지 판단한다.
+     * TransitionToFullScreen 은 로컬 뷰만 바꾸므로, 원격 플레이어 때문에 내 화면이 바뀌면 안 된다.
+     * bForEnteringPlayer=false 면 FixedPlayerIndex 와 로컬 플레이어의 ControllerId 를 비교한다.
+     */
+    static bool ShouldLocalViewRespondTo(const class ACharacter* Character, bool bForEnteringPlayer, int32 FixedPlayerIndex);
+
     UFUNCTION(BlueprintCallable, Category = "Split Screen")
     void TransitionToSplitScreen();
 

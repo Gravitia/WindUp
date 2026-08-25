@@ -32,8 +32,10 @@ protected:
 	// 서버 전용. 지정 칸에 박스 스폰.
 	void SpawnBox();
 
-	UFUNCTION(NetMulticast, Reliable)
-	void NetMulticastSetLeverVisual(bool bInUsed);
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	UFUNCTION()
+	void OnRep_Used();
 
 	void ApplyLeverColor();
 
@@ -82,5 +84,7 @@ protected:
 	UPROPERTY()
 	TObjectPtr<class UMaterialInstanceDynamic> LeverMID;
 
+	// Multicast 로만 전파하면 늦게 접속한 클라는 이미 당겨진 레버를 안 당겨진 색으로 본다
+	UPROPERTY(ReplicatedUsing = OnRep_Used)
 	bool bUsed = false;
 };

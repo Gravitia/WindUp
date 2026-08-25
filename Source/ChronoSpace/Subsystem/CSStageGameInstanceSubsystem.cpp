@@ -1,5 +1,7 @@
 #include "CSStageGameInstanceSubsystem.h"
 #include "Kismet/GameplayStatics.h"
+#include "Engine/World.h"
+#include "GameFramework/GameModeBase.h"
 
 UCSStageGameInstanceSubsystem::UCSStageGameInstanceSubsystem()
 {
@@ -39,10 +41,20 @@ void UCSStageGameInstanceSubsystem::ChangeStage(FString NewStage)
     UE_LOG(LogTemp, Warning, TEXT("ChangeStage called with: %s"), *NewStage);
 
     CurrentStage = NewStage;
-    OnStageChanged.Broadcast(); //  UI 업데이트 및 기타 기능 수행
+    OnStageChanged.Broadcast();
 
-    // 레벨 변경 실행
-    UGameplayStatics::OpenLevel(GetWorld(), *NewStage);
+    UWorld* World = GetWorld();
+    if (!World) return;
+
+    // OpenLevel 은 로컬 트래블이다 - 리슨 서버에서 부르면 접속한 클라가 전부 끊기고,
+    // 클라에서 부르면 그 클라만 세션을 떠난다. 코옵에서는 서버 권한 + ServerTravel 이어야 한다.
+    if (!World->GetAuthGameMode())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("ChangeStage: server only (ignored on client) - %s"), *NewStage);
+        return;
+    }
+
+    World->ServerTravel(NewStage + TEXT("?listen"), false);
 } 
 
 TArray<FString> UCSStageGameInstanceSubsystem::GetAvailableAbilities()

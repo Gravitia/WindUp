@@ -96,46 +96,34 @@ void ACSBlackHole::SetDuration(float Duration)
 
 void ACSBlackHole::Destroyed()
 {
-	// 블랙홀 파괴 시, 중력 범위 안에 남아있는 메쉬들의 상태를 안전하게 복원
-	for (auto It = StaticMeshesInSphereTrigger.CreateIterator(); It; ++It)
+	// 블랙홀 파괴 시, 영향 아래 있던 메시 상태를 복원한다.
+	// 두 집합에 모두 들어 있는 메시를 두 번 해제하지 않도록 합집합으로 한 번만 처리한다
+	// (예전엔 같은 메시에 종료 알림이 두 번 가서 BP 토글 연출이 두 번 뒤집혔다).
+	TSet< TWeakObjectPtr<UStaticMeshComponent> > AffectedMeshes = StaticMeshesInSphereTrigger;
+	AffectedMeshes.Append(StaticMeshesInEventHorizon);
+
+	StaticMeshesInSphereTrigger.Empty();
+	StaticMeshesInEventHorizon.Empty();
+
+	for (const TWeakObjectPtr<UStaticMeshComponent>& WeakMesh : AffectedMeshes)
 	{
-		UStaticMeshComponent* Mesh = It->Get();
-		if (IsValid(Mesh))
+		UStaticMeshComponent* Mesh = WeakMesh.Get();
+		if (!IsValid(Mesh)) continue;
+
+		Mesh->SetPhysicsLinearVelocity(FVector::ZeroVector, false);
+		Mesh->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector, false);
+
+		AActor* MeshOwner = Mesh->GetOwner();
+		if (UCSMeshPulledByBlackhole* Comp = MeshOwner ? MeshOwner->FindComponentByClass<UCSMeshPulledByBlackhole>() : nullptr)
+		{
+			// 저장해 둔 원래 중력/카메라 응답으로 되돌린다 (다른 블랙홀이 아직 잡고 있으면 유지)
+			Comp->RemoveInfluence();
+		}
+		else if (Mesh->IsSimulatingPhysics())
 		{
 			Mesh->SetEnableGravity(true);
-			Mesh->SetCollisionResponseToChannel(ECC_Camera, ECR_Block);
-			Mesh->SetPhysicsLinearVelocity(FVector::ZeroVector, false);
-			Mesh->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector, false);
-
-			AActor* MeshOwner = Mesh->GetOwner();
-			if (MeshOwner)
-			{
-				if (UCSMeshPulledByBlackhole* Comp = MeshOwner->FindComponentByClass<UCSMeshPulledByBlackhole>())
-				{
-					Comp->NotifyInteractionEnded();
-				}
-			}
 		}
 	}
-	StaticMeshesInSphereTrigger.Empty();
-
-	// EventHorizon 안에만 있고 바깥 트리거에서 EndOverlap이 오지 않은 메쉬들 처리
-	for (auto It = StaticMeshesInEventHorizon.CreateIterator(); It; ++It)
-	{
-		UStaticMeshComponent* Mesh = It->Get();
-		if (IsValid(Mesh))
-		{
-			AActor* MeshOwner = Mesh->GetOwner();
-			if (MeshOwner)
-			{
-				if (UCSMeshPulledByBlackhole* Comp = MeshOwner->FindComponentByClass<UCSMeshPulledByBlackhole>())
-				{
-					Comp->NotifyInteractionEnded();
-				}
-			}
-		}
-	}
-	StaticMeshesInEventHorizon.Empty();
 
 	// BlackHole OFF Sound
 	if (BlackHoleOffSound)
@@ -194,6 +182,11 @@ void ACSBlackHole::SetCheckComponentInMesh(bool bCheckComponent)
 
 void ACSBlackHole::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepHitResult)
 {
+	// 물리/콜리전 상태 변경은 서버 권한.
+	// 클라 복제본의 GravitySphereTrigger 반경은 복제되지 않아(기본값 유지) 서버와 판정 범위가 달랐고,
+	// 끌어당기는 Tick 자체도 서버 전용이라 클라의 로컬 변경은 어긋나기만 했다.
+	if (!HasAuthority()) return;
+
 	// For Character
 	ACharacter* DetectedCharacter = Cast<ACharacter>(OtherActor);
 
@@ -207,22 +200,28 @@ void ACSBlackHole::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComponen
 	UStaticMeshComponent* StaticMeshComp = Cast<UStaticMeshComponent>(OtherComp);
 	if ( StaticMeshComp )
 	{
-		StaticMeshComp->SetEnableGravity(false);
-		StaticMeshComp->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 		StaticMeshesInSphereTrigger.Add(StaticMeshComp);
 
-		if (OtherActor)
+		// 물리 시뮬레이션 중인 메시만 건드린다.
+		// (예전엔 바닥/벽 같은 레벨 지오메트리까지 카메라 채널을 Ignore 로 바꿔 스프링암 카메라가 벽을 뚫었다)
+		if (!StaticMeshComp->IsSimulatingPhysics()) return;
+
+		if (UCSMeshPulledByBlackhole* Comp = OtherActor ? OtherActor->FindComponentByClass<UCSMeshPulledByBlackhole>() : nullptr)
 		{
-			if (UCSMeshPulledByBlackhole* Comp = OtherActor->FindComponentByClass<UCSMeshPulledByBlackhole>())
-			{
-				Comp->NotifyInteractionStarted();
-			}
+			// 컴포넌트가 원래 물리 상태를 저장/복원하고, 복제로 클라에도 연출(버튼 점등)을 전달한다
+			Comp->AddInfluence();
+		}
+		else
+		{
+			StaticMeshComp->SetEnableGravity(false);
 		}
 	}
 }
 
 void ACSBlackHole::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
+	if (!HasAuthority()) return;
+
 	// For Character
 	ACharacter* DetectedCharacter = Cast<ACharacter>(OtherActor);
 
@@ -235,20 +234,20 @@ void ACSBlackHole::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedComponent,
 	UStaticMeshComponent* StaticMeshComp = Cast<UStaticMeshComponent>(OtherComp);
 	if (StaticMeshComp)
 	{
-		StaticMeshComp->SetEnableGravity(true);
-		StaticMeshComp->SetCollisionResponseToChannel(ECC_Camera, ECR_Block);
 		StaticMeshesInSphereTrigger.Remove(StaticMeshComp);
 
-		if (OtherActor)
+		if (UCSMeshPulledByBlackhole* Comp = OtherActor ? OtherActor->FindComponentByClass<UCSMeshPulledByBlackhole>() : nullptr)
 		{
-			if (UCSMeshPulledByBlackhole* Comp = OtherActor->FindComponentByClass<UCSMeshPulledByBlackhole>())
+			// EventHorizon 안에 있으면 아직 상호작용 중 -> 해제 생략
+			if (!StaticMeshesInEventHorizon.Contains(StaticMeshComp))
 			{
-				// EventHorizon 안에 있으면 아직 상호작용 중 → 종료 알림 생략
-				if (!StaticMeshesInEventHorizon.Contains(StaticMeshComp))
-				{
-					Comp->NotifyInteractionEnded();
-				}
+				// 다른 블랙홀이 아직 잡고 있으면 컴포넌트가 카운트로 걸러 원복하지 않는다
+				Comp->RemoveInfluence();
 			}
+		}
+		else if (StaticMeshComp->IsSimulatingPhysics())
+		{
+			StaticMeshComp->SetEnableGravity(true);
 		}
 	}
 }

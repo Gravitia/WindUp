@@ -421,9 +421,27 @@ void UCSSplitScreenSubsystem::DisableSplitScreen()
 
 void UCSSplitScreenSubsystem::TransitionToFullScreen(int32 /*PlayerIndex*/)
 {
-    // 현재 구현은 메인(로컬) 뷰만 풀스크린으로 확장. PlayerIndex 는 기존 API 호환 위해 시그니처 유지.
+    // 이 함수는 "이 머신의 화면"만 바꾼다. PlayerIndex 는 기존 API 호환을 위해 남겨둔 인자이며 무시된다.
+    // 어느 플레이어 때문에 바꿀지는 호출측이 ShouldLocalViewRespondTo() 로 판단해야 한다.
     TargetAlpha = 1.f;
     UE_LOG(LogCS, Log, TEXT("CSSplitScreenSubsystem: TransitionToFullScreen"));
+}
+
+bool UCSSplitScreenSubsystem::ShouldLocalViewRespondTo(const ACharacter* Character, bool bForEnteringPlayer, int32 FixedPlayerIndex)
+{
+    if (!IsValid(Character)) return false;
+
+    if (bForEnteringPlayer)
+    {
+        // 원격 플레이어의 PlayerController 는 이 머신에 존재하지 않는다.
+        // 예전에는 호스트에서 원격 플레이어의 PC 가 잡히고 GetLocalPlayer() 만 null 이라
+        // FixedFullScreenPlayerIndex(기본 0) 로 폴백해 "원격 플레이어가 들어갔는데 호스트 화면이 풀스크린"이 됐다.
+        return Character->IsLocallyControlled();
+    }
+
+    const APlayerController* PC = Cast<APlayerController>(Character->GetController());
+    const ULocalPlayer* LP = PC ? PC->GetLocalPlayer() : nullptr;
+    return LP && LP->GetControllerId() == FixedPlayerIndex;
 }
 
 void UCSSplitScreenSubsystem::TransitionToSplitScreen()

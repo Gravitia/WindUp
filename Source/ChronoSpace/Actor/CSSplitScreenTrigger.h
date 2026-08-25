@@ -43,5 +43,6 @@ protected:
 
 private:
 	/** 트리거 안에 있는 플레이어 수 */
-	int32 PlayersInTrigger = 0;
+	// 이 머신의 화면을 풀스크린으로 만든 캐릭터들 (로컬 판정 - 머신마다 다르다)
+	TSet< TWeakObjectPtr<class ACharacter> > LocalTriggerCharacters;
 };

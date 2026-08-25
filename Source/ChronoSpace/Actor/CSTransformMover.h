@@ -102,12 +102,20 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Transform Mover|Return")
 	TObjectPtr<UCurveFloat> ReturnCurve = nullptr;
 
+public:
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 private:
+	/** 늦게 접속한 클라도 현재 이동 상태(또는 최종 위치)를 받는다 - Multicast 는 그 시점 접속자에게만 간다 */
+	UFUNCTION()
+	void OnRep_MovementState();
+
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastStartMovement(
 		FName MovementKey,
 		const FTransform& StartTransform,
 		const FTransform& TargetTransform,
+		float ServerStartTime,
 		float Duration);
 
 	UFUNCTION(NetMulticast, Reliable)
@@ -126,6 +134,7 @@ private:
 	float EvaluateAlpha(float NormalizedTime) const;
 	FTransform MakeTargetTransform(const FCSTransformMovementPreset& Preset) const;
 
+	UPROPERTY(ReplicatedUsing = OnRep_MovementState)
 	FCSTransformMovementState MovementState;
 
 	FTransform InitialMovingRootTransform = FTransform::Identity;

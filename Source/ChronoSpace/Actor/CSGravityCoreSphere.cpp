@@ -4,6 +4,7 @@
 #include "Actor/CSGravityCoreSphere.h"
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "PhysicsEngine/BodyInstance.h"
 #include "ActorComponent/CSMeshAffectedByGravityCore.h"
 #include "Physics/CSCollision.h"
 #include "ChronoSpace.h"
@@ -68,6 +69,9 @@ void ACSGravityCoreSphere::BeginPlay()
 
 void ACSGravityCoreSphere::Tick(float DeltaSeconds)
 {
+	// Super 를 빼면 BP 자식의 Event Tick 이 서버/클라 어디서도 돌지 않는다
+	Super::Tick(DeltaSeconds);
+
 	if (!HasAuthority()) return;
 
 	//ProcessForCharacter(DeltaSeconds);
@@ -139,6 +143,20 @@ void ACSGravityCoreSphere::OnTriggerBeginOverlap(UPrimitiveComponent* Overlapped
 	{
 		if ( bCheckMeshHaveComponent && OtherActor->FindComponentByClass<UCSMeshAffectedByGravityCore>() == nullptr ) return;
 
+		// 원래 값을 저장해 EndOverlap 에서 되돌린다
+		// (예전엔 복원하지 않아, 한 번이라도 코어에 닿은 프롭은 이후 영원히 느리게 굴렀다)
+		if (!SavedMeshStates.Contains(TargetStaticMeshComp))
+		{
+			FCSGravityCoreMeshState Saved;
+			if (const FBodyInstance* Body = TargetStaticMeshComp->GetBodyInstance())
+			{
+				Saved.MaxAngularVelocityRad = Body->GetMaxAngularVelocityInRadians();
+			}
+			Saved.AngularDamping = TargetStaticMeshComp->GetAngularDamping();
+			Saved.bGravityEnabled = TargetStaticMeshComp->IsGravityEnabled();
+			SavedMeshStates.Add(TargetStaticMeshComp, Saved);
+		}
+
 		TargetStaticMeshComp->SetPhysicsMaxAngularVelocityInDegrees(180.f);
 		TargetStaticMeshComp->SetAngularDamping(2.0f);
 
@@ -147,7 +165,7 @@ void ACSGravityCoreSphere::OnTriggerBeginOverlap(UPrimitiveComponent* Overlapped
 
 		if (UCSMeshAffectedByGravityCore* Comp = OtherActor->FindComponentByClass<UCSMeshAffectedByGravityCore>())
 		{
-			Comp->NotifyInteractionStarted();
+			Comp->AddInfluence();
 		}
 	}
 }
@@ -162,16 +180,35 @@ void ACSGravityCoreSphere::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedCo
 	{
 		if (bCheckMeshHaveComponent && OtherActor->FindComponentByClass<UCSMeshAffectedByGravityCore>() == nullptr) return;
 		
-		TargetStaticMeshComp->SetEnableGravity(true);
-		//TargetStaticMeshComp->ClearAllPhysicsForces();
-		TargetStaticMeshComp->SetPhysicsLinearVelocity(FVector::ZeroVector, false);
-		TargetStaticMeshComp->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector, false);
 		StaticMeshesInSphereTrigger.Remove(TargetStaticMeshComp);
 
-		if (UCSMeshAffectedByGravityCore* Comp = OtherActor->FindComponentByClass<UCSMeshAffectedByGravityCore>())
+		UCSMeshAffectedByGravityCore* Comp = OtherActor->FindComponentByClass<UCSMeshAffectedByGravityCore>();
+		if (Comp)
 		{
-			Comp->NotifyInteractionEnded();
+			Comp->RemoveInfluence();
 		}
+
+		// 다른 코어/블랙홀이 아직 이 메시를 잡고 있으면 물리 상태를 되돌리지 않는다
+		// (예전엔 먼저 빠져나간 쪽이 중력을 켜고 속도를 0 으로 만들어, 끌려가던 프롭이 갑자기 멈췄다)
+		if (Comp && Comp->IsInfluenced())
+		{
+			return;
+		}
+
+		if (const FCSGravityCoreMeshState* Saved = SavedMeshStates.Find(TargetStaticMeshComp))
+		{
+			TargetStaticMeshComp->SetPhysicsMaxAngularVelocityInRadians(Saved->MaxAngularVelocityRad);
+			TargetStaticMeshComp->SetAngularDamping(Saved->AngularDamping);
+			TargetStaticMeshComp->SetEnableGravity(Saved->bGravityEnabled);
+			SavedMeshStates.Remove(TargetStaticMeshComp);
+		}
+		else
+		{
+			TargetStaticMeshComp->SetEnableGravity(true);
+		}
+
+		TargetStaticMeshComp->SetPhysicsLinearVelocity(FVector::ZeroVector, false);
+		TargetStaticMeshComp->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector, false);
 
 		UE_LOG(LogCS, Log, TEXT("ACSGravityCoreSphere - OnTriggerEndOverlap"));
 	}

@@ -4,6 +4,7 @@
 #include "ActorComponent/CSMeshAffectedByGravityCore.h"
 #include "Components/StaticMeshComponent.h"
 #include "Physics/CSCollision.h"
+#include "Net/UnrealNetwork.h"
 #include "ChronoSpace.h"
 
 UCSMeshAffectedByGravityCore::UCSMeshAffectedByGravityCore()
@@ -43,14 +44,47 @@ void UCSMeshAffectedByGravityCore::BeginPlay()
 	MeshComp->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 }
 
-void UCSMeshAffectedByGravityCore::NotifyInteractionStarted()
+void UCSMeshAffectedByGravityCore::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-	OnInteractionStarted.Broadcast();
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(UCSMeshAffectedByGravityCore, InfluenceCount);
 }
 
-void UCSMeshAffectedByGravityCore::NotifyInteractionEnded()
+void UCSMeshAffectedByGravityCore::AddInfluence()
 {
-	OnInteractionEnded.Broadcast();
+	AActor* Owner = GetOwner();
+	if (!IsValid(Owner) || !Owner->HasAuthority()) return;
+
+	++InfluenceCount;
+	OnRep_InfluenceCount();	// 리슨 호스트는 OnRep 을 받지 않는다
+}
+
+void UCSMeshAffectedByGravityCore::RemoveInfluence()
+{
+	AActor* Owner = GetOwner();
+	if (!IsValid(Owner) || !Owner->HasAuthority()) return;
+	if (InfluenceCount <= 0) return;
+
+	--InfluenceCount;
+	OnRep_InfluenceCount();
+}
+
+void UCSMeshAffectedByGravityCore::OnRep_InfluenceCount()
+{
+	const bool bNowActive = (InfluenceCount > 0);
+	if (bNowActive == bBroadcastActive) return;
+
+	bBroadcastActive = bNowActive;
+
+	if (bNowActive)
+	{
+		OnInteractionStarted.Broadcast();
+	}
+	else
+	{
+		OnInteractionEnded.Broadcast();
+	}
 }
 
 void UCSMeshAffectedByGravityCore::SetEnable( bool bInEnable )

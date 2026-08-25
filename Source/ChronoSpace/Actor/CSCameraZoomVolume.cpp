@@ -27,7 +27,7 @@ ACSCameraZoomVolume::ACSCameraZoomVolume()
 void ACSCameraZoomVolume::BeginPlay()
 {
 	Super::BeginPlay();
-	PlayersInTrigger = 0;
+	LocalTriggerCharacters.Empty();
 }
 
 void ACSCameraZoomVolume::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepHitResult)
@@ -38,33 +38,24 @@ void ACSCameraZoomVolume::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedC
 	APlayerController* PC = Cast<APlayerController>(Player->GetController());
 	if (!PC) return;
 
-	PlayersInTrigger++;
-
 	// ── 줌 적용 (로컬 플레이어만) ──
 	if (Player->IsLocallyControlled())
 	{
 		Player->ZoomCamera(ZoomLength, ZoomSpeed);
 	}
 
-	// ── 스플릿 스크린 전환 (옵션) ──
-	if (bUseSplitScreenTransition)
+	// ── 스플릿 스크린 전환 (옵션) ── 이 머신의 화면만 바뀌므로 로컬 판정이 필요하다
+	if (bUseSplitScreenTransition
+		&& UCSSplitScreenSubsystem::ShouldLocalViewRespondTo(Player, bFullScreenForEnteringPlayer, FixedFullScreenPlayerIndex))
 	{
-		int32 TargetPlayerIndex = FixedFullScreenPlayerIndex;
-
-		if (bFullScreenForEnteringPlayer)
-		{
-			if (ULocalPlayer* LP = PC->GetLocalPlayer())
-			{
-				TargetPlayerIndex = LP->GetControllerId();
-			}
-		}
+		LocalTriggerCharacters.Add(Player);
 
 		if (UGameInstance* GI = GetGameInstance())
 		{
 			if (UCSSplitScreenSubsystem* Subsystem = GI->GetSubsystem<UCSSplitScreenSubsystem>())
 			{
-				Subsystem->TransitionToFullScreen(TargetPlayerIndex);
-				UE_LOG(LogCS, Log, TEXT("CameraZoomVolume: Player %d → Full Screen transition"), TargetPlayerIndex);
+				Subsystem->TransitionToFullScreen(0);
+				UE_LOG(LogCS, Log, TEXT("CameraZoomVolume: local player entered -> Full Screen transition"));
 			}
 		}
 	}
@@ -80,16 +71,17 @@ void ACSCameraZoomVolume::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedCom
 	APlayerController* PC = Cast<APlayerController>(Player->GetController());
 	if (!PC) return;
 
-	PlayersInTrigger = FMath::Max(0, PlayersInTrigger - 1);
-
 	// ── 줌 복원 (로컬 플레이어만) ──
 	if (Player->IsLocallyControlled())
 	{
 		Player->ZoomCamera(0.f, ZoomSpeed);
 	}
 
-	// ── 스플릿 스크린 복원 (모든 플레이어가 나갔을 때) ──
-	if (bUseSplitScreenTransition && PlayersInTrigger <= 0)
+	const bool bWasLocalTrigger = (LocalTriggerCharacters.Remove(Player) > 0);
+	LocalTriggerCharacters.Remove(nullptr);
+
+	// ── 스플릿 스크린 복원 (우리 화면을 바꾼 플레이어가 모두 나갔을 때) ──
+	if (bUseSplitScreenTransition && bWasLocalTrigger && LocalTriggerCharacters.Num() == 0)
 	{
 		if (UGameInstance* GI = GetGameInstance())
 		{

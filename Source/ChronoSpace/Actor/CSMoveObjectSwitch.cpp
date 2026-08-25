@@ -168,12 +168,6 @@ void ACSMoveObjectSwitch::CalculateTargetTransforms()
 
 void ACSMoveObjectSwitch::StartMovement()
 {
-	if (bIsMoving)
-	{
-		UE_LOG(LogCS, Warning, TEXT("Movement already in progress, ignoring new request"));
-		return;
-	}
-
 	// 이동할 유효한 오브젝트가 있는지 확인
 	bool bHasValidTargets = false;
 	for (const FMoveObjectData& MoveData : MoveObjects)
@@ -191,14 +185,17 @@ void ACSMoveObjectSwitch::StartMovement()
 		return;
 	}
 
-	// 이동 방향 결정 (스위치 상태에 따라)
+	// 이동 방향은 항상 스위치 상태를 따른다.
+	// 예전엔 이동 중이면 여기서 그냥 리턴해 스위치 표시와 오브젝트 위치가 영구히 어긋났다
+	// (문이 열리는 도중 다시 누르면 표시는 OFF 인데 문은 계속 열림).
+	// 이제는 이동 중에 눌러도 그 자리에서 방향만 뒤집힌다.
 	bMovingToTarget = bIsInteracted;
 	bIsMoving = true;
 
 	UE_LOG(LogCS, Log, TEXT("Starting movement - Direction: %s"),
 		bMovingToTarget ? TEXT("To Target") : TEXT("To Initial"));
 
-	// 클라이언트에 이동 시작 알림
+	// 클라이언트에 이동 시작/방향 전환 알림
 	NetMulticastStartMovement(bMovingToTarget);
 }
 
