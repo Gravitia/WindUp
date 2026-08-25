@@ -10,6 +10,14 @@ class UCSGameUIWidget;
 class SCSServerTravelWidget;
 class ACSStagePortal;
 
+/** 디버그로 켜 준 셰이프 컴포넌트의 원래 표시 상태. 끌 때 그대로 되돌리기 위해 들고 있는다. */
+struct FCSDebugShapeVisibility
+{
+	TWeakObjectPtr<class UShapeComponent> Component;
+	bool bWasHiddenInGame = true;
+	bool bWasVisible = true;
+};
+
 /**
  *
  */
@@ -83,6 +91,31 @@ public:
 public:
 	UFUNCTION(Server, Reliable)
 	void ServerRequestStagePortalTravel(ACSStagePortal* Portal, int32 Chapter, int32 Stage);
+
+// Debug — 체크포인트 순간이동 패널 (상단 숫자열 0)
+public:
+	/** 패널을 열거나 닫는다. 0 키와 패널의 X 버튼이 여기로 들어온다. */
+	void ToggleDebugTeleportPanel();
+	void CloseDebugTeleportPanel();
+
+	/** 이동은 서버 권한이다. 패널을 누른 쪽이 클라이언트여도 서버가 옮긴다. */
+	UFUNCTION(Server, Reliable)
+	void ServerDebugTeleport(FVector Location, FRotator Rotation, bool bAllPlayers);
+
+	/**
+	 * 블루프린트 액터에 달린 콜리전 셰이프(Box/Sphere/Capsule)를 게임 화면에 그린다.
+	 * show collision 과 달리 블루프린트로 만든 액터만 골라내므로 트리거만 보기에 좋다.
+	 * 순수하게 보는 쪽 연출이라 로컬에서만 처리한다 — 서버로 보내지 않는다.
+	 * @return 표시로 바꾼 셰이프 개수
+	 */
+	int32 SetShowBlueprintCollision(bool bEnable);
+	bool IsShowingBlueprintCollision() const { return bShowBlueprintCollision; }
+
+private:
+	TSharedPtr<class SCSDebugTeleportPanel> DebugTeleportPanel;
+
+	TArray<FCSDebugShapeVisibility> DebugShownShapes;
+	bool bShowBlueprintCollision = false;
 
 // Option Menu
 public:
