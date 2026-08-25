@@ -72,11 +72,12 @@ void UCSViewFamilyViewportClient::OnPostLoadMap(UWorld* /*LoadedWorld*/)
 	FadeTargetAlpha = 0.f;
 }
 
-void UCSViewFamilyViewportClient::SetSecondaryView(const FVector& InLocation, const FRotator& InRotation, float InFOV)
+void UCSViewFamilyViewportClient::SetSecondaryView(const FVector& InLocation, const FRotator& InRotation, float InFOV, float InAspectRatio)
 {
 	SecondaryLocation = InLocation;
 	SecondaryRotation = InRotation;
 	SecondaryFOV = (InFOV > KINDA_SMALL_NUMBER) ? InFOV : 90.f;
+	SecondaryAspectRatio = (InAspectRatio > KINDA_SMALL_NUMBER) ? InAspectRatio : (16.f / 9.f);
 	bSecondaryActive = true;
 }
 
@@ -139,13 +140,12 @@ void UCSViewFamilyViewportClient::AddSecondarySceneView(FSceneViewFamilyContext&
 		FPlane(0, 1, 0, 0),
 		FPlane(0, 0, 0, 1));
 
-	// 투영 행렬 — ULocalPlayer 가 메인 뷰에 적용하는 AspectRatioAxisConstraint 와 동일한 보정 적용.
-	// 기본값 (MaintainYFOV) 일 때, 화면 종횡비가 좁아지면 (분할 화면) 가로 FOV 를 줄여 세로 FOV 를 유지.
-	// 이 보정을 안 하면 보조 뷰는 90° 와이드 그대로 → 메인보다 화각이 넓어져 캐릭터가 작게 보임.
+	// 투영 행렬 — 메인 뷰와 "같은 함수"를 쓴다.
+	// ULocalPlayer::GetProjectionData 도 결국 CalculateProjectionMatrixGivenViewRectangle 을 호출한다.
+	// 예전엔 16:9 기준 FOV 를 손으로 변환한 뒤 FMinimalViewInfo::CalculateProjectionMatrix() 에 넘겼는데,
+	// 그 함수는 AspectRatio 를 한 번 더 적용하는 다른 공식이라(FReversedZPerspectiveMatrix(HalfFOV, AspectRatio, 1, ...))
+	// 종횡비 보정이 이중으로 걸려 보조 뷰의 화각이 메인 뷰와 달라졌다.
 	{
-		const float NewAspect = static_cast<float>(ViewRect.Width()) / FMath::Max(1.f, static_cast<float>(ViewRect.Height()));
-
-		// LocalPlayer 의 AspectRatioAxisConstraint 조회 (기본: MaintainYFOV 또는 MajorAxisFOV)
 		EAspectRatioAxisConstraint AspectConstraint = AspectRatio_MajorAxisFOV;
 		if (UGameInstance* GIRef = GetGameInstance())
 		{
@@ -155,32 +155,23 @@ void UCSViewFamilyViewportClient::AddSecondarySceneView(FSceneViewFamilyContext&
 			}
 		}
 
-		// FOV 가 정의된 기준 종횡비 (UE 표준: 16:9). 이 종횡비에서 SecondaryFOV 가 가로 FOV.
-		constexpr float ReferenceAspect = 16.f / 9.f;
-
-		// 새 종횡비에서 사용할 가로 FOV 계산
-		float MatrixFOV_Deg = SecondaryFOV;
-		const bool bMaintainYFOV =
-			(AspectConstraint == AspectRatio_MaintainYFOV) ||
-			(AspectConstraint == AspectRatio_MajorAxisFOV && NewAspect < ReferenceAspect);
-		if (bMaintainYFOV)
-		{
-			// 기준 종횡비에서의 세로 FOV → 새 종횡비에서의 가로 FOV
-			const float OrigHFOV_Rad = FMath::DegreesToRadians(SecondaryFOV);
-			const float YFOV_Rad = 2.f * FMath::Atan(FMath::Tan(OrigHFOV_Rad * 0.5f) / ReferenceAspect);
-			const float NewHFOV_Rad = 2.f * FMath::Atan(FMath::Tan(YFOV_Rad * 0.5f) * NewAspect);
-			MatrixFOV_Deg = FMath::RadiansToDegrees(NewHFOV_Rad);
-		}
-
 		FMinimalViewInfo MinView;
 		MinView.Location = SecondaryLocation;
 		MinView.Rotation = SecondaryRotation;
-		MinView.FOV = MatrixFOV_Deg;
-		MinView.DesiredFOV = MatrixFOV_Deg;
-		MinView.AspectRatio = NewAspect;
+		MinView.FOV = SecondaryFOV;
+		MinView.DesiredFOV = SecondaryFOV;
+		// FOV 가 정의된 기준 종횡비 (카메라 컴포넌트의 AspectRatio, 기본 16:9)
+		MinView.AspectRatio = SecondaryAspectRatio;
 		MinView.bConstrainAspectRatio = false;
 		MinView.ProjectionMode = ECameraProjectionMode::Perspective;
-		ViewInit.ProjectionMatrix = MinView.CalculateProjectionMatrix();
+
+		FSceneViewProjectionData ProjData;
+		ProjData.ViewOrigin = SecondaryLocation;
+		ProjData.ViewRotationMatrix = ViewInit.ViewRotationMatrix;
+		ProjData.SetViewRectangle(ViewRect);
+
+		FMinimalViewInfo::CalculateProjectionMatrixGivenViewRectangle(MinView, AspectConstraint, ViewRect, ProjData);
+		ViewInit.ProjectionMatrix = ProjData.ProjectionMatrix;
 	}
 
 	FSceneView* SecondarySceneView = new FSceneView(ViewInit);

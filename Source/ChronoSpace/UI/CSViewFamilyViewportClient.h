@@ -30,7 +30,7 @@ public:
 	virtual void BeginDestroy() override;
 
 	/** Subsystem 이 매 프레임 호출 — 보조 뷰 카메라 갱신 */
-	void SetSecondaryView(const FVector& InLocation, const FRotator& InRotation, float InFOV);
+	void SetSecondaryView(const FVector& InLocation, const FRotator& InRotation, float InFOV, float InAspectRatio = 16.f / 9.f);
 
 	/** 보조 뷰 비활성화 → 엔진 기본 Draw 로 폴백 */
 	void ClearSecondaryView();
@@ -61,6 +61,9 @@ private:
 	FVector  SecondaryLocation = FVector::ZeroVector;
 	FRotator SecondaryRotation = FRotator::ZeroRotator;
 	float    SecondaryFOV = 90.f;
+
+	// SecondaryFOV 가 "가로 FOV" 로 정의된 기준 종횡비. 송신측 카메라 컴포넌트의 AspectRatio (기본 16:9).
+	float    SecondaryAspectRatio = 16.f / 9.f;
 
 	float FullscreenAlpha = 0.f;
 	bool  bSwapLeftRight = true;

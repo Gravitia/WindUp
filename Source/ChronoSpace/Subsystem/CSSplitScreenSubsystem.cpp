@@ -11,6 +11,7 @@
 #include "EngineUtils.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Camera/CameraComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "CollisionQueryParams.h"
 #include "DrawDebugHelpers.h"
@@ -251,10 +252,23 @@ void UCSSplitScreenSubsystem::PushSecondaryCamera()
     }
 
     // ===== 카메라 target 위치 (충돌 처리 전) =====
-    const FVector CamTarget = SmoothedAnchorLocation - SmoothedSecondaryRotation.Vector() * SmoothedArmLength;
+    // USpringArmComponent::UpdateDesiredArmLocation 과 같은 순서로 재구성한다.
+    //   ArmOrigin = 부착점 + TargetOffset
+    //   Desired   = ArmOrigin - Rot.Vector() * ArmLength + Rot 로 회전한 SocketOffset
+    // 예전엔 TargetOffset / SocketOffset 을 빼먹어서, 어깨 오프셋을 쓰는 카메라(3인칭 표준)에서
+    // 보조 뷰만 캐릭터가 화면 중앙에 오는 등 메인 뷰와 구도가 어긋났다.
+    // (오프셋 값은 클래스 기본값이라 모든 머신에서 같으므로 복제 없이 로컬에서 읽어도 된다)
+    const FVector TargetOffset = RemoteArm ? RemoteArm->TargetOffset : FVector::ZeroVector;
+    const FVector SocketOffset = RemoteArm ? RemoteArm->SocketOffset : FVector::ZeroVector;
+
+    const FVector ArmOrigin = SmoothedAnchorLocation + TargetOffset;
+    const FVector CamTarget = ArmOrigin
+        - SmoothedSecondaryRotation.Vector() * SmoothedArmLength
+        + FRotationMatrix(SmoothedSecondaryRotation).TransformVector(SocketOffset);
 
     // ===== Sphere sweep — 벽/지형 뚫림 방지 =====
     // 수신측 자체 환경에서 sweep 하므로 송신측 환경에 의존하지 않음.
+    // 스프링암과 동일하게 ArmOrigin -> CamTarget 구간을 쓴다.
     FVector CamLoc = CamTarget;
     if (bDoCollisionTest && World && SmoothedArmLength > KINDA_SMALL_NUMBER)
     {
@@ -276,7 +290,7 @@ void UCSSplitScreenSubsystem::PushSecondaryCamera()
         }
 
         FHitResult Hit;
-        if (World->SweepSingleByChannel(Hit, SmoothedAnchorLocation, CamTarget, FQuat::Identity,
+        if (World->SweepSingleByChannel(Hit, ArmOrigin, CamTarget, FQuat::Identity,
             ProbeChannel, FCollisionShape::MakeSphere(ProbeSize), Params))
         {
             CamLoc = Hit.Location;
@@ -353,7 +367,18 @@ void UCSSplitScreenSubsystem::PushSecondaryCamera()
     }
 #endif
 
-    VC->SetSecondaryView(SmoothedSecondaryLocation, SmoothedSecondaryRotation, SmoothedSecondaryFOV);
+    // FOV 가 정의된 기준 종횡비는 원격 캐릭터의 카메라 컴포넌트에서 읽는다 (기본 16:9).
+    // 메인 뷰도 같은 값을 쓰므로 두 뷰의 화각이 일치한다.
+    float RemoteAspect = 16.f / 9.f;
+    if (const UCameraComponent* RemoteCam = RemoteChar->FindComponentByClass<UCameraComponent>())
+    {
+        if (RemoteCam->AspectRatio > KINDA_SMALL_NUMBER)
+        {
+            RemoteAspect = RemoteCam->AspectRatio;
+        }
+    }
+
+    VC->SetSecondaryView(SmoothedSecondaryLocation, SmoothedSecondaryRotation, SmoothedSecondaryFOV, RemoteAspect);
 }
 
 void UCSSplitScreenSubsystem::Tick(float DeltaTime)
