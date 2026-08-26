@@ -104,7 +104,8 @@ protected:
 	void OnRep_TriggerActive();
 
 	// 서버/클라 양쪽에서 활성 상태 진입 시 실제 반응(OnActivated/OnDeactivated)을 부른다.
-	void HandleActivationChanged();
+	// C++ 자식이 여기에 자기 반응을 얹을 수 있게 virtual 이다 - 반드시 Super 를 부를 것.
+	virtual void HandleActivationChanged();
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Reactor")

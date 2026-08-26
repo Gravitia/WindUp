@@ -37,6 +37,18 @@ void ACSAbilityReactorBase::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// 부모 클래스가 만든 네이티브 컴포넌트라 정상적으로는 항상 있다.
+	// 다만 예전에 같은 이름의 BP 컴포넌트를 쓰던 액터가 레벨에 배치돼 있으면
+	// 저장된 인스턴스 데이터와 클래스가 어긋나 null 로 들어올 수 있다.
+	// 그 경우 크래시 대신 로그로 알린다 - 해당 레벨을 다시 저장하면 정리된다.
+	if (!Trigger)
+	{
+		UE_LOG(LogCS, Error,
+			TEXT("[Reactor] %s : Trigger 컴포넌트가 없다. 레벨에 배치된 인스턴스 데이터가 옛 컴포넌트를 가리키고 있을 수 있다 - 레벨을 다시 저장할 것."),
+			*GetName());
+		return;
+	}
+
 	Trigger->SetSphereRadius(TriggerRadius, true);
 
 	if (!HasAuthority()) return;
