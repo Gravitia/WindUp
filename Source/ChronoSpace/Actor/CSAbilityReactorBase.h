@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -112,37 +112,37 @@ protected:
 
 	// [축1] 어떤 능력에 반응할지. 디테일 패널에서 체크박스 다중 선택.
 	// 아무것도 체크하지 않으면(0) 모든 능력에 반응한다.
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Reactor",
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|Reactor",
 		meta = (Bitmask, BitmaskEnum = "/Script/ChronoSpace.ECSAbilityType"))
 	int32 RespondsToAbilities = 0;
 
 	// [축2] 1회(Latch) / 반복(Toggle).
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Reactor")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|Reactor")
 	ECSReactorMode Mode = ECSReactorMode::Toggle;
 
 	// 감지 트리거 반경.
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Reactor")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|Reactor")
 	float TriggerRadius = 100.0f;
 
 	// ==== [타겟 트리거] 세팅. 타겟을 가진 "대표" 리액터 한쪽에만 지정한다 ====
 	// 나와 함께 조합 조건을 이룰 리액터들. 비워두면 나 혼자 조건.
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Reactor|Trigger")
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "CSEditable|Reactor|Trigger")
 	TArray<TObjectPtr<ACSAbilityReactorBase>> LinkedReactors;
 
 	// All = 나+링크 전부 활성(AND) / Any = 하나라도 활성(OR).
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Reactor|Trigger")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|Reactor|Trigger")
 	ECSReactorGroupLogic TriggerLogic = ECSReactorGroupLogic::All;
 
 	// true 면 조합이 한번 완성되면 유지. ResetReactor 로 재무장.
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Reactor|Trigger")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|Reactor|Trigger")
 	bool bTriggerLatch = false;
 
 	// 조합 완성/해제 시 통지할 타겟들. ICSReactorTarget 구현 필요 (문/다리/다른 리액터 등).
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Reactor|Trigger")
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "CSEditable|Reactor|Trigger")
 	TArray<TObjectPtr<AActor>> TargetActors;
 
 	// 켜면 오버랩/활성 변화를 화면·로그에 출력해 감지 문제를 진단할 수 있다.
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Reactor|Debug")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|Reactor|Debug")
 	bool bReactorDebug = false;
 
 protected:

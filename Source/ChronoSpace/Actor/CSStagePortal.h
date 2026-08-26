@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -89,31 +89,31 @@ protected:
     TObjectPtr<UStaticMeshComponent> Light2;
 
     // === This portal's location in progression (where "here" is) ===
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default|Stage", meta = (ClampMin = "1"))
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CSEditable|StagePortal|Stage", meta = (ClampMin = "1"))
     int32 CurrentChapter = 1;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default|Stage", meta = (ClampMin = "1"))
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CSEditable|StagePortal|Stage", meta = (ClampMin = "1"))
     int32 CurrentStage = 1;
 
     // If true, marks (CurrentChapter, CurrentStage) cleared before traveling.
     // Set false for rest/hub stages that shouldn't count toward progression.
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default|Stage")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CSEditable|StagePortal|Stage")
     bool bMarkCurrentStageCleared = true;
 
     // === UI ===
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default|UI")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CSEditable|StagePortal|UI")
     TSubclassOf<UCSStageSelectWidget> StageSelectWidgetClass;
 
     // === Travel ===
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default|Travel", meta = (ClampMin = "0.0"))
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CSEditable|StagePortal|Travel", meta = (ClampMin = "0.0"))
     float FadeDuration = 1.0f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default|Travel", meta = (ClampMin = "1", ClampMax = "4"))
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CSEditable|StagePortal|Travel", meta = (ClampMin = "1", ClampMax = "4"))
     int32 RequiredPlayerCount = 2;
 
     // === Debug ===
     // When true (and not a Shipping build), the UI offers every stage for free travel.
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default|Debug")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CSEditable|StagePortal|Debug")
     bool bDebugUnlockAllStages = true;
 
     // === Runtime State ===

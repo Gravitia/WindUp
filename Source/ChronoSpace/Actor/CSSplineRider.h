@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -119,66 +119,66 @@ protected:
 
 	// ==== 배치 설정 ====
 	// 이 라이더가 따라갈 레일. 레벨에 배치된 ACSSplineTrack 중 선택.
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "SplineRider")
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "CSEditable|SplineRider")
 	TObjectPtr<ACSSplineTrack> TargetTrack;
 
 	// 게임 시작 시 스플라인의 몇 번 포인트에서 시작할지.
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SplineRider")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|SplineRider")
 	int32 StartPointIndex = 0;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SplineRider")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|SplineRider")
 	ECSSplineRiderMoveType MoveType = ECSSplineRiderMoveType::Normal;
 
 	// MoveType 이 Recover 일 때 시작점으로 복귀하는 속도 (cm/s).
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SplineRider", meta = (ClampMin = "0.0", EditCondition = "MoveType == ECSSplineRiderMoveType::Recover"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|SplineRider", meta = (ClampMin = "0.0", EditCondition = "MoveType == ECSSplineRiderMoveType::Recover"))
 	float RecoverSpeed = 200.0f;
 
 	// 어떤 능력에 반응할지. 아무것도 체크하지 않으면(0) 모든 능력에 반응.
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SplineRider",
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|SplineRider",
 		meta = (Bitmask, BitmaskEnum = "/Script/ChronoSpace.ECSAbilityType"))
 	int32 RespondsToAbilities = 0;
 
 	// ==== 이동 튜닝 ====
 	// 능력 소스 하나가 주는 당김 가속 (cm/s^2). 접선 투영 후 적용.
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SplineRider|Move", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|SplineRider|Move", meta = (ClampMin = "0.0"))
 	float PullAcceleration = 1500.0f;
 
 	// 속도 감쇠 계수. 클수록 능력이 떨어졌을 때 빨리 멈춘다.
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SplineRider|Move", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|SplineRider|Move", meta = (ClampMin = "0.0"))
 	float MoveDamping = 2.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SplineRider|Move", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|SplineRider|Move", meta = (ClampMin = "0.0"))
 	float MaxMoveSpeed = 600.0f;
 
 	// 레일 경사를 따라 미끄러지는 중력 가속 배율. 접선의 상하 성분에 월드 중력을 곱해 적용한다.
 	// 1 = 실제 중력, 0 = 경사 영향 없음.
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SplineRider|Move", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|SplineRider|Move", meta = (ClampMin = "0.0"))
 	float RailGravityScale = 1.0f;
 
 	// ==== 점유 / 밀어내기 ====
 	// 1D 점유 판정 반경. 다른 라이더와 이 반경의 합 이하로는 겹치지 못한다.
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SplineRider|Push", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|SplineRider|Push", meta = (ClampMin = "0.0"))
 	float RailBlockRadius = 60.0f;
 
 	// 상대보다 크거나 같으면 밀 수 있고, 작으면 상대 앞에서 막힌다.
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SplineRider|Push")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|SplineRider|Push")
 	int32 PushPriority = 0;
 
 	// ==== 트리거 포인트 ====
 	// 포인트 도달로 판정하는 거리 허용 오차 (cm).
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SplineRider", meta = (ClampMin = "1.0"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|SplineRider", meta = (ClampMin = "1.0"))
 	float ArriveTolerance = 25.0f;
 
 	// 감지 스피어 반경.
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SplineRider", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|SplineRider", meta = (ClampMin = "0.0"))
 	float DetectionRadius = 100.0f;
 
 	// 클라이언트 보간 속도.
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SplineRider", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|SplineRider", meta = (ClampMin = "0.0"))
 	float InterpSpeed = 10.0f;
 
 	// 켜면 당김/점유/트리거 판정을 로그로 출력한다.
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SplineRider|Debug")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|SplineRider|Debug")
 	bool bRiderDebug = false;
 
 protected:

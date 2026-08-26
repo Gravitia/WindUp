@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -43,13 +43,13 @@ public:
     // --------------------------
     // Linked Actor (LERP target)
     // --------------------------
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Move Object")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CSEditable|Bellows|MoveObject")
     TObjectPtr<AActor> LinkedActor;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Move Object")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CSEditable|Bellows|MoveObject")
     float LinkedMoveDistance = 1000.f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Move Object")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CSEditable|Bellows|MoveObject")
     float LinkedMoveDuration = 0.25f;
 
 protected:
@@ -90,16 +90,16 @@ protected:
     FVector TargetScale = FVector(1.f, 1.f, 1.f);
     float ScaleLerpAlpha = 0.f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CSEditable|Bellows|Scale")
     float ScaleLerpDuration = 0.15f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CSEditable|Bellows|Scale")
     FVector IdleScale = FVector(1.f, 1.f, 1.f);
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CSEditable|Bellows|Scale")
     FVector PressOneScale = FVector(1.f, 1.f, 0.7f);
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scale")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CSEditable|Bellows|Scale")
     FVector PressTwoScale = FVector(1.f, 1.f, 0.45f);
 
     void StartScaleLerp(const FVector& NewTargetScale);
@@ -107,7 +107,7 @@ protected:
     // --------------------------
     // PressTwo Hold
     // --------------------------
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bellows")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CSEditable|Bellows")
     float PressTwoHoldTime = 3.0f;
 
     bool bHoldPressTwoState = false;

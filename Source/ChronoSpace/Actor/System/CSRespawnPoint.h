@@ -18,15 +18,15 @@ public:
 
 public:
     // === Components ===
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CS|RespawnPoint")
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     UArrowComponent* DirectionArrow;
 
 public:
 
-    UFUNCTION(BlueprintCallable, Category = "CS|RespawnPoint")
+    UFUNCTION(BlueprintCallable, Category = "Respawn Point")
     FVector GetRespawnLocation() const { return GetActorLocation(); }
 
-    UFUNCTION(BlueprintCallable, Category = "CS|RespawnPoint")
+    UFUNCTION(BlueprintCallable, Category = "Respawn Point")
     FRotator GetRespawnRotation() const { return GetActorRotation(); }
 
     /**

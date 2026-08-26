@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -34,23 +34,23 @@ protected:
 	TObjectPtr<UBoxComponent> TriggerBox;
 
 	/** 줄일 카메라 암 거리 (양수: 줌인, 예: 400이면 기본 거리보다 400 가깝게) */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default|Camera Volume")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CSEditable|CameraVolume|Zoom")
 	float ZoomLength = 400.f;
 
 	/** 줌 이동 속도 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default|Camera Volume")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CSEditable|CameraVolume|Zoom")
 	float ZoomSpeed = 5.f;
 
 	/** true이면 진입 시 풀스크린, 퇴장 시 스플릿 스크린 전환 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default|Camera Volume")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CSEditable|CameraVolume|Zoom")
 	bool bUseSplitScreenTransition = false;
 
 	/** true이면 진입한 캐릭터의 화면만 풀스크린으로 전환. false이면 항상 FixedFullScreenPlayerIndex 기준 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default|Camera Volume", meta = (EditCondition = "bUseSplitScreenTransition"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CSEditable|CameraVolume|Zoom", meta = (EditCondition = "bUseSplitScreenTransition"))
 	bool bFullScreenForEnteringPlayer = true;
 
 	/** bFullScreenForEnteringPlayer가 false일 때 사용할 고정 플레이어 인덱스 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default|Camera Volume", meta = (EditCondition = "bUseSplitScreenTransition && !bFullScreenForEnteringPlayer"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CSEditable|CameraVolume|Zoom", meta = (EditCondition = "bUseSplitScreenTransition && !bFullScreenForEnteringPlayer"))
 	int32 FixedFullScreenPlayerIndex = 0;
 
 private:

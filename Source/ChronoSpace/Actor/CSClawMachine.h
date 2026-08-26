@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -79,35 +79,35 @@ protected:
 	 * 플레이어를 옮길 목적지. MakeEditWidget 이라 뷰포트 위젯으로 찍으면 이 값은 액터 로컬 좌표로 저장된다
 	 * (엔진 규약). 런타임에는 GetDestinationWorld() 로 월드 좌표로 변환해서 쓴다.
 	 */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ClawMachine", meta = (MakeEditWidget = true))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|ClawMachine", meta = (MakeEditWidget = true))
 	FVector Destination = FVector(0.0f, 0.0f, 0.0f);
 
 	/** 잡은 후 들어올릴 높이 (cm) */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ClawMachine")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|ClawMachine")
 	float LiftHeight = 1000.0f;
 
 	/** 잡으러 빠르게 내려가는 속도 (cm/s) */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ClawMachine|Speed")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|ClawMachine|Speed")
 	float DiveSpeed = 2000.0f;
 
 	/** 잡지 못하고 복귀하는 속도 */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ClawMachine|Speed")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|ClawMachine|Speed")
 	float RetractSpeed = 1500.0f;
 
 	/** 잡은 채 들어올리는 속도 */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ClawMachine|Speed")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|ClawMachine|Speed")
 	float LiftSpeed = 800.0f;
 
 	/** 좌우 이동 속도 */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ClawMachine|Speed")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|ClawMachine|Speed")
 	float TranslateSpeed = 800.0f;
 
 	/** 내려놓는 속도 */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ClawMachine|Speed")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|ClawMachine|Speed")
 	float DropSpeed = 600.0f;
 
 	/** Home으로 복귀하는 속도 */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ClawMachine|Speed")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|ClawMachine|Speed")
 	float ReturnSpeed = 1500.0f;
 
 	/* ─────────────────────────────────────────────

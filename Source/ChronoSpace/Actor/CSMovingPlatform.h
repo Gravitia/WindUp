@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -26,14 +26,14 @@ protected:
 	UStaticMeshComponent* Mesh;
 
 	// Assign in level per platform instance
-	UPROPERTY(EditAnywhere, Category = "Default|LevelDesign")
+	UPROPERTY(EditAnywhere, Category = "CSEditable|MovingPlatform")
 	ACSTrackManager* Track = nullptr;
 
 	// cm offset along spline
-	UPROPERTY(EditAnywhere, Category = "Default|LevelDesign")
+	UPROPERTY(EditAnywhere, Category = "CSEditable|MovingPlatform")
 	float OffsetDistance = 0.f;
 
 	// optional vertical offset
-	UPROPERTY(EditAnywhere, Category = "Default|LevelDesign")
+	UPROPERTY(EditAnywhere, Category = "CSEditable|MovingPlatform")
 	float ZOffset = 0.f;
 };

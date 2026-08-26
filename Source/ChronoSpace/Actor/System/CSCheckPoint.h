@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -21,11 +21,11 @@ protected:
 
 public:
     // === Components ===
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CS|CheckPoint")
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     UBoxComponent* TriggerBox;
 
     // === Settings ===
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CS|CheckPoint")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CSEditable|CheckPoint")
     class ACSRespawnPoint* ConnectedRespawnPoint;
 
 public:
@@ -52,6 +52,6 @@ public:
     static bool ClaimCheckPointAtPawnLocation(APawn* Pawn);
 
     // === Debug Functions ===
-    UFUNCTION(BlueprintCallable, Category = "CS|CheckPoint")
+    UFUNCTION(BlueprintCallable, Category = "Debug")
     void DebugNetworkInfo() const;
 };

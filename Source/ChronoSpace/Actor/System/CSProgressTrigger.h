@@ -40,34 +40,34 @@ protected:
 
 	/* ================= Progress UI ================= */
 
-	UPROPERTY(EditAnywhere, Category = "Default|UI")
+	UPROPERTY(EditAnywhere, Category = "CSEditable|ProgressTrigger|UI")
 	TSubclassOf<UCSProgressUIWidget> ProgressUIWidgetClass;
 
-	UPROPERTY(EditAnywhere, Category = "Default|UI")
+	UPROPERTY(EditAnywhere, Category = "CSEditable|ProgressTrigger|UI")
 	bool bProgressText = true;
 
-	UPROPERTY(EditAnywhere, Category = "Default|UI")
+	UPROPERTY(EditAnywhere, Category = "CSEditable|ProgressTrigger|UI")
 	FName ProgressText;
 
-	UPROPERTY(EditAnywhere, Category = "Default|UI")
+	UPROPERTY(EditAnywhere, Category = "CSEditable|ProgressTrigger|UI")
 	float DisplayDuration = 3.0f;
 
 	/* ================= Targets ================= */
 
 	// 트리거에 닿으면 Activate 할 대상들(레벨에 배치된 액터 드래그로 넣기)
-	UPROPERTY(EditAnywhere, Category = "Default|Progress")
+	UPROPERTY(EditAnywhere, Category = "CSEditable|ProgressTrigger")
 	TArray<TObjectPtr<AActor>> ActivateTargets;
 
 	// 트리거에 닿으면 Deactivate 할 대상들
-	UPROPERTY(EditAnywhere, Category = "Default|Progress")
+	UPROPERTY(EditAnywhere, Category = "CSEditable|ProgressTrigger")
 	TArray<TObjectPtr<AActor>> DeactivateTargets;
 
 	// 트리거 ID (디버그/로그용)
-	UPROPERTY(EditAnywhere, Category = "Default|Progress")
+	UPROPERTY(EditAnywhere, Category = "CSEditable|ProgressTrigger")
 	FName TriggerId = NAME_None;
 
 	// 한 번만 발동할지
-	UPROPERTY(EditAnywhere, Category = "Default|Progress")
+	UPROPERTY(EditAnywhere, Category = "CSEditable|ProgressTrigger")
 	bool bTriggerOnce = true;
 
 	/* ================= State ================= */

@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -61,87 +61,87 @@ protected:
 	 * ════════════════════════════════════ */
 
 	/** 5가지 입자 메쉬 타입 (에디터에서 할당) */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Default")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="CSEditable|PartyPopper|Particle")
 	TArray<TObjectPtr<UStaticMesh>> ParticleMeshTypes;
 
 	/** 생성할 입자 수 */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Default", meta=(ClampMin=1, ClampMax=200))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="CSEditable|PartyPopper|Particle", meta=(ClampMin=1, ClampMax=200))
 	int32 ParticleCount = 50;
 
 	/** 폭발 기본 속도 (cm/s) */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Default")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="CSEditable|PartyPopper|Launch")
 	float ExplosionSpeed = 600.0f;
 
 	/** 속도 랜덤 범위 최솟값 배율 */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Default", meta=(ClampMin=0.1f, ClampMax=1.0f))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="CSEditable|PartyPopper|Launch", meta=(ClampMin=0.1f, ClampMax=1.0f))
 	float SpeedRandomMin = 0.5f;
 
 	/** 속도 랜덤 범위 최댓값 배율 */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Default", meta=(ClampMin=1.0f, ClampMax=3.0f))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="CSEditable|PartyPopper|Launch", meta=(ClampMin=1.0f, ClampMax=3.0f))
 	float SpeedRandomMax = 1.5f;
 
 	/** 입자 생존 시간 (초) */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Default")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="CSEditable|PartyPopper|Particle")
 	float ParticleLifeTime = 3.0f;
 
 	/** 중력 가속도 (cm/s²) */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Default")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="CSEditable|PartyPopper|Launch")
 	float GravityZ = 980.0f;
 
 	/** 입자 초기 스케일 */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Default")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="CSEditable|PartyPopper|Particle")
 	float ParticleScale = 1.0f;
 
 	/** 입자 회전 속도 최댓값 (도/초) */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Default")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="CSEditable|PartyPopper|Launch")
 	float MaxRotationSpeed = 720.0f;
 
 	/** 컨페티 발사 방향 (액터 로컬 스페이스) — X=앞, Z=위 */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Default")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="CSEditable|PartyPopper|Launch")
 	FVector LaunchDirection = FVector(1.0f, 0.0f, 0.0f);
 
 	/** 원뿔 반각 (도) — 클수록 넓게 퍼짐 */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Default", meta=(ClampMin=1.0f, ClampMax=90.0f))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="CSEditable|PartyPopper|Launch", meta=(ClampMin=1.0f, ClampMax=90.0f))
 	float ConeHalfAngle = 30.0f;
 
 	/** true 이면 한 번만 폭발 */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Default")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="CSEditable|PartyPopper|Trigger")
 	bool bOneShot = true;
 
 	/** 폭발 시 재생할 사운드 */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Default")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="CSEditable|PartyPopper|Sound")
 	TObjectPtr<USoundBase> ExplosionSound;
 
 	/** 뚜껑 발사 속도 (cm/s) */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Default")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="CSEditable|PartyPopper|Launch")
 	float LidLaunchSpeed = 500.0f;
 
 	/** 거리 트리거 대상 버튼 액터 (레벨에서 인스턴스별로 설정) */
-	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Default")
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="CSEditable|PartyPopper|Trigger")
 	TObjectPtr<AActor> LinkedButtonActor;
 
 	/** 버튼과의 거리가 이 값 이상이면 폭발 (cm) */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Default")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="CSEditable|PartyPopper|Trigger")
 	float TriggerDistance = 150.0f;
 
 	/** 연결 줄 처짐 정도 (cm) — 클수록 아래로 더 처짐 */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Default")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="CSEditable|PartyPopper|String")
 	float StringSag = 30.0f;
 
 	/** 줄 끝점 오프셋 — 버튼 로컬 스페이스 기준 (버튼의 특정 위치에 연결) */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Default")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="CSEditable|PartyPopper|String")
 	FVector StringEndOffset = FVector::ZeroVector;
 
 	/** 폭발 시 본체가 날아가는 방향 (액터 로컬 스페이스, 초록=Y) */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Default")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="CSEditable|PartyPopper|Recoil")
 	FVector RecoilDirection = FVector(0.0f, 1.0f, 0.0f);
 
 	/** 폭발 시 본체가 날아가는 초기 속도 (cm/s) */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Default")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="CSEditable|PartyPopper|Recoil")
 	float RecoilSpeed = 400.0f;
 
 	/** 폭발 후 컨페티·뚜껑 발사까지 대기 시간 (초) */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Default", meta=(ClampMin=0.0f, ClampMax=5.0f))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="CSEditable|PartyPopper|Launch", meta=(ClampMin=0.0f, ClampMax=5.0f))
 	float LaunchDelay = 0.7f;
 
 private:

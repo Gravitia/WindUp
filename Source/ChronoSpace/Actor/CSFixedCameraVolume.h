@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -42,15 +42,15 @@ protected:
 	TObjectPtr<UCameraComponent> FixedCamera;
 
 	/** 카메라 전환 블렌드 시간 (초) */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default|Camera Volume")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CSEditable|CameraVolume|Fixed")
 	float BlendTime = 0.75f;
 
 	/** 볼륨 내에서 사용할 고정 컨트롤러 회전 (이동 방향 기준) */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default|Camera Volume")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CSEditable|CameraVolume|Fixed")
 	FRotator FixedControlRotation = FRotator(0.f, 0.f, 0.f);
 
 	/** ControlRotation Lerp 전환 시간 (초). 카메라 BlendTime과 별도로 조정 가능 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default|Camera Volume")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CSEditable|CameraVolume|Fixed")
 	float ControlRotationBlendTime = 0.75f;
 
 	/**
@@ -58,19 +58,19 @@ protected:
 	 * false(기본) = 보고 있던 방향(Yaw)을 유지해 이동 방향이 끊기지 않는다. Pitch/Roll 만 되돌린다.
 	 * true = 진입 전 회전으로 완전히 복원 (이전 동작).
 	 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default|Camera Volume")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CSEditable|CameraVolume|Fixed")
 	bool bRestoreControlRotationOnExit = false;
 
 	/** true이면 진입 시 풀스크린, 퇴장 시 스플릿 스크린 전환 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default|Camera Volume")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CSEditable|CameraVolume|Fixed")
 	bool bUseSplitScreenTransition = false;
 
 	/** true이면 진입한 캐릭터의 화면만 풀스크린으로 전환. false이면 항상 FixedFullScreenPlayerIndex 기준 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default|Camera Volume", meta = (EditCondition = "bUseSplitScreenTransition"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CSEditable|CameraVolume|Fixed", meta = (EditCondition = "bUseSplitScreenTransition"))
 	bool bFullScreenForEnteringPlayer = true;
 
 	/** bFullScreenForEnteringPlayer가 false일 때 사용할 고정 플레이어 인덱스 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default|Camera Volume", meta = (EditCondition = "bUseSplitScreenTransition && !bFullScreenForEnteringPlayer"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CSEditable|CameraVolume|Fixed", meta = (EditCondition = "bUseSplitScreenTransition && !bFullScreenForEnteringPlayer"))
 	int32 FixedFullScreenPlayerIndex = 0;
 
 private:

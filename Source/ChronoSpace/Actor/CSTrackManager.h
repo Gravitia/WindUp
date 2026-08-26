@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -27,15 +27,15 @@ protected:
 	virtual void BeginPlay() override;
 
 	// Track spline owned by this manager (recommended)
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Default|LevelDesign")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|TrackManager")
 	USplineComponent* Spline;
 
 	// cm/s
-	UPROPERTY(EditAnywhere, Category = "Default|LevelDesign")
+	UPROPERTY(EditAnywhere, Category = "CSEditable|TrackManager")
 	float MoveSpeed = 300.f;
 
 	// smoothing for clients
-	UPROPERTY(EditAnywhere, Category = "Default|LevelDesign")
+	UPROPERTY(EditAnywhere, Category = "CSEditable|TrackManager")
 	float InterpSpeed = 8.f;
 
 	// replicated progress distance (0..SplineLength)

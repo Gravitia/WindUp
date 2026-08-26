@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -41,39 +41,39 @@ struct FAnimTrapEntry
 	GENERATED_BODY()
 
 	/** 움직일 컴포넌트의 태그 (비어 있으면 RootComponent) */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|AnimTrap|Entry")
 	FName TargetComponentTag;
 
 	/** 이동 vs 회전 */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|AnimTrap|Entry")
 	EAnimTrapType AnimType = EAnimTrapType::Translate;
 
 	/** 축 */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|AnimTrap|Entry")
 	EAnimTrapAxis AnimAxis = EAnimTrapAxis::Z;
 
 	/** 파형 종류 */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|AnimTrap|Entry")
 	EAnimTrapWave WaveShape = EAnimTrapWave::Sine;
 
 	/** 진폭 — Translate: cm, Rotate: degree */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|AnimTrap|Entry")
 	float Amplitude = 200.0f;
 
 	/** [Sine / HoldPause] 왕복 1회 소요 시간 (초) — 이동 구간만의 시간 */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (EditCondition = "WaveShape != EAnimTrapWave::Impulse", EditConditionHides))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (EditCondition = "WaveShape != EAnimTrapWave::Impulse", EditConditionHides, Category = "CSEditable|AnimTrap|Entry"))
 	float Period = 2.0f;
 
 	/** [Impulse] a → b 진입 시간 (초). 짧을수록 즉각적 */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (EditCondition = "WaveShape == EAnimTrapWave::Impulse", EditConditionHides))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (EditCondition = "WaveShape == EAnimTrapWave::Impulse", EditConditionHides, Category = "CSEditable|AnimTrap|Entry"))
 	float SnapTime = 0.05f;
 
 	/** [Impulse] b → a 복귀 시간 (초). 길수록 천천히 돌아옴 */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (EditCondition = "WaveShape == EAnimTrapWave::Impulse", EditConditionHides))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (EditCondition = "WaveShape == EAnimTrapWave::Impulse", EditConditionHides, Category = "CSEditable|AnimTrap|Entry"))
 	float ReturnTime = 1.0f;
 
 	/** 끝점 b에서 대기 시간 (초). HoldPause / Impulse에서 사용 */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (EditCondition = "WaveShape != EAnimTrapWave::Sine", EditConditionHides))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (EditCondition = "WaveShape != EAnimTrapWave::Sine", EditConditionHides, Category = "CSEditable|AnimTrap|Entry"))
 	float HoldTime = 0.0f;
 
 	/* ── 런타임 캐시 (에디터 비노출) ── */
@@ -113,11 +113,11 @@ protected:
 	 * ════════════════════════════════════ */
 
 	/** 움직일 컴포넌트 + 설정 목록 */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AnimTrap")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|AnimTrap")
 	TArray<FAnimTrapEntry> AnimEntries;
 
 	/** BeginPlay 시 자동 시작 여부 */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AnimTrap")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|AnimTrap")
 	bool bAutoStart = true;
 
 	/* ════════════════════════════════════

@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -39,16 +39,16 @@ public:
     UStaticMeshComponent* VisualMesh;
 
     // === Settings ===
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Kill Zone Settings")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CSEditable|KillZone")
     EKillZoneType KillZoneType = EKillZoneType::Fall;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Kill Zone Settings")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CSEditable|KillZone")
     bool bIsActive = true;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Kill Zone Settings")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CSEditable|KillZone")
     bool bAffectsPlayersOnly = true;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual Settings")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CSEditable|KillZone|Visual")
     bool bShowVisualMesh = false;
 
 public:

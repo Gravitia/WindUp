@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -19,20 +19,20 @@ struct FCSSplineTriggerPoint
 	GENERATED_BODY()
 
 	// 이벤트가 발생할 스플라인 포인트 인덱스.
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Trigger")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|SplineTrack|Trigger")
 	int32 PointIndex = 0;
 
 	// 도달 시 라이더가 능력 면역 + 위치 고정되는 시간(초). 0 이면 고정 없음.
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Trigger", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|SplineTrack|Trigger", meta = (ClampMin = "0.0"))
 	float LockDuration = 3.0f;
 
 	// true = 라이더가 포인트를 떠나면 타겟에 false 를 다시 통지 (Toggle).
 	// false = 한번 발동하면 유지 (Latch).
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Trigger")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|SplineTrack|Trigger")
 	bool bDeactivateOnLeave = false;
 
 	// 도달 시 통지할 타겟들. ICSReactorTarget 구현 필요 (문/다리/리액터 등).
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Trigger")
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "CSEditable|SplineTrack|Trigger")
 	TArray<TObjectPtr<AActor>> TargetActors;
 };
 
@@ -92,7 +92,7 @@ protected:
 	TObjectPtr<USplineComponent> Spline;
 
 	// 이벤트 포인트 목록. 한 레일에 여러 개 등록 가능. (비트마스크 리플리케이션 한계로 최대 32개)
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SplineTrack")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|SplineTrack")
 	TArray<FCSSplineTriggerPoint> TriggerPoints;
 
 	// 각 TriggerPoints 항목의 활성 상태 비트마스크 (리플리케이트).

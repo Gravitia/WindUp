@@ -33,10 +33,10 @@ protected:
 	// =========================
 	// Conveyor Logic
 	// =========================
-	UPROPERTY(EditAnywhere, Category = "Default|Conveyor|Logic")
+	UPROPERTY(EditAnywhere, Category = "CSEditable|Conveyor|Logic")
 	float MoveSpeed = 300.f;
 
-	UPROPERTY(EditAnywhere, Category = "Default|Conveyor|Logic")
+	UPROPERTY(EditAnywhere, Category = "CSEditable|Conveyor|Logic")
 	float InterpSpeed = 8.f;
 
 	UPROPERTY(ReplicatedUsing = OnRep_RepProgress)
@@ -48,14 +48,14 @@ protected:
 	// =========================
 	// Conveyor Layout
 	// =========================
-	UPROPERTY(EditAnywhere, Category = "Default|Conveyor|Layout")
+	UPROPERTY(EditAnywhere, Category = "CSEditable|Conveyor|Layout")
 	float ConveyorSpacing = 200.f;
 
 	// =========================
 	// Conveyor Platforms
 	// =========================
 	// 레벨에서 매니저마다 직접 지정
-	UPROPERTY(EditInstanceOnly, Category = "Default|Conveyor|Platform", meta = (DisplayName = "Assigned Platforms"))
+	UPROPERTY(EditInstanceOnly, Category = "CSEditable|Conveyor|Platform", meta = (DisplayName = "Assigned Platforms"))
 	TArray<TObjectPtr<ACSConveyorPlatform>> AssignedPlatforms;
 
 	// 런타임용(정리/중복 제거 후 사용하는 배열)
@@ -65,10 +65,10 @@ protected:
 	// =========================
 	// Conveyor Visual (선택)
 	// =========================
-	UPROPERTY(EditAnywhere, Category = "Default|Conveyor|Visual")
+	UPROPERTY(EditAnywhere, Category = "CSEditable|Conveyor|Visual")
 	UStaticMesh* ConveyorMesh;
 
-	UPROPERTY(EditAnywhere, Category = "Default|Conveyor|Visual")
+	UPROPERTY(EditAnywhere, Category = "CSEditable|Conveyor|Visual")
 	UMaterialInterface* ConveyorMaterial;
 
 	UPROPERTY(VisibleAnywhere, Category = "Default|Conveyor|Visual")

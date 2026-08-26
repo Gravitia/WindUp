@@ -21,11 +21,11 @@ struct FTrapStep
     GENERATED_BODY()
 
     // 이 스텝까지의 대기 시간
-    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|AutoTrap|Step")
     float Delay = 1.0f;
 
     // 몇 번째 스텝인지
-    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|AutoTrap|Step")
     ETrapStepSlot StepSlot = ETrapStepSlot::First;
 };
 
@@ -48,7 +48,7 @@ protected:
      * Pattern / Step System
      * ========================= */
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Default")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|AutoTrap")
     TArray<FTrapStep> TrapSteps;
 
     UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Default")

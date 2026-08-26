@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -34,11 +34,11 @@ protected:
 	TObjectPtr<UBoxComponent> TriggerBox;
 
 	/** true이면 진입한 캐릭터의 화면만 풀스크린으로 전환. false이면 항상 Player 0 기준. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Split Screen")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CSEditable|SplitScreenTrigger")
 	bool bFullScreenForEnteringPlayer = true;
 
 	/** bFullScreenForEnteringPlayer가 false일 때 사용할 고정 플레이어 인덱스 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Split Screen", meta = (EditCondition = "!bFullScreenForEnteringPlayer"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CSEditable|SplitScreenTrigger", meta = (EditCondition = "!bFullScreenForEnteringPlayer"))
 	int32 FixedFullScreenPlayerIndex = 0;
 
 private:

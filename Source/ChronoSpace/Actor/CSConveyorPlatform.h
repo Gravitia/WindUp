@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -33,7 +33,7 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* Mesh;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default|Conveyor|Offset")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CSEditable|Conveyor|Offset")
 	float ZOffset = 0.f;
 
 private:

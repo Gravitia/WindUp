@@ -28,7 +28,7 @@ public:
 	FCSJoinSessionFailedSignature OnJoinSessionFailed;
 
 	/** 세션 시작 후 호스트가 이동할 맵 (예: /Game/02_Map/L_Stage01). 비우면 트래블하지 않는다. */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "CS|Session")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "CSEditable|Session")
 	FString LobbyMapPath;
 
 protected:
