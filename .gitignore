@@ -225,3 +225,5 @@ CLAUDE.local.md
 !.claude/skills/unreal-test/**
 !.claude/skills/unreal-project-config/
 !.claude/skills/unreal-project-config/**
+!.claude/skills/code-review-cs/
+!.claude/skills/code-review-cs/**
