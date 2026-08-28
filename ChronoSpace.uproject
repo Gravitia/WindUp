@@ -73,10 +73,6 @@
 			"Enabled": false
 		},
 		{
-			"Name": "Bridge",
-			"Enabled": false
-		},
-		{
 			"Name": "MetaHumanSDK",
 			"Enabled": false
 		},
