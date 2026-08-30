@@ -230,3 +230,4 @@ CLAUDE.local.md
 
 # Package.bat 기본 아카이브 출력 폴더
 /Packaged/
+/Packaged_Dev/
