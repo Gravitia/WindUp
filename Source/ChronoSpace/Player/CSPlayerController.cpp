@@ -105,7 +105,6 @@ void ACSPlayerController::OnRep_PlayerState()
 
 void ACSPlayerController::ToggleDebugTeleportPanel()
 {
-#if !UE_BUILD_SHIPPING
 	if (DebugTeleportPanel.IsValid())
 	{
 		CloseDebugTeleportPanel();
@@ -130,12 +129,10 @@ void ACSPlayerController::ToggleDebugTeleportPanel()
 	InputMode.SetHideCursorDuringCapture(false);
 	SetInputMode(InputMode);
 	bShowMouseCursor = true;
-#endif
 }
 
 void ACSPlayerController::CloseDebugTeleportPanel()
 {
-#if !UE_BUILD_SHIPPING
 	if (!DebugTeleportPanel.IsValid())
 	{
 		return;
@@ -154,10 +151,8 @@ void ACSPlayerController::CloseDebugTeleportPanel()
 		SetupInputMode();
 		bShowMouseCursor = false;
 	}
-#endif
 }
 
-#if !UE_BUILD_SHIPPING
 namespace CSDebugTeleport
 {
 	/** 폰 하나를 옮기고 잔여 속도·회전까지 정리한다. RespawnSinglePlayer 와 같은 정리다. */
@@ -196,11 +191,9 @@ namespace CSDebugTeleport
 		}
 	}
 }
-#endif
 
 void ACSPlayerController::ServerDebugTeleport_Implementation(FVector Location, FRotator Rotation, bool bAllPlayers)
 {
-#if !UE_BUILD_SHIPPING
 	UWorld* World = GetWorld();
 	if (World == nullptr)
 	{
@@ -237,12 +230,10 @@ void ACSPlayerController::ServerDebugTeleport_Implementation(FVector Location, F
 
 	UE_LOG(LogCS, Log, TEXT("ServerDebugTeleport: %d pawn(s) -> %s"),
 		Targets.Num(), *Location.ToCompactString());
-#endif
 }
 
 void ACSPlayerController::ServerDebugSummonPlayer_Implementation(int32 MovingPlayerIndex, int32 AnchorPlayerIndex)
 {
-#if !UE_BUILD_SHIPPING
 	UWorld* World = GetWorld();
 	if (World == nullptr || MovingPlayerIndex == AnchorPlayerIndex)
 	{
@@ -285,12 +276,10 @@ void ACSPlayerController::ServerDebugSummonPlayer_Implementation(int32 MovingPla
 
 	UE_LOG(LogCS, Log, TEXT("ServerDebugSummonPlayer: P%d -> P%d at %s"),
 		MovingPlayerIndex + 1, AnchorPlayerIndex + 1, *Location.ToCompactString());
-#endif
 }
 
 void ACSPlayerController::ServerDebugTravelToStage_Implementation(int32 Chapter, int32 Stage)
 {
-#if !UE_BUILD_SHIPPING
 	UWorld* World = GetWorld();
 	if (World == nullptr)
 	{
@@ -316,12 +305,10 @@ void ACSPlayerController::ServerDebugTravelToStage_Implementation(int32 Chapter,
 
 	UE_LOG(LogCS, Log, TEXT("ServerDebugTravelToStage: C%d_S%d -> %s"), Chapter, Stage, *URL);
 	World->ServerTravel(URL, false);
-#endif
 }
 
 int32 ACSPlayerController::SetShowBlueprintCollision(bool bEnable)
 {
-#if !UE_BUILD_SHIPPING
 	// 켜 뒀던 것부터 원래대로 되돌린다. 다시 켤 때 그 사이 스폰된 액터까지 새로 훑기 위해서이기도 하다.
 	for (const FCSDebugShapeVisibility& Shown : DebugShownShapes)
 	{
@@ -377,9 +364,6 @@ int32 ACSPlayerController::SetShowBlueprintCollision(bool bEnable)
 
 	UE_LOG(LogCS, Log, TEXT("ShowBlueprintCollision: %d shape(s) shown"), DebugShownShapes.Num());
 	return DebugShownShapes.Num();
-#else
-	return 0;
-#endif
 }
 
 void ACSPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -407,10 +391,9 @@ void ACSPlayerController::SetupInputComponent()
 
 	InputComponent->BindAction("ToggleOption", IE_Pressed, this, &ACSPlayerController::ToggleOption);
 
-#if !UE_BUILD_SHIPPING
 	// 상단 숫자열 0. 넘버패드 0 은 EKeys::NumPadZero 라 여기에 걸리지 않는다.
+	// 쉬핑 빌드에서도 쓸 수 있도록 의도적으로 가드 없이 열어 둔다.
 	InputComponent->BindKey(EKeys::Zero, IE_Pressed, this, &ACSPlayerController::ToggleDebugTeleportPanel);
-#endif
 }
 
 void ACSPlayerController::SetupInputMode()
