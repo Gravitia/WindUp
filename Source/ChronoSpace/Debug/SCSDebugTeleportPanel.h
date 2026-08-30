@@ -10,11 +10,13 @@ class ACSPlayerController;
 class SVerticalBox;
 
 /**
- * 체크포인트 순간이동 디버그 패널 (Slate).
+ * 디버그 패널 (Slate).
  *
  * ACSPlayerController 가 상단 숫자열 0 키로 열고 닫는다.
- * 열릴 때마다 월드의 ACSCheckPoint 를 다시 훑으므로 좌표를 코드에 박아둘 필요가 없다.
- * 이동 자체는 서버 권한이라 PC 의 Server RPC 로 넘긴다.
+ *  - 체크포인트 순간이동: 열릴 때마다 월드의 ACSCheckPoint 를 다시 훑으므로 좌표를 코드에 박아둘 필요가 없다.
+ *  - 플레이어 소환: 한 플레이어를 다른 플레이어 옆으로 옮긴다.
+ *  - 스테이지 트래블: UCSStageDataSettings 테이블의 스테이지로 ServerTravel 한다 (CSStagePortal 과 같은 데이터).
+ * 이동·트래블 자체는 서버 권한이라 PC 의 Server RPC 로 넘긴다.
  */
 class CHRONOSPACE_API SCSDebugTeleportPanel : public SCompoundWidget
 {
@@ -35,10 +37,25 @@ private:
 		bool     bFromRespawnPoint = false;
 	};
 
+	/** 스테이지 목록 한 줄. UCSStageDataSettings 에서 만든다. */
+	struct FStageEntry
+	{
+		int32   Chapter = 0;
+		int32   Stage = 0;
+		FString Label;
+		FString LevelName;
+		bool    bMapped = false;
+	};
+
 	/** 월드에서 체크포인트를 다시 수집하고 목록 위젯을 새로 만든다 */
 	void RebuildEntries();
 
+	/** 스테이지 데이터 테이블을 읽어 스테이지 목록 위젯을 새로 만든다 */
+	void RebuildStageEntries();
+
 	FReply OnEntryClicked(int32 EntryIndex);
+	FReply OnStageClicked(int32 StageIndex);
+	FReply OnSummonClicked(int32 MovingPlayerIndex, int32 AnchorPlayerIndex);
 	FReply OnRefreshClicked();
 	FReply OnCloseClicked();
 
@@ -53,6 +70,9 @@ private:
 	TWeakObjectPtr<ACSPlayerController> OwningPC;
 	TArray<FEntry> Entries;
 	TSharedPtr<SVerticalBox> EntryBox;
+
+	TArray<FStageEntry> StageEntries;
+	TSharedPtr<SVerticalBox> StageBox;
 
 	/** 체크포인트는 보통 둘이 같이 진행하는 지점이라 기본값은 전원 이동 */
 	bool bTeleportAllPlayers = true;
