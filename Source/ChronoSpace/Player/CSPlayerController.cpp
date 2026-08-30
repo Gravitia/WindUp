@@ -9,8 +9,10 @@
 #include "Engine/GameViewportClient.h"
 #include "Game/CSGameMode.h"
 #include "Subsystem/CSSplitScreenSubsystem.h"
-#include "Actor/CSStagePortal.h"
-#include "Actor/System/CSCheckPoint.h"
+#include "Subsystem/CSGameProgressSubsystem.h"
+#include "Settings/CSStageDataSettings.h"
+#include "Actor/CSStagePortal.h"
+#include "Actor/System/CSCheckPoint.h"
 #include "Actor/System/CSRespawnPoint.h"
 #include "TimerManager.h"
 #include "EngineUtils.h"
@@ -155,6 +157,47 @@ void ACSPlayerController::CloseDebugTeleportPanel()
 #endif
 }
 
+#if !UE_BUILD_SHIPPING
+namespace CSDebugTeleport
+{
+	/** 폰 하나를 옮기고 잔여 속도·회전까지 정리한다. RespawnSinglePlayer 와 같은 정리다. */
+	static void TeleportPawnForDebug(APlayerController* PC, const FVector& Location, const FRotator& Rotation)
+	{
+		APawn* TargetPawn = PC ? PC->GetPawn() : nullptr;
+		if (!IsValid(TargetPawn))
+		{
+			return;
+		}
+
+		TargetPawn->SetActorLocationAndRotation(Location, Rotation, false, nullptr, ETeleportType::TeleportPhysics);
+
+		// 남아 있던 속도로 그대로 날아가는 걸 막는다.
+		if (ACharacter* TargetCharacter = Cast<ACharacter>(TargetPawn))
+		{
+			if (UCharacterMovementComponent* MovementComp = TargetCharacter->GetCharacterMovement())
+			{
+				MovementComp->StopMovementImmediately();
+				MovementComp->Velocity = FVector::ZeroVector;
+				MovementComp->SetMovementMode(MOVE_Walking);
+				MovementComp->bForceNextFloorCheck = true;
+				MovementComp->UpdateComponentVelocity();
+			}
+		}
+
+		TargetPawn->ForceNetUpdate();
+		TargetPawn->FlushNetDormancy();
+
+		PC->SetControlRotation(Rotation);
+		PC->ClientSetRotation(Rotation, true);
+
+		if (ACSPlayerController* CSPC = Cast<ACSPlayerController>(PC))
+		{
+			CSPC->Client_ApplyRespawnView(Rotation);
+		}
+	}
+}
+#endif
+
 void ACSPlayerController::ServerDebugTeleport_Implementation(FVector Location, FRotator Rotation, bool bAllPlayers)
 {
 #if !UE_BUILD_SHIPPING
@@ -187,50 +230,92 @@ void ACSPlayerController::ServerDebugTeleport_Implementation(FVector Location, F
 
 	for (int32 Index = 0; Index < Targets.Num(); ++Index)
 	{
-		APlayerController* PC = Targets[Index];
-		APawn* TargetPawn = PC ? PC->GetPawn() : nullptr;
-		if (!IsValid(TargetPawn))
-		{
-			continue;
-		}
-
 		const float SpreadAmount = (static_cast<float>(Index) - (Targets.Num() - 1) * 0.5f) * SpreadStep;
 
-		TargetPawn->SetActorLocationAndRotation(
-			Location + RightAxis * SpreadAmount,
-			Rotation,
-			false,
-			nullptr,
-			ETeleportType::TeleportPhysics
-		);
-
-		// RespawnSinglePlayer 와 같은 정리. 남아 있던 속도로 그대로 날아가는 걸 막는다.
-		if (ACharacter* TargetCharacter = Cast<ACharacter>(TargetPawn))
-		{
-			if (UCharacterMovementComponent* MovementComp = TargetCharacter->GetCharacterMovement())
-			{
-				MovementComp->StopMovementImmediately();
-				MovementComp->Velocity = FVector::ZeroVector;
-				MovementComp->SetMovementMode(MOVE_Walking);
-				MovementComp->bForceNextFloorCheck = true;
-				MovementComp->UpdateComponentVelocity();
-			}
-		}
-
-		TargetPawn->ForceNetUpdate();
-		TargetPawn->FlushNetDormancy();
-
-		PC->SetControlRotation(Rotation);
-		PC->ClientSetRotation(Rotation, true);
-
-		if (ACSPlayerController* CSPC = Cast<ACSPlayerController>(PC))
-		{
-			CSPC->Client_ApplyRespawnView(Rotation);
-		}
+		CSDebugTeleport::TeleportPawnForDebug(Targets[Index], Location + RightAxis * SpreadAmount, Rotation);
 	}
 
 	UE_LOG(LogCS, Log, TEXT("ServerDebugTeleport: %d pawn(s) -> %s"),
 		Targets.Num(), *Location.ToCompactString());
+#endif
+}
+
+void ACSPlayerController::ServerDebugSummonPlayer_Implementation(int32 MovingPlayerIndex, int32 AnchorPlayerIndex)
+{
+#if !UE_BUILD_SHIPPING
+	UWorld* World = GetWorld();
+	if (World == nullptr || MovingPlayerIndex == AnchorPlayerIndex)
+	{
+		return;
+	}
+
+	// 패널의 P1/P2 는 서버 컨트롤러 순서다 (호스트가 0).
+	TArray<APlayerController*> AllPCs;
+	for (FConstPlayerControllerIterator It = World->GetPlayerControllerIterator(); It; ++It)
+	{
+		if (APlayerController* PC = It->Get())
+		{
+			AllPCs.Add(PC);
+		}
+	}
+
+	if (!AllPCs.IsValidIndex(MovingPlayerIndex) || !AllPCs.IsValidIndex(AnchorPlayerIndex))
+	{
+		UE_LOG(LogCS, Warning, TEXT("ServerDebugSummonPlayer: P%d or P%d not present (%d player(s))"),
+			MovingPlayerIndex + 1, AnchorPlayerIndex + 1, AllPCs.Num());
+		return;
+	}
+
+	const APawn* AnchorPawn = AllPCs[AnchorPlayerIndex]->GetPawn();
+	if (!IsValid(AnchorPawn))
+	{
+		return;
+	}
+
+	// 캡슐과 컨트롤 회전에 피치·롤이 섞이면 캐릭터가 눕는다.
+	FRotator Rotation = AnchorPawn->GetActorRotation();
+	Rotation.Pitch = 0.f;
+	Rotation.Roll = 0.f;
+
+	// 같은 좌표에 겹쳐 놓으면 캡슐끼리 밀려난다. 기준 플레이어의 오른쪽 옆에 놓는다.
+	const FVector RightAxis = FRotationMatrix(Rotation).GetScaledAxis(EAxis::Y);
+	const FVector Location = AnchorPawn->GetActorLocation() + RightAxis * 150.f;
+
+	CSDebugTeleport::TeleportPawnForDebug(AllPCs[MovingPlayerIndex], Location, Rotation);
+
+	UE_LOG(LogCS, Log, TEXT("ServerDebugSummonPlayer: P%d -> P%d at %s"),
+		MovingPlayerIndex + 1, AnchorPlayerIndex + 1, *Location.ToCompactString());
+#endif
+}
+
+void ACSPlayerController::ServerDebugTravelToStage_Implementation(int32 Chapter, int32 Stage)
+{
+#if !UE_BUILD_SHIPPING
+	UWorld* World = GetWorld();
+	if (World == nullptr)
+	{
+		return;
+	}
+
+	const UCSStageDataSettings* Data = UCSStageDataSettings::Get();
+	const FString URL = Data ? Data->GetStageTravelURL(Chapter, Stage) : FString();
+	if (URL.IsEmpty())
+	{
+		UE_LOG(LogCS, Warning, TEXT("ServerDebugTravelToStage: C%d_S%d has no mapped level"), Chapter, Stage);
+		return;
+	}
+
+	// CSStagePortal 과 달리 클리어 처리는 하지 않는다. 이어하기 위치만 맞춰 둔다.
+	if (UGameInstance* GI = GetGameInstance())
+	{
+		if (UCSGameProgressSubsystem* Progress = GI->GetSubsystem<UCSGameProgressSubsystem>())
+		{
+			Progress->SetLastPlayedStage(Chapter, Stage);
+		}
+	}
+
+	UE_LOG(LogCS, Log, TEXT("ServerDebugTravelToStage: C%d_S%d -> %s"), Chapter, Stage, *URL);
+	World->ServerTravel(URL, false);
 #endif
 }
 

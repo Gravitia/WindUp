@@ -5,8 +5,10 @@
 #include "Actor/System/CSCheckPoint.h"
 #include "Actor/System/CSRespawnPoint.h"
 #include "Player/CSPlayerController.h"
+#include "Settings/CSStageDataSettings.h"
 
 #include "EngineUtils.h"
+#include "Misc/PackageName.h"
 #include "GameFramework/Pawn.h"
 #include "Styling/CoreStyle.h"
 #include "Widgets/SBoxPanel.h"
@@ -70,7 +72,7 @@ void SCSDebugTeleportPanel::Construct(const FArguments& InArgs)
 						SNew(STextBlock)
 						.Font(FCoreStyle::GetDefaultFontStyle("Bold", 13))
 						.ColorAndOpacity(CSDebugTeleportPanel::TitleColor)
-						.Text(FText::FromString(TEXT("CheckPoint Teleport")))
+						.Text(FText::FromString(TEXT("Debug Panel")))
 					]
 
 					+ SHorizontalBox::Slot()
@@ -201,18 +203,119 @@ void SCSDebugTeleportPanel::Construct(const FArguments& InArgs)
 					]
 				]
 
+				// --- 플레이어 소환 ---
+				// P1 = 호스트(서버 컨트롤러 0번), P2 = 클라이언트. 서버 RPC 쪽 인덱스와 같은 기준이다.
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				.Padding(0.f, 0.f, 0.f, 8.f)
+				[
+					SNew(SHorizontalBox)
+
+					+ SHorizontalBox::Slot()
+					.FillWidth(1.f)
+					.Padding(0.f, 0.f, 3.f, 0.f)
+					[
+						SNew(SButton)
+						.ButtonStyle(&FCoreStyle::Get(), "Button")
+						.HAlign(HAlign_Center)
+						.ContentPadding(FMargin(6.f, 4.f))
+						.OnClicked(FOnClicked::CreateSP(this, &SCSDebugTeleportPanel::OnSummonClicked, 1, 0))
+						[
+							SNew(STextBlock)
+							.Font(FCoreStyle::GetDefaultFontStyle("Bold", 9))
+							.ColorAndOpacity(CSDebugTeleportPanel::RowTitleColor)
+							.Text(FText::FromString(TEXT("Bring P2 to P1")))
+						]
+					]
+
+					+ SHorizontalBox::Slot()
+					.FillWidth(1.f)
+					.Padding(3.f, 0.f, 0.f, 0.f)
+					[
+						SNew(SButton)
+						.ButtonStyle(&FCoreStyle::Get(), "Button")
+						.HAlign(HAlign_Center)
+						.ContentPadding(FMargin(6.f, 4.f))
+						.OnClicked(FOnClicked::CreateSP(this, &SCSDebugTeleportPanel::OnSummonClicked, 0, 1))
+						[
+							SNew(STextBlock)
+							.Font(FCoreStyle::GetDefaultFontStyle("Bold", 9))
+							.ColorAndOpacity(CSDebugTeleportPanel::RowTitleColor)
+							.Text(FText::FromString(TEXT("Bring P1 to P2")))
+						]
+					]
+				]
+
 				// --- 체크포인트 목록 ---
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				.Padding(0.f, 0.f, 0.f, 2.f)
+				[
+					SNew(STextBlock)
+					.Font(FCoreStyle::GetDefaultFontStyle("Bold", 10))
+					.ColorAndOpacity(CSDebugTeleportPanel::TitleColor)
+					.Text(FText::FromString(TEXT("CheckPoints")))
+				]
+
 				+ SVerticalBox::Slot()
 				.AutoHeight()
 				[
 					SNew(SBox)
-					.MaxDesiredHeight(420.f)
+					.MaxDesiredHeight(240.f)
 					[
 						SNew(SScrollBox)
 
 						+ SScrollBox::Slot()
 						[
 							SAssignNew(EntryBox, SVerticalBox)
+						]
+					]
+				]
+
+				// --- 스테이지 트래블 ---
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				.Padding(0.f, 8.f, 0.f, 8.f)
+				[
+					SNew(SBox)
+					.HeightOverride(1.f)
+					[
+						SNew(SBorder)
+						.BorderImage(FillBrush)
+						.BorderBackgroundColor(CSDebugTeleportPanel::DividerColor)
+					]
+				]
+
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				[
+					SNew(STextBlock)
+					.Font(FCoreStyle::GetDefaultFontStyle("Bold", 10))
+					.ColorAndOpacity(CSDebugTeleportPanel::TitleColor)
+					.Text(FText::FromString(TEXT("Stage Travel")))
+				]
+
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				.Padding(0.f, 0.f, 0.f, 2.f)
+				[
+					SNew(STextBlock)
+					.Font(FCoreStyle::GetDefaultFontStyle("Regular", 8))
+					.ColorAndOpacity(CSDebugTeleportPanel::SubtleColor)
+					.Text(FText::FromString(TEXT("ServerTravel — moves everyone to the level")))
+				]
+
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				[
+					SNew(SBox)
+					.MaxDesiredHeight(220.f)
+					[
+						SNew(SScrollBox)
+
+						+ SScrollBox::Slot()
+						[
+							SAssignNew(StageBox, SVerticalBox)
 						]
 					]
 				]
@@ -233,6 +336,7 @@ void SCSDebugTeleportPanel::Construct(const FArguments& InArgs)
 	];
 
 	RebuildEntries();
+	RebuildStageEntries();
 }
 
 void SCSDebugTeleportPanel::RebuildEntries()
@@ -366,6 +470,100 @@ void SCSDebugTeleportPanel::RebuildEntries()
 	StatusText = FText::FromString(FString::Printf(TEXT("%d checkpoint(s)"), Entries.Num()));
 }
 
+void SCSDebugTeleportPanel::RebuildStageEntries()
+{
+	StageEntries.Reset();
+
+	// 개발자 설정(Config)이라 서버·클라이언트 어느 쪽에서 읽어도 같은 테이블이다.
+	if (const UCSStageDataSettings* Data = UCSStageDataSettings::Get())
+	{
+		for (const FCSChapterDef& Chapter : Data->Chapters)
+		{
+			for (const FCSStageDef& StageDef : Chapter.Stages)
+			{
+				FStageEntry Entry;
+				Entry.Chapter = Chapter.Chapter;
+				Entry.Stage = StageDef.Stage;
+				Entry.Label = Data->GetStageDisplayName(Chapter.Chapter, StageDef.Stage).ToString();
+
+				const FString URL = Data->GetStageTravelURL(Chapter.Chapter, StageDef.Stage);
+				Entry.bMapped = !URL.IsEmpty();
+				if (Entry.bMapped)
+				{
+					Entry.LevelName = FPackageName::GetShortName(URL);
+				}
+
+				StageEntries.Add(MoveTemp(Entry));
+			}
+		}
+	}
+
+	if (!StageBox.IsValid())
+	{
+		return;
+	}
+
+	StageBox->ClearChildren();
+
+	if (StageEntries.Num() == 0)
+	{
+		StageBox->AddSlot()
+		.AutoHeight()
+		.Padding(0.f, 6.f)
+		[
+			SNew(STextBlock)
+			.Font(FCoreStyle::GetDefaultFontStyle("Regular", 10))
+			.ColorAndOpacity(CSDebugTeleportPanel::WarnColor)
+			.AutoWrapText(true)
+			.Text(FText::FromString(TEXT("No stages in Project Settings > ChronoSpace Stage Data.")))
+		];
+		return;
+	}
+
+	for (int32 Index = 0; Index < StageEntries.Num(); ++Index)
+	{
+		const FStageEntry& Entry = StageEntries[Index];
+
+		FString Detail = FString::Printf(TEXT("C%d-S%d"), Entry.Chapter, Entry.Stage);
+		Detail += Entry.bMapped
+			? TEXT("    ") + Entry.LevelName
+			: FString(TEXT("    [no level mapped]"));
+
+		StageBox->AddSlot()
+		.AutoHeight()
+		.Padding(0.f, 2.f)
+		[
+			SNew(SButton)
+			.ButtonStyle(&FCoreStyle::Get(), "Button")
+			.HAlign(HAlign_Fill)
+			.ContentPadding(FMargin(9.f, 5.f))
+			.IsEnabled(Entry.bMapped)
+			.OnClicked(FOnClicked::CreateSP(this, &SCSDebugTeleportPanel::OnStageClicked, Index))
+			[
+				SNew(SVerticalBox)
+
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				[
+					SNew(STextBlock)
+					.Font(FCoreStyle::GetDefaultFontStyle("Bold", 11))
+					.ColorAndOpacity(CSDebugTeleportPanel::RowTitleColor)
+					.Text(FText::FromString(Entry.Label))
+				]
+
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				[
+					SNew(STextBlock)
+					.Font(FCoreStyle::GetDefaultFontStyle("Regular", 8))
+					.ColorAndOpacity(CSDebugTeleportPanel::RowDetailColor)
+					.Text(FText::FromString(Detail))
+				]
+			]
+		];
+	}
+}
+
 FReply SCSDebugTeleportPanel::OnEntryClicked(int32 EntryIndex)
 {
 	ACSPlayerController* PC = OwningPC.Get();
@@ -388,9 +586,47 @@ FReply SCSDebugTeleportPanel::OnEntryClicked(int32 EntryIndex)
 	return FReply::Handled();
 }
 
+FReply SCSDebugTeleportPanel::OnStageClicked(int32 StageIndex)
+{
+	ACSPlayerController* PC = OwningPC.Get();
+
+	if (!PC || !StageEntries.IsValidIndex(StageIndex))
+	{
+		StatusText = FText::FromString(TEXT("Travel failed: no player controller."));
+		return FReply::Handled();
+	}
+
+	const FStageEntry& Entry = StageEntries[StageIndex];
+
+	// 트래블은 서버 권한이다. 클라이언트가 눌러도 서버가 전원을 옮긴다.
+	PC->ServerDebugTravelToStage(Entry.Chapter, Entry.Stage);
+
+	StatusText = FText::FromString(FString::Printf(TEXT("ServerTravel -> %s ..."), *Entry.Label));
+	return FReply::Handled();
+}
+
+FReply SCSDebugTeleportPanel::OnSummonClicked(int32 MovingPlayerIndex, int32 AnchorPlayerIndex)
+{
+	ACSPlayerController* PC = OwningPC.Get();
+
+	if (!PC)
+	{
+		StatusText = FText::FromString(TEXT("Summon failed: no player controller."));
+		return FReply::Handled();
+	}
+
+	// 소환도 서버 권한이다. 어느 클라이언트 패널에서 눌러도 결과는 같다.
+	PC->ServerDebugSummonPlayer(MovingPlayerIndex, AnchorPlayerIndex);
+
+	StatusText = FText::FromString(FString::Printf(TEXT("Summon P%d -> P%d"),
+		MovingPlayerIndex + 1, AnchorPlayerIndex + 1));
+	return FReply::Handled();
+}
+
 FReply SCSDebugTeleportPanel::OnRefreshClicked()
 {
 	RebuildEntries();
+	RebuildStageEntries();
 	return FReply::Handled();
 }
 

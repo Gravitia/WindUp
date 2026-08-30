@@ -103,6 +103,20 @@ public:
 	void ServerDebugTeleport(FVector Location, FRotator Rotation, bool bAllPlayers);
 
 	/**
+	 * MovingPlayerIndex 플레이어를 AnchorPlayerIndex 플레이어 옆으로 옮긴다.
+	 * 인덱스는 서버 컨트롤러 순서다 (0 = 호스트 = P1, 1 = 클라이언트 = P2).
+	 */
+	UFUNCTION(Server, Reliable)
+	void ServerDebugSummonPlayer(int32 MovingPlayerIndex, int32 AnchorPlayerIndex);
+
+	/**
+	 * UCSStageDataSettings 에서 레벨을 찾아 즉시 ServerTravel 한다.
+	 * CSStagePortal 과 달리 클리어 처리·페이드 없이 바로 이동하는 디버그 전용 경로다.
+	 */
+	UFUNCTION(Server, Reliable)
+	void ServerDebugTravelToStage(int32 Chapter, int32 Stage);
+
+	/**
 	 * 블루프린트 액터에 달린 콜리전 셰이프(Box/Sphere/Capsule)를 게임 화면에 그린다.
 	 * show collision 과 달리 블루프린트로 만든 액터만 골라내므로 트리거만 보기에 좋다.
 	 * 순수하게 보는 쪽 연출이라 로컬에서만 처리한다 — 서버로 보내지 않는다.
