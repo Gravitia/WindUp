@@ -148,8 +148,6 @@ private:
     /** 다른 플레이어의 카메라 정보를 들고 있는 Proxy (로컬 플레이어 시점에서 *상대*) */
     TWeakObjectPtr<ACSCameraViewProxy> CachedRemoteProxy;
 
-
-
     /** Fullscreen 트랜지션 상태 — 0=split, 1=fullscreen */
     float CurrentAlpha = 0.f;
     float TargetAlpha = 0.f;

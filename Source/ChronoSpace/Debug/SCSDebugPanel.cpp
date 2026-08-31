@@ -51,12 +51,20 @@ void SCSDebugPanel::Construct(const FArguments& InArgs)
 	[
 		SNew(SBox)
 		.WidthOverride(380.f)
+		.MaxDesiredHeight(this, &SCSDebugPanel::GetMaxPanelHeight)
 		[
 			SNew(SBorder)
 			.BorderImage(FillBrush)
 			.BorderBackgroundColor(CSDebugPanel::PanelBackground)
 			.Padding(FMargin(12.f))
 			[
+				// 작은 PIE 창(P2, 기본 640x480)에서도 끝까지 볼 수 있게 루트를 스크롤로 감쌌다.
+				// 아래 슬롯들의 들여쓰기는 일부러 그대로 뒀다 — 여기 한 겹 때문에 300 줄을 다시
+				// 들여쓰면 이 파일을 같이 고치는 사람과 매번 충돌한다.
+				SNew(SScrollBox)
+
+				+ SScrollBox::Slot()
+				[
 				SNew(SVerticalBox)
 
 				// --- 제목 줄 ---
@@ -411,6 +419,7 @@ void SCSDebugPanel::Construct(const FArguments& InArgs)
 					.ColorAndOpacity(CSDebugPanel::SubtleColor)
 					.Text(this, &SCSDebugPanel::GetStatusText)
 					.AutoWrapText(true)
+				]
 				]
 			]
 		]
@@ -837,6 +846,21 @@ void SCSDebugPanel::OnShowCollisionChanged(ECheckBoxState NewState)
 	StatusText = bEnable
 		? FText::FromString(FString::Printf(TEXT("collision on: %d shape(s)"), ShapeCount))
 		: FText::FromString(TEXT("collision off"));
+}
+
+FOptionalSize SCSDebugPanel::GetMaxPanelHeight() const
+{
+	// 이 위젯은 AddViewportWidgetContent 로 뷰포트 전체에 얹히므로, 할당된 높이가 곧 창 높이다.
+	const float ViewportHeight = GetTickSpaceGeometry().GetLocalSize().Y;
+
+	// 아직 한 번도 배치되지 않았으면(0) 제한하지 않는다 — 여기서 0 을 주면 패널이 접혀 버린다.
+	if (ViewportHeight <= 1.f)
+	{
+		return FOptionalSize();
+	}
+
+	// ChildSlot 위 여백 28 + 아래로 조금 남긴다.
+	return FOptionalSize(FMath::Max(160.f, ViewportHeight - 56.f));
 }
 
 FText SCSDebugPanel::GetStatusText() const

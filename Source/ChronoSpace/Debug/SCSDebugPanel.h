@@ -84,6 +84,15 @@ private:
 
 	FText GetStatusText() const;
 
+	/**
+	 * 패널이 뷰포트 높이를 넘지 않게 막는다.
+	 *
+	 * PIE 를 리슨 서버 2인으로 띄우면 두 번째(P2) 창은 Editor Preferences 의
+	 * ClientWindowWidth/Height 를 쓰는데 기본값이 640x480 이다. 패널은 그보다 훨씬 길어서
+	 * 제한이 없으면 Stage Travel 목록과 상태 줄이 창 밖으로 나가 손이 닿지 않는다.
+	 */
+	FOptionalSize GetMaxPanelHeight() const;
+
 	TWeakObjectPtr<ACSPlayerController> OwningPC;
 	TArray<FEntry> Entries;
 	TSharedPtr<SVerticalBox> EntryBox;
