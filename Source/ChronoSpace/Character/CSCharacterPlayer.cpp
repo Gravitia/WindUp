@@ -176,15 +176,59 @@ void ACSCharacterPlayer::BeginPlay()
 		return;
 	}
 
-	APlayerController* PlayerController = CastChecked<APlayerController>(GetController()); 
-	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))			
-	{
-		Subsystem->AddMappingContext(MappingContext, 0);
-	}
+	APlayerController* PlayerController = CastChecked<APlayerController>(GetController());
+	ApplyInputMappingContext(PlayerController, /*bAdd=*/true);
 
 	/* AlwaysClockUnwind not using now 
 	AlwaysClockUnwind();
 	*/
+}
+
+void ACSCharacterPlayer::PawnClientRestart()
+{
+	Super::PawnClientRestart();
+
+	// 이 폰을 조작하게 된 머신에서 불린다 (엔진: APlayerController::OnPossess -> ClientRestart).
+	// 빙의될 때마다 오므로 최초 스폰이든 디버그 캐릭터 스왑이든 같은 경로로 IMC 가 붙는다.
+	ApplyInputMappingContext(Cast<APlayerController>(GetController()), /*bAdd=*/true);
+}
+
+void ACSCharacterPlayer::UnPossessed()
+{
+	// Super 가 Controller 를 null 로 지우기 전에 잡아 둔다.
+	// 이름을 PreviousController 로 쓰면 APawn 의 동명 멤버를 가려 C4458(= UE 에서는 에러)이 난다.
+	APlayerController* LeavingController = Cast<APlayerController>(GetController());
+
+	Super::UnPossessed();
+
+	// 이 몸을 놓는 머신에서 매핑을 뗀다. 두 캐릭터가 서로 다른 IMC 를 쓸 때 옛 매핑이 남으면
+	// 키가 겹친다. 같은 IMC 를 쓰면 뗐다가 다시 붙는 꼴이라 무해하다.
+	ApplyInputMappingContext(LeavingController, /*bAdd=*/false);
+}
+
+void ACSCharacterPlayer::ApplyInputMappingContext(APlayerController* ForController, bool bAdd)
+{
+	if (!IsValid(ForController) || MappingContext == nullptr)
+	{
+		return;
+	}
+
+	// LocalPlayer 가 없는 머신(서버가 들고 있는 원격 플레이어의 복사본 등)에서는 할 일이 없다.
+	UEnhancedInputLocalPlayerSubsystem* Subsystem =
+		ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(ForController->GetLocalPlayer());
+	if (Subsystem == nullptr)
+	{
+		return;
+	}
+
+	if (bAdd)
+	{
+		Subsystem->AddMappingContext(MappingContext, 0);
+	}
+	else
+	{
+		Subsystem->RemoveMappingContext(MappingContext);
+	}
 }
 
 void ACSCharacterPlayer::AlwaysClockUnwind()

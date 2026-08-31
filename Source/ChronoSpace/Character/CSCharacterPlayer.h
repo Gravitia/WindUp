@@ -29,6 +29,27 @@ public:
 	virtual void OnRep_PlayerState() override;
 	virtual void Landed(const FHitResult& Hit) override;
 
+	/**
+	 * IMC 는 폰이 아니라 LocalPlayer 에 붙는다.
+	 *
+	 * 그래서 "한 컨트롤러가 다른 몸으로 갈아타는" 상황(디버그 캐릭터 스왑)에서는 폰이 바뀔 때마다
+	 * 매핑도 같이 갈아끼워야 한다. 원래는 ACSCharacterPlayer::BeginPlay 가 폰당 한 번만 등록해서,
+	 * 나중에 빙의된 몸은 자기 IMC 를 등록할 기회가 없었다.
+	 *
+	 * PawnClientRestart(빙의) 에서 등록하고 UnPossessed(해제) 에서 해제한다. 둘 다 엔진이
+	 * 빙의 경로에서 반드시 불러 주는 지점이라, 정상 플레이든 디버그 스왑이든 같은 코드가 처리한다.
+	 */
+	virtual void PawnClientRestart() override;
+	virtual void UnPossessed() override;
+
+	/**
+	 * 이 캐릭터의 InputMappingContext 를 ForController 의 LocalPlayer 에 등록/해제한다.
+	 *
+	 * 서버가 들고 있는 원격 플레이어의 복사본처럼 GetLocalPlayer() 가 null 인 머신에서는
+	 * 조용히 아무것도 하지 않는다. 입력은 조작하는 머신에서만 의미가 있기 때문이다.
+	 */
+	void ApplyInputMappingContext(class APlayerController* ForController, bool bAdd);
+
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 	FORCEINLINE class UCSGASManagerComponent* GetGASManagerComponent() const { return GASManagerComponent; }
 

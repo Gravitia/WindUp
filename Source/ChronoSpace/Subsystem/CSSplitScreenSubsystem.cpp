@@ -5,6 +5,10 @@
 #include "UI/CSViewFamilyViewportClient.h"
 #include "Actor/CSCameraViewProxy.h"
 #include "Character/CSCharacterPlayer.h"
+#include "Game/CSGameMode.h"
+#include "Player/CSPlayerController.h"
+#include "GameFramework/GameStateBase.h"
+#include "GameFramework/PlayerState.h"
 #include "Engine/Engine.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
@@ -22,6 +26,36 @@ static TAutoConsoleVariable<int32> CVarCSSplitScreenDebug(
     0,
     TEXT("0=off, 1=draw secondary camera position (yellow sphere) and forward (red line) every Tick"),
     ECVF_Cheat);
+
+/**
+ * 화면 절반을 *몸* 에 고정한다 — P1 몸 왼쪽, P2 몸 오른쪽.
+ *
+ * 프로세스 전역이라 PIE 두 창이 같은 값을 본다. GameInstance 별 멤버로 두면
+ * 창마다 따로 켜야 해서 두 창의 배치가 어긋날 수 있었다.
+ * 비셰이핑 기본 1 — 디버그 툴을 쓸 때 설정 없이 바로 적용되기를 원했기 때문이다.
+ */
+static TAutoConsoleVariable<int32> CVarCSSplitScreenFixedSide(
+    TEXT("cs.SplitScreen.FixedSide"),
+#if UE_BUILD_SHIPPING
+    0,
+#else
+    1,
+#endif
+    TEXT("1=fix screen halves to the bodies (P1 left / P2 right). 0=each player sees own body on the right (shipping behaviour)."),
+    ECVF_Cheat);
+
+namespace CSSplitScreenLayout
+{
+    /**
+     * 상대를 못 찾은 프레임에 직전 대상을 몇 프레임까지 유지할지.
+     *
+     * 캐릭터 스왑 직후 두 폰의 PlayerState 역포인터가 한두 프레임 어긋난다
+     * (APawn::OnRep_PlayerState 도착 순서). 그동안 보조 뷰를 꺼 버리면 화면이 풀스크린으로
+     * 한 번 번쩍인다. 유예는 그 구간만 메운다 — 유지 대상이 "지금 내가 모는 몸" 이면
+     * 절대 쓰지 않으므로(아래 가드) 원래 버그가 이 경로로 되살아나지 않는다.
+     */
+    static constexpr int32 MaxSecondaryHoldFrames = 6;
+}
 
 UCSSplitScreenSubsystem::UCSSplitScreenSubsystem()
 {
@@ -43,7 +77,10 @@ void UCSSplitScreenSubsystem::Deinitialize()
     }
     CachedViewportClient.Reset();
     CachedRemoteProxy.Reset();
-    CachedRemoteCharacter.Reset();
+    LastGoodRemoteBody.Reset();
+    SecondaryHoldFrames = 0;
+    bLastMainViewOnRight = true;
+    bBodySlotWarnLogged = false;
     Super::Deinitialize();
 }
 
@@ -128,21 +165,135 @@ ACSCameraViewProxy* UCSSplitScreenSubsystem::ResolveRemoteProxy() const
     return nullptr;
 }
 
-ACSCharacterPlayer* UCSSplitScreenSubsystem::ResolveRemoteCharacter() const
+bool UCSSplitScreenSubsystem::ResolveSplitViewPair(ACSCharacterPlayer*& OutLocalBody, ACSCharacterPlayer*& OutRemoteBody) const
+{
+    OutLocalBody = nullptr;
+    OutRemoteBody = nullptr;
+
+    UWorld* World = GetGameInstance() ? GetGameInstance()->GetWorld() : nullptr;
+    if (!World) return false;
+
+    ACSPlayerController* LocalPC = ResolveLocalPlayerController();
+    if (!LocalPC) return false;
+
+    OutLocalBody = Cast<ACSCharacterPlayer>(LocalPC->GetPawn());
+
+    const AGameStateBase* GameState = World->GetGameState();
+    if (!GameState) return false;
+
+    const APlayerState* LocalPS = LocalPC->PlayerState;
+
+    // PlayerArray 는 모든 머신에 복제된다. 2인 세션이면 나 아닌 하나가 곧 상대다.
+    // (자세한 근거는 선언부 주석 참고)
+    int32 CandidateCount = 0;
+    for (const TObjectPtr<APlayerState>& PlayerStatePtr : GameState->PlayerArray)
+    {
+        APlayerState* PS = PlayerStatePtr.Get();
+        if (!IsValid(PS) || PS == LocalPS) continue;
+        if (PS->IsABot() || PS->IsOnlyASpectator()) continue;
+
+        ACSCharacterPlayer* Body = Cast<ACSCharacterPlayer>(PS->GetPawn());
+        if (!IsValid(Body)) continue;
+
+        ++CandidateCount;
+        if (OutRemoteBody == nullptr)
+        {
+            OutRemoteBody = Body;
+        }
+    }
+
+    if (CandidateCount > 1)
+    {
+        // 이 분할 화면은 2인 전용이다 (ECSPlayerSlot 이 둘뿐). 조용히 첫 번째를 쓰되 소리는 낸다.
+        UE_LOG(LogCS, VeryVerbose, TEXT("SplitScreen: %d remote candidates, using the first"), CandidateCount);
+    }
+
+    return OutRemoteBody != nullptr;
+}
+
+ACSPlayerController* UCSSplitScreenSubsystem::ResolveLocalPlayerController() const
 {
     UWorld* World = GetGameInstance() ? GetGameInstance()->GetWorld() : nullptr;
     if (!World) return nullptr;
 
-    // 원격 플레이어 캐릭터 = IsLocallyControlled() == false 인 ACSCharacterPlayer
-    // CharacterMovement Replication 의 NetSmoothing 이 적용된 부드러운 위치 신호를 anchor 로 사용
-    for (TActorIterator<ACSCharacterPlayer> It(World); It; ++It)
+    for (FConstPlayerControllerIterator It = World->GetPlayerControllerIterator(); It; ++It)
     {
-        ACSCharacterPlayer* Char = *It;
-        if (!Char) continue;
-        if (Char->IsLocallyControlled()) continue;
-        return Char;
+        ACSPlayerController* PC = Cast<ACSPlayerController>(It->Get());
+        if (PC && PC->IsLocalController())
+        {
+            return PC;
+        }
     }
     return nullptr;
+}
+
+bool UCSSplitScreenSubsystem::IsFixedSideLayoutActive() const
+{
+#if UE_BUILD_SHIPPING
+    // 셰이핑에서는 런타임에 켤 방법이 없다. 컴파일 타임에 잘라낸다.
+    return false;
+#else
+    return CVarCSSplitScreenFixedSide.GetValueOnGameThread() != 0;
+#endif
+}
+
+void UCSSplitScreenSubsystem::SetDebugFixedSplitSide(bool bEnable)
+{
+    // 상태 소유자는 CVar 하나다. 서브시스템이나 PlayerController 에 사본을 두면
+    // "레이아웃은 고정인데 체크박스는 비어 있는" 어긋남이 생긴다.
+    CVarCSSplitScreenFixedSide->Set(bEnable ? 1 : 0, ECVF_SetByCode);
+}
+
+bool UCSSplitScreenSubsystem::IsDebugFixedSplitSide() const
+{
+    return IsFixedSideLayoutActive();
+}
+
+void UCSSplitScreenSubsystem::UpdateSplitSideLayout()
+{
+    UCSViewFamilyViewportClient* VC = CachedViewportClient.Get();
+    if (!VC) return;
+
+    // bSwapLeftRight 는 "메인 뷰(= 이 창이 조작 중인 몸)를 오른쪽에 둔다" 는 뜻이다.
+
+    if (!IsFixedSideLayoutActive())
+    {
+        // 셰이핑 동작: 두 사람 모두 자기 몸을 오른쪽에서 본다.
+        bLastMainViewOnRight = true;
+        VC->SetSwapLeftRight(true);
+        return;
+    }
+
+    // 고정 배치: 화면 절반을 *몸* 에 묶는다 — P1 몸 왼쪽, P2 몸 오른쪽.
+    // 판정 기준이 "누가 조작하느냐" 가 아니라 "어느 몸이냐" 라서 캐릭터를 맞바꿔도 배치가 유지된다.
+    // (예전엔 GetDrivenBodySlot() 을 썼는데, 그 값은 서버 OnPossess 에서만 갱신되는
+    //  COND_OwnerOnly 복제라 클라 배치가 왕복 지연만큼 늦었다)
+    ACSCharacterPlayer* LocalBody = nullptr;
+    ACSCharacterPlayer* RemoteBody = nullptr;
+    ResolveSplitViewPair(LocalBody, RemoteBody);
+
+    UWorld* World = GetGameInstance() ? GetGameInstance()->GetWorld() : nullptr;
+
+    bool bSlotResolved = false;
+    const ECSPlayerSlot LocalBodySlot = ACSGameMode::ResolveBodySlotForPawn(World, LocalBody, bSlotResolved);
+
+    if (bSlotResolved)
+    {
+        bLastMainViewOnRight = (LocalBodySlot == ECSPlayerSlot::Player1);
+        bBodySlotWarnLogged = false;
+    }
+    else if (!bBodySlotWarnLogged)
+    {
+        // 판정에 실패하면 추측하지 않고 마지막 값을 유지한다.
+        // 매 프레임 뒤집히면 두 뷰의 ViewRect 가 계속 자리를 바꿔 TSR/자동노출 히스토리가 리셋된다.
+        bBodySlotWarnLogged = true;
+        UE_LOG(LogCS, Warning,
+            TEXT("SplitScreen: 몸의 슬롯을 판정하지 못해 좌우 배치를 유지한다 (pawn=%s). "
+                 "GameState 가 아직 안 왔거나 BP_CSGameMode 의 PawnClassPlayer0/1 이 비었거나 서로 같다."),
+            *GetNameSafe(LocalBody));
+    }
+
+    VC->SetSwapLeftRight(bLastMainViewOnRight);
 }
 
 void UCSSplitScreenSubsystem::PushSecondaryCamera()
@@ -167,22 +318,56 @@ void UCSSplitScreenSubsystem::PushSecondaryCamera()
         return;
     }
 
-    // 원격 캐릭터 (anchor) 찾기
-    ACSCharacterPlayer* RemoteChar = CachedRemoteCharacter.Get();
-    if (!RemoteChar)
+    // ── 보조 뷰 대상(anchor) 을 *매 프레임* 다시 정한다. 캐시하지 않는다. ──
+    //
+    // 예전엔 CachedRemoteCharacter 에 캐시해 두고 null 일 때만 재해석했다. 그런데 디버그
+    // 캐릭터 스왑은 액터를 죽이지 않고 조작자만 바꾸므로, TWeakObjectPtr 는 계속 유효한 채
+    // "이제는 틀린" 대상을 가리켰다. 그래서 스왑 후 메인 뷰와 보조 뷰가 같은 몸을 비췄다
+    // (사용자 보고: "p2 일 때는 양쪽 화면이 다 p2 로 나온다").
+    ACSCharacterPlayer* LocalBody = nullptr;
+    ACSCharacterPlayer* PairRemoteBody = nullptr;
+    ResolveSplitViewPair(LocalBody, PairRemoteBody);
+
+    // 같은 몸이면 절대 보조 뷰를 그리지 않는다. 이 가드가 위 버그를 구조적으로 막는다.
+    if (PairRemoteBody == LocalBody)
     {
-        RemoteChar = ResolveRemoteCharacter();
-        if (RemoteChar)
+        PairRemoteBody = nullptr;
+    }
+
+    ACSCharacterPlayer* RemoteChar = nullptr;
+    if (IsValid(PairRemoteBody))
+    {
+        RemoteChar = PairRemoteBody;
+        SecondaryHoldFrames = 0;
+    }
+    else
+    {
+        // 스왑 직후 한두 프레임의 공백만 메운다. 유지 대상이 지금 내가 모는 몸이면 쓰지 않는다.
+        ACSCharacterPlayer* HeldBody = LastGoodRemoteBody.Get();
+        if (IsValid(HeldBody) && HeldBody != LocalBody &&
+            SecondaryHoldFrames < CSSplitScreenLayout::MaxSecondaryHoldFrames)
         {
-            CachedRemoteCharacter = RemoteChar;
+            RemoteChar = HeldBody;
+            ++SecondaryHoldFrames;
         }
     }
-    if (!RemoteChar)
+
+    if (!IsValid(RemoteChar))
     {
+        LastGoodRemoteBody.Reset();
+        SecondaryHoldFrames = 0;
         VC->ClearSecondaryView();
         bHasSmoothedSecondary = false;
         return;
     }
+
+    // 대상이 바뀐 프레임에는 보간을 끊는다. 안 하면 카메라가 옛 몸에서 새 몸으로 미끄러진다
+    // (두 몸이 SnapDistance 안쪽에 있으면 스냅 처리에도 안 걸린다).
+    if (LastGoodRemoteBody.Get() != RemoteChar)
+    {
+        bHasSmoothedSecondary = false;
+    }
+    LastGoodRemoteBody = RemoteChar;
 
     const FRepCamInfo& TargetCam = Proxy->GetReplicatedCamera();
 
@@ -417,6 +602,11 @@ void UCSSplitScreenSubsystem::Tick(float DeltaTime)
         }
     }
 
+    // 좌우 배치를 먼저, 그리고 무조건 갱신한다.
+    // PushSecondaryCamera 는 프록시/상대 몸/RepCam 미수신에서 조기 반환하므로,
+    // 그 안에 두면 배치가 옛 값에 얼어붙는다.
+    UpdateSplitSideLayout();
+
     PushSecondaryCamera();
 }
 
@@ -452,7 +642,10 @@ void UCSSplitScreenSubsystem::DisableSplitScreen()
         VC->ClearSecondaryView();
     }
     CachedRemoteProxy.Reset();
-    CachedRemoteCharacter.Reset();
+    LastGoodRemoteBody.Reset();
+    SecondaryHoldFrames = 0;
+    bLastMainViewOnRight = true;
+    bBodySlotWarnLogged = false;
     bHasSmoothedSecondary = false;
     UE_LOG(LogCS, Log, TEXT("CSSplitScreenSubsystem: DisableSplitScreen"));
 }

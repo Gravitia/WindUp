@@ -30643,19 +30643,19 @@
 	"AdditionalProperties": [
 		{
 			"Name": "Uba",
-			"Value": "E:\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealBuildAccelerator\\x64\\UbaDetours.dll"
+			"Value": "C:\\Program Files\\Epic Games\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealBuildAccelerator\\x64\\UbaDetours.dll"
 		},
 		{
 			"Name": "Uba",
-			"Value": "E:\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealBuildAccelerator\\x64\\UbaAgent.exe"
+			"Value": "C:\\Program Files\\Epic Games\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealBuildAccelerator\\x64\\UbaAgent.exe"
 		},
 		{
 			"Name": "Uba",
-			"Value": "E:\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealBuildAccelerator\\x64\\UbaHost.toml"
+			"Value": "C:\\Program Files\\Epic Games\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealBuildAccelerator\\x64\\UbaHost.toml"
 		},
 		{
 			"Name": "Uba",
-			"Value": "E:\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealBuildAccelerator\\x64\\UbaAgent.toml"
+			"Value": "C:\\Program Files\\Epic Games\\UE_5.8\\Engine\\Binaries\\Win64\\UnrealBuildAccelerator\\x64\\UbaAgent.toml"
 		},
 		{
 			"Name": "SDK",

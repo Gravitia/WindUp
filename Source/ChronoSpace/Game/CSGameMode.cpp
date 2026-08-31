@@ -10,6 +10,7 @@
 #include "Actor/System/CSRespawnPoint.h"
 #include "Actor/CSCameraViewProxy.h"
 #include "Engine/World.h"
+#include "GameFramework/GameStateBase.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -201,6 +202,61 @@ UClass* ACSGameMode::GetDefaultPawnClassForController_Implementation(AController
     return Super::GetDefaultPawnClassForController_Implementation(InController);
 }
 
+TSubclassOf<APawn> ACSGameMode::GetPawnClassForSlot(ECSPlayerSlot Slot) const
+{
+    switch (Slot)
+    {
+    case ECSPlayerSlot::Player0: return PawnClassPlayer0;
+    case ECSPlayerSlot::Player1: return PawnClassPlayer1;
+    }
+    return nullptr;
+}
+
+ECSPlayerSlot ACSGameMode::ResolveBodySlotForPawn(const UWorld* World, const APawn* InPawn, bool& bOutResolved)
+{
+    bOutResolved = false;
+
+    if (World == nullptr || !IsValid(InPawn))
+    {
+        return ECSPlayerSlot::Player0;
+    }
+
+    // 인스턴스가 아니라 CDO 를 읽는다. 클라이언트에는 GameMode 인스턴스가 없기 때문이다.
+    const AGameStateBase* GameState = World->GetGameState();
+    const ACSGameMode* GameModeCDO = GameState ? GameState->GetDefaultGameMode<ACSGameMode>() : nullptr;
+    if (GameModeCDO == nullptr)
+    {
+        // 접속 직후엔 정상적으로 null 이다. 실패로 돌려주고 *캐시하지 않는다*.
+        return ECSPlayerSlot::Player0;
+    }
+
+    const TSubclassOf<APawn> Class0 = GameModeCDO->GetPawnClassForSlot(ECSPlayerSlot::Player0);
+    const TSubclassOf<APawn> Class1 = GameModeCDO->GetPawnClassForSlot(ECSPlayerSlot::Player1);
+
+    // 두 슬롯이 같은 클래스면 몸을 구분할 방법이 없다. 추측하지 않고 실패로 돌려준다.
+    if (Class0 == nullptr || Class1 == nullptr || Class0 == Class1)
+    {
+        return ECSPlayerSlot::Player0;
+    }
+
+    // 정확 비교다. IsA 를 쓰면 안 되는 이유는 선언부 주석 참고.
+    UClass* const PawnClass = InPawn->GetClass();
+
+    if (PawnClass == Class0)
+    {
+        bOutResolved = true;
+        return ECSPlayerSlot::Player0;
+    }
+
+    if (PawnClass == Class1)
+    {
+        bOutResolved = true;
+        return ECSPlayerSlot::Player1;
+    }
+
+    return ECSPlayerSlot::Player0;
+}
+
 bool ACSGameMode::RespawnSinglePlayer(APawn* Player)
 {
     if (!HasAuthority() || !IsValid(Player))
@@ -372,6 +428,11 @@ void ACSGameMode::CreateProxiesForPlayer(APlayerController* NewPlayer)
             ServerCamProxy->SetReplicates(true);
             ServerCamProxy->SetReplicateMovement(false);
             ServerCamProxy->SetIsServerProxy(true);
+            // 소스를 명시한다. 이게 없으면 ACSCameraViewProxy::Tick 이
+            // UGameplayStatics::GetPlayerController(World, 0) 로 호스트를 *유추* 한다 —
+            // 리슨 서버에서 결과는 맞지만 순서에 기대는 암묵적 의존이다.
+            // 이 블록은 NewPlayer->IsLocalController() 안이라 NewPlayer 가 곧 호스트 PC 다.
+            ServerCamProxy->SetSourcePC(NewPlayer);
             UE_LOG(LogCS, Log, TEXT("Created ServerCamProxy (ListenServer POV)"));
         }
     }

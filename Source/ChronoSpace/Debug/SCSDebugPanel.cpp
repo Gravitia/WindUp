@@ -1,6 +1,6 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
-#include "Debug/SCSDebugTeleportPanel.h"
+#include "Debug/SCSDebugPanel.h"
 
 #include "Actor/System/CSCheckPoint.h"
 #include "Actor/System/CSRespawnPoint.h"
@@ -19,7 +19,7 @@
 #include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/Text/STextBlock.h"
 
-namespace CSDebugTeleportPanel
+namespace CSDebugPanel
 {
 	/** 바닥에 박힌 채 나타나지 않도록 띄우는 높이. ACSGameMode::RespawnSinglePlayer 와 맞춘 값이다. */
 	static constexpr float SpawnZOffset = 120.f;
@@ -34,7 +34,7 @@ namespace CSDebugTeleportPanel
 	static const FLinearColor RowDetailColor(0.60f, 0.66f, 0.78f);
 }
 
-void SCSDebugTeleportPanel::Construct(const FArguments& InArgs)
+void SCSDebugPanel::Construct(const FArguments& InArgs)
 {
 	OwningPC = InArgs._OwningPlayerController;
 
@@ -54,7 +54,7 @@ void SCSDebugTeleportPanel::Construct(const FArguments& InArgs)
 		[
 			SNew(SBorder)
 			.BorderImage(FillBrush)
-			.BorderBackgroundColor(CSDebugTeleportPanel::PanelBackground)
+			.BorderBackgroundColor(CSDebugPanel::PanelBackground)
 			.Padding(FMargin(12.f))
 			[
 				SNew(SVerticalBox)
@@ -71,7 +71,7 @@ void SCSDebugTeleportPanel::Construct(const FArguments& InArgs)
 					[
 						SNew(STextBlock)
 						.Font(FCoreStyle::GetDefaultFontStyle("Bold", 13))
-						.ColorAndOpacity(CSDebugTeleportPanel::TitleColor)
+						.ColorAndOpacity(CSDebugPanel::TitleColor)
 						.Text(FText::FromString(TEXT("Debug Panel")))
 					]
 
@@ -82,11 +82,11 @@ void SCSDebugTeleportPanel::Construct(const FArguments& InArgs)
 						SNew(SButton)
 						.ButtonStyle(&FCoreStyle::Get(), "Button")
 						.ContentPadding(FMargin(8.f, 2.f))
-						.OnClicked(this, &SCSDebugTeleportPanel::OnCloseClicked)
+						.OnClicked(this, &SCSDebugPanel::OnCloseClicked)
 						[
 							SNew(STextBlock)
 							.Font(FCoreStyle::GetDefaultFontStyle("Bold", 10))
-							.ColorAndOpacity(CSDebugTeleportPanel::RowTitleColor)
+							.ColorAndOpacity(CSDebugPanel::RowTitleColor)
 							.Text(FText::FromString(TEXT("X")))
 						]
 					]
@@ -98,7 +98,7 @@ void SCSDebugTeleportPanel::Construct(const FArguments& InArgs)
 				[
 					SNew(STextBlock)
 					.Font(FCoreStyle::GetDefaultFontStyle("Regular", 8))
-					.ColorAndOpacity(CSDebugTeleportPanel::SubtleColor)
+					.ColorAndOpacity(CSDebugPanel::SubtleColor)
 					.Text(FText::FromString(TEXT("Press 0 (top row) to close")))
 				]
 
@@ -112,7 +112,7 @@ void SCSDebugTeleportPanel::Construct(const FArguments& InArgs)
 					[
 						SNew(SBorder)
 						.BorderImage(FillBrush)
-						.BorderBackgroundColor(CSDebugTeleportPanel::DividerColor)
+						.BorderBackgroundColor(CSDebugPanel::DividerColor)
 					]
 				]
 
@@ -128,8 +128,8 @@ void SCSDebugTeleportPanel::Construct(const FArguments& InArgs)
 					.VAlign(VAlign_Center)
 					[
 						SNew(SCheckBox)
-						.IsChecked(this, &SCSDebugTeleportPanel::IsTeleportAllChecked)
-						.OnCheckStateChanged(this, &SCSDebugTeleportPanel::OnTeleportAllChanged)
+						.IsChecked(this, &SCSDebugPanel::IsTeleportAllChecked)
+						.OnCheckStateChanged(this, &SCSDebugPanel::OnTeleportAllChanged)
 					]
 
 					+ SHorizontalBox::Slot()
@@ -150,11 +150,11 @@ void SCSDebugTeleportPanel::Construct(const FArguments& InArgs)
 						SNew(SButton)
 						.ButtonStyle(&FCoreStyle::Get(), "Button")
 						.ContentPadding(FMargin(10.f, 3.f))
-						.OnClicked(this, &SCSDebugTeleportPanel::OnRefreshClicked)
+						.OnClicked(this, &SCSDebugPanel::OnRefreshClicked)
 						[
 							SNew(STextBlock)
 							.Font(FCoreStyle::GetDefaultFontStyle("Regular", 9))
-							.ColorAndOpacity(CSDebugTeleportPanel::RowTitleColor)
+							.ColorAndOpacity(CSDebugPanel::RowTitleColor)
 							.Text(FText::FromString(TEXT("Refresh")))
 						]
 					]
@@ -172,8 +172,8 @@ void SCSDebugTeleportPanel::Construct(const FArguments& InArgs)
 					.VAlign(VAlign_Center)
 					[
 						SNew(SCheckBox)
-						.IsChecked(this, &SCSDebugTeleportPanel::IsShowCollisionChecked)
-						.OnCheckStateChanged(this, &SCSDebugTeleportPanel::OnShowCollisionChanged)
+						.IsChecked(this, &SCSDebugPanel::IsShowCollisionChecked)
+						.OnCheckStateChanged(this, &SCSDebugPanel::OnShowCollisionChanged)
 					]
 
 					+ SHorizontalBox::Slot()
@@ -197,7 +197,7 @@ void SCSDebugTeleportPanel::Construct(const FArguments& InArgs)
 						[
 							SNew(STextBlock)
 							.Font(FCoreStyle::GetDefaultFontStyle("Regular", 8))
-							.ColorAndOpacity(CSDebugTeleportPanel::SubtleColor)
+							.ColorAndOpacity(CSDebugPanel::SubtleColor)
 							.Text(FText::FromString(TEXT("Box / Sphere / Capsule on Blueprint actors")))
 						]
 					]
@@ -219,11 +219,11 @@ void SCSDebugTeleportPanel::Construct(const FArguments& InArgs)
 						.ButtonStyle(&FCoreStyle::Get(), "Button")
 						.HAlign(HAlign_Center)
 						.ContentPadding(FMargin(6.f, 4.f))
-						.OnClicked(FOnClicked::CreateSP(this, &SCSDebugTeleportPanel::OnSummonClicked, 1, 0))
+						.OnClicked(FOnClicked::CreateSP(this, &SCSDebugPanel::OnSummonClicked, 1, 0))
 						[
 							SNew(STextBlock)
 							.Font(FCoreStyle::GetDefaultFontStyle("Bold", 9))
-							.ColorAndOpacity(CSDebugTeleportPanel::RowTitleColor)
+							.ColorAndOpacity(CSDebugPanel::RowTitleColor)
 							.Text(FText::FromString(TEXT("Bring P2 to P1")))
 						]
 					]
@@ -236,14 +236,95 @@ void SCSDebugTeleportPanel::Construct(const FArguments& InArgs)
 						.ButtonStyle(&FCoreStyle::Get(), "Button")
 						.HAlign(HAlign_Center)
 						.ContentPadding(FMargin(6.f, 4.f))
-						.OnClicked(FOnClicked::CreateSP(this, &SCSDebugTeleportPanel::OnSummonClicked, 0, 1))
+						.OnClicked(FOnClicked::CreateSP(this, &SCSDebugPanel::OnSummonClicked, 0, 1))
 						[
 							SNew(STextBlock)
 							.Font(FCoreStyle::GetDefaultFontStyle("Bold", 9))
-							.ColorAndOpacity(CSDebugTeleportPanel::RowTitleColor)
+							.ColorAndOpacity(CSDebugPanel::RowTitleColor)
 							.Text(FText::FromString(TEXT("Bring P1 to P2")))
 						]
 					]
+				]
+
+				// --- Two Player Debug : 캐릭터 스왑 / 분할 화면 좌우 고정 ---
+				// 위 "소환" 버튼은 몸을 옮기고, 여기 스왑은 조작자를 옮긴다.
+				// 리슨 서버 2인 세션에서만 의미가 있어 그 외에는 비활성으로 둔다.
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				.Padding(0.f, 0.f, 0.f, 2.f)
+				[
+					SNew(STextBlock)
+					.Font(FCoreStyle::GetDefaultFontStyle("Bold", 10))
+					.ColorAndOpacity(CSDebugPanel::TitleColor)
+					.Text(FText::FromString(TEXT("Two Player Debug")))
+				]
+
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				[
+					SNew(SButton)
+					.ButtonStyle(&FCoreStyle::Get(), "Button")
+					.HAlign(HAlign_Center)
+					.ContentPadding(FMargin(6.f, 4.f))
+					.IsEnabled(this, &SCSDebugPanel::IsSwapButtonEnabled)
+					.OnClicked(this, &SCSDebugPanel::OnSwapCharacterClicked)
+					[
+						SNew(STextBlock)
+						.Font(FCoreStyle::GetDefaultFontStyle("Bold", 10))
+						.ColorAndOpacity(CSDebugPanel::RowTitleColor)
+						.Text(this, &SCSDebugPanel::GetSwapButtonText)
+					]
+				]
+
+				// --- 분할 화면 좌우 고정 ---
+				// 프로세스 전역 CVar 라 PIE 두 창에 동시에 적용된다.
+				// 비셰이핑에서는 기본으로 켜져 있다 — 이 체크박스는 사실상 "끄기" 용이다.
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				.Padding(0.f, 5.f, 0.f, 0.f)
+				[
+					SNew(SHorizontalBox)
+
+					+ SHorizontalBox::Slot()
+					.AutoWidth()
+					.VAlign(VAlign_Center)
+					[
+						SNew(SCheckBox)
+						.IsChecked(this, &SCSDebugPanel::IsFixedSplitSideChecked)
+						.OnCheckStateChanged(this, &SCSDebugPanel::OnFixedSplitSideChanged)
+					]
+
+					+ SHorizontalBox::Slot()
+					.FillWidth(1.f)
+					.VAlign(VAlign_Center)
+					.Padding(6.f, 0.f, 0.f, 0.f)
+					[
+						SNew(STextBlock)
+						.Font(FCoreStyle::GetDefaultFontStyle("Regular", 10))
+						.ColorAndOpacity(FLinearColor::White)
+						.Text(FText::FromString(TEXT("Fixed split side: P1 left / P2 right")))
+					]
+
+					+ SHorizontalBox::Slot()
+					.AutoWidth()
+					.VAlign(VAlign_Center)
+					[
+						SNew(STextBlock)
+						.Font(FCoreStyle::GetDefaultFontStyle("Regular", 8))
+						.ColorAndOpacity(CSDebugPanel::SubtleColor)
+						.Text(FText::FromString(TEXT("   [8] P1   [9] P2")))
+					]
+				]
+
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				.Padding(0.f, 3.f, 0.f, 8.f)
+				[
+					SNew(STextBlock)
+					.Font(FCoreStyle::GetDefaultFontStyle("Regular", 8))
+					.ColorAndOpacity(CSDebugPanel::SubtleColor)
+					.AutoWrapText(true)
+					.Text(this, &SCSDebugPanel::GetSwapCaptionText)
 				]
 
 				// --- 체크포인트 목록 ---
@@ -253,7 +334,7 @@ void SCSDebugTeleportPanel::Construct(const FArguments& InArgs)
 				[
 					SNew(STextBlock)
 					.Font(FCoreStyle::GetDefaultFontStyle("Bold", 10))
-					.ColorAndOpacity(CSDebugTeleportPanel::TitleColor)
+					.ColorAndOpacity(CSDebugPanel::TitleColor)
 					.Text(FText::FromString(TEXT("CheckPoints")))
 				]
 
@@ -282,7 +363,7 @@ void SCSDebugTeleportPanel::Construct(const FArguments& InArgs)
 					[
 						SNew(SBorder)
 						.BorderImage(FillBrush)
-						.BorderBackgroundColor(CSDebugTeleportPanel::DividerColor)
+						.BorderBackgroundColor(CSDebugPanel::DividerColor)
 					]
 				]
 
@@ -291,7 +372,7 @@ void SCSDebugTeleportPanel::Construct(const FArguments& InArgs)
 				[
 					SNew(STextBlock)
 					.Font(FCoreStyle::GetDefaultFontStyle("Bold", 10))
-					.ColorAndOpacity(CSDebugTeleportPanel::TitleColor)
+					.ColorAndOpacity(CSDebugPanel::TitleColor)
 					.Text(FText::FromString(TEXT("Stage Travel")))
 				]
 
@@ -301,7 +382,7 @@ void SCSDebugTeleportPanel::Construct(const FArguments& InArgs)
 				[
 					SNew(STextBlock)
 					.Font(FCoreStyle::GetDefaultFontStyle("Regular", 8))
-					.ColorAndOpacity(CSDebugTeleportPanel::SubtleColor)
+					.ColorAndOpacity(CSDebugPanel::SubtleColor)
 					.Text(FText::FromString(TEXT("ServerTravel — moves everyone to the level")))
 				]
 
@@ -327,8 +408,8 @@ void SCSDebugTeleportPanel::Construct(const FArguments& InArgs)
 				[
 					SNew(STextBlock)
 					.Font(FCoreStyle::GetDefaultFontStyle("Regular", 9))
-					.ColorAndOpacity(CSDebugTeleportPanel::SubtleColor)
-					.Text(this, &SCSDebugTeleportPanel::GetStatusText)
+					.ColorAndOpacity(CSDebugPanel::SubtleColor)
+					.Text(this, &SCSDebugPanel::GetStatusText)
 					.AutoWrapText(true)
 				]
 			]
@@ -339,7 +420,7 @@ void SCSDebugTeleportPanel::Construct(const FArguments& InArgs)
 	RebuildStageEntries();
 }
 
-void SCSDebugTeleportPanel::RebuildEntries()
+void SCSDebugPanel::RebuildEntries()
 {
 	Entries.Reset();
 
@@ -381,7 +462,7 @@ void SCSDebugTeleportPanel::RebuildEntries()
 			// 캡슐과 컨트롤 회전에 피치·롤이 섞이면 캐릭터가 눕는다.
 			Entry.Rotation.Pitch = 0.f;
 			Entry.Rotation.Roll = 0.f;
-			Entry.Location.Z += CSDebugTeleportPanel::SpawnZOffset;
+			Entry.Location.Z += CSDebugPanel::SpawnZOffset;
 
 			Entries.Add(MoveTemp(Entry));
 		}
@@ -405,7 +486,7 @@ void SCSDebugTeleportPanel::RebuildEntries()
 		[
 			SNew(STextBlock)
 			.Font(FCoreStyle::GetDefaultFontStyle("Regular", 10))
-			.ColorAndOpacity(CSDebugTeleportPanel::WarnColor)
+			.ColorAndOpacity(CSDebugPanel::WarnColor)
 			.AutoWrapText(true)
 			.Text(FText::FromString(TEXT("No CheckPoint in the loaded levels.")))
 		];
@@ -442,7 +523,7 @@ void SCSDebugTeleportPanel::RebuildEntries()
 			.ButtonStyle(&FCoreStyle::Get(), "Button")
 			.HAlign(HAlign_Fill)
 			.ContentPadding(FMargin(9.f, 5.f))
-			.OnClicked(FOnClicked::CreateSP(this, &SCSDebugTeleportPanel::OnEntryClicked, Index))
+			.OnClicked(FOnClicked::CreateSP(this, &SCSDebugPanel::OnEntryClicked, Index))
 			[
 				SNew(SVerticalBox)
 
@@ -451,7 +532,7 @@ void SCSDebugTeleportPanel::RebuildEntries()
 				[
 					SNew(STextBlock)
 					.Font(FCoreStyle::GetDefaultFontStyle("Bold", 11))
-					.ColorAndOpacity(CSDebugTeleportPanel::RowTitleColor)
+					.ColorAndOpacity(CSDebugPanel::RowTitleColor)
 					.Text(FText::FromString(Entry.Label))
 				]
 
@@ -460,7 +541,7 @@ void SCSDebugTeleportPanel::RebuildEntries()
 				[
 					SNew(STextBlock)
 					.Font(FCoreStyle::GetDefaultFontStyle("Regular", 8))
-					.ColorAndOpacity(CSDebugTeleportPanel::RowDetailColor)
+					.ColorAndOpacity(CSDebugPanel::RowDetailColor)
 					.Text(FText::FromString(Detail))
 				]
 			]
@@ -470,7 +551,7 @@ void SCSDebugTeleportPanel::RebuildEntries()
 	StatusText = FText::FromString(FString::Printf(TEXT("%d checkpoint(s)"), Entries.Num()));
 }
 
-void SCSDebugTeleportPanel::RebuildStageEntries()
+void SCSDebugPanel::RebuildStageEntries()
 {
 	StageEntries.Reset();
 
@@ -513,7 +594,7 @@ void SCSDebugTeleportPanel::RebuildStageEntries()
 		[
 			SNew(STextBlock)
 			.Font(FCoreStyle::GetDefaultFontStyle("Regular", 10))
-			.ColorAndOpacity(CSDebugTeleportPanel::WarnColor)
+			.ColorAndOpacity(CSDebugPanel::WarnColor)
 			.AutoWrapText(true)
 			.Text(FText::FromString(TEXT("No stages in Project Settings > ChronoSpace Stage Data.")))
 		];
@@ -538,7 +619,7 @@ void SCSDebugTeleportPanel::RebuildStageEntries()
 			.HAlign(HAlign_Fill)
 			.ContentPadding(FMargin(9.f, 5.f))
 			.IsEnabled(Entry.bMapped)
-			.OnClicked(FOnClicked::CreateSP(this, &SCSDebugTeleportPanel::OnStageClicked, Index))
+			.OnClicked(FOnClicked::CreateSP(this, &SCSDebugPanel::OnStageClicked, Index))
 			[
 				SNew(SVerticalBox)
 
@@ -547,7 +628,7 @@ void SCSDebugTeleportPanel::RebuildStageEntries()
 				[
 					SNew(STextBlock)
 					.Font(FCoreStyle::GetDefaultFontStyle("Bold", 11))
-					.ColorAndOpacity(CSDebugTeleportPanel::RowTitleColor)
+					.ColorAndOpacity(CSDebugPanel::RowTitleColor)
 					.Text(FText::FromString(Entry.Label))
 				]
 
@@ -556,7 +637,7 @@ void SCSDebugTeleportPanel::RebuildStageEntries()
 				[
 					SNew(STextBlock)
 					.Font(FCoreStyle::GetDefaultFontStyle("Regular", 8))
-					.ColorAndOpacity(CSDebugTeleportPanel::RowDetailColor)
+					.ColorAndOpacity(CSDebugPanel::RowDetailColor)
 					.Text(FText::FromString(Detail))
 				]
 			]
@@ -564,7 +645,7 @@ void SCSDebugTeleportPanel::RebuildStageEntries()
 	}
 }
 
-FReply SCSDebugTeleportPanel::OnEntryClicked(int32 EntryIndex)
+FReply SCSDebugPanel::OnEntryClicked(int32 EntryIndex)
 {
 	ACSPlayerController* PC = OwningPC.Get();
 
@@ -586,7 +667,7 @@ FReply SCSDebugTeleportPanel::OnEntryClicked(int32 EntryIndex)
 	return FReply::Handled();
 }
 
-FReply SCSDebugTeleportPanel::OnStageClicked(int32 StageIndex)
+FReply SCSDebugPanel::OnStageClicked(int32 StageIndex)
 {
 	ACSPlayerController* PC = OwningPC.Get();
 
@@ -605,7 +686,7 @@ FReply SCSDebugTeleportPanel::OnStageClicked(int32 StageIndex)
 	return FReply::Handled();
 }
 
-FReply SCSDebugTeleportPanel::OnSummonClicked(int32 MovingPlayerIndex, int32 AnchorPlayerIndex)
+FReply SCSDebugPanel::OnSummonClicked(int32 MovingPlayerIndex, int32 AnchorPlayerIndex)
 {
 	ACSPlayerController* PC = OwningPC.Get();
 
@@ -623,34 +704,118 @@ FReply SCSDebugTeleportPanel::OnSummonClicked(int32 MovingPlayerIndex, int32 Anc
 	return FReply::Handled();
 }
 
-FReply SCSDebugTeleportPanel::OnRefreshClicked()
+FReply SCSDebugPanel::OnRefreshClicked()
 {
 	RebuildEntries();
 	RebuildStageEntries();
 	return FReply::Handled();
 }
 
-FReply SCSDebugTeleportPanel::OnCloseClicked()
+FReply SCSDebugPanel::OnCloseClicked()
 {
 	if (ACSPlayerController* PC = OwningPC.Get())
 	{
-		PC->CloseDebugTeleportPanel();
+		PC->CloseDebugPanel();
 	}
 
 	return FReply::Handled();
 }
 
-ECheckBoxState SCSDebugTeleportPanel::IsTeleportAllChecked() const
+ECheckBoxState SCSDebugPanel::IsTeleportAllChecked() const
 {
 	return bTeleportAllPlayers ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
 }
 
-void SCSDebugTeleportPanel::OnTeleportAllChanged(ECheckBoxState NewState)
+void SCSDebugPanel::OnTeleportAllChanged(ECheckBoxState NewState)
 {
 	bTeleportAllPlayers = (NewState == ECheckBoxState::Checked);
 }
 
-ECheckBoxState SCSDebugTeleportPanel::IsShowCollisionChecked() const
+FReply SCSDebugPanel::OnSwapCharacterClicked()
+{
+	ACSPlayerController* PC = OwningPC.Get();
+	if (!PC)
+	{
+		StatusText = FText::FromString(TEXT("Swap failed: no player controller."));
+		return FReply::Handled();
+	}
+
+	if (!PC->HasOtherPlayerToSwapWith())
+	{
+		StatusText = FText::FromString(TEXT("Swap needs 2 players (Play As Listen Server, 2 clients)."));
+		return FReply::Handled();
+	}
+
+	// 빙의는 서버 권한이다. 클라이언트가 눌러도 서버가 두 컨트롤러의 폰을 맞바꾼다.
+	// 결과는 복제되어 돌아오므로 버튼 라벨은 알아서 바뀐다 — 여기서 낙관적으로 갱신하지 않는다.
+	//
+	// 8/9 단축키와 같은 RPC 를 쓴다. 버튼도 "지정" 이라 연타해도 몸이 튀지 않는다.
+	const FString TargetName = PC->GetDebugSwapTargetName();
+	PC->ServerDebugPlayAsBodySlot(PC->GetSwapTargetBodySlot());
+
+	StatusText = FText::FromString(FString::Printf(TEXT("switching to %s..."), *TargetName));
+
+	return FReply::Handled();
+}
+
+FText SCSDebugPanel::GetSwapButtonText() const
+{
+	const ACSPlayerController* PC = OwningPC.Get();
+	if (!PC)
+	{
+		return FText::FromString(TEXT("Swap character"));
+	}
+
+	// 라벨은 "누르면 조작하게 될 몸" 이다.
+	return FText::FromString(FString::Printf(TEXT("Play %s"), *PC->GetDebugSwapTargetName()));
+}
+
+FText SCSDebugPanel::GetSwapCaptionText() const
+{
+	const ACSPlayerController* PC = OwningPC.Get();
+
+	if (!PC || !PC->HasOtherPlayerToSwapWith())
+	{
+		// 버튼이 왜 꺼져 있는지 그 자리에서 알려 준다. 이게 없으면 "고장났나" 로 오해한다.
+		return FText::FromString(TEXT("Swap needs 2 players. Editor Preferences > Play: Play As Listen Server, Number of Players = 2."));
+	}
+
+	return FText::FromString(FString::Printf(
+		TEXT("Now driving %s. The two players trade bodies; abilities and slot stay with the controller."),
+		*PC->GetDebugCurrentBodyName()));
+}
+
+bool SCSDebugPanel::IsSwapButtonEnabled() const
+{
+	const ACSPlayerController* PC = OwningPC.Get();
+	return PC != nullptr && PC->HasOtherPlayerToSwapWith();
+}
+
+ECheckBoxState SCSDebugPanel::IsFixedSplitSideChecked() const
+{
+	const ACSPlayerController* PC = OwningPC.Get();
+
+	// 패널을 닫았다 열어도 실제 상태를 그대로 비추도록 PC(뒤의 CVar) 쪽 값을 읽는다.
+	return (PC && PC->IsDebugFixedSplitSide()) ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+}
+
+void SCSDebugPanel::OnFixedSplitSideChanged(ECheckBoxState NewState)
+{
+	ACSPlayerController* PC = OwningPC.Get();
+	if (!PC)
+	{
+		return;
+	}
+
+	const bool bEnable = (NewState == ECheckBoxState::Checked);
+	PC->SetDebugFixedSplitSide(bEnable);
+
+	StatusText = FText::FromString(bEnable
+		? TEXT("split side fixed: P1 left / P2 right (both windows)")
+		: TEXT("shipping layout: own body on the right (both windows)"));
+}
+
+ECheckBoxState SCSDebugPanel::IsShowCollisionChecked() const
 {
 	const ACSPlayerController* PC = OwningPC.Get();
 
@@ -658,7 +823,7 @@ ECheckBoxState SCSDebugTeleportPanel::IsShowCollisionChecked() const
 	return (PC && PC->IsShowingBlueprintCollision()) ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
 }
 
-void SCSDebugTeleportPanel::OnShowCollisionChanged(ECheckBoxState NewState)
+void SCSDebugPanel::OnShowCollisionChanged(ECheckBoxState NewState)
 {
 	ACSPlayerController* PC = OwningPC.Get();
 	if (!PC)
@@ -674,7 +839,7 @@ void SCSDebugTeleportPanel::OnShowCollisionChanged(ECheckBoxState NewState)
 		: FText::FromString(TEXT("collision off"));
 }
 
-FText SCSDebugTeleportPanel::GetStatusText() const
+FText SCSDebugPanel::GetStatusText() const
 {
 	return StatusText;
 }

@@ -75,6 +75,22 @@ public:
     UFUNCTION(BlueprintPure, Category = "Split Screen")
     bool IsInFullScreenMode() const;
 
+    /**
+     * 디버그: 분할 화면의 좌우를 *조작 중인 캐릭터* 에 고정한다 — P1 몸 왼쪽, P2 몸 오른쪽.
+     *
+     * 기본 동작(false)은 "메인 뷰(내가 조작 중인 몸)를 항상 오른쪽에 둔다" 라서,
+     * 두 창을 나란히 놓고 보면 같은 자리에 서로 다른 캐릭터가 떠 헷갈린다.
+     * 켜면 두 창의 좌우 배치가 같아진다. 실제로 바뀌는 건 P1 몸을 조작 중인 창뿐이다
+     * (P2 몸을 조작 중인 창은 기본값과 결과가 같다).
+     *
+     * 비셰이핑 빌드에서는 기본으로 켜져 있다. 사용자가 설정 없이 "그냥" 되기를 원했기 때문이다.
+     * 상태는 프로세스 전역 콘솔 변수 cs.SplitScreen.FixedSide 하나가 소유한다 —
+     * PIE 두 창이 같은 값을 보므로 창마다 따로 켤 필요가 없다. 끄려면 체크박스나 CVar 를 쓴다.
+     * 셰이핑에서는 컴파일 타임에 꺼져 런타임에 켤 방법이 없다.
+     */
+    void SetDebugFixedSplitSide(bool bEnable);
+    bool IsDebugFixedSplitSide() const;
+
 protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Split Screen")
     bool bEnableSplitScreen = true;
@@ -132,8 +148,7 @@ private:
     /** 다른 플레이어의 카메라 정보를 들고 있는 Proxy (로컬 플레이어 시점에서 *상대*) */
     TWeakObjectPtr<ACSCameraViewProxy> CachedRemoteProxy;
 
-    /** 원격 캐릭터 — anchor 위치 (CharacterMovement Replication NetSmoothing 적용된 부드러운 신호) */
-    TWeakObjectPtr<ACSCharacterPlayer> CachedRemoteCharacter;
+
 
     /** Fullscreen 트랜지션 상태 — 0=split, 1=fullscreen */
     float CurrentAlpha = 0.f;
@@ -156,9 +171,47 @@ private:
     /** 로컬에서 *상대* 가 되는 Proxy 를 찾음 (NetMode 별 분기) */
     ACSCameraViewProxy* ResolveRemoteProxy() const;
 
-    /** 로컬에서 *상대* 캐릭터를 찾음 (anchor 용) */
-    ACSCharacterPlayer* ResolveRemoteCharacter() const;
+    /** 이 머신의 로컬 ACSPlayerController. 없으면 nullptr. */
+    class ACSPlayerController* ResolveLocalPlayerController() const;
+
+    /**
+     * 이 창이 조작 중인 몸과 상대가 조작 중인 몸을 한 번에 찾는다. 둘을 따로 구하지 않는 것이 핵심이다 —
+     * 따로 구하면 "양쪽 절반이 같은 몸" 상태가 조용히 만들어질 수 있다.
+     *
+     * 상대는 GameState->PlayerArray 에서 내 PlayerState 가 아닌 것의 GetPawn() 이다.
+     *   - APawn::PlayerState 는 무조건 복제되고 APawn::OnRep_PlayerState 가
+     *     APlayerState::GetPawn() 역포인터를 클라에서도 유지한다 -> 호스트와 클라가 같은 답을 낸다.
+     *   - 빙의가 바뀌면 APawn::PossessedBy 가 PlayerState 를 옮기므로 캐릭터 스왑을 자동으로 따라간다.
+     *   - PlayerState 가 없는 ACSCharacterPlayer 파생(미믹/디코이)은 후보에 오르지 않는다.
+     *     예전 방식(TActorIterator + !IsLocallyControlled())은 컨트롤러 없는 그 인형들을
+     *     "원격 캐릭터" 로 잘못 집었다.
+     *
+     * @return 상대 몸을 찾았으면 true
+     */
+    bool ResolveSplitViewPair(ACSCharacterPlayer*& OutLocalBody, ACSCharacterPlayer*& OutRemoteBody) const;
+
+    /** 좌우 배치 갱신. PushSecondaryCamera 와 분리되어 있어야 그쪽 조기 반환에 걸려 얼어붙지 않는다. */
+    void UpdateSplitSideLayout();
+
+    /** 좌우 고정 배치가 지금 유효한가 (셰이핑에서는 컴파일 타임에 false). */
+    bool IsFixedSideLayoutActive() const;
 
     /** 매 프레임 보조 뷰 카메라 푸시 */
     void PushSecondaryCamera();
+
+    /**
+     * 직전 프레임의 보조 뷰 대상. *대상 결정에는 쓰지 않는다* — 아래 두 가지에만 쓴다.
+     *   1) 대상이 바뀐 프레임을 감지해 보간 상태를 리셋 (안 하면 카메라가 옛 몸에서 새 몸으로 미끄러진다)
+     *   2) 스왑 직후 PlayerState 역포인터가 한두 프레임 어긋날 때의 짧은 유예
+     * 예전의 CachedRemoteCharacter 처럼 "캐시가 있으면 재해석 안 함" 으로 쓰면 안 된다.
+     * 그게 스왑 후 양쪽 절반이 같은 몸으로 보이던 원인이었다.
+     */
+    TWeakObjectPtr<ACSCharacterPlayer> LastGoodRemoteBody;
+    int32 SecondaryHoldFrames = 0;
+
+    /** 좌우 배치 마지막 값. 판정에 실패하면 추측하지 않고 이 값을 유지한다. */
+    bool bLastMainViewOnRight = true;
+
+    /** 몸 슬롯 판정 실패 경고를 한 번만 찍기 위한 래치. */
+    bool bBodySlotWarnLogged = false;
 };
