@@ -81,6 +81,8 @@ private:
 
 	ECheckBoxState IsFixedSplitSideChecked() const;
 	void OnFixedSplitSideChanged(ECheckBoxState NewState);
+	bool IsFixedSplitSideEnabled() const;
+	FText GetFixedSplitSideLabel() const;
 
 	FText GetStatusText() const;
 

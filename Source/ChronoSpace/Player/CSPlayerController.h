@@ -221,6 +221,9 @@ public:
 	void SetDebugFixedSplitSide(bool bEnable);
 	bool IsDebugFixedSplitSide() const;
 
+	/** 패널용 — 이 빌드에 좌우 고정 기능이 있는가. 셰이핑에서는 없다. */
+	bool IsDebugFixedSplitSideSupported() const;
+
 	/**
 	 * 지금 조작 중인 *몸* 의 슬롯. 스왑 여부(bDebugDrivingOtherBody)를 반영한 값이다.
 	 * 내 PlayerState 슬롯과는 다를 수 있다 — 그게 이 기능의 요점이다.

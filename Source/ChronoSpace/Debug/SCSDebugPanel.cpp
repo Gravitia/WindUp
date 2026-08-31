@@ -298,6 +298,7 @@ void SCSDebugPanel::Construct(const FArguments& InArgs)
 					.VAlign(VAlign_Center)
 					[
 						SNew(SCheckBox)
+						.IsEnabled(this, &SCSDebugPanel::IsFixedSplitSideEnabled)
 						.IsChecked(this, &SCSDebugPanel::IsFixedSplitSideChecked)
 						.OnCheckStateChanged(this, &SCSDebugPanel::OnFixedSplitSideChanged)
 					]
@@ -310,7 +311,7 @@ void SCSDebugPanel::Construct(const FArguments& InArgs)
 						SNew(STextBlock)
 						.Font(FCoreStyle::GetDefaultFontStyle("Regular", 10))
 						.ColorAndOpacity(FLinearColor::White)
-						.Text(FText::FromString(TEXT("Fixed split side: P1 left / P2 right")))
+						.Text(this, &SCSDebugPanel::GetFixedSplitSideLabel)
 					]
 
 					+ SHorizontalBox::Slot()
@@ -798,6 +799,24 @@ bool SCSDebugPanel::IsSwapButtonEnabled() const
 {
 	const ACSPlayerController* PC = OwningPC.Get();
 	return PC != nullptr && PC->HasOtherPlayerToSwapWith();
+}
+
+bool SCSDebugPanel::IsFixedSplitSideEnabled() const
+{
+	// 셰이핑 빌드에는 좌우 고정이 아예 들어 있지 않다. 눌러도 안 되는 체크박스를
+	// 멀쩡한 것처럼 두지 않는다 (패널 자체는 셰이핑에서도 열린다).
+	const ACSPlayerController* PC = OwningPC.Get();
+	return PC != nullptr && PC->IsDebugFixedSplitSideSupported();
+}
+
+FText SCSDebugPanel::GetFixedSplitSideLabel() const
+{
+	if (!IsFixedSplitSideEnabled())
+	{
+		return FText::FromString(TEXT("Fixed split side (editor / development only)"));
+	}
+
+	return FText::FromString(TEXT("Fixed split side: P1 left / P2 right"));
 }
 
 ECheckBoxState SCSDebugPanel::IsFixedSplitSideChecked() const

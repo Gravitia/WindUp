@@ -507,6 +507,11 @@ void ACSPlayerController::SetDebugFixedSplitSide(bool bEnable)
 	}
 }
 
+bool ACSPlayerController::IsDebugFixedSplitSideSupported() const
+{
+	return UCSSplitScreenSubsystem::IsFixedSideLayoutSupported();
+}
+
 bool ACSPlayerController::IsDebugFixedSplitSide() const
 {
 	if (const UGameInstance* GI = GetGameInstance())

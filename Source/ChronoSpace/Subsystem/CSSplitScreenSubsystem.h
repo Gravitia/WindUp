@@ -91,6 +91,15 @@ public:
     void SetDebugFixedSplitSide(bool bEnable);
     bool IsDebugFixedSplitSide() const;
 
+    /**
+     * 이 빌드에 좌우 고정 기능이 들어 있는가. 셰이핑에서는 컴파일 타임에 빠진다.
+     *
+     * "켜져 있는가"(IsDebugFixedSplitSide) 와 다른 질문이다. 디버그 패널이 체크박스를
+     * 비활성으로 그릴지 정하는 데 쓴다 — 눌러도 아무 일이 없는 컨트롤을 멀쩡한 것처럼
+     * 두면 "고장났나" 로 오해한다. 패널 자체는 셰이핑에서도 열린다(팀 결정)는 점에 주의.
+     */
+    static bool IsFixedSideLayoutSupported();
+
 protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Split Screen")
     bool bEnableSplitScreen = true;

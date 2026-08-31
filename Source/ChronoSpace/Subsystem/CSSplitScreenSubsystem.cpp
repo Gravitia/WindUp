@@ -227,14 +227,21 @@ ACSPlayerController* UCSSplitScreenSubsystem::ResolveLocalPlayerController() con
     return nullptr;
 }
 
-bool UCSSplitScreenSubsystem::IsFixedSideLayoutActive() const
+bool UCSSplitScreenSubsystem::IsFixedSideLayoutSupported()
 {
 #if UE_BUILD_SHIPPING
-    // 셰이핑에서는 런타임에 켤 방법이 없다. 컴파일 타임에 잘라낸다.
+    // 좌우 고정은 *출시 게임의 카메라 배치* 를 바꾸는 일이라 셰이핑에는 넣지 않는다.
+    // 디버그 창이 셰이핑에서도 열리는 것과는 별개 사안이다.
     return false;
 #else
-    return CVarCSSplitScreenFixedSide.GetValueOnGameThread() != 0;
+    return true;
 #endif
+}
+
+bool UCSSplitScreenSubsystem::IsFixedSideLayoutActive() const
+{
+    // 조건은 여기 한 곳에만 둔다. 패널도 IsFixedSideLayoutSupported() 를 거쳐 묻는다.
+    return IsFixedSideLayoutSupported() && CVarCSSplitScreenFixedSide.GetValueOnGameThread() != 0;
 }
 
 void UCSSplitScreenSubsystem::SetDebugFixedSplitSide(bool bEnable)
