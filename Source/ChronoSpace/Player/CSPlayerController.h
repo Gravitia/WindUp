@@ -84,9 +84,9 @@ private:
 	void InitializeUI();
 	FTimerHandle UICreationTimerHandle;
 
-// Camera Zoom Sync (CSCameraZoomComponent 호환 — 새 ViewFamily 분할 화면에서는 카메라 위치 자체가
-//                   리플리케이트되므로 SpringArm 길이 동기화는 더 이상 필요 없다. 호출자 호환을 위해
-//                   시그니처만 유지하며, 실제 구현은 빈 본문이다.)
+// Camera Zoom Sync (새 ViewFamily 분할 화면에서는 카메라 위치 자체가 리플리케이트되므로
+//                   SpringArm 길이 동기화는 더 이상 필요 없다. C++ 호출부는 0 개이고 본문도 비어 있다.
+//                   블루프린트 호출 가능성 때문에 선언만 남겨둔다.)
 public:
 	UFUNCTION(Server, Reliable)
 	void ServerBroadcastZoomToOthers(float NewArmLength);

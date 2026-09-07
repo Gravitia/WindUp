@@ -3,6 +3,7 @@
 
 #include "GA/CSGA_CameraZoom.h"
 #include "Character/CSCharacterPlayer.h"
+#include "ActorComponent/CSCameraRigComponent.h"
 #include "ChronoSpace.h"
 
 UCSGA_CameraZoom::UCSGA_CameraZoom()
@@ -30,7 +31,17 @@ void UCSGA_CameraZoom::ActivateAbility(
 		return;
 	}
 
-	CSPlayer->ZoomCamera(ZoomLength, ZoomSpeed);
+	// 예전 부호 규약: 양수 ZoomLength = 팔이 짧아진다(가까이). 등속 유지를 위해 Linear
+	const float BlendTime = CSCameraRig::BlendTimeFromSpeed(ZoomLength, ZoomSpeed);
+
+	FCSCameraModifier Modifier;
+	Modifier.Source = CSCameraRigSource::CameraZoomAbility;
+	Modifier.ArmLengthDelta = -ZoomLength;
+	Modifier.BlendInTime = BlendTime;
+	Modifier.BlendOutTime = BlendTime;
+	Modifier.Blend = ECSCameraBlend::Linear;
+
+	CSPlayer->AddCameraModifier(Modifier);
 
 	UE_LOG(LogCS, Log, TEXT("CameraZoom Ability Activated"));
 }
@@ -46,7 +57,7 @@ void UCSGA_CameraZoom::EndAbility(
 	ACSCharacterPlayer* CSPlayer = Cast<ACSCharacterPlayer>(ActorInfo->AvatarActor.Get());
 	if (CSPlayer)
 	{
-		CSPlayer->ZoomCamera(0.f, ZoomSpeed);
+		CSPlayer->RemoveCameraModifier(CSCameraRigSource::CameraZoomAbility);
 	}
 
 	UE_LOG(LogCS, Log, TEXT("CameraZoom Ability Ended"));

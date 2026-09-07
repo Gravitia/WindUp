@@ -93,11 +93,16 @@ protected:
 	TObjectPtr<class UCameraComponent> FollowCamera;
 
 	UPROPERTY()
-	TObjectPtr<class UCSCameraZoomComponent> ZoomComponent;
+	TObjectPtr<class UCSCameraRigComponent> CameraRigComponent;
 
 // Move & Look
 public:
-	void ZoomCamera( float ZoomLength, float ZoomSpeed );
+	/**
+	 * 카메라 모디파이어를 등록/해제한다. 원본 복원은 UCSCameraRigComponent 가 책임지므로
+	 * 호출부는 원본값을 캐시하지 않는다. Source 는 CSCameraRigSource 의 것을 쓴다.
+	 */
+	void AddCameraModifier( struct FCSCameraModifier InModifier );
+	void RemoveCameraModifier( FName Source );
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, Meta = (AllowPrivateAccess = "true"))

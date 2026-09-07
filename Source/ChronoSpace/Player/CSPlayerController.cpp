@@ -778,7 +778,9 @@ bool ACSPlayerController::IsGameUIVisible() const
 // ============================================================
 // 새 ViewFamily 분할 화면에서는 PlayerCameraManager 의 결과 카메라 위치(SpringArm 적용 후)가
 // 그대로 RepCam.Location 으로 리플리케이트되므로, 별도의 ArmLength 동기화가 필요 없다.
-// CSCameraZoomComponent 가 호출하는 시그니처를 유지하기 위해 본문은 비워둔다.
+//
+// C++ 호출부는 0 개다. 예전 UCSCameraZoomComponent::ZoomCamera 안에 있던 마지막 호출이
+// 카메라 리그 리팩터로 사라졌다. 블루프린트에서 부르고 있을 수 있어 선언만 남겨둔다.
 
 void ACSPlayerController::ServerBroadcastZoomToOthers_Implementation(float /*NewArmLength*/)
 {

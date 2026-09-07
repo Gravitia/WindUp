@@ -28,7 +28,7 @@
 #include "ActorComponent/CSTransformRecordComponent.h"
 #include "ActorComponent/CSCharacterPushedComponent.h"
 #include "ActorComponent/CSCharacterPulledByBlackhole.h"
-#include "ActorComponent/CSCameraZoomComponent.h"
+#include "ActorComponent/CSCameraRigComponent.h"
 #include "ActorComponent/CSVFXComponent.h"
 #include "Player/CSPlayerController.h"
 #include "DataAsset/CSCharacterPlayerData.h"
@@ -55,7 +55,7 @@ ACSCharacterPlayer::ACSCharacterPlayer()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
 
-	ZoomComponent = CreateDefaultSubobject<UCSCameraZoomComponent>(TEXT("ZoomComponent"));
+	CameraRigComponent = CreateDefaultSubobject<UCSCameraRigComponent>(TEXT("CameraRigComponent"));
 
 	FirstPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
 	// 보통 플레이어 메쉬의 “head” 소켓(혹은 눈 위치)에 붙입니다.
@@ -334,9 +334,9 @@ void ACSCharacterPlayer::SetData()
 	CameraBoom->TargetArmLength = Data->TargetArmLength;
 	CameraBoom->SetRelativeLocation(Data->CameraOffset);
 
-	if ( ZoomComponent )
+	if ( CameraRigComponent )
 	{
-		ZoomComponent->Init(CameraBoom, Data->TargetArmLength);
+		CameraRigComponent->Init(CameraBoom, Data->TargetArmLength);
 	}
 
 	GetCharacterMovement()->RotationRate = Data->RotationRate;
@@ -368,11 +368,18 @@ void ACSCharacterPlayer::SetData()
 	Trigger->SetCapsuleSize(Data->TriggerRadius, Data->TriggerHeight); 
 }
 
-void ACSCharacterPlayer::ZoomCamera( float ZoomLength, float ZoomSpeed )
+void ACSCharacterPlayer::AddCameraModifier( FCSCameraModifier InModifier )
 {
-	if ( Data == nullptr || ZoomComponent == nullptr ) return;
+	if ( CameraRigComponent == nullptr ) return;
 
-	ZoomComponent->ZoomCamera(ZoomLength, ZoomSpeed);
+	CameraRigComponent->AddModifier(InModifier);
+}
+
+void ACSCharacterPlayer::RemoveCameraModifier( FName Source )
+{
+	if ( CameraRigComponent == nullptr ) return;
+
+	CameraRigComponent->RemoveModifier(Source);
 }
 
 void ACSCharacterPlayer::ShoulderMove(const FInputActionValue& Value)

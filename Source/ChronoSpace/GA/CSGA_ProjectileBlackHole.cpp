@@ -6,13 +6,13 @@
 #include "GA/CSGA_CameraZoom.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/Character.h"
-#include "GameFramework/SpringArmComponent.h"
 #include "Engine/World.h"
 #include "DrawDebugHelpers.h"
 #include "Abilities/GameplayAbilityTypes.h"
 #include "AbilitySystemComponent.h"
 #include "Abilities/GameplayAbilityTargetTypes.h"
 #include "Character/CSCharacterPlayer.h"
+#include "ActorComponent/CSCameraRigComponent.h"
 #include "Actor/CSBlackHoleDummy.h"
 #include "Actor/CSBlackHole.h"
 #include "Subsystem/CSManagedActorSubsystem.h"
@@ -41,7 +41,6 @@ UCSGA_ProjectileBlackHole::UCSGA_ProjectileBlackHole()
 
 	CameraZOffsetWhileAiming = 400.0f;
 	bApplyCameraZOffsetWhileAiming = true;
-	bCameraOffsetApplied = false;
 
 	bRetriggerInstancedAbility = true;
 }
@@ -111,7 +110,7 @@ void UCSGA_ProjectileBlackHole::ActivateAbility(const FGameplayAbilitySpecHandle
 	}
 	*/
 
-	ApplyCameraZOffset();
+	ApplyCameraZOffset(ActorInfo);
 
 	UE_LOG(LogCS, Log, TEXT("ProjectileBlackHole Activated"));
 
@@ -175,10 +174,10 @@ void UCSGA_ProjectileBlackHole::EndAbility(const FGameplayAbilitySpecHandle Hand
 		GetWorld()->GetTimerManager().ClearTimer(DurationTimerHandle);
 	}
 
-	// 카메라 복원 Lerp 는 어빌리티 수명과 분리해서 돌린다 (InstancedPerActor 라 인스턴스와 타이머는 살아 있다).
-	// 예전엔 Lerp 가 끝날 때까지 Super::EndAbility 를 미뤘는데, 엔진은 EndAbility 가 동기라고 가정하므로
-	// retrigger 경로에서 ActiveCount 가 누수되고 Spec->IsActive() 가 영구 true 가 됐다 (ClearAbility 불가).
-	RestoreCameraZOffset();
+	// 카메라 복원은 캐릭터의 UCSCameraRigComponent 가 Tick 으로 돌린다.
+	// 어빌리티 타이머로 돌리면 바로 아래 Super::EndAbility 안의
+	// ClearAllTimersForObject(this) 에 지워져서 복원이 한 번도 실행되지 않는다.
+	RestoreCameraZOffset(ActorInfo);
 
 	UE_LOG(LogCS, Log, TEXT("ProjectileBlackHole Ended"));
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
@@ -364,133 +363,52 @@ void UCSGA_ProjectileBlackHole::CheckMouseMovement()
 }
 
 
-void UCSGA_ProjectileBlackHole::ApplyCameraZOffset()
+ACSCharacterPlayer* UCSGA_ProjectileBlackHole::GetCameraRigOwner(const FGameplayAbilityActorInfo* ActorInfo) const
 {
-	if (!bApplyCameraZOffsetWhileAiming || bCameraOffsetApplied)
-	{
-		return;
-	}
+	AActor* Avatar = (ActorInfo && ActorInfo->AvatarActor.IsValid())
+		? ActorInfo->AvatarActor.Get()
+		: GetAvatarActorFromActorInfo();
 
-	AActor* Avatar = GetAvatarActorFromActorInfo();
-	if (!IsValid(Avatar))
-	{
-		return;
-	}
-
-	// 캐릭터에 붙은 스프링암 컴포넌트 찾기
-	USpringArmComponent* SpringArmComp = Avatar->FindComponentByClass<USpringArmComponent>();
-	if (!IsValid(SpringArmComp))
-	{
-		UE_LOG(LogCS, Warning, TEXT("ApplyCameraZOffset: SpringArmComponent not found"));
-		return;
-	}
-
-	// 복원 Lerp 도중 재활성화된 경우, 기존 원래 위치(CachedSpringArmRelativeLocation) 유지
-	if (CachedSpringArmComponent == SpringArmComp)
-	{
-		// 이미 캐시된 원래 위치를 그대로 사용
-	}
-	else
-	{
-		CachedSpringArmComponent = SpringArmComp;
-		CachedSpringArmRelativeLocation = SpringArmComp->GetRelativeLocation();
-	}
-
-	FVector TargetLocation = CachedSpringArmRelativeLocation;
-	TargetLocation.Z += CameraZOffsetWhileAiming;
-
-	// Lerp 시작 (현재 위치에서 목표 위치로)
-	CameraOffsetLerpStart = SpringArmComp->GetRelativeLocation();
-	CameraOffsetLerpTarget = TargetLocation;
-	CameraOffsetLerpElapsed = 0.f;
-	bCameraOffsetApplied = true;
-
-	if (UWorld* World = Avatar->GetWorld())
-	{
-		World->GetTimerManager().ClearTimer(CameraOffsetLerpTimerHandle);
-		World->GetTimerManager().SetTimer(
-			CameraOffsetLerpTimerHandle,
-			FTimerDelegate::CreateUObject(this, &UCSGA_ProjectileBlackHole::UpdateCameraOffsetLerp),
-			0.016f,
-			true
-		);
-	}
-
-	UE_LOG(LogCS, Log, TEXT("ApplyCameraZOffset(SpringArm): Lerp Z + %f over %f seconds"), CameraZOffsetWhileAiming, CameraOffsetLerpDuration);
+	return Cast<ACSCharacterPlayer>(Avatar);
 }
 
-void UCSGA_ProjectileBlackHole::RestoreCameraZOffset()
+void UCSGA_ProjectileBlackHole::ApplyCameraZOffset(const FGameplayAbilityActorInfo* ActorInfo)
 {
-	if (!bCameraOffsetApplied)
+	if (!bApplyCameraZOffsetWhileAiming)
 	{
 		return;
 	}
 
-	if (!IsValid(CachedSpringArmComponent))
+	ACSCharacterPlayer* CSPlayer = GetCameraRigOwner(ActorInfo);
+	if (!IsValid(CSPlayer))
 	{
-		bCameraOffsetApplied = false;
-		CachedSpringArmComponent = nullptr;
-		CachedSpringArmRelativeLocation = FVector::ZeroVector;
+		UE_LOG(LogCS, Warning, TEXT("ApplyCameraZOffset: avatar is not ACSCharacterPlayer"));
 		return;
 	}
 
-	// 현재 위치에서 원래 위치로 Lerp 시작
-	CameraOffsetLerpStart = CachedSpringArmComponent->GetRelativeLocation();
-	CameraOffsetLerpTarget = CachedSpringArmRelativeLocation;
-	CameraOffsetLerpElapsed = 0.f;
-	bCameraOffsetApplied = false;	// UpdateCameraOffsetLerp에서 Lerp 완료 시 캐시 정리됨
+	FCSCameraModifier Modifier;
+	Modifier.Source = CSCameraRigSource::BlackHoleAim;
+	Modifier.BoomOffsetDelta = FVector(0.f, 0.f, CameraZOffsetWhileAiming);
+	Modifier.BlendInTime = CameraOffsetLerpDuration;
+	Modifier.BlendOutTime = CameraOffsetRestoreLerpDuration;
+	Modifier.Blend = ECSCameraBlend::EaseInOut;
 
-	if (UWorld* World = CachedSpringArmComponent->GetWorld())
-	{
-		World->GetTimerManager().ClearTimer(CameraOffsetLerpTimerHandle);
-		World->GetTimerManager().SetTimer(
-			CameraOffsetLerpTimerHandle,
-			FTimerDelegate::CreateUObject(this, &UCSGA_ProjectileBlackHole::UpdateCameraOffsetLerp),
-			0.016f,
-			true
-		);
-	}
+	CSPlayer->AddCameraModifier(Modifier);
 
-	UE_LOG(LogCS, Log, TEXT("RestoreCameraZOffset(SpringArm): Lerp restore over %f seconds"), CameraOffsetLerpDuration);
+	UE_LOG(LogCS, Log, TEXT("ApplyCameraZOffset: Z + %f over %f seconds"), CameraZOffsetWhileAiming, CameraOffsetLerpDuration);
 }
 
-void UCSGA_ProjectileBlackHole::UpdateCameraOffsetLerp()
+void UCSGA_ProjectileBlackHole::RestoreCameraZOffset(const FGameplayAbilityActorInfo* ActorInfo)
 {
-	if (!IsValid(CachedSpringArmComponent))
+	ACSCharacterPlayer* CSPlayer = GetCameraRigOwner(ActorInfo);
+	if (!IsValid(CSPlayer))
 	{
-		// 스프링암이 사라졌으면 타이머 정리
-		if (UWorld* World = GetWorld())
-		{
-			World->GetTimerManager().ClearTimer(CameraOffsetLerpTimerHandle);
-		}
-		CachedSpringArmComponent = nullptr;
-		CachedSpringArmRelativeLocation = FVector::ZeroVector;
+		// 여기로 빠지면 오프셋이 걸린 채 남는다. 흔적을 남겨야 추적이 된다
+		UE_LOG(LogCS, Warning, TEXT("RestoreCameraZOffset: avatar is not ACSCharacterPlayer - BlackHoleAim offset left active"));
 		return;
 	}
 
-	CameraOffsetLerpElapsed += 0.016f;
-	const float CurrentLerpDuration = bCameraOffsetApplied ? CameraOffsetLerpDuration : CameraOffsetRestoreLerpDuration;
-	const float Alpha = FMath::Clamp(CameraOffsetLerpElapsed / CurrentLerpDuration, 0.f, 1.f);
+	CSPlayer->RemoveCameraModifier(CSCameraRigSource::BlackHoleAim);
 
-	// EaseInOut 커브 적용
-	const float SmoothedAlpha = FMath::InterpEaseInOut(0.f, 1.f, Alpha, 2.f);
-
-	const FVector NewLocation = FMath::Lerp(CameraOffsetLerpStart, CameraOffsetLerpTarget, SmoothedAlpha);
-	CachedSpringArmComponent->SetRelativeLocation(NewLocation);
-
-	if (Alpha >= 1.f)
-	{
-		// Lerp 완료
-		if (UWorld* World = CachedSpringArmComponent->GetWorld())
-		{
-			World->GetTimerManager().ClearTimer(CameraOffsetLerpTimerHandle);
-		}
-
-		// 원복 완료 시 캐시 정리
-		if (!bCameraOffsetApplied)
-		{
-			CachedSpringArmComponent = nullptr;
-			CachedSpringArmRelativeLocation = FVector::ZeroVector;
-		}
-	}
+	UE_LOG(LogCS, Log, TEXT("RestoreCameraZOffset: release over %f seconds"), CameraOffsetRestoreLerpDuration);
 }

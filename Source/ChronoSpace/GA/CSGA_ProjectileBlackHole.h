@@ -115,21 +115,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Default|Camera")
 	bool bApplyCameraZOffsetWhileAiming = true;
 
-	UPROPERTY(Transient)
-	TObjectPtr<class USpringArmComponent> CachedSpringArmComponent = nullptr;
-
-	UPROPERTY(Transient)
-	FVector CachedSpringArmRelativeLocation = FVector::ZeroVector;
-
-	UPROPERTY(Transient)
-	bool bCameraOffsetApplied = false;
-
-	/** Lerp 관련 */
-	FTimerHandle CameraOffsetLerpTimerHandle;
-	FVector CameraOffsetLerpStart = FVector::ZeroVector;
-	FVector CameraOffsetLerpTarget = FVector::ZeroVector;
-	float CameraOffsetLerpElapsed = 0.f;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Default|Camera")
 	float CameraOffsetLerpDuration = 0.5f;
 
@@ -137,8 +122,13 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Default|Camera")
 	float CameraOffsetRestoreLerpDuration = 0.3f;
 
+	/**
+	 * 카메라 오프셋의 적용/복원과 원본값 보관은 전부 UCSCameraRigComponent 가 한다.
+	 * 어빌리티가 타이머로 Lerp 를 돌리면 UGameplayAbility::EndAbility 의
+	 * ClearAllTimersForObject(this) 에 지워져 복원이 아예 실행되지 않는다.
+	 */
+	void ApplyCameraZOffset(const FGameplayAbilityActorInfo* ActorInfo);
+	void RestoreCameraZOffset(const FGameplayAbilityActorInfo* ActorInfo);
 
-	void ApplyCameraZOffset();
-	void RestoreCameraZOffset();
-	void UpdateCameraOffsetLerp();
+	class ACSCharacterPlayer* GetCameraRigOwner(const FGameplayAbilityActorInfo* ActorInfo) const;
 };

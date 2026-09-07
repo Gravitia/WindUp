@@ -4,6 +4,7 @@
 #include "Actor/CSCameraZoomVolume.h"
 #include "Components/BoxComponent.h"
 #include "Character/CSCharacterPlayer.h"
+#include "ActorComponent/CSCameraRigComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "Subsystem/CSSplitScreenSubsystem.h"
 #include "Engine/LocalPlayer.h"
@@ -47,7 +48,17 @@ void ACSCameraZoomVolume::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedC
 	// ── 줌 적용 (로컬 플레이어만) ──
 	if (Player->IsLocallyControlled())
 	{
-		Player->ZoomCamera(ZoomLength, ZoomSpeed);
+		// 예전 부호 규약: 양수 ZoomLength = 팔이 짧아진다(가까이). 등속 유지를 위해 Linear
+		const float BlendTime = CSCameraRig::BlendTimeFromSpeed(ZoomLength, ZoomSpeed);
+
+		FCSCameraModifier Modifier;
+		Modifier.Source = CSCameraRigSource::ZoomVolume;
+		Modifier.ArmLengthDelta = -ZoomLength;
+		Modifier.BlendInTime = BlendTime;
+		Modifier.BlendOutTime = BlendTime;
+		Modifier.Blend = ECSCameraBlend::Linear;
+
+		Player->AddCameraModifier(Modifier);
 	}
 
 	// ── 스플릿 스크린 전환 (옵션) ── 이 머신의 화면만 바뀌므로 로컬 판정이 필요하다
@@ -86,7 +97,7 @@ void ACSCameraZoomVolume::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedCom
 	// ── 줌 복원 (로컬 플레이어만) ──
 	if (Player->IsLocallyControlled())
 	{
-		Player->ZoomCamera(0.f, ZoomSpeed);
+		Player->RemoveCameraModifier(CSCameraRigSource::ZoomVolume);
 	}
 
 	const bool bWasLocalTrigger = Occupant->bRequestedFullScreen;
