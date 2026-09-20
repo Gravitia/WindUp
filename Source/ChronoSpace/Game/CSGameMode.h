@@ -79,6 +79,17 @@ protected:
 private:
     class ACSGameState* GetCSGameState() const;
 
+    /**
+     * 이 플레이어의 슬롯을 확정해 PlayerState 에 박고 그 값을 돌려준다.
+     * Super::PostLogin(=RestartPlayer) 보다 먼저 불러야 한다.
+     * 다른 접속자가 같은 슬롯을 들고 있으면 반대쪽으로 돌린다 — 1번/2번이 하나씩 나오게 하는
+     * 마지막 방어선이다.
+     */
+    ECSPlayerSlot ResolvePlayerSlotForPlayer(APlayerController* NewPlayer);
+
+    /** NewPlayer 를 제외한, 지금 접속해 있는 플레이어 중 이 슬롯을 이미 쓰는 사람이 있는가. */
+    bool IsSlotHeldByOtherPlayer(const APlayerController* NewPlayer, ECSPlayerSlot Slot) const;
+
 
 // Split Screen
 public:

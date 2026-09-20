@@ -16,26 +16,26 @@
 UCLASS()
 class CHRONOSPACE_API UCSAbilityHUD : public UUserWidget
 {
-    GENERATED_BODY()  // GENERATED_BODY() Ãß°¡ ¾È ÇÏ¸é UUserWidget ±â´ÉÀ» »ç¿ëÇÒ ¼ö ¾øÀ½.
+    GENERATED_BODY()  // GENERATED_BODY() ì¶”ê°€ ì•ˆ í•˜ë©´ UUserWidget ê¸°ëŠ¥ì„ ì‚¬ìš©í•  ìˆ˜ ì—†ìŒ.
 
 public:
-    // **¾îºô¸®Æ¼ UI ¸®½ºÆ®¸¦ Ç¥½ÃÇÒ ÄÁÅ×ÀÌ³Ê (Blueprint¿¡¼­ ¼³Á¤ ÇÊ¿ä)**
+    // **ì–´ë¹Œë¦¬í‹° UI ë¦¬ìŠ¤íŠ¸ë¥¼ í‘œì‹œí•  ì»¨í…Œì´ë„ˆ (Blueprintì—ì„œ ì„¤ì • í•„ìš”)**
     UPROPERTY(meta = (BindWidget))
     UVerticalBox* AbilityContainer;
 
-    // **¾îºô¸®Æ¼ UI ¿ä¼Ò (ÀÌ¹ÌÁö + ÅØ½ºÆ®)**
+    // **ì–´ë¹Œë¦¬í‹° UI ìš”ì†Œ (ì´ë¯¸ì§€ + í…ìŠ¤íŠ¸)**
     UPROPERTY(EditDefaultsOnly, Category="AbilityUI")
     TSubclassOf<UUserWidget> AbilityWidgetClass;
 
-    // ÇöÀç ¼±ÅÃµÈ ¾îºô¸®Æ¼ ÀÎµ¦½º
+    // í˜„ì¬ ì„ íƒëœ ì–´ë¹Œë¦¬í‹° ì¸ë±ìŠ¤
     UPROPERTY(BlueprintReadWrite, Category="AbilityUI")
     int32 SelectedAbilityIndex;
 
-    // ÇöÀç »ç¿ë °¡´ÉÇÑ ¾îºô¸®Æ¼ ¸ñ·Ï
+    // í˜„ì¬ ì‚¬ìš© ê°€ëŠ¥í•œ ì–´ë¹Œë¦¬í‹° ëª©ë¡
     UPROPERTY(BlueprintReadWrite, Category="AbilityUI")
     TArray<FString> AvailableAbilities;
 
-    // UI ÃÊ±âÈ­ ÇÔ¼ö (½ºÅ×ÀÌÁö º¯°æ ½Ã È£ÃâµÊ)
+    // UI ì´ˆê¸°í™” í•¨ìˆ˜ (ìŠ¤í…Œì´ì§€ ë³€ê²½ ì‹œ í˜¸ì¶œë¨)
     UFUNCTION(BlueprintCallable, Category="AbilityUI")
     void InitializeAbilityUI();
 
@@ -43,11 +43,11 @@ protected:
     virtual void NativeConstruct() override;
 
 private:
-    // ¸¶¿ì½º ÈÙ ÀÔ·Â Ã³¸®
+    // ë§ˆìš°ìŠ¤ íœ  ì…ë ¥ ì²˜ë¦¬
     UFUNCTION()
     void ChangeAbilitySelection(float AxisValue);
 
-    // ¾îºô¸®Æ¼ ½ÇÇà
+    // ì–´ë¹Œë¦¬í‹° ì‹¤í–‰
     UFUNCTION()
     void UseSelectedAbility();
 	
