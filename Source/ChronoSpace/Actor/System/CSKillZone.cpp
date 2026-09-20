@@ -15,7 +15,19 @@ ACSKillZone::ACSKillZone()
 {
     PrimaryActorTick.bCanEverTick = false;
 
-    bReplicates = true;
+    // 리플리케이트하지 않는다. 이 액터는 완전히 서버 전용이다.
+    // OnTriggerBeginOverlap 이 HasAuthority() 가 아니면 즉시 반환하고, 복제할 프로퍼티도 없다.
+    // 사망 연출은 캐릭터의 bIsDead 복제와 Multicast 가 담당한다.
+    //
+    // 켜 두면 킬존이 넷 GUID 캐시에 올라가고, 파괴될 때 "파괴된 스타트업 액터" 기록으로 남는다.
+    // 그 기록 때문에 에디터에서 트래블할 때마다 PackageMapClient 의
+    // ensureAlways(DriverPIEInstanceID == ObjectPIEInstanceID) 가 킬존 수만큼 터졌고,
+    // 한 번 터질 때마다 크래시 리포트를 쓰느라 2~5초씩 멈췄다 (16초 트래블의 대부분).
+    //
+    // 대가: 서버가 런타임에 킬존을 파괴해도 클라이언트에는 남는다. 클라는 판정을 하지 않고
+    // 콜리전도 Trigger 라 막지 않으므로 무해하다. 단 bShowVisualMesh 를 켠 인스턴스는
+    // 그 메시가 클라에 남는다.
+    bReplicates = false;
 
     // Kill Volume as root
     KillVolume = CreateDefaultSubobject<UBoxComponent>(TEXT("KillVolume"));
