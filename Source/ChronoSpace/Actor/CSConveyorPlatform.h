@@ -24,6 +24,9 @@ public:
 
 	float GetOffsetDistance() const { return OffsetDistance; }
 
+	/** 이 플랫폼의 높이 보정값. 매니저가 에디터에서 정렬할 때 같이 반영한다. */
+	float GetZOffset() const { return ZOffset; }
+
 private:
 	// wrap(끝 -> 시작 순간이동) 시 이 플랫폼 위에 올라탄 캐릭터가
 	// 같이 텔레포트되지 않도록 movement base를 끊어준다.
