@@ -12,47 +12,47 @@ void UCSAbilityHUD::NativeConstruct()
 {
     Super::NativeConstruct();
 
-    //  ÃÊ±â UI ·Îµå
+    //  ì´ˆê¸° UI ë¡œë“œ
     InitializeAbilityUI();
 }
 
 void UCSAbilityHUD::InitializeAbilityUI()
 {
-    // ½ºÅ×ÀÌÁö ¼­ºê½Ã½ºÅÛ °¡Á®¿À±â
+    // ìŠ¤í…Œì´ì§€ ì„œë¸Œì‹œìŠ¤í…œ ê°€ì ¸ì˜¤ê¸°
     UCSStageGameInstanceSubsystem* StageSubsystem = GetGameInstance()->GetSubsystem<UCSStageGameInstanceSubsystem>();
     if (!StageSubsystem) return;
 
-    //  ÇöÀç »ç¿ë °¡´ÉÇÑ ¾îºô¸®Æ¼ °¡Á®¿À±â
+    //  í˜„ì¬ ì‚¬ìš© ê°€ëŠ¥í•œ ì–´ë¹Œë¦¬í‹° ê°€ì ¸ì˜¤ê¸°
     AvailableAbilities = StageSubsystem->GetAvailableAbilities();
     SelectedAbilityIndex = 0;
 
-    // ±âÁ¸ UI Á¦°Å
+    // ê¸°ì¡´ UI ì œê±°
     AbilityContainer->ClearChildren();
 
-    // ¾îºô¸®Æ¼ ¸ñ·ÏÀ» UI¿¡ Ãß°¡
+    // ì–´ë¹Œë¦¬í‹° ëª©ë¡ì„ UIì— ì¶”ê°€
     for (int32 i = 0; i < AvailableAbilities.Num(); i++)
     {
         UE_LOG(LogTemp, Warning, TEXT("AvailableAbilities: %s"), *AvailableAbilities[i]);
 
-        // »õ·Î¿î TextBlock »ı¼º
+        // ìƒˆë¡œìš´ TextBlock ìƒì„±
         UTextBlock* NewText = NewObject<UTextBlock>(this);
         if (NewText)
         {
-            // ÅØ½ºÆ® ¼³Á¤
+            // í…ìŠ¤íŠ¸ ì„¤ì •
             NewText->SetText(FText::FromString(AvailableAbilities[i]));
 
-            // ÅØ½ºÆ® ½ºÅ¸ÀÏ (ÆùÆ® Å©±â Á¶Á¤)
+            // í…ìŠ¤íŠ¸ ìŠ¤íƒ€ì¼ (í°íŠ¸ í¬ê¸° ì¡°ì •)
             FSlateFontInfo FontInfo = NewText->Font;
-            FontInfo.Size = 24;  // ÆùÆ® Å©±â ¼³Á¤
+            FontInfo.Size = 24;  // í°íŠ¸ í¬ê¸° ì„¤ì •
             NewText->SetFont(FontInfo);
 
-            // AbilityContainer (VerticalBox)¿¡ Ãß°¡
+            // AbilityContainer (VerticalBox)ì— ì¶”ê°€
             AbilityContainer->AddChild(NewText);
         }
     }
 }
 
-//  ¸¶¿ì½º ÈÙ·Î ¾îºô¸®Æ¼ ¼±ÅÃ º¯°æ
+//  ë§ˆìš°ìŠ¤ íœ ë¡œ ì–´ë¹Œë¦¬í‹° ì„ íƒ ë³€ê²½
 void UCSAbilityHUD::ChangeAbilitySelection(float AxisValue)
 {
     if (AvailableAbilities.Num() == 0) return;
@@ -67,14 +67,14 @@ void UCSAbilityHUD::ChangeAbilitySelection(float AxisValue)
     }
 }
 
-//  ¸¶¿ì½º Å¬¸¯À¸·Î ¾îºô¸®Æ¼ ½ÇÇà
+//  ë§ˆìš°ìŠ¤ í´ë¦­ìœ¼ë¡œ ì–´ë¹Œë¦¬í‹° ì‹¤í–‰
 void UCSAbilityHUD::UseSelectedAbility()
 {
     if (AvailableAbilities.Num() > 0)
     {
         FString SelectedAbility = AvailableAbilities[SelectedAbilityIndex];
-        UE_LOG(LogTemp, Warning, TEXT("»ç¿ëµÈ ¾îºô¸®Æ¼: %s"), *SelectedAbility);
+        UE_LOG(LogTemp, Warning, TEXT("ì‚¬ìš©ëœ ì–´ë¹Œë¦¬í‹°: %s"), *SelectedAbility);
 
-        //  ¾îºô¸®Æ¼ ½ÇÇà ·ÎÁ÷ Ãß°¡ °¡´É (¿¹: AbilitySystem Àû¿ë)
+        //  ì–´ë¹Œë¦¬í‹° ì‹¤í–‰ ë¡œì§ ì¶”ê°€ ê°€ëŠ¥ (ì˜ˆ: AbilitySystem ì ìš©)
     }
 }

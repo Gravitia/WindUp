@@ -51,26 +51,10 @@ void ACSGameMode::PostLogin(APlayerController* NewPlayer)
 {
     ConnectedPlayers.AddUnique(NewPlayer);
 
-    // Resolve the slot identity-first (UCSPlayerSlotSubsystem keys by UniqueNetId
-    // and survives non-seamless ServerTravel), then stamp it onto the PlayerState
-    // BEFORE Super::PostLogin — Super invokes RestartPlayer ->
-    // GetDefaultPawnClassForController, which needs the slot at that moment.
-    // If PS is null at this point (rare race on EOS reconnects), the fallback
-    // in GetDefaultPawnClassForController will ask the subsystem directly.
-    if (UCSPlayerSlotSubsystem* SlotSub = GetGameInstance()->GetSubsystem<UCSPlayerSlotSubsystem>())
-    {
-        const ECSPlayerSlot AssignedSlot = SlotSub->EnsureSlotForController(NewPlayer);
-        if (ACSPlayerState* CSPS = NewPlayer->GetPlayerState<ACSPlayerState>())
-        {
-            CSPS->SetPlayerSlot(AssignedSlot);
-        }
-        else
-        {
-            UE_LOG(LogCS, Warning,
-                TEXT("ACSGameMode::PostLogin: PlayerState null for %s; pawn class will fall back to subsystem lookup"),
-                *NewPlayer->GetName());
-        }
-    }
+    // 슬롯을 먼저 정하고 PlayerState 에 박은 뒤에 Super::PostLogin 을 부른다.
+    // Super 가 RestartPlayer -> GetDefaultPawnClassForController 를 타므로
+    // 그 시점에 슬롯이 이미 있어야 한다.
+    ResolvePlayerSlotForPlayer(NewPlayer);
 
     Super::PostLogin(NewPlayer);
 
@@ -91,6 +75,76 @@ void ACSGameMode::PostLogin(APlayerController* NewPlayer)
     TrySplitScreenSetup();
 }
 
+ECSPlayerSlot ACSGameMode::ResolvePlayerSlotForPlayer(APlayerController* NewPlayer)
+{
+    UGameInstance* GI = GetGameInstance();
+    UCSPlayerSlotSubsystem* SlotSub = GI ? GI->GetSubsystem<UCSPlayerSlotSubsystem>() : nullptr;
+    if (!NewPlayer || !SlotSub)
+    {
+        return ECSPlayerSlot::Player0;
+    }
+
+    // UCSPlayerSlotSubsystem 은 GameInstance 소유라 non-seamless ServerTravel 을 넘어 살아남는다.
+    ECSPlayerSlot Slot = SlotSub->EnsureSlotForController(NewPlayer);
+
+    // 마지막 방어선: 같은 슬롯을 이미 들고 있는 다른 접속자가 있으면 반대쪽으로 돌린다.
+    // 슬롯 키가 어떤 이유로든 겹쳐도 "1번 하나, 2번 하나" 라는 규칙만은 깨지지 않게 한다.
+    // 여기가 울리면 키 생성이 잘못된 것이므로 Warning 을 남긴다 (조용히 덮지 않는다).
+    if (IsSlotHeldByOtherPlayer(NewPlayer, Slot))
+    {
+        const ECSPlayerSlot Other =
+            (Slot == ECSPlayerSlot::Player0) ? ECSPlayerSlot::Player1 : ECSPlayerSlot::Player0;
+
+        UE_LOG(LogCS, Warning,
+            TEXT("ACSGameMode: %s was assigned %s but another connected player already holds it; using %s instead"),
+            *NewPlayer->GetName(),
+            Slot == ECSPlayerSlot::Player0 ? TEXT("Player0") : TEXT("Player1"),
+            Other == ECSPlayerSlot::Player0 ? TEXT("Player0") : TEXT("Player1"));
+
+        Slot = Other;
+        SlotSub->AssignSlotForController(NewPlayer, Slot);
+    }
+
+    if (ACSPlayerState* CSPS = NewPlayer->GetPlayerState<ACSPlayerState>())
+    {
+        CSPS->SetPlayerSlot(Slot);
+    }
+    else
+    {
+        // PS 가 아직 안 붙은 드문 경우. GetDefaultPawnClassForController 의
+        // 폴백이 서브시스템에 직접 물어본다.
+        UE_LOG(LogCS, Warning,
+            TEXT("ACSGameMode: PlayerState null for %s; pawn class will fall back to subsystem lookup"),
+            *NewPlayer->GetName());
+    }
+
+    UE_LOG(LogCS, Log, TEXT("ACSGameMode: %s -> %s"),
+        *NewPlayer->GetName(),
+        Slot == ECSPlayerSlot::Player0 ? TEXT("Player0") : TEXT("Player1"));
+
+    return Slot;
+}
+
+bool ACSGameMode::IsSlotHeldByOtherPlayer(const APlayerController* NewPlayer, ECSPlayerSlot Slot) const
+{
+    for (const TObjectPtr<APlayerController>& Other : ConnectedPlayers)
+    {
+        if (!IsValid(Other) || Other == NewPlayer)
+        {
+            continue;
+        }
+
+        if (const ACSPlayerState* OtherPS = Other->GetPlayerState<ACSPlayerState>())
+        {
+            if (OtherPS->GetPlayerSlot() == Slot)
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 void ACSGameMode::HandleSeamlessTravelPlayer(AController*& C)
 {
     Super::HandleSeamlessTravelPlayer(C);
@@ -100,6 +154,20 @@ void ACSGameMode::HandleSeamlessTravelPlayer(AController*& C)
         return;
 
     UE_LOG(LogCS, Log, TEXT("HandleSeamlessTravelPlayer: %s"), *NewPlayer->GetName());
+
+    // SeamlessTravel 에서는 Super 안에서 이미 폰이 스폰됐다. 슬롯은
+    // ACSPlayerState::CopyProperties 가 옮겨 준 값이 정답이므로 여기서 다시 정하지 않는다.
+    // 대신 그 값을 서브시스템에 되돌려 넣어, 이후 non-seamless 트래블까지 같은 값이 남게 한다.
+    if (const ACSPlayerState* CSPS = NewPlayer->GetPlayerState<ACSPlayerState>())
+    {
+        if (UGameInstance* GI = GetGameInstance())
+        {
+            if (UCSPlayerSlotSubsystem* SlotSub = GI->GetSubsystem<UCSPlayerSlotSubsystem>())
+            {
+                SlotSub->AssignSlotForController(NewPlayer, CSPS->GetPlayerSlot());
+            }
+        }
+    }
 
     if (NewPlayer && NewPlayer->GetPawn())
     {

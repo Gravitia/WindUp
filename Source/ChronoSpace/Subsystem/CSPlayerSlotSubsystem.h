@@ -21,9 +21,10 @@ class APlayerController;
  *     non-seamless ServerTravel on the listen server, so the assignment can
  *     live here and outlast individual maps.
  *
- * The slot is keyed by (UniqueNetId, LocalPlayerControllerId):
- *   - UniqueNetId is the EOS account id — stable across travel and re-join.
- *   - ControllerId disambiguates split-screen players that share one NetId.
+ * 슬롯 키는 서버가 보는 연결 신원 (local/remote, LocalPlayerControllerId) 이다.
+ * UniqueNetId 는 쓰지 않는다 — 이유는 MakePlayerKey 주석 참고.
+ * 요약하면 EOS DeviceID 로그인이 기기 단위라, 한 PC 에서 호스트와 클라를 같이 띄우면
+ * 둘의 NetId 가 같아져 키가 겹치고 둘 다 Player0(토끼)이 된다.
  *
  * Server-only meaningful; clients receive the resolved slot via the
  * replicated PlayerSlot on ACSPlayerState.
@@ -36,6 +37,13 @@ class CHRONOSPACE_API UCSPlayerSlotSubsystem : public UGameInstanceSubsystem
 public:
     /** Returns the slot for this PC, assigning the lowest-free slot on first contact. */
     ECSPlayerSlot EnsureSlotForController(APlayerController* PC);
+
+    /**
+     * 이 PC 의 슬롯을 지정한 값으로 덮어쓴다.
+     * ACSGameMode 가 중복 슬롯을 발견해 반대쪽으로 돌렸을 때, 그 결정이 다음 트래블까지
+     * 남도록 되돌려 넣는 용도다. 일반 경로는 EnsureSlotForController 를 쓴다.
+     */
+    void AssignSlotForController(APlayerController* PC, ECSPlayerSlot Slot);
 
     /** Drops the slot mapping for this PC (call from real Logout, not travel teardown). */
     void ReleaseSlotForController(APlayerController* PC);

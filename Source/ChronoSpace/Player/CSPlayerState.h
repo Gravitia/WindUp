@@ -34,7 +34,7 @@ public:
 
 	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
-	// Health ���� �Լ���
+	// Health 占쏙옙占쏙옙 占쌉쇽옙占쏙옙
 	UFUNCTION(BlueprintCallable, Category = "Health")
 	float GetHealth() const;
 
@@ -44,7 +44,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Health")
 	float GetHealthPercent() const;
 
-	// ��������Ʈ
+	// 占쏙옙占쏙옙占쏙옙占쏙옙트
 	UPROPERTY(BlueprintAssignable, Category = "Health")
 	FOnHealthChanged OnHealthChanged;
 
@@ -66,7 +66,7 @@ protected:
 
 	virtual void BeginPlay() override;
 
-	// Health ��ȭ �ݹ�
+	// Health 占쏙옙화 占쌥뱄옙
 	virtual void HealthChanged(const FOnAttributeChangeData& Data);
 	virtual void MaxHealthChanged(const FOnAttributeChangeData& Data);
 
@@ -74,6 +74,9 @@ protected:
 public:
 	void SetPlayerSlot(ECSPlayerSlot InSlot) { PlayerSlot = InSlot; }
 	ECSPlayerSlot GetPlayerSlot() const { return PlayerSlot; }
+
+	/** SeamlessTravel 시 새 PlayerState 로 PlayerSlot 을 넘긴다. */
+	virtual void CopyProperties(APlayerState* PlayerState) override;
 
 	UFUNCTION()
 	void OnRep_PlayerSlot();
@@ -83,7 +86,7 @@ public:
 
 protected:
 	// Replicated so clients can read who-is-who (e.g. HUD, character-tinted UI).
-	// Authority is the server; UCSPlayerSlotSubsystem persists the per-NetId
+	// Authority is the server; UCSPlayerSlotSubsystem persists the per-connection
 	// assignment across non-seamless ServerTravel so the slot stays stable.
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_PlayerSlot)
 	ECSPlayerSlot PlayerSlot = ECSPlayerSlot::Player0;

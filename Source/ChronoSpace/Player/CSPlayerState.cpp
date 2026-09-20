@@ -29,7 +29,7 @@ void ACSPlayerState::BeginPlay()
 
 	if (ASC)
 	{
-		// Health ��ȭ ��������Ʈ ���ε�
+		// Health 占쏙옙화 占쏙옙占쏙옙占쏙옙占쏙옙트 占쏙옙占싸듸옙
 		ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetHealthAttribute())
 			.AddUObject(this, &ACSPlayerState::HealthChanged);
 
@@ -52,6 +52,19 @@ void ACSPlayerState::OnRep_PlayerSlot()
     OnPlayerSlotChanged.Broadcast(PlayerSlot);
 }
 
+
+void ACSPlayerState::CopyProperties(APlayerState* PlayerState)
+{
+    Super::CopyProperties(PlayerState);
+
+    // SeamlessTravel 은 PlayerState 를 새로 만들고 이 함수로 값을 옮긴다.
+    // 여기서 안 옮기면 새 PlayerState 의 PlayerSlot 이 기본값(Player0)으로 돌아가
+    // 두 명 다 1번 캐릭터로 스폰된다.
+    if (ACSPlayerState* NewPS = Cast<ACSPlayerState>(PlayerState))
+    {
+        NewPS->PlayerSlot = PlayerSlot;
+    }
+}
 
 float ACSPlayerState::GetHealth() const
 {
