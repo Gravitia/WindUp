@@ -15,15 +15,11 @@
 #include "ChronoSpace.h"
 #include "Materials/MaterialFunctionInterface.h"
 #include "MaterialCachedData.h"
+#include "HAL/IConsoleManager.h"
 
 #if WITH_EDITOR
-#include "Materials/Material.h"
 #include "Materials/MaterialFunction.h"
 #include "Materials/MaterialExpressionScalarParameter.h"
-#include "AssetRegistry/IAssetRegistry.h"
-#include "AssetRegistry/ARFilter.h"
-#include "AssetRegistry/AssetData.h"
-#include "HAL/IConsoleManager.h"
 #endif
 
 namespace CSCameraOcclusionFade
@@ -444,89 +440,3 @@ void UCSCameraOcclusionFadeSubsystem::RestoreAll()
 	}
 	Faded.Empty();
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 에디터 콘솔 명령
-// ─────────────────────────────────────────────────────────────────────────────
-
-#if WITH_EDITOR
-namespace
-{
-	/**
-	 * CS.CameraFade.FixMaterials
-	 *
-	 * UMaterial 에는 "OpacityMask 가 사실상 항상 1이면 Masked 여도 Opaque 로 취급" 하는 캐시 플래그
-	 * bCanMaskedBeAssumedOpaque 가 있다. Opaque 로 만들어진 머티리얼은 이 값이 true 로 저장돼 있고,
-	 * 나중에 Masked 로 바꾸고 MF_CameraFade 를 꽂아도 이 플래그는 다시 계산되지 않는다 (5.8 기준 엔진에 재계산 코드가 없다).
-	 * 켜진 채로 두면 GetBlendMode() 가 Opaque 를 돌려줘 셰이더가 마스크를 무시하고 페이드가 되지 않는다.
-	 *
-	 * 프로젝트의 UMaterial 전부를 읽어, Masked 이고 MF_CameraFade 를 참조하는데 이 플래그가 켜진 것을 내리고
-	 * 재컴파일한 뒤 더티로 표시한다. 저장은 하지 않는다 (Ctrl+S 또는 MCP save_assets).
-	 */
-	bool FixCameraFadeMaterials()
-	{
-		const UCSCameraOcclusionFadeSettings* Settings = UCSCameraOcclusionFadeSettings::Get();
-		const UMaterialFunctionInterface* Fn = Settings ? Settings->FadeFunction.LoadSynchronous() : nullptr;
-		if (!Fn)
-		{
-			UE_LOG(LogCS, Error, TEXT("CameraFade: 설정의 FadeFunction 을 로드하지 못했다."));
-			return false;
-		}
-
-		IAssetRegistry& Registry = IAssetRegistry::GetChecked();
-		Registry.SearchAllAssets(true);
-
-		FARFilter Filter;
-		Filter.ClassPaths.Add(UMaterial::StaticClass()->GetClassPathName());
-		Filter.PackagePaths.Add(TEXT("/Game"));
-		Filter.bRecursivePaths = true;
-
-		TArray<FAssetData> Assets;
-		Registry.GetAssets(Filter, Assets);
-
-		int32 Scanned = 0, Fixed = 0;
-		TArray<FString> FixedNames;
-		for (const FAssetData& Data : Assets)
-		{
-			UMaterial* Material = Cast<UMaterial>(Data.GetAsset());
-			if (!Material) continue;
-			++Scanned;
-
-			if (Material->BlendMode != BLEND_Masked) continue;
-
-			bool bUsesFade = false;
-			for (const FMaterialFunctionInfo& Info : Material->GetCachedExpressionData().FunctionInfos)
-			{
-				if (Info.Function == Fn) { bUsesFade = true; break; }
-			}
-			if (!bUsesFade) continue;
-
-			// 임포트된 머티리얼은 OpacityMask 입력에 UseConstant 가 켜진 채 들어오기도 한다. 그러면 노드를 꽂아도
-			// 컴파일러는 연결 대신 상수(1)를 써서 마스크가 죽는다. 머티리얼 에디터에서 와이어를 연결하면 UI 가 꺼 주지만
-			// 코드로 연결한 경우는 남는다.
-			UMaterialEditorOnlyData* EditorOnly = Material->GetEditorOnlyData();
-			const bool bConstOverride = EditorOnly && EditorOnly->OpacityMask.Expression && EditorOnly->OpacityMask.UseConstant;
-			const bool bAssumedOpaque = Material->bCanMaskedBeAssumedOpaque;
-			if (!bConstOverride && !bAssumedOpaque) continue;
-
-			Material->PreEditChange(nullptr);
-			Material->bCanMaskedBeAssumedOpaque = false;
-			if (bConstOverride) EditorOnly->OpacityMask.UseConstant = false;
-			Material->PostEditChange();	// 셰이더 재컴파일
-			Material->MarkPackageDirty();
-			++Fixed;
-			FixedNames.Add(FString::Printf(TEXT("%s(%s%s)"), *Material->GetName(),
-				bAssumedOpaque ? TEXT("AssumedOpaque") : TEXT(""), bConstOverride ? TEXT(" UseConstant") : TEXT("")));
-		}
-
-		UE_LOG(LogCS, Display, TEXT("CameraFade: 머티리얼 %d 개 검사, %d 개 수정 (더티 상태, 저장 필요): %s"),
-			Scanned, Fixed, *FString::Join(FixedNames, TEXT(", ")));
-		return true;
-	}
-
-	FAutoConsoleCommand GFixCameraFadeMaterialsCmd(
-		TEXT("CS.CameraFade.FixMaterials"),
-		TEXT("MF_CameraFade 를 쓰는 Masked 머티리얼의 bCanMaskedBeAssumedOpaque 와 OpacityMask.UseConstant 를 내리고 재컴파일한다 (저장은 별도)."),
-		FConsoleCommandDelegate::CreateLambda([]() { FixCameraFadeMaterials(); }));
-}
-#endif // WITH_EDITOR

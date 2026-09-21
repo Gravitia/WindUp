@@ -33,7 +33,8 @@ public class ChronoSpace : ModuleRules
 		{
 			"GameplayAbilities",
             "GameplayTasks",
-            "GameplayTags"
+            "GameplayTags",
+            "AssetRegistry"	// Editor/CSCameraFadeMaterialSetup.cpp 가 IAssetRegistry 를 직접 쓴다
         });
 
 		// Uncomment if you are using Slate UI
