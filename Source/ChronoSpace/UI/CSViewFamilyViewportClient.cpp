@@ -44,6 +44,16 @@ void UCSViewFamilyViewportClient::BeginDestroy()
 	Super::BeginDestroy();
 }
 
+void UCSViewFamilyViewportClient::AddReferencedObjects(UObject* InThis, FReferenceCollector& Collector)
+{
+	UCSViewFamilyViewportClient* This = CastChecked<UCSViewFamilyViewportClient>(InThis);
+	if (FSceneViewStateInterface* Ref = This->SecondaryViewState.GetReference())
+	{
+		Ref->AddReferencedObjects(Collector);
+	}
+	Super::AddReferencedObjects(InThis, Collector);
+}
+
 void UCSViewFamilyViewportClient::StartFade(float TargetAlpha, float Duration)
 {
 	FadeTargetAlpha = FMath::Clamp(TargetAlpha, 0.f, 1.f);

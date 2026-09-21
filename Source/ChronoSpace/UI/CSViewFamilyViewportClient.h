@@ -29,6 +29,16 @@ public:
 	virtual void Draw(FViewport* InViewport, FCanvas* SceneCanvas) override;
 	virtual void BeginDestroy() override;
 
+	/**
+	 * SecondaryViewState 가 쥔 UObject(포스트 프로세스 MID 풀)를 GC 에 보고한다.
+	 *
+	 * FSceneViewState 는 UObject 가 아니라 GC 가 내부를 걷지 못한다. 메인 뷰는 ULocalPlayer 가
+	 * 같은 일을 해 주지만 보조 뷰 스테이트는 이 클래스가 들고 있으므로 여기서 해야 한다.
+	 * 안 하면 보조 뷰에 포스트 프로세스 머티리얼이 하나라도 들어가는 순간 MID 가 GC 로 지워지고
+	 * 렌더 스레드가 죽은 주소를 써서 터진다 ("Cannot queue the Expression Cache ... about to be deleted").
+	 */
+	static void AddReferencedObjects(UObject* InThis, FReferenceCollector& Collector);
+
 	/** Subsystem 이 매 프레임 호출 — 보조 뷰 카메라 갱신 */
 	void SetSecondaryView(const FVector& InLocation, const FRotator& InRotation, float InFOV, float InAspectRatio = 16.f / 9.f);
 
