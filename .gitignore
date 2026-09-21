@@ -232,5 +232,3 @@ CLAUDE.local.md
 /Packaged/
 /Packaged_Dev/
 
-# 카메라 페이드용 반투명 쌍둥이 머티리얼. PIE/쿠킹 때 코드가 자동 생성한다 (Editor/CSCameraFadeTwinGenerator).
-Content/_Generated/

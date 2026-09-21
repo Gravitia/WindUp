@@ -7,21 +7,36 @@
 #include "Components/StaticMeshComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Materials/MaterialInterface.h"
-#include "Materials/MaterialInstanceDynamic.h"
-#include "Common/CSCameraFadeMaterials.h"
-#include "DataAsset/CSCameraFadeMaterialTable.h"
 #include "Camera/PlayerCameraManager.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/Character.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
 #include "ChronoSpace.h"
+#include "Materials/MaterialFunctionInterface.h"
+#include "MaterialCachedData.h"
+
+#if WITH_EDITOR
+#include "Materials/Material.h"
+#include "Materials/MaterialFunction.h"
+#include "Materials/MaterialExpressionScalarParameter.h"
+#include "AssetRegistry/IAssetRegistry.h"
+#include "AssetRegistry/ARFilter.h"
+#include "AssetRegistry/AssetData.h"
+#include "HAL/IConsoleManager.h"
+#endif
 
 namespace CSCameraOcclusionFade
 {
 	// 캡슐 위 샘플 격자: 세로 4단 × 가로 3열 = 12 광선
 	static const float RowFractions[] = { -0.6f, -0.2f, 0.2f, 0.6f };
 	static const float ColFractions[] = { -0.7f, 0.f, 0.7f };
+
+	// cs.CameraFade.Debug 1 : 매 틱 후보·페이드 상태를 화면에 찍고, 판정 광선을 그린다
+	static TAutoConsoleVariable<int32> CVarDebug(
+		TEXT("cs.CameraFade.Debug"), 0,
+		TEXT("카메라 가림 페이드 디버그. 1 이면 후보 수, 페이드 중인 액터와 값, 샘플 광선을 화면에 표시한다."),
+		ECVF_Cheat);
 }
 
 bool UCSCameraOcclusionFadeSubsystem::ShouldCreateSubsystem(UObject* Outer) const
@@ -32,11 +47,6 @@ bool UCSCameraOcclusionFadeSubsystem::ShouldCreateSubsystem(UObject* Outer) cons
 	return World && (World->WorldType == EWorldType::Game || World->WorldType == EWorldType::PIE);
 }
 
-void UCSCameraOcclusionFadeSubsystem::Initialize(FSubsystemCollectionBase& Collection)
-{
-	Super::Initialize(Collection);
-}
-
 void UCSCameraOcclusionFadeSubsystem::Deinitialize()
 {
 	RestoreAll();
@@ -44,12 +54,20 @@ void UCSCameraOcclusionFadeSubsystem::Deinitialize()
 	Super::Deinitialize();
 }
 
+TStatId UCSCameraOcclusionFadeSubsystem::GetStatId() const
+{
+	RETURN_QUICK_DECLARE_CYCLE_STAT(UCSCameraOcclusionFadeSubsystem, STATGROUP_Tickables);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 등록
+// ─────────────────────────────────────────────────────────────────────────────
+
 void UCSCameraOcclusionFadeSubsystem::RegisterTarget(AActor* Actor)
 {
-	if (IsValid(Actor))
-	{
-		Targets.AddUnique(Actor);
-	}
+	if (!IsValid(Actor)) return;
+	Targets.AddUnique(Actor);
+	ValidateActorMaterials(Actor);
 }
 
 void UCSCameraOcclusionFadeSubsystem::UnregisterTarget(AActor* Actor)
@@ -65,10 +83,95 @@ void UCSCameraOcclusionFadeSubsystem::UnregisterTarget(AActor* Actor)
 	}
 }
 
-TStatId UCSCameraOcclusionFadeSubsystem::GetStatId() const
+bool UCSCameraOcclusionFadeSubsystem::IsMaterialFadeReady(const UMaterialInterface* Material)
 {
-	RETURN_QUICK_DECLARE_CYCLE_STAT(UCSCameraOcclusionFadeSubsystem, STATGROUP_Tickables);
+	if (!Material) return true;	// 빈 슬롯은 아무것도 그리지 않는다
+	if (Material->GetBlendMode() != BLEND_Masked) return false;
+
+	const UCSCameraOcclusionFadeSettings* Settings = UCSCameraOcclusionFadeSettings::Get();
+	const UMaterialFunctionInterface* Fn = Settings ? Settings->FadeFunction.LoadSynchronous() : nullptr;
+	if (!Fn) return true;	// 검사할 기준이 없으면 검사하지 않는다
+
+	// 그래프(에디터 전용 데이터) 대신 캐시된 함수 목록을 본다. 중첩 호출까지 들어 있고 쿠킹된 빌드에도 남는다.
+	for (const FMaterialFunctionInfo& Info : Material->GetCachedExpressionData().FunctionInfos)
+	{
+		if (Info.Function == Fn) return true;
+	}
+	return false;
 }
+
+#if WITH_EDITOR
+namespace
+{
+	/**
+	 * 설정의 PrimitiveDataIndex 와 MF_CameraFade 안 파라미터의 PrimitiveDataIndex 가 같은지 확인한다. 설정값이 바뀔 때마다 다시 본다.
+	 * 둘은 따로 저장되는 값이라 어긋나도 컴파일은 통과하고, 그저 페이드가 조용히 안 될 뿐이다.
+	 */
+	void ValidateFadeFunctionIndex()
+	{
+		const UCSCameraOcclusionFadeSettings* Settings = UCSCameraOcclusionFadeSettings::Get();
+		if (!Settings) return;
+
+		// 설정값이 바뀌면 다시 검사한다. 세션당 한 번만 하면 "작업 중 인덱스를 바꿨을 때" 정작 침묵한다.
+		static int32 LastCheckedIndex = INDEX_NONE;
+		if (LastCheckedIndex == Settings->PrimitiveDataIndex) return;
+		LastCheckedIndex = Settings->PrimitiveDataIndex;
+
+		const UMaterialFunction* Fn = Cast<UMaterialFunction>(Settings->FadeFunction.LoadSynchronous());
+		if (!Fn) return;
+
+		for (const TObjectPtr<UMaterialExpression>& Expr : Fn->GetExpressions())
+		{
+			const UMaterialExpressionScalarParameter* Param = Cast<UMaterialExpressionScalarParameter>(Expr);
+			if (!Param || !Param->bUseCustomPrimitiveData) continue;
+
+			if (Param->PrimitiveDataIndex != Settings->PrimitiveDataIndex)
+			{
+				UE_LOG(LogCS, Error, TEXT("CameraOcclusionFade: 설정의 PrimitiveDataIndex(%d) 와 %s 의 파라미터 '%s' 가 읽는 인덱스(%d) 가 다르다. 값을 넣어도 머티리얼이 읽지 못한다."),
+					Settings->PrimitiveDataIndex, *Fn->GetName(), *Param->ParameterName.ToString(), Param->PrimitiveDataIndex);
+			}
+			return;
+		}
+		UE_LOG(LogCS, Warning, TEXT("CameraOcclusionFade: %s 안에 Custom Primitive Data 를 읽는 스칼라 파라미터가 없다."), *Fn->GetName());
+	}
+}
+#endif
+
+void UCSCameraOcclusionFadeSubsystem::ValidateActorMaterials(AActor* Actor)
+{
+#if WITH_EDITOR
+	ValidateFadeFunctionIndex();
+#endif
+
+	TInlineComponentArray<UStaticMeshComponent*> Meshes;
+	Actor->GetComponents<UStaticMeshComponent>(Meshes);
+
+	for (UStaticMeshComponent* Mesh : Meshes)
+	{
+		if (!IsValid(Mesh)) continue;
+		const int32 NumSlots = Mesh->GetNumMaterials();
+		for (int32 Slot = 0; Slot < NumSlots; ++Slot)
+		{
+			const UMaterialInterface* Material = Mesh->GetMaterial(Slot);
+			if (!Material || IsMaterialFadeReady(Material) || WarnedMaterials.Contains(Material)) continue;
+
+			WarnedMaterials.Add(Material);
+
+			FString Functions;
+			for (const FMaterialFunctionInfo& Info : Material->GetCachedExpressionData().FunctionInfos)
+			{
+				Functions += (Info.Function ? Info.Function->GetName() : TEXT("null")) + TEXT(",");
+			}
+			UE_LOG(LogCS, Warning,
+				TEXT("CameraOcclusionFade: %s (액터 %s) 는 Masked 가 아니거나 OpacityMask 에 MF_CameraFade 가 없다. 이 머티리얼은 가려져도 투명해지지 않는다. (BlendMode=%d, 함수=[%s])"),
+				*Material->GetPathName(), *Actor->GetName(), static_cast<int32>(Material->GetBlendMode()), *Functions);
+		}
+	}
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 틱
+// ─────────────────────────────────────────────────────────────────────────────
 
 void UCSCameraOcclusionFadeSubsystem::Tick(float DeltaTime)
 {
@@ -129,6 +232,19 @@ void UCSCameraOcclusionFadeSubsystem::Tick(float DeltaTime)
 
 		ApplyFadeAmount(Entry, Entry.CurrentFade);
 	}
+
+#if !UE_BUILD_SHIPPING
+	if (CSCameraOcclusionFade::CVarDebug.GetValueOnGameThread() != 0 && GEngine)
+	{
+		FString Msg = FString::Printf(TEXT("CameraFade: 뷰 %d, 후보 %d, 페이드 중 %d"), Views.Num(), Targets.Num(), Faded.Num());
+		for (const auto& Pair : Faded)
+		{
+			Msg += FString::Printf(TEXT("\n  %s  목표 %.2f  현재 %.2f  메시 %d"),
+				*GetNameSafe(Pair.Key), Pair.Value.TargetFade, Pair.Value.CurrentFade, Pair.Value.Meshes.Num());
+		}
+		GEngine->AddOnScreenDebugMessage(reinterpret_cast<uint64>(this), 0.f, FColor::Cyan, Msg);
+	}
+#endif
 }
 
 void UCSCameraOcclusionFadeSubsystem::CollectViews(TArray<FViewPair>& OutViews) const
@@ -155,7 +271,7 @@ void UCSCameraOcclusionFadeSubsystem::CollectViews(TArray<FViewPair>& OutViews) 
 		{
 			FVector SecondaryCam;
 			ACSCharacterPlayer* SecondaryTarget = nullptr;
-			if (Split->GetSecondaryViewForOcclusion(SecondaryCam, SecondaryTarget))
+			if (Split->TryGetVisibleSecondaryView(SecondaryCam, SecondaryTarget))
 			{
 				OutViews.Add({ SecondaryCam, SecondaryTarget });
 			}
@@ -165,26 +281,32 @@ void UCSCameraOcclusionFadeSubsystem::CollectViews(TArray<FViewPair>& OutViews) 
 
 void UCSCameraOcclusionFadeSubsystem::BuildSamplePoints(const FViewPair& View, TArray<FVector>& OutPoints)
 {
-	const AActor* Target = View.Target;
-	const FVector Center = Target->GetActorLocation();
+	const ACharacter* Character = Cast<ACharacter>(View.Target);
+	const UCapsuleComponent* Capsule = Character ? Character->GetCapsuleComponent() : nullptr;
 
-	float HalfHeight = 88.f;
-	float Radius = 34.f;
-	if (const ACharacter* Character = Cast<ACharacter>(Target))
+	FVector Center;
+	float HalfHeight, Radius;
+	if (Capsule)
 	{
-		if (const UCapsuleComponent* Capsule = Character->GetCapsuleComponent())
-		{
-			HalfHeight = Capsule->GetScaledCapsuleHalfHeight();
-			Radius = Capsule->GetScaledCapsuleRadius();
-		}
+		Center = Capsule->GetComponentLocation();
+		HalfHeight = Capsule->GetScaledCapsuleHalfHeight();
+		Radius = Capsule->GetScaledCapsuleRadius();
+	}
+	else if (View.Target)
+	{
+		FVector Extent;
+		View.Target->GetActorBounds(true, Center, Extent);
+		HalfHeight = Extent.Z;
+		Radius = FMath::Max(Extent.X, Extent.Y);
+	}
+	else
+	{
+		return;
 	}
 
-	// 카메라에서 본 화면 가로 방향. 캡슐을 화면에 보이는 폭만큼 가로로 훑는다.
-	FVector ToCamera = (View.CameraLocation - Center);
-	ToCamera.Z = 0.f;
-	const FVector Right = ToCamera.IsNearlyZero()
-		? FVector::RightVector
-		: FVector::CrossProduct(FVector::UpVector, ToCamera.GetSafeNormal());
+	// 카메라에서 본 좌우 방향으로 열을 펼친다
+	const FVector ToTarget = (Center - View.CameraLocation).GetSafeNormal2D();
+	const FVector Right = FVector::CrossProduct(FVector::UpVector, ToTarget).GetSafeNormal();
 
 	OutPoints.Reset();
 	for (float Row : CSCameraOcclusionFade::RowFractions)
@@ -261,164 +383,55 @@ void UCSCameraOcclusionFadeSubsystem::UpdateTargets(const FViewPair& View, const
 	}
 }
 
-const FCSCameraFadeMaterialData* UCSCameraOcclusionFadeSubsystem::ResolveFadeData(UMaterialInterface* Original)
-{
-	if (!Original) return nullptr;
-
-	FString Why;
-	const FCSCameraFadeMaterialData* Data = FCSCameraFadeMaterials::Resolve(Original, &Why);
-	if (!Data && !WarnedUnsupported.Contains(Original))
-	{
-		WarnedUnsupported.Add(Original);
-		UE_LOG(LogCS, Warning, TEXT("CameraOcclusionFade: %s 는 페이드하지 않는다 - %s"), *Original->GetPathName(), *Why);
-	}
-	return Data;
-}
+// ─────────────────────────────────────────────────────────────────────────────
+// 적용 / 복원
+// ─────────────────────────────────────────────────────────────────────────────
 
 void UCSCameraOcclusionFadeSubsystem::BeginFade(AActor* Actor)
 {
-	UMaterialInterface* FadeMaterial = FCSCameraFadeMaterials::GetFadeMaterial();
-	if (!FadeMaterial)
-	{
-		if (!bWarnedNoFadeMaterial)
-		{
-			bWarnedNoFadeMaterial = true;
-			UE_LOG(LogCS, Warning, TEXT("CameraOcclusionFade: 페이드 머티리얼이 없다. 프로젝트 설정의 FadeMaterial 을 확인한다."));
-		}
-		return;
-	}
+	// 등록 뒤 게임플레이가 머티리얼을 바꿨을 수 있다 (버튼 점등 등). 페이드가 시작될 때 한 번 더 본다.
+	// 머티리얼당 한 번만 경고하므로 비용은 조회 몇 번이다.
+	ValidateActorMaterials(Actor);
 
-	const UCSCameraOcclusionFadeSettings* Settings = UCSCameraOcclusionFadeSettings::Get();
-	const float MinOpacity = Settings ? Settings->MinOpacity : 0.15f;
+	FCSCameraOcclusionFadeEntry& Entry = Faded.Add(Actor);
 
 	TInlineComponentArray<UStaticMeshComponent*> Meshes;
 	Actor->GetComponents<UStaticMeshComponent>(Meshes);
-
-	// 1) 먼저 보이는 메시의 모든 슬롯을 읽는다. 하나라도 못 읽으면 MID 를 만들기 전에 끝낸다.
-	//    (실패한 액터는 가려져 있는 동안 매 틱 여기 다시 오지만, 캐시·표 조회뿐이라 싸다.)
-	struct FPendingMesh
-	{
-		UStaticMeshComponent* Mesh = nullptr;
-		TArray<UMaterialInterface*, TInlineAllocator<4>> Originals;
-		TArray<FCSCameraFadeMaterialData, TInlineAllocator<4>> Data;	// 빈 슬롯은 기본값, 아래 bHasData 로 구분
-		TArray<bool, TInlineAllocator<4>> bHasData;
-	};
-	TArray<FPendingMesh, TInlineAllocator<8>> Pending;
-
-	auto SkipActor = [&](UMaterialInterface* Original, const TCHAR* Reason)
-	{
-		if (WarnedActors.Contains(Actor)) return;
-		WarnedActors.Add(Actor);
-		UE_LOG(LogCS, Warning, TEXT("CameraOcclusionFade: %s 는 페이드하지 않는다 - %s 를 %s. 일부 슬롯만 투명해지는 걸 막으려 액터 전체를 그대로 둔다."),
-			*Actor->GetName(), *Original->GetPathName(), Reason);
-	};
-
 	for (UStaticMeshComponent* Mesh : Meshes)
 	{
 		if (!IsValid(Mesh) || !Mesh->IsVisible() || Mesh->bHiddenInGame) continue;
-
-		FPendingMesh& P = Pending.AddDefaulted_GetRef();
-		P.Mesh = Mesh;
-
-		const int32 NumSlots = Mesh->GetNumMaterials();
-		for (int32 Slot = 0; Slot < NumSlots; ++Slot)
-		{
-			UMaterialInterface* Original = Mesh->GetMaterial(Slot);
-			P.Originals.Add(Original);
-
-			if (!Original)
-			{
-				// 빈 슬롯은 아무것도 그리지 않으므로 페이드할 것도 없다
-				P.Data.AddDefaulted();
-				P.bHasData.Add(false);
-				continue;
-			}
-
-			// Resolve 가 돌려주는 포인터는 다음 Resolve 까지만 유효하므로 값으로 복사한다
-			const FCSCameraFadeMaterialData* Data = ResolveFadeData(Original);
-			if (!Data)
-			{
-				SkipActor(Original, TEXT("읽을 수 없다"));
-				return;
-			}
-			P.Data.Add(*Data);
-			P.bHasData.Add(true);
-		}
-	}
-
-	// 2) MID 를 만들고 값을 넣는다. 텍스처를 못 찾는 슬롯이 있으면 역시 액터 전체를 건너뛴다.
-	TArray<TArray<UMaterialInstanceDynamic*, TInlineAllocator<4>>, TInlineAllocator<8>> MIDsPerMesh;
-	MIDsPerMesh.SetNum(Pending.Num());
-	for (int32 i = 0; i < Pending.Num(); ++i)
-	{
-		const FPendingMesh& P = Pending[i];
-		for (int32 Slot = 0; Slot < P.Originals.Num(); ++Slot)
-		{
-			if (!P.bHasData[Slot])
-			{
-				MIDsPerMesh[i].Add(nullptr);
-				continue;
-			}
-			UMaterialInstanceDynamic* MID = UMaterialInstanceDynamic::Create(FadeMaterial, this);
-			if (!P.Data[Slot].ApplyTo(MID))
-			{
-				SkipActor(P.Originals[Slot], TEXT("의 텍스처를 찾지 못했다"));
-				return;	// 아직 어떤 메시도 건드리지 않았다. 만든 MID 는 GC 가 치운다.
-			}
-			MID->SetScalarParameterValue(FCSCameraFadeParams::MinOpacity, MinOpacity);
-			MID->SetScalarParameterValue(FCSCameraFadeParams::FadeAmount, 0.f);
-			MIDsPerMesh[i].Add(MID);
-		}
-	}
-
-	// 3) 전부 준비됐을 때만 실제로 교체한다
-	FCSCameraOcclusionFadeEntry& Entry = Faded.Add(Actor);
-	for (int32 i = 0; i < Pending.Num(); ++i)
-	{
-		const FPendingMesh& P = Pending[i];
-		FCSMaterialSlots& Originals = Entry.Originals.Add(P.Mesh);
-		FCSMaterialSlots& MIDs = Entry.FadeMIDs.Add(P.Mesh);
-		for (int32 Slot = 0; Slot < P.Originals.Num(); ++Slot)
-		{
-			Originals.Materials.Add(P.Originals[Slot]);
-			MIDs.Materials.Add(MIDsPerMesh[i][Slot]);
-			if (MIDsPerMesh[i][Slot]) P.Mesh->SetMaterial(Slot, MIDsPerMesh[i][Slot]);
-		}
+		Entry.Meshes.Add(Mesh);
 	}
 }
 
 void UCSCameraOcclusionFadeSubsystem::ApplyFadeAmount(FCSCameraOcclusionFadeEntry& Entry, float Amount)
 {
-	for (auto& Pair : Entry.FadeMIDs)
+	const UCSCameraOcclusionFadeSettings* Settings = UCSCameraOcclusionFadeSettings::Get();
+	const float MinOpacity = Settings ? Settings->MinOpacity : 0.15f;
+	const int32 Index = Settings ? Settings->PrimitiveDataIndex : 0;
+
+	// MF_CameraFade: 0 = 불투명, 1 = 완전 투명. 최소 불투명도만큼은 남긴다.
+	const float Value = FMath::Clamp(Amount, 0.f, 1.f) * (1.f - MinOpacity);
+
+	for (const TWeakObjectPtr<UStaticMeshComponent>& Weak : Entry.Meshes)
 	{
-		for (const TObjectPtr<UMaterialInterface>& Mat : Pair.Value.Materials)
+		if (UStaticMeshComponent* Mesh = Weak.Get())
 		{
-			if (UMaterialInstanceDynamic* MID = Cast<UMaterialInstanceDynamic>(Mat.Get()))
-			{
-				MID->SetScalarParameterValue(FCSCameraFadeParams::FadeAmount, Amount);
-			}
+			Mesh->SetCustomPrimitiveDataFloat(Index, Value);
 		}
 	}
 }
 
 void UCSCameraOcclusionFadeSubsystem::RestoreEntry(const FCSCameraOcclusionFadeEntry& Entry)
 {
-	for (const auto& Pair : Entry.Originals)
+	const UCSCameraOcclusionFadeSettings* Settings = UCSCameraOcclusionFadeSettings::Get();
+	const int32 Index = Settings ? Settings->PrimitiveDataIndex : 0;
+
+	for (const TWeakObjectPtr<UStaticMeshComponent>& Weak : Entry.Meshes)
 	{
-		UStaticMeshComponent* Mesh = Pair.Key;
-		if (!IsValid(Mesh)) continue;
-
-		const FCSMaterialSlots* MIDs = Entry.FadeMIDs.Find(Mesh);
-		const TArray<TObjectPtr<UMaterialInterface>>& Originals = Pair.Value.Materials;
-
-		for (int32 Slot = 0; Slot < Originals.Num(); ++Slot)
+		if (UStaticMeshComponent* Mesh = Weak.Get())
 		{
-			// 페이드 중에 게임플레이(버튼 점등 등)가 슬롯을 바꿨으면 그건 존중한다. 우리가 넣은 MID 만 되돌린다.
-			const bool bStillOurs = MIDs && MIDs->Materials.IsValidIndex(Slot) && Mesh->GetMaterial(Slot) == MIDs->Materials[Slot];
-			if (bStillOurs)
-			{
-				Mesh->SetMaterial(Slot, Originals[Slot]);
-			}
+			Mesh->SetCustomPrimitiveDataFloat(Index, 0.f);
 		}
 	}
 }
@@ -431,3 +444,89 @@ void UCSCameraOcclusionFadeSubsystem::RestoreAll()
 	}
 	Faded.Empty();
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 에디터 콘솔 명령
+// ─────────────────────────────────────────────────────────────────────────────
+
+#if WITH_EDITOR
+namespace
+{
+	/**
+	 * CS.CameraFade.FixMaterials
+	 *
+	 * UMaterial 에는 "OpacityMask 가 사실상 항상 1이면 Masked 여도 Opaque 로 취급" 하는 캐시 플래그
+	 * bCanMaskedBeAssumedOpaque 가 있다. Opaque 로 만들어진 머티리얼은 이 값이 true 로 저장돼 있고,
+	 * 나중에 Masked 로 바꾸고 MF_CameraFade 를 꽂아도 이 플래그는 다시 계산되지 않는다 (5.8 기준 엔진에 재계산 코드가 없다).
+	 * 켜진 채로 두면 GetBlendMode() 가 Opaque 를 돌려줘 셰이더가 마스크를 무시하고 페이드가 되지 않는다.
+	 *
+	 * 프로젝트의 UMaterial 전부를 읽어, Masked 이고 MF_CameraFade 를 참조하는데 이 플래그가 켜진 것을 내리고
+	 * 재컴파일한 뒤 더티로 표시한다. 저장은 하지 않는다 (Ctrl+S 또는 MCP save_assets).
+	 */
+	bool FixCameraFadeMaterials()
+	{
+		const UCSCameraOcclusionFadeSettings* Settings = UCSCameraOcclusionFadeSettings::Get();
+		const UMaterialFunctionInterface* Fn = Settings ? Settings->FadeFunction.LoadSynchronous() : nullptr;
+		if (!Fn)
+		{
+			UE_LOG(LogCS, Error, TEXT("CameraFade: 설정의 FadeFunction 을 로드하지 못했다."));
+			return false;
+		}
+
+		IAssetRegistry& Registry = IAssetRegistry::GetChecked();
+		Registry.SearchAllAssets(true);
+
+		FARFilter Filter;
+		Filter.ClassPaths.Add(UMaterial::StaticClass()->GetClassPathName());
+		Filter.PackagePaths.Add(TEXT("/Game"));
+		Filter.bRecursivePaths = true;
+
+		TArray<FAssetData> Assets;
+		Registry.GetAssets(Filter, Assets);
+
+		int32 Scanned = 0, Fixed = 0;
+		TArray<FString> FixedNames;
+		for (const FAssetData& Data : Assets)
+		{
+			UMaterial* Material = Cast<UMaterial>(Data.GetAsset());
+			if (!Material) continue;
+			++Scanned;
+
+			if (Material->BlendMode != BLEND_Masked) continue;
+
+			bool bUsesFade = false;
+			for (const FMaterialFunctionInfo& Info : Material->GetCachedExpressionData().FunctionInfos)
+			{
+				if (Info.Function == Fn) { bUsesFade = true; break; }
+			}
+			if (!bUsesFade) continue;
+
+			// 임포트된 머티리얼은 OpacityMask 입력에 UseConstant 가 켜진 채 들어오기도 한다. 그러면 노드를 꽂아도
+			// 컴파일러는 연결 대신 상수(1)를 써서 마스크가 죽는다. 머티리얼 에디터에서 와이어를 연결하면 UI 가 꺼 주지만
+			// 코드로 연결한 경우는 남는다.
+			UMaterialEditorOnlyData* EditorOnly = Material->GetEditorOnlyData();
+			const bool bConstOverride = EditorOnly && EditorOnly->OpacityMask.Expression && EditorOnly->OpacityMask.UseConstant;
+			const bool bAssumedOpaque = Material->bCanMaskedBeAssumedOpaque;
+			if (!bConstOverride && !bAssumedOpaque) continue;
+
+			Material->PreEditChange(nullptr);
+			Material->bCanMaskedBeAssumedOpaque = false;
+			if (bConstOverride) EditorOnly->OpacityMask.UseConstant = false;
+			Material->PostEditChange();	// 셰이더 재컴파일
+			Material->MarkPackageDirty();
+			++Fixed;
+			FixedNames.Add(FString::Printf(TEXT("%s(%s%s)"), *Material->GetName(),
+				bAssumedOpaque ? TEXT("AssumedOpaque") : TEXT(""), bConstOverride ? TEXT(" UseConstant") : TEXT("")));
+		}
+
+		UE_LOG(LogCS, Display, TEXT("CameraFade: 머티리얼 %d 개 검사, %d 개 수정 (더티 상태, 저장 필요): %s"),
+			Scanned, Fixed, *FString::Join(FixedNames, TEXT(", ")));
+		return true;
+	}
+
+	FAutoConsoleCommand GFixCameraFadeMaterialsCmd(
+		TEXT("CS.CameraFade.FixMaterials"),
+		TEXT("MF_CameraFade 를 쓰는 Masked 머티리얼의 bCanMaskedBeAssumedOpaque 와 OpacityMask.UseConstant 를 내리고 재컴파일한다 (저장은 별도)."),
+		FConsoleCommandDelegate::CreateLambda([]() { FixCameraFadeMaterials(); }));
+}
+#endif // WITH_EDITOR

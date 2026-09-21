@@ -1,11 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Settings/CSCameraOcclusionFadeSettings.h"
-#include "Materials/MaterialInterface.h"
+#include "Materials/MaterialFunctionInterface.h"
 
 UCSCameraOcclusionFadeSettings::UCSCameraOcclusionFadeSettings()
 {
-	FadeMaterial = FSoftObjectPath(TEXT("/Game/31_Material/CameraFade/M_CameraOcclusionFade.M_CameraOcclusionFade"));
+	FadeFunction = FSoftObjectPath(TEXT("/Game/31_Material/CameraFade/MF_CameraFade.MF_CameraFade"));
 }
 
 const UCSCameraOcclusionFadeSettings* UCSCameraOcclusionFadeSettings::Get()

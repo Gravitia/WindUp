@@ -77,10 +77,10 @@ public:
 
     /**
      * 보조 뷰가 실제로 그려지는 중이면 그 카메라 위치와 비추는 캐릭터를 돌려준다.
-     * 화면 기준 판정(UCSCameraOcclusionFadeSubsystem 의 시선 가림 등)이 보조 뷰에도 같은 규칙을 적용할 때 쓴다.
+     * 보조 뷰를 기준으로 무언가 판정할 때 쓴다 (예: UCSCameraOcclusionFadeSubsystem 의 시선 가림). 용도를 한정하지 않는다.
      * 풀스크린으로 완전히 넘어가 보조 뷰가 안 보이면 false.
      */
-    bool GetSecondaryViewForOcclusion(FVector& OutCameraLocation, ACSCharacterPlayer*& OutTarget) const;
+    bool TryGetVisibleSecondaryView(FVector& OutCameraLocation, ACSCharacterPlayer*& OutTarget) const;
 
     /**
      * 디버그: 분할 화면의 좌우를 *조작 중인 캐릭터* 에 고정한다 — P1 몸 왼쪽, P2 몸 오른쪽.

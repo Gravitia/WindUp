@@ -37,12 +37,6 @@ public class ChronoSpace : ModuleRules
         });
 
 		// Uncomment if you are using Slate UI
-		// 카메라 페이드 추출 표 생성기 (Editor/CSCameraFadeTableGenerator, CSCameraFadeMaterialExtractor) 는 에디터 빌드에만 들어간다
-		if (Target.bBuildEditor)
-		{
-			PrivateDependencyModuleNames.AddRange(new string[] { "UnrealEd", "AssetRegistry" });
-		}
-
 		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
 		
 		// Uncomment if you are using online features

@@ -8,31 +8,16 @@
 
 class UStaticMeshComponent;
 class UMaterialInterface;
-class UMaterialInstanceDynamic;
-struct FCSCameraFadeMaterialData;
 
-USTRUCT()
-struct FCSMaterialSlots
-{
-	GENERATED_BODY()
-
-	UPROPERTY()
-	TArray<TObjectPtr<UMaterialInterface>> Materials;
-};
-
-/** 페이드 중인 액터 하나의 상태. 원본 머티리얼은 강한 참조로 들고 있어야 슬롯을 비운 MID 가 GC 로 사라지지 않는다. */
+/** 페이드 중인 액터 하나의 상태 */
 USTRUCT()
 struct FCSCameraOcclusionFadeEntry
 {
 	GENERATED_BODY()
 
-	/** 메시별 원본 머티리얼 (슬롯 순서) */
+	/** 값을 넣은 메시들. 복원 때 같은 메시에 0 을 넣는다. */
 	UPROPERTY()
-	TMap<TObjectPtr<UStaticMeshComponent>, FCSMaterialSlots> Originals;
-
-	/** 메시별로 우리가 끼운 페이드 MID (슬롯 순서). 복원 시 이것과 같은 슬롯만 되돌린다. */
-	UPROPERTY()
-	TMap<TObjectPtr<UStaticMeshComponent>, FCSMaterialSlots> FadeMIDs;
+	TArray<TWeakObjectPtr<UStaticMeshComponent>> Meshes;
 
 	/** 이번 틱 판정된 목표값 (가려진 광선 비율 0..1). 안 걸리면 0. */
 	float TargetFade = 0.f;
@@ -47,18 +32,16 @@ struct FCSCameraOcclusionFadeEntry
  * 대상은 RegisterTarget 으로 등록된 액터의 스태틱 메시다. 지금은 UCSMeshPulledByBlackhole 과
  * UCSMeshAffectedByGravityCore 가 BeginPlay/EndPlay 에서 등록·해제한다.
  * 이 메시들은 카메라 채널을 무시하므로 스프링암이 줄어들지 않는 대신 캐릭터를 가릴 수 있다.
- * (UCSManagedActorSubsystem 의 블랙홀 목록을 빌려 쓰지 않는다. 그 목록은 캐릭터·투사체 트레이스가
- *  무시할 액터 목록이라, 페이드 대상을 거기 섞으면 게임플레이가 바뀐다.)
  *
  * 매 틱 이 머신의 모든 뷰(로컬 플레이어 카메라 → 조작 캐릭터, 스플릿 보조 뷰 카메라 → 원격 캐릭터)에 대해
  * 카메라에서 캐릭터 캡슐 위 격자점들로 광선을 쏴 "막힌 광선 비율" 을 구하고, 그 비율을 목표로
- * 시간 보간한 값을 페이드 MID 의 FadeAmount 에 넣는다. 조금 겹치면 조금, 다 가리면 많이 투명해진다.
+ * 시간 보간한 값을 메시의 Custom Primitive Data 에 넣는다. 조금 겹치면 조금, 다 가리면 많이 투명해진다.
  *
- * 페이드 머티리얼은 하나(설정의 FadeMaterial, Masked + 디더)다. 원본 머티리얼에서 뽑아낸 텍스처·색
- * (FCSCameraFadeMaterials → FCSCameraFadeMaterialData)을 파라미터로 넣어 원본과 같은 색에서 투명해진다.
- * 뽑아낼 수 없는 머티리얼은 경고만 남기고 그 슬롯은 건드리지 않는다. 틀린 색으로 그리느니 안 하는 게 낫다.
+ * 실제로 투명하게 그리는 건 머티리얼이다. 대상 오브젝트의 Material 은 Masked 이고 OpacityMask 에 MF_CameraFade 가
+ * 꽂혀 있어야 한다. 그 함수가 이 값을 읽어 DitherTemporalAA 마스크를 만든다. 함수가 없는 머티리얼은 값을 넣어도
+ * 아무 변화가 없다. 등록 시점에 이를 검사해 경고한다 (IsMaterialFadeReady).
  *
- * 순수 로컬 연출이다. 머티리얼 교체는 복제되지 않고 각 머신이 자기 화면 기준으로 판정한다.
+ * 순수 로컬 연출이다. 값은 복제되지 않고 각 머신이 자기 화면 기준으로 판정한다.
  */
 UCLASS()
 class CHRONOSPACE_API UCSCameraOcclusionFadeSubsystem : public UTickableWorldSubsystem
@@ -67,7 +50,6 @@ class CHRONOSPACE_API UCSCameraOcclusionFadeSubsystem : public UTickableWorldSub
 
 public:
 	virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
-	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 
 	virtual void Tick(float DeltaTime) override;
@@ -94,24 +76,19 @@ private:
 	/** 한 뷰에 대해 후보 액터마다 막힌 광선 비율을 구해 목표 페이드를 갱신한다 */
 	void UpdateTargets(const FViewPair& View, const TArray<TObjectPtr<AActor>>& Candidates);
 
-	/**
-	 * 액터를 페이드 상태로 만든다 (MID 생성, 슬롯 교체).
-	 * 전부 아니면 안 함: 보이는 메시의 슬롯 하나라도 추출 데이터가 없으면 액터를 건드리지 않고 Faded 에 넣지 않는다.
-	 * 몸통은 불투명한데 버튼만 투명해지는 반쪽 고스트가 그냥 불투명한 것보다 더 이상하다.
-	 */
+	/** 액터의 보이는 스태틱 메시를 모아 엔트리를 만든다 */
 	void BeginFade(AActor* Actor);
 	void ApplyFadeAmount(FCSCameraOcclusionFadeEntry& Entry, float Amount);
 	void RestoreEntry(const FCSCameraOcclusionFadeEntry& Entry);
 	void RestoreAll();
 
-	/** 원본에서 뽑아낸 페이드 데이터. 없으면 nullptr 이고 한 번만 경고한다. */
-	const FCSCameraFadeMaterialData* ResolveFadeData(UMaterialInterface* Original);
-
-	/** 뽑아낼 수 없어 경고를 이미 남긴 원본들. 매 틱 같은 경고를 반복하지 않기 위해서다. */
-	TSet<TWeakObjectPtr<UMaterialInterface>> WarnedUnsupported;
-	/** 슬롯 하나가 안 돼 통째로 건너뛴다고 이미 경고한 액터들 */
-	TSet<TWeakObjectPtr<AActor>> WarnedActors;
-	bool bWarnedNoFadeMaterial = false;
+	/**
+	 * 대상 액터의 머티리얼이 Masked 이고 페이드 함수를 참조하는지 검사하고, 아니면 머티리얼당 한 번 경고한다.
+	 * 머티리얼의 캐시된 함수 목록(FMaterialCachedExpressionData::FunctionInfos)을 보므로 패키지 빌드에서도 동작한다.
+	 */
+	void ValidateActorMaterials(AActor* Actor);
+	static bool IsMaterialFadeReady(const UMaterialInterface* Material);
+	TSet<TWeakObjectPtr<const UMaterialInterface>> WarnedMaterials;
 
 	/** 페이드 판정 후보. RegisterTarget 으로 들어온 액터들. */
 	UPROPERTY(Transient)

@@ -3,22 +3,6 @@
 #include "ChronoSpace.h"
 #include "Modules/ModuleManager.h"
 
-#if WITH_EDITOR
-#include "Editor/CSCameraFadeTableGenerator.h"
-#endif
-
 DEFINE_LOG_CATEGORY(LogCS);
 
-class FChronoSpaceModule : public FDefaultGameModuleImpl
-{
-public:
-	virtual void StartupModule() override
-	{
-		FDefaultGameModuleImpl::StartupModule();
-#if WITH_EDITOR
-		FCSCameraFadeTableGenerator::RegisterHooks();
-#endif
-	}
-};
-
-IMPLEMENT_PRIMARY_GAME_MODULE( FChronoSpaceModule, ChronoSpace, "ChronoSpace" );
+IMPLEMENT_PRIMARY_GAME_MODULE( FDefaultGameModuleImpl, ChronoSpace, "ChronoSpace" );

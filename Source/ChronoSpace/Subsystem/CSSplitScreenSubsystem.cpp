@@ -716,7 +716,7 @@ bool UCSSplitScreenSubsystem::IsInFullScreenMode() const
     return TargetAlpha >= 1.f - KINDA_SMALL_NUMBER && CurrentAlpha >= 1.f - KINDA_SMALL_NUMBER;
 }
 
-bool UCSSplitScreenSubsystem::GetSecondaryViewForOcclusion(FVector& OutCameraLocation, ACSCharacterPlayer*& OutTarget) const
+bool UCSSplitScreenSubsystem::TryGetVisibleSecondaryView(FVector& OutCameraLocation, ACSCharacterPlayer*& OutTarget) const
 {
     if (!bSplitScreenActive || !bHasSmoothedSecondary || IsInFullScreenMode()) return false;
 
