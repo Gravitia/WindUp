@@ -227,7 +227,10 @@ CLAUDE.local.md
 !.claude/skills/unreal-project-config/**
 !.claude/skills/code-review-cs/
 !.claude/skills/code-review-cs/**
+!.claude/skills/update-camera-fade-materials/
+!.claude/skills/update-camera-fade-materials/**
 
 # Package.bat 기본 아카이브 출력 폴더
 /Packaged/
 /Packaged_Dev/
+

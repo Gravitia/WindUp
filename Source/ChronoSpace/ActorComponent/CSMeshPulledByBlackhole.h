@@ -47,6 +47,13 @@ protected:
 	void SaveAndApplyAffectedState();
 	void RestoreAffectedState();
 
+	/**
+	 * 모든 머신에서 - 오너의 스태틱 메시가 카메라 채널을 무시하게 한다.
+	 * 스프링암 스윕은 각 클라이언트 로컬에서 돌므로 서버에서만 바꾸면 클라는 여전히 카메라가 밀린다.
+	 * 카메라와 캐릭터 사이를 막는 오브젝트는 UCSCameraOcclusionFadeSubsystem 이 고스트 머티리얼로 바꿔 보여준다.
+	 */
+	void IgnoreCameraCollision();
+
 	// 델리게이트를 복제로 전파하기 위한 카운트. 연출(버튼 점등)은 서버 이벤트가 아니라 이 값의 OnRep 으로 돈다.
 	UPROPERTY(ReplicatedUsing = OnRep_InfluenceCount)
 	int32 InfluenceCount = 0;
@@ -58,6 +65,5 @@ protected:
 	UPROPERTY()
 	TObjectPtr<class UStaticMeshComponent> AffectedMesh;
 	bool bSavedGravityEnabled = true;
-	TEnumAsByte<ECollisionResponse> SavedCameraResponse = ECR_Block;
 	bool bHasSavedState = false;
 };

@@ -22,7 +22,7 @@ Unreal Engine 5.8 프로젝트. 게임 모듈은 `Source/ChronoSpace` (단일 Ru
 
 언리얼 에디터 작업은 `.claude/skills/` 아래 스킬을 사용한다. 어떤 툴셋을 쓸지 모르겠으면 **`unreal-mcp` 스킬의 라우팅 표를 먼저 본다.**
 
-`unreal-blueprint` · `unreal-asset` · `unreal-level-actor` · `unreal-umg` · `unreal-gas` · `unreal-data` · `unreal-material` · `unreal-animation` · `unreal-niagara` · `unreal-ai` · `unreal-editor-debug` · `unreal-test` · `unreal-project-config`
+`unreal-blueprint` · `unreal-asset` · `unreal-level-actor` · `unreal-umg` · `unreal-gas` · `unreal-data` · `unreal-material` · `unreal-animation` · `unreal-niagara` · `unreal-ai` · `unreal-editor-debug` · `unreal-test` · `unreal-project-config` · `update-camera-fade-materials`
 
 ## 참고
 

@@ -76,6 +76,13 @@ public:
     bool IsInFullScreenMode() const;
 
     /**
+     * 보조 뷰가 실제로 그려지는 중이면 그 카메라 위치와 비추는 캐릭터를 돌려준다.
+     * 보조 뷰를 기준으로 무언가 판정할 때 쓴다 (예: UCSCameraOcclusionFadeSubsystem 의 시선 가림). 용도를 한정하지 않는다.
+     * 풀스크린으로 완전히 넘어가 보조 뷰가 안 보이면 false.
+     */
+    bool TryGetVisibleSecondaryView(FVector& OutCameraLocation, ACSCharacterPlayer*& OutTarget) const;
+
+    /**
      * 디버그: 분할 화면의 좌우를 *조작 중인 캐릭터* 에 고정한다 — P1 몸 왼쪽, P2 몸 오른쪽.
      *
      * 기본 동작(false)은 "메인 뷰(내가 조작 중인 몸)를 항상 오른쪽에 둔다" 라서,

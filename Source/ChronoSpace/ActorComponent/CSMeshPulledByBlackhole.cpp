@@ -3,6 +3,7 @@
 
 #include "ActorComponent/CSMeshPulledByBlackhole.h"
 #include "Subsystem/CSManagedActorSubsystem.h"
+#include "Subsystem/CSCameraOcclusionFadeSubsystem.h"
 #include "Components/StaticMeshComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "ChronoSpace.h"
@@ -25,12 +26,21 @@ void UCSMeshPulledByBlackhole::BeginPlay()
 	Super::BeginPlay();
 
 	if ( !IsValid(GetWorld()) || !IsValid(GetOwner()) ) return;
+
+	IgnoreCameraCollision();
+
 	UCSManagedActorSubsystem* Subsystem = GetWorld()->GetSubsystem< UCSManagedActorSubsystem >();
 
 	if ( IsValid( Subsystem ) )
 	{
 		UE_LOG(LogCS, Log, TEXT("Actor Registered"));
 		Subsystem->RegisterActorPulledByBlackHole(GetOwner());
+	}
+
+	// 카메라 채널을 무시하는 대신 캐릭터를 가릴 수 있으므로 페이드 대상으로도 등록한다
+	if (UCSCameraOcclusionFadeSubsystem* Fade = GetWorld()->GetSubsystem<UCSCameraOcclusionFadeSubsystem>())
+	{
+		Fade->RegisterTarget(GetOwner());
 	}
 }
 
@@ -43,6 +53,11 @@ void UCSMeshPulledByBlackhole::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		if (IsValid(Subsystem))
 		{
 			Subsystem->UnRegisterActorPulledByBlackHole(GetOwner());
+		}
+
+		if (UCSCameraOcclusionFadeSubsystem* Fade = GetWorld()->GetSubsystem<UCSCameraOcclusionFadeSubsystem>())
+		{
+			Fade->UnregisterTarget(GetOwner());
 		}
 	}
 
@@ -101,14 +116,11 @@ void UCSMeshPulledByBlackhole::SaveAndApplyAffectedState()
 	AffectedMesh = Owner->FindComponentByClass<UStaticMeshComponent>();
 	if (!IsValid(AffectedMesh)) return;
 
-	// 원래 값을 저장한다. 예전엔 블랙홀이 나갈 때 원래 값과 무관하게 Block 으로 되돌려
-	// 원래 카메라를 무시하던 장식 메시가 이후 영구히 카메라를 막았다.
+	// 원래 값을 저장한다. 블랙홀이 나갈 때 그대로 되돌리기 위해서다.
 	bSavedGravityEnabled = AffectedMesh->IsGravityEnabled();
-	SavedCameraResponse = AffectedMesh->GetCollisionResponseToChannel(ECC_Camera);
 	bHasSavedState = true;
 
 	AffectedMesh->SetEnableGravity(false);
-	AffectedMesh->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 }
 
 void UCSMeshPulledByBlackhole::RestoreAffectedState()
@@ -116,9 +128,27 @@ void UCSMeshPulledByBlackhole::RestoreAffectedState()
 	if (!bHasSavedState || !IsValid(AffectedMesh)) return;
 
 	AffectedMesh->SetEnableGravity(bSavedGravityEnabled);
-	AffectedMesh->SetCollisionResponseToChannel(ECC_Camera, SavedCameraResponse);
 	bHasSavedState = false;
 	AffectedMesh = nullptr;
+}
+
+void UCSMeshPulledByBlackhole::IgnoreCameraCollision()
+{
+	AActor* Owner = GetOwner();
+	if (!IsValid(Owner)) return;
+
+	// 블랙홀에 끌리는 동안만 무시하던 것을 상시로 바꿨다.
+	// 평소에도 이 오브젝트가 캐릭터를 가리면 스프링암이 줄어들었고,
+	// 서버에서만 바꾸던 탓에 클라이언트에서는 끌리는 중에도 카메라가 밀렸다.
+	TInlineComponentArray<UStaticMeshComponent*> Meshes;
+	Owner->GetComponents<UStaticMeshComponent>(Meshes);
+	for (UStaticMeshComponent* Mesh : Meshes)
+	{
+		if (IsValid(Mesh))
+		{
+			Mesh->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+		}
+	}
 }
 
 
