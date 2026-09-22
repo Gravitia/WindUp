@@ -36,7 +36,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Actor/CSBlackHole.h"
 #include "Actor/CSBellows.h"
-#include "Subsystem/CSManagedActorSubsystem.h"
+#include "GA/CSGameplayAbility.h"
 #include "Kismet/GameplayStatics.h"
 
 
@@ -501,12 +501,49 @@ float ACSCharacterPlayer::GetReviveTime()
 	return Data->ReviveDelay;
 }
 
-void ACSCharacterPlayer::ServerDestoryBlackHole_Implementation()
+void ACSCharacterPlayer::ServerAbilityCommand_Implementation(FGameplayAbilitySpecHandle Handle, const FInstancedStruct& Payload)
 {
-	if ( BlackHole )
+	DispatchAbilityCommand(Handle, Payload);
+}
+
+void ACSCharacterPlayer::ServerAbilityCommandUnreliable_Implementation(FGameplayAbilitySpecHandle Handle, const FInstancedStruct& Payload)
+{
+	DispatchAbilityCommand(Handle, Payload);
+}
+
+void ACSCharacterPlayer::DispatchAbilityCommand(FGameplayAbilitySpecHandle Handle, const FInstancedStruct& Payload)
+{
+	UAbilitySystemComponent* OwnerASC = GetAbilitySystemComponent();
+	if (!OwnerASC)
 	{
-		BlackHole->SetDuration(0.2f);
+		UE_LOG(LogCS, Warning, TEXT("DispatchAbilityCommand: no ASC on %s"), *GetName());
+		return;
 	}
+
+	FGameplayAbilitySpec* Spec = OwnerASC->FindAbilitySpecFromHandle(Handle);
+	if (!Spec)
+	{
+		UE_LOG(LogCS, Warning, TEXT("DispatchAbilityCommand: spec not found for handle %s"), *Handle.ToString());
+		return;
+	}
+
+	// InstancedPerActor 어빌리티만 서버에 인스턴스가 있다
+	UCSGameplayAbility* Ability = Cast<UCSGameplayAbility>(Spec->GetPrimaryInstance());
+	if (!Ability)
+	{
+		UE_LOG(LogCS, Warning, TEXT("DispatchAbilityCommand: %s has no UCSGameplayAbility primary instance (InstancedPerActor 인가?)"),
+			Spec->Ability ? *Spec->Ability->GetName() : TEXT("null"));
+		return;
+	}
+
+	if (!Ability->CanReceiveServerCommand(Payload))
+	{
+		// 죽은 채 우클릭을 잡고 있으면 이동 명령이 매 틱 거부된다. Log 로 두면 다른 로그가 묻힌다.
+		UE_LOG(LogCS, Verbose, TEXT("DispatchAbilityCommand: %s rejected command (avatar dead or ability gate)"), *Ability->GetName());
+		return;
+	}
+
+	Ability->OnServerCommand(Payload);
 }
 
 void ACSCharacterPlayer::NetMulticastMakeGravityCoreSphere_Implementation(float SphereRaduis, float SphereScale)
@@ -526,66 +563,4 @@ void ACSCharacterPlayer::NetMulticastDestroyGravityCoreSphere_Implementation()
 		UE_LOG(LogCS, Log, TEXT("GravityCore Off"));
 		GravityCoreSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
-}
-
-void ACSCharacterPlayer::ServerSpawnAndSetBlackHole_Implementation(TSubclassOf<class ACSBlackHole> BlackHoleClass,
-	FVector Direction, float MaxDistance, float Duration, float GravityInfluenceRange, float PullStrength, float StopRange, bool bCheckComponent)
-{
-	if (UWorld* World = GetWorld())
-	{
-		FVector StartLocation = GetActorLocation() + FVector(0.0f, 0.0f, BaseEyeHeight); 
-		FVector EndLocation = StartLocation + Direction * MaxDistance; 
-
-		FCollisionQueryParams QueryParams; 
-		QueryParams.AddIgnoredActor(this); 
-
-		if ( IsValid(GetWorld()) )
-		{
-			if ( UCSManagedActorSubsystem* Subsystem = GetWorld()->GetSubsystem<UCSManagedActorSubsystem>(); Subsystem )
-			{
-				QueryParams.AddIgnoredActors( Subsystem->GetActorsPulledByBlackHole() );
-			}
-		}
-
-		FHitResult HitResult; 
-		if (GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Visibility, QueryParams)) 
-		{
-			EndLocation = HitResult.Location; 
-		}
-
-		FActorSpawnParameters Params;
-		Params.Owner = this;
-		Params.Instigator = this;
-
-		FRotator Rotation = FRotator::ZeroRotator;
-		BlackHole = World->SpawnActor<ACSBlackHole>(BlackHoleClass, EndLocation, Rotation, Params);
-
-		if (BlackHole)
-		{
-			BlackHole->SetDuration(Duration);
-			BlackHole->SetGravityInfluenceRange(GravityInfluenceRange);
-			BlackHole->SetPullStrength(PullStrength);
-			BlackHole->SetStopRange(StopRange);
-			BlackHole->SetCheckComponentInMesh(bCheckComponent);
-		}
-	}
-}
-
-void ACSCharacterPlayer::ServerSetBlackHoleLocation_Implementation(FVector Direction, float MaxDistance) 
-{
-	if (!IsValid(BlackHole)) return; 
-
-	FVector StartLocation = GetActorLocation() + FVector(0.0f, 0.0f, BaseEyeHeight);
-	FVector EndLocation = StartLocation + Direction * MaxDistance;
-
-	FCollisionQueryParams QueryParams;
-	QueryParams.AddIgnoredActor( this );
-
-	FHitResult HitResult;
-	if (GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Visibility, QueryParams))
-	{
-		EndLocation = HitResult.Location;
-	}
-
-	BlackHole->SetActorLocation(EndLocation);
 }

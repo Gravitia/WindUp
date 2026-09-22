@@ -3,17 +3,46 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Abilities/GameplayAbility.h"
+#include "GA/CSGameplayAbility.h"
 #include "ActorComponent/CSGASManagerComponent.h"
 #include "CSGA_ProjectileBlackHole.generated.h"
 
 class UCameraComponent;
+class ACSBlackHole;
+
+// ---- 서버 명령 페이로드 --------------------------------------------------
+// 서버 인스턴스도 같은 클래스라 MaxGuideDistance, BlackHoleClass, 중력 파라미터는
+// 자기 프로퍼티에서 읽는다. 클라가 보내는 건 조준 방향뿐이다.
+
+USTRUCT()
+struct FCSBlackHoleSpawnCmd
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FVector Direction = FVector::ForwardVector;
+};
+
+USTRUCT()
+struct FCSBlackHoleMoveCmd
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FVector Direction = FVector::ForwardVector;
+};
+
+USTRUCT()
+struct FCSBlackHoleReleaseCmd
+{
+	GENERATED_BODY()
+};
 
 /**
- * 
+ * 조준(클라, LocalOnly) → 명령 릴레이 → 스폰·이동·파괴(서버, OnServerCommand).
  */
 UCLASS()
-class CHRONOSPACE_API UCSGA_ProjectileBlackHole : public UGameplayAbility
+class CHRONOSPACE_API UCSGA_ProjectileBlackHole : public UCSGameplayAbility
 {
 	GENERATED_BODY()
 
@@ -23,32 +52,40 @@ public:
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 
+	virtual void OnServerCommand(const FInstancedStruct& Payload) override;
+
+	/** 릴리즈(정리) 명령은 사망 중에도 통과시킨다. 정리를 막아서 얻는 게 없고, 막으면 블랙홀이 남는다. */
+	virtual bool CanReceiveServerCommand(const FInstancedStruct& Payload) const override;
+
+	/** 서버에서 어빌리티가 제거될 때(캐릭터 교체 등) 남은 블랙홀을 정리한다 */
+	virtual void OnRemoveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec) override;
+
 protected:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile Guide")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "CSEditable|ProjectileBlackHole|Aim")
 	float GuideDuration = 5.0f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile Guide")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "CSEditable|ProjectileBlackHole|Aim")
 	float MaxGuideDistance = 2000.0f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile Guide")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "CSEditable|ProjectileBlackHole|Aim")
 	float UpdateRate = 0.02f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile Guide")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "CSEditable|ProjectileBlackHole|Aim")
 	float StartOffsetDistance = 100.f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile Guide")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "CSEditable|ProjectileBlackHole|Aim")
 	float MouseYSensitivity = 1.5f;
 
-	//UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Black Hole")
+	//UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "CSEditable|ProjectileBlackHole|BlackHole")
 	float Duration;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Black Hole")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "CSEditable|ProjectileBlackHole|BlackHole")
 	float GravityInfluenceRange;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Black Hole")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "CSEditable|ProjectileBlackHole|BlackHole")
 	float PullStrength;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Black Hole")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "CSEditable|ProjectileBlackHole|BlackHole")
 	float StopRange;
 
 private:
@@ -60,10 +97,16 @@ private:
 	FVector GetScreenCenterDirection() const;
 	FVector GetStartLocation() const;
 
+	/**
+	 * 아바타 눈높이에서 Direction 으로 MaxGuideDistance 만큼 라인 트레이스한 끝점.
+	 * 아바타와 블랙홀에 끌려가는 액터는 무시한다. 클라(조준 표시)와 서버(스폰·이동)가 같은 함수를 쓴다.
+	 */
+	FVector TraceAimEndLocation(const FVector& Direction) const;
+
 private:
 	bool bUsingMouseAiming = false;
 	FVector2D LastMousePosition = FVector2D::ZeroVector;
-	float MouseMovementThreshold = 1.0f; 
+	float MouseMovementThreshold = 1.0f;
 
 private:
 	FVector InitialAimDirection = FVector::ZeroVector;
@@ -72,27 +115,52 @@ private:
 private:
 	void CheckMouseMovement();
 
-	// Black Hole 
+	// Black Hole
 protected:
 	FVector CurrentEndLocation;
-	FVector CurrentDirection;    
+	FVector CurrentDirection;
 
 	void CheckMouseInput();
-	void CreateBlackHoleAtLocation(const FVector& Direction);
+
+	/** 마지막으로 서버에 보낸 조준 끝점. 이동 명령은 이 값에서 유의미하게 바뀌었을 때만 보낸다. */
+	FVector LastSentEndLocation = FVector::ZeroVector;
+
+	/** 마지막 이동 명령 전송 시각(월드 초). Unreliable 드랍 복구용 하트비트 기준. */
+	float LastMoveSendTime = 0.f;
+
+	/** 끝점이 안 바뀌어도 이 주기로는 한 번 보낸다 */
+	static constexpr float MoveHeartbeatInterval = 0.2f;
+
+	// ---- 서버 전용 ----
+	void ServerSpawnBlackHole(const FVector& Direction);
+	void ServerMoveBlackHole(const FVector& Direction);
+	void ServerReleaseBlackHole();
+
+	/** 아바타(캐릭터)가 파괴되면(사망 리스폰 등) 클라의 릴리즈 명령 없이도 서버가 정리한다 */
+	UFUNCTION()
+	void OnServerAvatarDestroyed(AActor* DestroyedActor);
+
+	/** 서버 인스턴스가 스폰한 블랙홀. 클라 인스턴스에서는 항상 null. */
+	UPROPERTY()
+	TObjectPtr<ACSBlackHole> SpawnedBlackHole;
+
+	/** OnServerAvatarDestroyed 를 바인딩한 아바타. 릴리즈 때 해제한다. */
+	TWeakObjectPtr<AActor> BoundAvatar;
 
 protected:
 	//void SpawnBlackHoleDummy(FVector SpawnLocation);
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Black Hole Dummy")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|ProjectileBlackHole|BlackHole")
 	TSubclassOf<class ACSBlackHoleDummy> BlackHoleDummyClass;
 
 	UPROPERTY()
 	TObjectPtr<class ACSBlackHoleDummy> BlackHoleDummyActor;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Black Hole")
-	TSubclassOf<class ACSBlackHole> BlackHoleClass;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|ProjectileBlackHole|BlackHole")
+	TSubclassOf<ACSBlackHole> BlackHoleClass;
 
 	//bool bIsDummySpawned;
+	/** 클라(조준 중인 인스턴스) 전용 상태. 서버는 SpawnedBlackHole 유효성으로 판단한다. */
 	bool bIsBlackHoleSpawned;
 
 protected:
@@ -106,20 +174,20 @@ protected:
 
 protected:
 	/** 블랙홀 조준 시 사용하는 카메라 줌 Ability (BP 가능) */
-	UPROPERTY(EditDefaultsOnly, Category = "Camera")
+	UPROPERTY(EditDefaultsOnly, Category = "CSEditable|ProjectileBlackHole|Camera")
 	TSubclassOf<UGameplayAbility> CameraZoomAbilityClass;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Default|Camera")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|ProjectileBlackHole|Camera")
 	float CameraZOffsetWhileAiming = 400.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Default|Camera")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|ProjectileBlackHole|Camera")
 	bool bApplyCameraZOffsetWhileAiming = true;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Default|Camera")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|ProjectileBlackHole|Camera")
 	float CameraOffsetLerpDuration = 0.5f;
 
 	/** 줌 복원(줌아웃) Lerp 시간 */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Default|Camera")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|ProjectileBlackHole|Camera")
 	float CameraOffsetRestoreLerpDuration = 0.3f;
 
 	/**

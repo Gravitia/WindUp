@@ -7,6 +7,8 @@
 #include "AbilitySystemInterface.h"
 #include "InputActionValue.h"
 #include "CSF_CharacterFrameData.h"
+#include "GameplayAbilitySpecHandle.h"
+#include "StructUtils/InstancedStruct.h"
 #include "CSCharacterPlayer.generated.h"
 
 //DECLARE_DYNAMIC_MULTICAST_DELEGATE(FInteractionDelegate);
@@ -259,20 +261,24 @@ protected:
 	UPROPERTY(Transient)
 	TObjectPtr<class USphereComponent> GravityCoreSphere;
 
-// Black Hole
-// GA가 RPC가 없는 것에 대한 우회..
+// Ability Command Relay
+// LocalOnly 어빌리티가 서버 권한 처리를 요청하는 단일 통로. 어빌리티별 RPC 를 여기에 추가하지 않는다.
+// 페이로드는 어빌리티가 정의한 USTRUCT 를 FInstancedStruct 로 감싼 것이고,
+// 서버는 핸들로 스펙을 찾아 그 어빌리티 인스턴스의 UCSGameplayAbility::OnServerCommand 에 넘긴다.
 public:
 	UFUNCTION(Server, Reliable)
-	void ServerSpawnAndSetBlackHole(TSubclassOf<class ACSBlackHole> BlackHoleClass,
-		FVector Direction, float MaxDistance, float Duration, float GravityInfluenceRange, float PullStrength,
-		float StopRange, bool bCheckComponent);
+	void ServerAbilityCommand(FGameplayAbilitySpecHandle Handle, const FInstancedStruct& Payload);
 
+	/** 매 틱 위치 갱신처럼 유실돼도 되는 명령용 */
 	UFUNCTION(Server, Unreliable)
-	void ServerSetBlackHoleLocation(FVector Direction, float MaxDistance);
+	void ServerAbilityCommandUnreliable(FGameplayAbilitySpecHandle Handle, const FInstancedStruct& Payload);
 
-	UFUNCTION(Server, Reliable)
-	void ServerDestoryBlackHole();
+private:
+	void DispatchAbilityCommand(FGameplayAbilitySpecHandle Handle, const FInstancedStruct& Payload);
 
+// Black Hole
+public:
+	/** 서버 어빌리티(UCSGA_ProjectileBlackHole)가 스폰한 블랙홀. 스폰·이동·파괴는 어빌리티가 한다. */
 	UPROPERTY(Replicated)
 	TObjectPtr<class ACSBlackHole> BlackHole;
 
