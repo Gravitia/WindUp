@@ -2,20 +2,14 @@
 
 
 #include "GA/CSGA_ProjectileBlackHole.h"
-#include "GA/CSGA_BlackHole.h"
-#include "GA/CSGA_CameraZoom.h"
-#include "Camera/CameraComponent.h"
+#include "GA/AT/CSAT_AimTrace.h"
 #include "GameFramework/Character.h"
+#include "GameFramework/PlayerController.h"
 #include "Engine/World.h"
-#include "DrawDebugHelpers.h"
-#include "Abilities/GameplayAbilityTypes.h"
 #include "AbilitySystemComponent.h"
-#include "Abilities/GameplayAbilityTargetTypes.h"
 #include "Character/CSCharacterPlayer.h"
 #include "ActorComponent/CSCameraRigComponent.h"
-#include "Actor/CSBlackHoleDummy.h"
 #include "Actor/CSBlackHole.h"
-#include "Subsystem/CSManagedActorSubsystem.h"
 #include "ChronoSpace.h"
 
 UCSGA_ProjectileBlackHole::UCSGA_ProjectileBlackHole()
@@ -23,16 +17,9 @@ UCSGA_ProjectileBlackHole::UCSGA_ProjectileBlackHole()
 	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::LocalOnly;
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 
-	GuideDuration = 5.0f;
 	MaxGuideDistance = 2000.0f;
 	UpdateRate = 0.02f;
 	MouseYSensitivity = 3.0f;
-
-	CurrentEndLocation = FVector::ZeroVector;
-
-	//bIsDummySpawned = false;
-	bIsBlackHoleSpawned = false;
-	bIsAming = false;
 
 	Duration = -1.0f;	// 블랙홀 지속 시간을 주고 싶으면 양수로
 	GravityInfluenceRange = 500.0f;
@@ -41,122 +28,34 @@ UCSGA_ProjectileBlackHole::UCSGA_ProjectileBlackHole()
 
 	CameraZOffsetWhileAiming = 400.0f;
 	bApplyCameraZOffsetWhileAiming = true;
-
-	bRetriggerInstancedAbility = true;
 }
+
+// ---------------------------------------------------------------- 클라: 발동·조준·입력
 
 void UCSGA_ProjectileBlackHole::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	// GAS 컴포넌트 구조 상 서버는 이미 눌렸을 때 ActivateAbility 발동 안함
-	// 클라 토글용 코드
-	if ( bIsAming && !bIsBlackHoleSpawned )
-	{
-		bIsAming = false;
-		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
-		return;
-	}
-	bIsAming = true;
-
-	//bIsDummySpawned = false;
-
-	if (!GetAvatarActorFromActorInfo())
+	AActor* Avatar = GetAvatarActorFromActorInfo();
+	if (!IsValid(Avatar))
 	{
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
 		return;
 	}
+	AimingAvatar = Avatar;
 
-	// 초기 상태 설정
-	bUsingMouseAiming = false;
-	LastMousePosition = FVector2D::ZeroVector;
-	bInitialDirectionSet = false;
-
-	// 초기 조준 방향 저장 (한 번만 설정)
-	if (ACharacter* Character = Cast<ACharacter>(GetAvatarActorFromActorInfo()))
-	{
-		InitialAimDirection = Character->GetActorForwardVector();
-		bInitialDirectionSet = true;
-		UE_LOG(LogCS, Log, TEXT("Initial aim direction set: %s"), *InitialAimDirection.ToString());
-
-		// 초기 마우스 위치 저장
-		if (APlayerController* PC = Cast<APlayerController>(Character->GetController()))
-		{
-			float MouseX, MouseY;
-			if (PC->GetMousePosition(MouseX, MouseY))
-			{
-				LastMousePosition = FVector2D(MouseX, MouseY);
-			}
-		}
-	}
-
-	// 업데이트 타이머 시작
-	GetWorld()->GetTimerManager().SetTimer(
-		UpdateTimerHandle,
-		this,
-		&UCSGA_ProjectileBlackHole::UpdateGuideLine,
-		UpdateRate,
-		true
-	);
-	/*
-	if (UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo())
-	{
-		if (CameraZoomAbilityClass)
-		{
-			ASC->TryActivateAbilityByClass(CameraZoomAbilityClass);
-		}
-	}
-	*/
+	AimTask = UCSAT_AimTrace::CreateAimTraceTask(this, MaxGuideDistance, MouseYSensitivity, UpdateRate);
+	AimTask->OnAimUpdated.AddDynamic(this, &UCSGA_ProjectileBlackHole::OnAimUpdated);
+	AimTask->ReadyForActivation();
 
 	ApplyCameraZOffset(ActorInfo);
 
 	UE_LOG(LogCS, Log, TEXT("ProjectileBlackHole Activated"));
-
-}
-
-FVector UCSGA_ProjectileBlackHole::GetScreenCenterDirection() const
-{
-	if (ACharacter* Character = Cast<ACharacter>(GetAvatarActorFromActorInfo()))
-	{
-		if (APlayerController* PC = Cast<APlayerController>(Character->GetController()))
-		{
-			int32 ViewportSizeX, ViewportSizeY;
-			PC->GetViewportSize(ViewportSizeX, ViewportSizeY);
-
-			// Determine which split-screen slot this player is in:
-			// 0 = left/top, 1 = right/bottom (for two players)
-			int32 ControllerId = PC->GetLocalPlayer()->GetControllerId();
-
-			// Left player uses 75% X (right side), right player 25% X (left side)
-			float ScreenCenterX = (ControllerId == 0)
-				? ViewportSizeX * 0.75f
-				: ViewportSizeX * 0.25f;
-
-			float ScreenCenterY = ViewportSizeY * 0.5f;
-
-			float CurrentMouseX, CurrentMouseY;
-			if (PC->GetMousePosition(CurrentMouseX, CurrentMouseY))
-			{
-				// apply Y-axis sensitivity as before
-				float MouseYOffset = CurrentMouseY - ScreenCenterY;
-				float AmplifiedYOffset = MouseYOffset * MouseYSensitivity;
-				float FinalY = ScreenCenterY + AmplifiedYOffset;
-
-				FVector WorldLocation, WorldDirection;
-				if (PC->DeprojectScreenPositionToWorld(ScreenCenterX, FinalY, WorldLocation, WorldDirection))
-				{
-					return WorldDirection;
-				}
-			}
-		}
-	}
-
-	return bInitialDirectionSet ? InitialAimDirection : FVector::ForwardVector;
 }
 
 void UCSGA_ProjectileBlackHole::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
-	// 우클릭 뗌 외의 경로(사망, CancelAbility, 태그 취소, 재발동)로 끝나도 서버의 블랙홀을 정리한다.
+	// 우클릭 뗌 외의 경로(사망, CancelAbility, 태그 취소)로 끝나도 서버의 블랙홀을 정리한다.
 	// 안 하면 Duration 이 -1 인 블랙홀이 영원히 남는다. 플래그도 여기서 리셋해야 다음 발동이 스폰 분기로 간다.
 	if (bIsBlackHoleSpawned)
 	{
@@ -164,21 +63,8 @@ void UCSGA_ProjectileBlackHole::EndAbility(const FGameplayAbilitySpecHandle Hand
 		bIsBlackHoleSpawned = false;
 	}
 
-	if ( BlackHoleDummyActor )
-	{
-		BlackHoleDummyActor->Destroy();
-	}
-
-	// 타이머 정리
-	if (UpdateTimerHandle.IsValid())
-	{
-		GetWorld()->GetTimerManager().ClearTimer(UpdateTimerHandle);
-	}
-
-	if (DurationTimerHandle.IsValid())
-	{
-		GetWorld()->GetTimerManager().ClearTimer(DurationTimerHandle);
-	}
+	// AimTask 는 어빌리티 종료와 함께 엔진이 끝낸다. 참조만 비워 둔다.
+	AimTask = nullptr;
 
 	// 카메라 복원은 캐릭터의 UCSCameraRigComponent 가 Tick 으로 돌린다.
 	// 어빌리티 타이머로 돌리면 바로 아래 Super::EndAbility 안의
@@ -189,87 +75,76 @@ void UCSGA_ProjectileBlackHole::EndAbility(const FGameplayAbilitySpecHandle Hand
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 
-void UCSGA_ProjectileBlackHole::UpdateGuideLine()
+void UCSGA_ProjectileBlackHole::OnAimUpdated(FVector Direction, FVector EndLocation)
 {
-	// 마우스 이동 감지
-	CheckMouseMovement();
-
-	CurrentDirection = GetScreenCenterDirection();
-
-	if (CurrentDirection.IsNearlyZero())
+	// 엔진은 아바타가 죽거나 바뀌어도 EndAbility 를 부르지 않는다. 여기서 직접 끝낸다.
+	// 안 끝내면 조준 Task 가 새 폰에서 계속 돌고 카메라 오프셋이 구 폰에 걸린 채 남는다.
+	const ACSCharacterBase* Avatar = Cast<ACSCharacterBase>(GetAvatarActorFromActorInfo());
+	if (!IsValid(Avatar) || Avatar->IsDead() || Avatar != AimingAvatar.Get())
 	{
-		CurrentDirection = FVector::ForwardVector;
+		UE_LOG(LogCS, Log, TEXT("ProjectileBlackHole: avatar dead or changed while aiming, ending"));
+		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
+		return;
 	}
 
-	CurrentEndLocation = TraceAimEndLocation(CurrentDirection);
+	CurrentDirection = Direction;
+	CurrentEndLocation = EndLocation;
 
 	CheckMouseInput();
 }
 
-void UCSGA_ProjectileBlackHole::OnGuideDurationEnd()
-{
-	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
-}
-
-
 void UCSGA_ProjectileBlackHole::CheckMouseInput()
 {
-	if (ACSCharacterPlayer* Character = Cast<ACSCharacterPlayer>(GetAvatarActorFromActorInfo()))
+	ACSCharacterPlayer* Character = Cast<ACSCharacterPlayer>(GetAvatarActorFromActorInfo());
+	if (!Character)
 	{
-		if (APlayerController* PC = Cast<APlayerController>(Character->GetController()))
+		return;
+	}
+
+	APlayerController* PC = Cast<APlayerController>(Character->GetController());
+	if (!PC)
+	{
+		return;
+	}
+
+	if ( PC->IsInputKeyDown(EKeys::RightMouseButton) )
+	{
+		const float Now = GetWorld()->GetTimeSeconds();
+
+		if (!bIsBlackHoleSpawned)
 		{
-			if ( PC->IsInputKeyDown(EKeys::RightMouseButton) )
+			FCSBlackHoleSpawnCmd Cmd;
+			Cmd.Direction = CurrentDirection;
+			SendServerCommand(FInstancedStruct::Make(Cmd));
+			bIsBlackHoleSpawned = true;
+			LastSentEndLocation = CurrentEndLocation;
+			LastMoveSendTime = Now;
+		}
+		else
+		{
+			// 끝점이 1cm 이상 움직였을 때 보낸다. 방향이 같아도 캐릭터가 걸으면 끝점이 바뀐다.
+			// Unreliable 이라 마지막 패킷이 드랍된 채 가만히 있으면 서버가 낡은 위치에 남으므로,
+			// 변화가 없어도 MoveHeartbeatInterval 마다 한 번은 보내 복구한다.
+			const bool bMoved = !CurrentEndLocation.Equals(LastSentEndLocation, 1.0f);
+			const bool bHeartbeat = (Now - LastMoveSendTime) >= MoveHeartbeatInterval;
+			if (bMoved || bHeartbeat)
 			{
-				const float Now = GetWorld()->GetTimeSeconds();
-
-				if (!bIsBlackHoleSpawned)
-				{
-					FCSBlackHoleSpawnCmd Cmd;
-					Cmd.Direction = CurrentDirection;
-					SendServerCommand(FInstancedStruct::Make(Cmd));
-					bIsBlackHoleSpawned = true;
-					LastSentEndLocation = CurrentEndLocation;
-					LastMoveSendTime = Now;
-				}
-				else
-				{
-					// 끝점이 1cm 이상 움직였을 때 보낸다. 방향이 같아도 캐릭터가 걸으면 끝점이 바뀐다.
-					// Unreliable 이라 마지막 패킷이 드랍된 채 가만히 있으면 서버가 낡은 위치에 남으므로,
-					// 변화가 없어도 MoveHeartbeatInterval 마다 한 번은 보내 복구한다.
-					const bool bMoved = !CurrentEndLocation.Equals(LastSentEndLocation, 1.0f);
-					const bool bHeartbeat = (Now - LastMoveSendTime) >= MoveHeartbeatInterval;
-					if (bMoved || bHeartbeat)
-					{
-						FCSBlackHoleMoveCmd Cmd;
-						Cmd.Direction = CurrentDirection;
-						SendServerCommand(FInstancedStruct::Make(Cmd), /*bReliable*/ false);
-						LastSentEndLocation = CurrentEndLocation;
-						LastMoveSendTime = Now;
-					}
-				}
-			}
-			else if (bIsBlackHoleSpawned)
-			{
-				// 릴리즈 명령은 EndAbility 가 보낸다 (다른 종료 경로와 한 곳으로 모은다)
-				bIsAming = false;
-
-				/*
-				if (UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo())
-				{
-					if (CameraZoomAbilityClass)
-					{
-						if (FGameplayAbilitySpec* Spec =
-							ASC->FindAbilitySpecFromClass(CameraZoomAbilityClass))
-						{
-							ASC->CancelAbilityHandle(Spec->Handle);
-						}
-					}
-				}
-				*/
-
-				EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+				FCSBlackHoleMoveCmd Cmd;
+				Cmd.Direction = CurrentDirection;
+				SendServerCommand(FInstancedStruct::Make(Cmd), /*bReliable*/ false);
+				LastSentEndLocation = CurrentEndLocation;
+				LastMoveSendTime = Now;
 			}
 		}
+	}
+	else
+	{
+		// 우클릭이 안 눌려 있으면 끝낸다. 블랙홀이 있든 없든 마찬가지다.
+		// 어빌리티 키가 우클릭이라 정상 흐름에선 첫 틱에 항상 눌려 있고, 안 눌려 있다는 건 이미 뗐다는 뜻이다.
+		// 리모트 클라는 활성화가 RPC 왕복 뒤라 짧은 클릭이면 여기로 온다. "스폰된 경우만" 으로 좁히면
+		// 조준만 하다 멈춘 어빌리티가 영영 안 끝나고 이후 입력이 전부 거부된다.
+		// 릴리즈 명령은 EndAbility 가 보낸다 (다른 종료 경로와 한 곳으로 모은다)
+		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 	}
 }
 
@@ -287,11 +162,11 @@ bool UCSGA_ProjectileBlackHole::CanReceiveServerCommand(const FInstancedStruct& 
 
 void UCSGA_ProjectileBlackHole::OnServerCommand(const FInstancedStruct& Payload)
 {
-	if (const FCSBlackHoleSpawnCmd* Spawn = Payload.GetPtr<FCSBlackHoleSpawnCmd>())
+	if (const FCSBlackHoleSpawnCmd* Spawn = Payload.GetPtr<FCSBlackHoleSpawnCmd>(); Spawn)
 	{
 		ServerSpawnBlackHole(Spawn->Direction);
 	}
-	else if (const FCSBlackHoleMoveCmd* Move = Payload.GetPtr<FCSBlackHoleMoveCmd>())
+	else if (const FCSBlackHoleMoveCmd* Move = Payload.GetPtr<FCSBlackHoleMoveCmd>(); Move)
 	{
 		ServerMoveBlackHole(Move->Direction);
 	}
@@ -341,7 +216,7 @@ void UCSGA_ProjectileBlackHole::ServerSpawnBlackHole(const FVector& Direction)
 		return;
 	}
 
-	const FVector SpawnLocation = TraceAimEndLocation(SafeDirection);
+	const FVector SpawnLocation = UCSAT_AimTrace::TraceAimEnd(CSPlayer, SafeDirection, MaxGuideDistance);
 
 	FActorSpawnParameters Params;
 	Params.Owner = CSPlayer;
@@ -381,7 +256,13 @@ void UCSGA_ProjectileBlackHole::ServerMoveBlackHole(const FVector& Direction)
 		return;
 	}
 
-	SpawnedBlackHole->SetActorLocation(TraceAimEndLocation(SafeDirection));
+	const AActor* Avatar = GetAvatarActorFromActorInfo();
+	if (!IsValid(Avatar))
+	{
+		return;
+	}
+
+	SpawnedBlackHole->SetActorLocation(UCSAT_AimTrace::TraceAimEnd(Avatar, SafeDirection, MaxGuideDistance));
 }
 
 void UCSGA_ProjectileBlackHole::ServerReleaseBlackHole()
@@ -395,12 +276,12 @@ void UCSGA_ProjectileBlackHole::ServerReleaseBlackHole()
 
 	// 스폰 때 바인딩·참조를 넣은 대상은 BoundAvatar 다. 리스폰으로 현재 아바타가 바뀌었을 수 있으니
 	// GetAvatarActorFromActorInfo() 가 아니라 이쪽을 쓴다.
-	if (AActor* Avatar = BoundAvatar.Get())
+	if (AActor* Avatar = BoundAvatar.Get(); Avatar)
 	{
 		Avatar->OnDestroyed.RemoveDynamic(this, &UCSGA_ProjectileBlackHole::OnServerAvatarDestroyed);
 
 		// BP 호환용 참조도 같이 비운다. 안 비우면 곧 파괴될 액터를 리플리케이트 포인터가 붙든다.
-		if (ACSCharacterPlayer* CSPlayer = Cast<ACSCharacterPlayer>(Avatar))
+		if (ACSCharacterPlayer* CSPlayer = Cast<ACSCharacterPlayer>(Avatar); CSPlayer)
 		{
 			if (CSPlayer->HasAuthority())
 			{
@@ -431,107 +312,7 @@ void UCSGA_ProjectileBlackHole::OnRemoveAbility(const FGameplayAbilityActorInfo*
 	Super::OnRemoveAbility(ActorInfo, Spec);
 }
 
-FVector UCSGA_ProjectileBlackHole::TraceAimEndLocation(const FVector& Direction) const
-{
-	const FVector StartLocation = GetStartLocation();
-	FVector EndLocation = StartLocation + Direction * MaxGuideDistance;
-
-	UWorld* World = GetWorld();
-	if (!IsValid(World))
-	{
-		return EndLocation;
-	}
-
-	FCollisionQueryParams QueryParams;
-	QueryParams.AddIgnoredActor(GetAvatarActorFromActorInfo());
-
-	if (UCSManagedActorSubsystem* Subsystem = World->GetSubsystem<UCSManagedActorSubsystem>())
-	{
-		QueryParams.AddIgnoredActors(Subsystem->GetActorsPulledByBlackHole());
-	}
-
-	FHitResult HitResult;
-	if (World->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Visibility, QueryParams))
-	{
-		EndLocation = HitResult.Location;
-	}
-
-	return EndLocation;
-}
-
-void UCSGA_ProjectileBlackHole::InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
-{
-	// GAS 컴포넌트 구조상 서버에서만 불린다
-	Super::InputPressed(Handle, ActorInfo, ActivationInfo);
-
-	ACharacter* Character = Cast<ACharacter>(GetAvatarActorFromActorInfo());
-	if ( Character == nullptr ) return;
-
-	APlayerController* PC = Cast<APlayerController>(Character->GetController());
-	if ( PC == nullptr ) return;
-
-	// 이미 소환한 후에는 왼쪽 버튼 놔줄 때로 종료 체크
-	if ( !bIsBlackHoleSpawned )
-	{
-		bIsAming = false;
-
-		/*
-		if (UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo())
-		{
-			if (CameraZoomAbilityClass)
-			{
-				if (FGameplayAbilitySpec* Spec =
-					ASC->FindAbilitySpecFromClass(CameraZoomAbilityClass))
-				{
-					ASC->CancelAbilityHandle(Spec->Handle);
-				}
-			}
-		}
-		*/
-
-		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
-	}
-}
-
-
-FVector UCSGA_ProjectileBlackHole::GetStartLocation() const
-{
-	if (ACharacter* Character = Cast<ACharacter>(GetAvatarActorFromActorInfo()))
-	{
-		return Character->GetActorLocation() + FVector(0.0f, 0.0f, Character->BaseEyeHeight);
-	}
-
-	return FVector::ZeroVector;
-}
-
-void UCSGA_ProjectileBlackHole::CheckMouseMovement()
-{
-	if (bUsingMouseAiming) return; // 이미 마우스 모드면 체크하지 않음
-
-	if (ACharacter* Character = Cast<ACharacter>(GetAvatarActorFromActorInfo()))
-	{
-		if (APlayerController* PC = Cast<APlayerController>(Character->GetController()))
-		{
-			float CurrentMouseX, CurrentMouseY;
-			if (PC->GetMousePosition(CurrentMouseX, CurrentMouseY))
-			{
-				FVector2D CurrentMousePosition(CurrentMouseX, CurrentMouseY);
-
-				// 마우스가 임계값 이상 움직였는지 확인
-				float MouseDistance = FVector2D::Distance(LastMousePosition, CurrentMousePosition);
-
-				if (MouseDistance > MouseMovementThreshold)
-				{
-					bUsingMouseAiming = true;
-					UE_LOG(LogCS, Log, TEXT("Switched to mouse aiming mode (Distance: %f)"), MouseDistance);
-				}
-
-				LastMousePosition = CurrentMousePosition;
-			}
-		}
-	}
-}
-
+// ---------------------------------------------------------------- 카메라
 
 ACSCharacterPlayer* UCSGA_ProjectileBlackHole::GetCameraRigOwner(const FGameplayAbilityActorInfo* ActorInfo) const
 {
