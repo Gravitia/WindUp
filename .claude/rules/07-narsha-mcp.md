@@ -30,13 +30,32 @@ NarshaMCP 는 팀 필수가 아니다. 쓰는 사람만 Fab 에서 받는다.
 | PIE, 로그, CVar, 뷰포트 스크린샷, 자동화 테스트 | `unreal-mcp` |
 | 타임라인 커브 키, 커스텀 이벤트 리플리케이션 쓰기 | `BlueprintInternalsToolset` |
 
-## NarshaMCP로 쓰지 않는다
+## 쓰기 경로는 4종이고, 위험한 것은 차단돼 있다
 
-NarshaMCP에는 `.uasset`을 디스크에서 직접 고치는 경로와, 액터 스폰·컴파일·테스트를 도는 Editor Control이 있다. **둘 다 쓰지 않는다.**
+NarshaMCP 의 쓰기는 하나가 아니다. 경로마다 위험도가 다르다.
 
-에디터를 켜 둔 채 디스크의 `.uasset`을 바꾸면 에디터는 그 변경을 모른 채 자기 메모리 버전을 들고 있다가 저장할 때 덮어쓴다. 작업이 조용히 사라지거나 에셋이 깨진다.
+| 경로 | 무엇을 하나 | 상태 |
+|---|---|---|
+| 바이너리 패치 | `.uasset` 을 fixed-width 로 디스크에서 직접 덮어씀 | **차단** |
+| 커맨드렛 | `UnrealEditor-Cmd` 를 띄워 **별도 프로세스**가 에셋을 저장 | **차단** |
+| Editor Control | 액터 스폰·삭제, 에셋 삭제, `execute_python`, 에디터 종료 | **차단** |
+| WebSocket / Remote Control | 에디터 안의 UObject 를 고치고 저장 | 허용, 규율로 관리 |
 
-**"Editor Control은 어차피 동작 안 할 것"이라고 가정하지 않는다.** `NarshaMCP.uplugin`이 `RemoteControl`과 `WebSocketNetworking`을 의존 플러그인으로 선언해 두어서, NarshaMCP를 켜면 **함께 자동 활성화된다.** 안 쓰는 것은 규칙으로 지킨다.
+앞의 셋은 `.claude/settings.json` 의 `permissions.deny` 로 **호출 자체가 막힌다.** 규율이 아니라
+강제다. 13개 툴이 대상이고 목록은 그 파일에 있다.
+
+**앞의 셋이 위험한 이유:** 에디터가 그 에셋을 메모리에 들고 있는 상태에서 디스크가 바뀌면,
+에디터는 그 변경을 모른 채 자기 버전을 저장해 덮어쓴다. 작업이 조용히 사라진다.
+커맨드렛은 에디터가 꺼져 있어도 동작하므로 "에디터를 껐으니 괜찮다" 는 판단이 성립하지 않는다.
+
+**네 번째(WebSocket)는 `unreal-mcp` 와 같은 메커니즘이다.** `LoadObject` → UObject 수정 →
+`MarkPackageDirty` → `SavePackage`. 손상 위험이 아니라 **두 도구가 같은 에셋을 건드리는**
+**조율 문제**다. 그래서 막지 않되, 에셋 쓰기는 `unreal-mcp` 로 하는 원칙을 지킨다 —
+컴파일·저장·PIE 검증 루프(룰 05)가 그쪽에만 있고, 쓰기 경로가 둘이면 추적이 안 된다.
+
+**Editor Control 이 "어차피 동작 안 할 것" 이라고 가정하지 않는다.** `NarshaMCP.uplugin` 이
+`RemoteControl` 과 `WebSocketNetworking` 을 의존 플러그인으로 선언해서 NarshaMCP 를 켜면
+**함께 자동 활성화된다.**
 
 ## Remote Control 웹서버는 꺼 둔다
 
@@ -84,6 +103,28 @@ narsha 의 자체 WebSocket(포트 30011, `127.0.0.1`)은 별개이며 그대로
 
 - `get_hierarchy(direction="down", recursive=true)` 로 각 결과의 자식을 보강하거나
 - `ue_grep(reference_recall=true)` 의 `[bp_var]` 행을 쓴다 (이쪽은 45개를 정확히 찾는다)
+
+## C++ 소스를 쓰는 툴 — 진단만 쓴다
+
+`ue_generate_code` / `ue_fix_errors` / `ue_auto_fix` 는 `.uasset` 이 아니라 **C++ 소스**를 쓴다.
+에셋 손상 위험은 없고 `git diff` 에 다 보이므로 권한으로 막지 않는다. 대신 규율로 나눈다.
+
+| 쓴다 (진단) | 쓰지 않는다 (자동 적용) |
+|---|---|
+| `auto` 빌드 로그 분석 | `autofix` 수정을 소스에 직접 씀 |
+| `preview` 수정안을 diff 로 제시 | `manual` 직접 에러 수정 |
+| `scan_build_log`, `get_compiler_results` | `build_and_fix` 빌드→수정 반복 |
+| `crash_analysis`, `runtime_analysis` | `preflight_autofix`, `predictive_autofix` |
+| `preflight`, `dependency_check`, `safety_check` | `engine_upgrade_apply` |
+
+**`preview` 로 수정안을 받아 직접 적용한다.** 자동 적용을 피하는 이유:
+
+- 편집 중인 파일을 동시에 고치면 한쪽 작업이 사라진다
+- 문서가 말하는 정확도 "95%+" 는 20번에 1번은 틀린 수정이 조용히 들어간다는 뜻이다
+- 생성·수정된 코드는 이 프로젝트 규칙을 모른다 — `CSEditable|<시스템>` 카테고리(06),
+  폴더 배치(03), `if (T* X = f(); X)` 스타일, UTF-8 인코딩(03)
+
+`ue_generate_code` 로 스캐폴드를 만들었으면 커밋 전에 위 규칙에 맞게 다듬는다.
 
 ## 조회하기 전에 저장한다
 

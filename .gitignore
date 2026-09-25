@@ -196,6 +196,9 @@ CLAUDE.local.md
 !.claude/rules/06-blueprint-category.md
 !.claude/rules/07-narsha-mcp.md
 
+# NarshaMCP 쓰기 툴 차단 (07-narsha-mcp.md 참고)
+!.claude/settings.json
+
 # --- 공용 스킬 ---
 !.claude/skills/
 !.claude/skills/unreal-mcp/
