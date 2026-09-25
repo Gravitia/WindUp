@@ -20,31 +20,31 @@ class CHRONOSPACE_API UCSGameUIWidget : public UUserWidget
 	
 
 public:
-	// HP UI À§Á¬ Å¬·¡½º
+	// HP UI ìœ„ì ¯ í´ë˜ìŠ¤
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
 	TSubclassOf<UCSHPDisplayWidget> HPDisplayWidgetClass;
 
-	// UI ¾÷µ¥ÀÌÆ® ÇÔ¼öµé
+	// UI ì—…ë°ì´íŠ¸ í•¨ìˆ˜ë“¤
 	UFUNCTION(BlueprintCallable, Category = "Game UI")
 	void RefreshPlayerUI();
 
 protected:
-	// UI ÄÁÅ×ÀÌ³Ê
+	// UI ì»¨í…Œì´ë„ˆ
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class UPanelWidget> PlayersContainer;
 
-	// HP µğ½ºÇÃ·¹ÀÌ À§Á¬µé
+	// HP ë””ìŠ¤í”Œë ˆì´ ìœ„ì ¯ë“¤
 	UPROPERTY(BlueprintReadOnly, Category = "UI")
 	TArray<TObjectPtr<UCSHPDisplayWidget>> HPDisplayWidgets;
 
-	// °ÔÀÓ »óÅÂ ÂüÁ¶
+	// ê²Œì„ ìƒíƒœ ì°¸ì¡°
 	UPROPERTY(BlueprintReadOnly, Category = "Game")
 	TObjectPtr<ACSGameState> GameState;
 
 	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;
 
-	// ÇÃ·¹ÀÌ¾î ¾÷µ¥ÀÌÆ® Äİ¹é
+	// í”Œë ˆì´ì–´ ì—…ë°ì´íŠ¸ ì½œë°±
 	UFUNCTION()
 	void OnPlayersUpdated(const TArray<ACSPlayerState*>& PlayerStates);
 

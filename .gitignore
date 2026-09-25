@@ -194,6 +194,7 @@ CLAUDE.local.md
 !.claude/rules/04-multiplayer.md
 !.claude/rules/05-editor-workflow.md
 !.claude/rules/06-blueprint-category.md
+!.claude/rules/07-narsha-mcp.md
 
 # --- 공용 스킬 ---
 !.claude/skills/
@@ -245,3 +246,7 @@ CLAUDE.local.md
 .mcp.json
 .cursor/
 .narshamcp/
+.antigravity/
+.uecodegen/
+.codex/
+.claude/settings.local.json

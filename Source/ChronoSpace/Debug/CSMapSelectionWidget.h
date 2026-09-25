@@ -37,7 +37,7 @@ protected:
     UPROPERTY(EditAnywhere, Category = "Map")
     FName Map3Name = "Map_C";
 
-    // «Ï¥ı
+    // Ìó§Îçî
     UFUNCTION()
     void OnMap1Clicked();
 

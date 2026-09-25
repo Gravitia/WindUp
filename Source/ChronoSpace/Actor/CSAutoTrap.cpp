@@ -15,7 +15,7 @@ void ACSAutoTrap::BeginPlay()
 {
     Super::BeginPlay();
 
-    // ¼­¹ö¸¸ ÆĞÅÏÀ» ÁøÇàÇÏ°í, Å¬¶ó´Â RepNotify·Î ¿¬Ãâ¸¸ µû¶ó°£´Ù.
+    // ì„œë²„ë§Œ íŒ¨í„´ì„ ì§„í–‰í•˜ê³ , í´ë¼ëŠ” RepNotifyë¡œ ì—°ì¶œë§Œ ë”°ë¼ê°„ë‹¤.
     if (HasAuthority())
     {
         StartServerPattern();
@@ -31,7 +31,7 @@ void ACSAutoTrap::StartServerPattern()
 
     CurrentStepIndex = 0;
 
-    // BeginPlay Á÷ÈÄ Å¸ÀÌ¹Ö ¾ÈÁ¤È­
+    // BeginPlay ì§í›„ íƒ€ì´ë° ì•ˆì •í™”
     GetWorldTimerManager().SetTimerForNextTick(
         this,
         &ACSAutoTrap::ExecuteCurrentStep
@@ -57,23 +57,23 @@ void ACSAutoTrap::ExecuteCurrentStep()
 
     const FTrapStep& Step = TrapSteps[CurrentStepIndex];
 
-    // ÀÌ¹ø ½ºÅÜ ½½·Ô ¼¼ÆÃ
+    // ì´ë²ˆ ìŠ¤í… ìŠ¬ë¡¯ ì„¸íŒ…
     CurrentStepSlot = Step.StepSlot;
 
-    // ¸Å ½ºÅÜ¸¶´Ù ¹İµå½Ã º¯ÇÏµµ·Ï ½Ã¸®¾ó Áõ°¡ (uint8 overflow´Â ÀÚ¿¬½º·´°Ô ¼øÈ¯)
+    // ë§¤ ìŠ¤í…ë§ˆë‹¤ ë°˜ë“œì‹œ ë³€í•˜ë„ë¡ ì‹œë¦¬ì–¼ ì¦ê°€ (uint8 overflowëŠ” ìì—°ìŠ¤ëŸ½ê²Œ ìˆœí™˜)
     ++StepSerial;
 
-    // ¼­¹ö¿¡¼­µµ ÇÊ¿äÇÏ¸é ½ÇÇà(¼­¹öÆÇÁ¤/»ç¿îµå µî). 
-    // "¿¬ÃâÀº Å¬¶ó¸¸" ¿øÇÏ¸é ¾Æ·¡ ÁÙÀ» Áö¿öµµ µÈ´Ù.
+    // ì„œë²„ì—ì„œë„ í•„ìš”í•˜ë©´ ì‹¤í–‰(ì„œë²„íŒì •/ì‚¬ìš´ë“œ ë“±). 
+    // "ì—°ì¶œì€ í´ë¼ë§Œ" ì›í•˜ë©´ ì•„ë˜ ì¤„ì„ ì§€ì›Œë„ ëœë‹¤.
     OnTrapStep(CurrentStepSlot);
 
-    // Áï½Ã ÀüÆÄ(°¡²û ´Ê°Ô µµÂøÇÏ´Â Ã¼°¨ ÁÙÀÌ±â)
+    // ì¦‰ì‹œ ì „íŒŒ(ê°€ë” ëŠ¦ê²Œ ë„ì°©í•˜ëŠ” ì²´ê° ì¤„ì´ê¸°)
     ForceNetUpdate();
 
-    // ´ÙÀ½ ½ºÅÜ ÀÎµ¦½º
+    // ë‹¤ìŒ ìŠ¤í… ì¸ë±ìŠ¤
     CurrentStepIndex = (CurrentStepIndex + 1) % TrapSteps.Num();
 
-    // ´ÙÀ½ ½ºÅÜ ¿¹¾à
+    // ë‹¤ìŒ ìŠ¤í… ì˜ˆì•½
     GetWorldTimerManager().SetTimer(
         TrapTimer,
         this,
@@ -85,6 +85,6 @@ void ACSAutoTrap::ExecuteCurrentStep()
 
 void ACSAutoTrap::OnRep_StepSerial()
 {
-    // Å¬¶ó¿¡¼­ ¸Å ½ºÅÜ¸¶´Ù ¹«Á¶°Ç È£ÃâµÊ
+    // í´ë¼ì—ì„œ ë§¤ ìŠ¤í…ë§ˆë‹¤ ë¬´ì¡°ê±´ í˜¸ì¶œë¨
     OnTrapStep(CurrentStepSlot);
 }

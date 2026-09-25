@@ -15,15 +15,15 @@ struct FCSTextData
 {
     GENERATED_BODY()
 
-    // Ç¥½ÃÇÒ ÅØ½ºÆ®
+    // í‘œì‹œí•  í…ìŠ¤íŠ¸
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Text")
     FString Text;
 
-    // ÀÌ ÅØ½ºÆ®°¡ Ç¥½ÃµÇ´Â ½Ã°£ (ÃÊ)
+    // ì´ í…ìŠ¤íŠ¸ê°€ í‘œì‹œë˜ëŠ” ì‹œê°„ (ì´ˆ)
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Text", meta = (ClampMin = "0.1"))
     float DisplayDuration = 3.0f;
 
-    // ´ÙÀ½ ÅØ½ºÆ®·Î ³Ñ¾î°¡´Â ¼Óµµ (ÃÊ)
+    // ë‹¤ìŒ í…ìŠ¤íŠ¸ë¡œ ë„˜ì–´ê°€ëŠ” ì†ë„ (ì´ˆ)
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Text", meta = (ClampMin = "0.1"))
     float TransitionSpeed = 1.0f;
 
@@ -56,48 +56,48 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     UStaticMeshComponent* TriggerMesh;
 
-    // ÅØ½ºÆ® µ¥ÀÌÅÍ ¹è¿­
+    // í…ìŠ¤íŠ¸ ë°ì´í„° ë°°ì—´
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Text Settings")
     TArray<FCSTextData> TextDataArray;
 
-    // Æ®¸®°Å°¡ ÇÑ ¹ø¸¸ ÀÛµ¿ÇÏ´ÂÁö ¿©ºÎ
+    // íŠ¸ë¦¬ê±°ê°€ í•œ ë²ˆë§Œ ì‘ë™í•˜ëŠ”ì§€ ì—¬ë¶€
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trigger Settings")
     bool bTriggerOnce = true;
 
-    // Æ®¸®°Å°¡ ÀÌ¹Ì ÀÛµ¿Çß´ÂÁö ¿©ºÎ
+    // íŠ¸ë¦¬ê±°ê°€ ì´ë¯¸ ì‘ë™í–ˆëŠ”ì§€ ì—¬ë¶€
     UPROPERTY(BlueprintReadOnly, Category = "Trigger Settings")
     bool bHasTriggered = false;
 
-    // ÇöÀç Ç¥½Ã ÁßÀÎ ÅØ½ºÆ® ÀÎµ¦½º
+    // í˜„ì¬ í‘œì‹œ ì¤‘ì¸ í…ìŠ¤íŠ¸ ì¸ë±ìŠ¤
     UPROPERTY(BlueprintReadOnly, Category = "Runtime")
     int32 CurrentTextIndex = 0;
 
-    // Å¸ÀÌ¸Ó ÇÚµé
+    // íƒ€ì´ë¨¸ í•¸ë“¤
     FTimerHandle TextDisplayTimer;
     FTimerHandle TextTransitionTimer;
 
-    // ÇöÀç ÅØ½ºÆ®¸¦ Ç¥½Ã ÁßÀÎÁö ¿©ºÎ
+    // í˜„ì¬ í…ìŠ¤íŠ¸ë¥¼ í‘œì‹œ ì¤‘ì¸ì§€ ì—¬ë¶€
     UPROPERTY(BlueprintReadOnly, Category = "Runtime")
     bool bIsDisplayingText = false;
 
-    // CSTextWidget Å¬·¡½º ÂüÁ¶
+    // CSTextWidget í´ë˜ìŠ¤ ì°¸ì¡°
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI Settings")
     TSubclassOf<class UCSTextWidget> TextWidgetClass;
 
-    // ÇöÀç ÅØ½ºÆ® À§Á¬ ÀÎ½ºÅÏ½º
+    // í˜„ì¬ í…ìŠ¤íŠ¸ ìœ„ì ¯ ì¸ìŠ¤í„´ìŠ¤
     UPROPERTY(BlueprintReadOnly, Category = "UI Runtime")
     class UCSTextWidget* CurrentTextWidget;
 
-    // Å¸ÀÌÇÎ È¿°ú »ç¿ë ¿©ºÎ
+    // íƒ€ì´í•‘ íš¨ê³¼ ì‚¬ìš© ì—¬ë¶€
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI Settings")
     bool bUseTypewriterEffect = false;
 
-    // Å¸ÀÌÇÎ ¼Óµµ (¹®ÀÚ´ç ½Ã°£)
+    // íƒ€ì´í•‘ ì†ë„ (ë¬¸ìë‹¹ ì‹œê°„)
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI Settings", meta = (ClampMin = "0.01"))
     float TypewriterSpeed = 0.05f;
 
 public:
-    // Overlap ÀÌº¥Æ®
+    // Overlap ì´ë²¤íŠ¸
     UFUNCTION()
     void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
         UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
@@ -108,47 +108,47 @@ public:
         UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 protected:
-    // ÅØ½ºÆ® ½ÃÄö½º ½ÃÀÛ
+    // í…ìŠ¤íŠ¸ ì‹œí€€ìŠ¤ ì‹œì‘
     UFUNCTION(BlueprintCallable, Category = "Text")
     void StartTextSequence();
 
-    // ´ÙÀ½ ÅØ½ºÆ® Ç¥½Ã
+    // ë‹¤ìŒ í…ìŠ¤íŠ¸ í‘œì‹œ
     UFUNCTION()
     void ShowNextText();
 
-    // ÇöÀç ÅØ½ºÆ® ¼û±â±â
+    // í˜„ì¬ í…ìŠ¤íŠ¸ ìˆ¨ê¸°ê¸°
     UFUNCTION()
     void HideCurrentText();
 
-    // ÅØ½ºÆ® ½ÃÄö½º ¿Ï·á
+    // í…ìŠ¤íŠ¸ ì‹œí€€ìŠ¤ ì™„ë£Œ
     UFUNCTION(BlueprintCallable, Category = "Text")
     void CompleteTextSequence();
 
-    // À§Á¬ »ı¼º ¹× °ü¸®
+    // ìœ„ì ¯ ìƒì„± ë° ê´€ë¦¬
     UFUNCTION(BlueprintCallable, Category = "UI")
     void CreateTextWidget();
 
     UFUNCTION(BlueprintCallable, Category = "UI")
     void DestroyTextWidget();
 
-    // ÇÃ·¹ÀÌ¾îÀÎÁö È®ÀÎ
+    // í”Œë ˆì´ì–´ì¸ì§€ í™•ì¸
     UFUNCTION(BlueprintCallable, Category = "Utils")
     bool IsPlayer(AActor* Actor);
 
 public:
-    // ÅØ½ºÆ® µ¥ÀÌÅÍ Ãß°¡ (·±Å¸ÀÓ¿¡¼­ »ç¿ë °¡´É)
+    // í…ìŠ¤íŠ¸ ë°ì´í„° ì¶”ê°€ (ëŸ°íƒ€ì„ì—ì„œ ì‚¬ìš© ê°€ëŠ¥)
     UFUNCTION(BlueprintCallable, Category = "Text")
     void AddTextData(const FString& Text, float DisplayDuration = 3.0f, float TransitionSpeed = 1.0f);
 
-    // Æ®¸®°Å ¸®¼Â (Àç»ç¿ë °¡´ÉÇÏ°Ô)
+    // íŠ¸ë¦¬ê±° ë¦¬ì…‹ (ì¬ì‚¬ìš© ê°€ëŠ¥í•˜ê²Œ)
     UFUNCTION(BlueprintCallable, Category = "Trigger")
     void ResetTrigger();
 
-    // ÅØ½ºÆ® ½ÃÄö½º °­Á¦ Áß´Ü
+    // í…ìŠ¤íŠ¸ ì‹œí€€ìŠ¤ ê°•ì œ ì¤‘ë‹¨
     UFUNCTION(BlueprintCallable, Category = "Text")
     void StopTextSequence();
 
-    // Getter ÇÔ¼öµé
+    // Getter í•¨ìˆ˜ë“¤
     UFUNCTION(BlueprintPure, Category = "Text")
     int32 GetTotalTextCount() const { return TextDataArray.Num(); }
 

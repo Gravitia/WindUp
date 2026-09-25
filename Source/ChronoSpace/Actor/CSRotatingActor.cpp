@@ -12,7 +12,7 @@ ACSRotatingActor::ACSRotatingActor()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	// Static Mesh ÄÄÆ÷³ÍÆ® »ı¼º ¹× ·çÆ® ÄÄÆ÷³ÍÆ®·Î ¼³Á¤
+	// Static Mesh ì»´í¬ë„ŒíŠ¸ ìƒì„± ë° ë£¨íŠ¸ ì»´í¬ë„ŒíŠ¸ë¡œ ì„¤ì •
 	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComponent"));
 	RootComponent = MeshComponent;
 
@@ -44,9 +44,9 @@ void ACSRotatingActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	// °¢ ¸Ó½ÅÀÌ ·ÎÄÃ DeltaTime À» ´©ÀûÇÏ¸é ÇÁ·¹ÀÓ·¹ÀÌÆ® Â÷ÀÌ¿Í hitch ·Î ¼­¹ö/Å¬¶ó °¢µµ°¡ °è¼Ó ¹ú¾îÁ³´Ù
-	// (È¸Àü ÇÃ·§Æû À§ Å¬¶ó Ä³¸¯ÅÍ°¡ ¼­¹ö ±âÁØÀ¸·Î´Â ¹Û¿¡ ÀÖ¾î ¹Ğ·Á ¶³¾îÁü).
-	// ¼­¹ö ½Ã°¢À¸·Î Àı´ë °¢µµ¸¦ °è»êÇÏ¸é º¹Á¦ ¾øÀÌµµ ¸ğµç ¸Ó½ÅÀÌ ÀÏÄ¡ÇÑ´Ù - CSAnimatedTrap °ú °°Àº ¹æ½Ä.
+	// ê° ë¨¸ì‹ ì´ ë¡œì»¬ DeltaTime ì„ ëˆ„ì í•˜ë©´ í”„ë ˆì„ë ˆì´íŠ¸ ì°¨ì´ì™€ hitch ë¡œ ì„œë²„/í´ë¼ ê°ë„ê°€ ê³„ì† ë²Œì–´ì¡Œë‹¤
+	// (íšŒì „ í”Œë«í¼ ìœ„ í´ë¼ ìºë¦­í„°ê°€ ì„œë²„ ê¸°ì¤€ìœ¼ë¡œëŠ” ë°–ì— ìˆì–´ ë°€ë ¤ ë–¨ì–´ì§).
+	// ì„œë²„ ì‹œê°ìœ¼ë¡œ ì ˆëŒ€ ê°ë„ë¥¼ ê³„ì‚°í•˜ë©´ ë³µì œ ì—†ì´ë„ ëª¨ë“  ë¨¸ì‹ ì´ ì¼ì¹˜í•œë‹¤ - CSAnimatedTrap ê³¼ ê°™ì€ ë°©ì‹.
 	const float Yaw = RotationSpeed * GetSynchronizedWorldTime();
 	SetActorRotation(InitialRotation + FRotator(0.0f, Yaw, 0.0f));
 }

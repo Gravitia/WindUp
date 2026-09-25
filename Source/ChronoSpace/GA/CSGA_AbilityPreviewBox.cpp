@@ -44,17 +44,17 @@ void UCSGA_AbilityPreviewBox::RunAbility(float BoxSize)
 	check(AbilityClass)
 	// /Script/ChronoSpace.CSDA_BoxProperties'/Game/DataAssets/CSDA_BoxProperties.CSDA_BoxProperties'
 
-	// µ¥ÀÌÅÍ ¿¡¼Â °æ·Î
+	// ë°ì´í„° ì—ì…‹ ê²½ë¡œ
 	const FString AssetPath = TEXT("/Game/04_DataAssets/CSDA_BoxProperties.CSDA_BoxProperties");
 	UCSDA_BoxProperties* BoxPropertiesAsset = Cast<UCSDA_BoxProperties>(StaticLoadObject(UCSDA_BoxProperties::StaticClass(), nullptr, *AssetPath));
 
 	if (BoxPropertiesAsset)
 	{
-		// BoxSize ¼³Á¤
+		// BoxSize ì„¤ì •
 		BoxPropertiesAsset->BoxSize = BoxSize;
 		UE_LOG(LogTemp, Log, TEXT("Successfully updated BoxSize in DataAsset to: %f"), BoxSize);
 
-		// º¯°æ »çÇ× ÀúÀå (¿¡µğÅÍ¿¡¼­¸¸ °¡´É)
+		// ë³€ê²½ ì‚¬í•­ ì €ì¥ (ì—ë””í„°ì—ì„œë§Œ ê°€ëŠ¥)
 #if WITH_EDITOR
 		BoxPropertiesAsset->MarkPackageDirty();
 #endif
@@ -72,16 +72,16 @@ void UCSGA_AbilityPreviewBox::RunAbility(float BoxSize)
 		NewAbilitySpec = ASC->FindAbilitySpecFromClass( AbilityClass );
 		if (NewAbilitySpec)
 		{
-			ASC->TryActivateAbility(NewAbilitySpec->Handle); // »õ·Î¿î ¾îºô¸®Æ¼ ½ÇÇà
+			ASC->TryActivateAbility(NewAbilitySpec->Handle); // ìƒˆë¡œìš´ ì–´ë¹Œë¦¬í‹° ì‹¤í–‰
 		}
 	}
 
-	StopActivateTask(); // ºÎ¸ğ ¾îºô¸®Æ¼ Á¾·á Ã³¸®
+	StopActivateTask(); // ë¶€ëª¨ ì–´ë¹Œë¦¬í‹° ì¢…ë£Œ ì²˜ë¦¬
 }
 
 void UCSGA_AbilityPreviewBox::StopAbility()
 {
-	// ´Ü¼ø Á¾·á Ã³¸®
+	// ë‹¨ìˆœ ì¢…ë£Œ ì²˜ë¦¬
 	StopActivateTask();
 }
 

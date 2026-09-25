@@ -35,10 +35,10 @@ protected:
 	TSubclassOf<class ACSTA_BlackHoleSphere> TargetActorClass;
 
 public:
-	// Á¤Àû º¯¼ö·Î À§Ä¡ Á¤º¸ Àü´Ş
+	// ì •ì  ë³€ìˆ˜ë¡œ ìœ„ì¹˜ ì •ë³´ ì „ë‹¬
 	static FVector PendingTargetLocation;
 	static bool bHasPendingTargetLocation;
 
-	// À§Ä¡ ¼³Á¤ ÇÔ¼ö
+	// ìœ„ì¹˜ ì„¤ì • í•¨ìˆ˜
 	static void SetPendingTargetLocation(const FVector& Location);
 }; 

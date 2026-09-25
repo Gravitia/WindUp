@@ -19,7 +19,7 @@ class CHRONOSPACE_API UCSHPDisplayWidget : public UUserWidget
 	GENERATED_BODY()
 	
 public:
-	// UI ¾÷µ¥ÀÌÆ® ÇÔ¼ö
+	// UI ì—…ë°ì´íŠ¸ í•¨ìˆ˜
 	UFUNCTION(BlueprintCallable, Category = "HP Display")
 	void UpdateHP(float CurrentHP, float MaxHP);
 
@@ -27,7 +27,7 @@ public:
 	void SetPlayerState(ACSPlayerState* PlayerState);
 
 protected:
-	// UI ÄÄÆ÷³ÍÆ®µé
+	// UI ì»´í¬ë„ŒíŠ¸ë“¤
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UProgressBar> HealthBar;
 
@@ -37,14 +37,14 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> PlayerNameText;
 
-	// ¹ÙÀÎµùµÈ ÇÃ·¹ÀÌ¾î »óÅÂ
+	// ë°”ì¸ë”©ëœ í”Œë ˆì´ì–´ ìƒíƒœ
 	UPROPERTY(BlueprintReadOnly, Category = "Player")
 	TObjectPtr<ACSPlayerState> BoundPlayerState;
 
 	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;
 
-	// Health º¯È­ Äİ¹é
+	// Health ë³€í™” ì½œë°±
 	UFUNCTION()
 	void OnHealthChanged(float Health, float MaxHealth);
 };

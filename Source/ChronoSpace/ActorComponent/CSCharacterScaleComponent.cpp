@@ -18,7 +18,7 @@ UCSCharacterScaleComponent::UCSCharacterScaleComponent()
     PrimaryComponentTick.bCanEverTick = false;
     SetIsReplicatedByDefault(true);
 
-    // ±âº»°ª ¼³Á¤
+    // ê¸°ë³¸ê°’ ì„¤ì •
     CurrentScaleType = ECharacterScaleType::Normal;
     CurrentScaleValue = 1.0f;
     NormalScale = 1.0f;
@@ -26,7 +26,7 @@ UCSCharacterScaleComponent::UCSCharacterScaleComponent()
     SmallScale = 0.5f;
     ScaleTransitionSpeed = 2.0f;
 
-    // Æ®·£Áö¼Ç °ü·Ã ÃÊ±âÈ­
+    // íŠ¸ëžœì§€ì…˜ ê´€ë ¨ ì´ˆê¸°í™”
     StartScale = 1.0f;
     TargetScale = 1.0f;
     TransitionTime = 0.0f;
@@ -39,7 +39,7 @@ void UCSCharacterScaleComponent::BeginPlay()
 {
     Super::BeginPlay();
 
-    // ÃÊ±â ½ºÄÉÀÏ Àû¿ë
+    // ì´ˆê¸° ìŠ¤ì¼€ì¼ ì ìš©
     ApplyScaleToCharacter(CurrentScaleValue);
 }
 
@@ -67,14 +67,14 @@ void UCSCharacterScaleComponent::RequestScaleChange(ECharacterScaleType NewScale
         return;
     }
 
-    // ¼­¹ö¿¡¼­ ½ÇÇà ÁßÀÌ¸é Á÷Á¢ Ã³¸®
+    // ì„œë²„ì—ì„œ ì‹¤í–‰ ì¤‘ì´ë©´ ì§ì ‘ ì²˜ë¦¬
     if (GetOwner()->HasAuthority())
     {
         ServerChangeScale(NewScaleType);
     }
     else
     {
-        // Å¬¶óÀÌ¾ðÆ®¸é ¼­¹ö RPC È£Ãâ
+        // í´ë¼ì´ì–¸íŠ¸ë©´ ì„œë²„ RPC í˜¸ì¶œ
         ServerChangeScale(NewScaleType);
     }
 }
@@ -95,36 +95,36 @@ void UCSCharacterScaleComponent::ServerChangeScale_Implementation(ECharacterScal
     CurrentScaleType = NewScaleType;
     CurrentScaleValue = GetScaleValueFromType(NewScaleType);
 
-    // ºÎµå·¯¿î Æ®·£Áö¼Ç ½ÃÀÛ
+    // ë¶€ë“œëŸ¬ìš´ íŠ¸ëžœì§€ì…˜ ì‹œìž‘
     StartScale = GetCurrentScaleValue();
     TargetScale = CurrentScaleValue;
     ElapsedTime = 0.0f;
     TransitionTime = FMath::Abs(TargetScale - StartScale) / ScaleTransitionSpeed;
     bIsTransitioning = true;
 
-    // ¸ðµç Å¬¶óÀÌ¾ðÆ®¿¡°Ô ½ºÄÉÀÏ º¯°æ Àû¿ë
+    // ëª¨ë“  í´ë¼ì´ì–¸íŠ¸ì—ê²Œ ìŠ¤ì¼€ì¼ ë³€ê²½ ì ìš©
     MulticastApplyScale(NewScaleType, CurrentScaleValue);
 
-    // ÀÌº¥Æ® ºê·ÎµåÄ³½ºÆ®
+    // ì´ë²¤íŠ¸ ë¸Œë¡œë“œìºìŠ¤íŠ¸
     OnCharacterScaleChanged.Broadcast(OldScaleType, NewScaleType);
 }
 
 bool UCSCharacterScaleComponent::ServerChangeScale_Validate(ECharacterScaleType NewScaleType)
 {
-    // ¿Ã¹Ù¸¥ ¹üÀ§: Small(0) ~ Large(2)
+    // ì˜¬ë°”ë¥¸ ë²”ìœ„: Small(0) ~ Large(2)
     return NewScaleType >= ECharacterScaleType::Small && NewScaleType <= ECharacterScaleType::Large;
 }
 
 void UCSCharacterScaleComponent::MulticastApplyScale_Implementation(ECharacterScaleType NewScaleType, float NewScale)
 {
-    // Æ®·£Áö¼Ç ¼³Á¤
+    // íŠ¸ëžœì§€ì…˜ ì„¤ì •
     StartScale = GetOwner() ? Cast<ACharacter>(GetOwner())->GetActorScale3D().X : 1.0f;
     TargetScale = NewScale;
     ElapsedTime = 0.0f;
     TransitionTime = FMath::Abs(TargetScale - StartScale) / ScaleTransitionSpeed;
     bIsTransitioning = true;
 
-    // Å¸ÀÌ¸Ó ½ÃÀÛ
+    // íƒ€ì´ë¨¸ ì‹œìž‘
     if (GetWorld())
     {
         GetWorld()->GetTimerManager().SetTimer(
@@ -139,13 +139,13 @@ void UCSCharacterScaleComponent::MulticastApplyScale_Implementation(ECharacterSc
 
 void UCSCharacterScaleComponent::OnRep_CurrentScaleType(ECharacterScaleType OldScaleType)
 {
-    // ½ºÄÉÀÏ Å¸ÀÔÀÌ º¯°æµÇ¾úÀ» ¶§ Ã³¸®
+    // ìŠ¤ì¼€ì¼ íƒ€ìž…ì´ ë³€ê²½ë˜ì—ˆì„ ë•Œ ì²˜ë¦¬
     OnCharacterScaleChanged.Broadcast(OldScaleType, CurrentScaleType);
 }
 
 void UCSCharacterScaleComponent::OnRep_CurrentScaleValue()
 {
-    // ½ºÄÉÀÏ °ªÀÌ º¯°æµÇ¾úÀ» ¶§ Ä³¸¯ÅÍ¿¡ Àû¿ë
+    // ìŠ¤ì¼€ì¼ ê°’ì´ ë³€ê²½ë˜ì—ˆì„ ë•Œ ìºë¦­í„°ì— ì ìš©
     ApplyScaleToCharacter(CurrentScaleValue);
 }
 
@@ -160,7 +160,7 @@ void UCSCharacterScaleComponent::ApplyScaleToCharacter(float NewScale)
     FVector NewScaleVector(NewScale, NewScale, NewScale);
     Character->SetActorScale3D(NewScaleVector);
 
-    // µð¹ö±× ·Î±×
+    // ë””ë²„ê·¸ ë¡œê·¸
     if (GEngine)
     {
         FString ScaleTypeName;
@@ -216,7 +216,7 @@ void UCSCharacterScaleComponent::UpdateScaleTransition()
     float CurrentScale = FMath::Lerp(StartScale, TargetScale, Alpha);
     ApplyScaleToCharacter(CurrentScale);
 
-    // º¸°£ ¿Ï·á È®ÀÎ
+    // ë³´ê°„ ì™„ë£Œ í™•ì¸
     if (Alpha >= 1.0f)
     {
         bIsTransitioning = false;

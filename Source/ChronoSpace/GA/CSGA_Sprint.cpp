@@ -33,13 +33,13 @@ void UCSGA_Sprint::ActivateAbility(
         }
     }
 
-    // Sprint ºñ¿ë Effect Àû¿ë ¹× Handle ÀúÀå
+    // Sprint ë¹„ìš© Effect ì ìš© ë° Handle ì €ì¥
     if (SprintCostEffect && ActorInfo->AbilitySystemComponent.IsValid())
     {
         FGameplayEffectSpecHandle CostSpecHandle = MakeOutgoingGameplayEffectSpec(SprintCostEffect, GetAbilityLevel());
         if (CostSpecHandle.IsValid())
         {
-            // HandleÀ» ÀúÀåÇØ¼­ ³ªÁß¿¡ Á¦°ÅÇÒ ¼ö ÀÖµµ·Ï ÇÔ
+            // Handleì„ ì €ì¥í•´ì„œ ë‚˜ì¤‘ì— ì œê±°í•  ìˆ˜ ìˆë„ë¡ í•¨
             SprintCostEffectHandle = ApplyGameplayEffectSpecToOwner(Handle, ActorInfo, ActivationInfo, CostSpecHandle);
 
             if (SprintCostEffectHandle.IsValid())
@@ -58,7 +58,7 @@ void UCSGA_Sprint::InputReleased(
     EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }
 
-// EndAbility ¼öÁ¤
+// EndAbility ìˆ˜ì •
 void UCSGA_Sprint::EndAbility(
     const FGameplayAbilitySpecHandle Handle,
     const FGameplayAbilityActorInfo* ActorInfo,
@@ -66,7 +66,7 @@ void UCSGA_Sprint::EndAbility(
     bool bReplicateEndAbility,
     bool bWasCancelled)
 {
-    // ¼Óµµ º¹¿ø
+    // ì†ë„ ë³µì›
     ACharacter* Character = Cast<ACharacter>(ActorInfo->AvatarActor.Get());
     if (Character)
     {
@@ -76,11 +76,11 @@ void UCSGA_Sprint::EndAbility(
         }
     }
 
-    // Sprint Cost Effect °­Á¦ Á¦°Å (DurationÀÌ ³²¾ÆÀÖ¾îµµ)
+    // Sprint Cost Effect ê°•ì œ ì œê±° (Durationì´ ë‚¨ì•„ìˆì–´ë„)
     if (SprintCostEffectHandle.IsValid() && ActorInfo->AbilitySystemComponent.IsValid())
     {
         ActorInfo->AbilitySystemComponent->RemoveActiveGameplayEffect(SprintCostEffectHandle);
-        SprintCostEffectHandle = FActiveGameplayEffectHandle(); // Handle ÃÊ±âÈ­
+        SprintCostEffectHandle = FActiveGameplayEffectHandle(); // Handle ì´ˆê¸°í™”
         UE_LOG(LogTemp, Log, TEXT("Sprint Cost Effect Removed Early"));
     }
 

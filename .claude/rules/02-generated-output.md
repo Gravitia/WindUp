@@ -21,3 +21,16 @@
 ## `Content/__ExternalActors__`
 
 World Partition이 관리한다. 레벨을 저장하면 이 아래 파일이 함께 변한다. 정상이므로 되돌리지 않는다.
+
+## AI 도구 산출물은 프로젝트 루트에 예고 없이 생긴다
+
+NarshaMCP 등이 `.mcp.json`, `.narshamcp/`, `.antigravity/`, `.uecodegen/`, `.cursor/`, `.codex/`,
+`.claude/agents/`, `.claude/settings.local.json` 을 만든다. 전부 머신별 절대경로나 캐시라
+공유 대상이 아니다.
+
+**이 목록은 완결이 아니다.** 위 넷은 전부 예고 없이 생겼고 `git status` 에 떠서야 발견했다.
+커밋 전에 `git status --short | grep "^??"` 로 새 항목을 확인하고, 도구가 만든 것이면
+`.gitignore` 에 추가한다.
+
+무시 규칙은 `.git/info/exclude` 가 아니라 `.gitignore` 에 넣는다. 전자는 커밋되지 않아
+그 머신에서만 동작하고, 팀원 클론에서는 같은 파일이 그대로 미추적으로 뜬다.

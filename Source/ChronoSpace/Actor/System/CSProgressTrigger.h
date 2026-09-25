@@ -54,19 +54,19 @@ protected:
 
 	/* ================= Targets ================= */
 
-	// Æ®¸®°Å¿¡ ´êÀ¸¸é Activate ÇÒ ´ë»óµé(·¹º§¿¡ ¹èÄ¡µÈ ¾×ÅÍ µå·¡±×·Î ³Ö±â)
+	// íŠ¸ë¦¬ê±°ì— ë‹¿ìœ¼ë©´ Activate í•  ëŒ€ìƒë“¤(ë ˆë²¨ì— ë°°ì¹˜ëœ ì•¡í„° ë“œë˜ê·¸ë¡œ ë„£ê¸°)
 	UPROPERTY(EditAnywhere, Category = "CSEditable|ProgressTrigger")
 	TArray<TObjectPtr<AActor>> ActivateTargets;
 
-	// Æ®¸®°Å¿¡ ´êÀ¸¸é Deactivate ÇÒ ´ë»óµé
+	// íŠ¸ë¦¬ê±°ì— ë‹¿ìœ¼ë©´ Deactivate í•  ëŒ€ìƒë“¤
 	UPROPERTY(EditAnywhere, Category = "CSEditable|ProgressTrigger")
 	TArray<TObjectPtr<AActor>> DeactivateTargets;
 
-	// Æ®¸®°Å ID (µğ¹ö±×/·Î±×¿ë)
+	// íŠ¸ë¦¬ê±° ID (ë””ë²„ê·¸/ë¡œê·¸ìš©)
 	UPROPERTY(EditAnywhere, Category = "CSEditable|ProgressTrigger")
 	FName TriggerId = NAME_None;
 
-	// ÇÑ ¹ø¸¸ ¹ßµ¿ÇÒÁö
+	// í•œ ë²ˆë§Œ ë°œë™í• ì§€
 	UPROPERTY(EditAnywhere, Category = "CSEditable|ProgressTrigger")
 	bool bTriggerOnce = true;
 

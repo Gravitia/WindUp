@@ -62,7 +62,7 @@ void UCSAT_BlackHoleSphere::FinalizeTargetActor()
     UAbilitySystemComponent* ASC = AbilitySystemComponent.Get();
     if (ASC)
     {
-        // ¸ñÇ¥ À§Ä¡°¡ ¼³Á¤µÇ¾î ÀÖÀ¸¸é ÇØ´ç À§Ä¡¿¡, ¾Æ´Ï¸é ÇÃ·¹ÀÌ¾î À§Ä¡¿¡ ½ºÆù
+        // ëª©í‘œ ìœ„ì¹˜ê°€ ì„¤ì •ë˜ì–´ ìˆìœ¼ë©´ í•´ë‹¹ ìœ„ì¹˜ì—, ì•„ë‹ˆë©´ í”Œë ˆì´ì–´ ìœ„ì¹˜ì— ìŠ¤í°
         FTransform SpawnTransform;
         if (bHasTargetLocation)
         {

@@ -17,12 +17,12 @@ class CHRONOSPACE_API UCSProgressUIWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
-	/** Æ®¸®°Å¿¡¼­ È£ÃâÇÏ´Â ÁøÀÔ ÇÔ¼ö */
+	/** íŠ¸ë¦¬ê±°ì—ì„œ í˜¸ì¶œí•˜ëŠ” ì§„ì… í•¨ìˆ˜ */
 	UFUNCTION(BlueprintCallable)
 	void Show(FName InProgressText, float Duration, bool bProgressText);
 
 protected:
-	/** BP¿¡¼­ ±¸ÇöÇÒ ½ÇÁ¦ Ç¥½Ã ·ÎÁ÷ */
+	/** BPì—ì„œ êµ¬í˜„í•  ì‹¤ì œ í‘œì‹œ ë¡œì§ */
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnShowProgressUI(FName InProgressText, float Duration);
 

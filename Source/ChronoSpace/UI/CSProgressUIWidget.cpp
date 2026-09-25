@@ -5,7 +5,7 @@
 
 void UCSProgressUIWidget::Show(FName InProgressText, float Duration, bool bProgressText)
 {
-	// ½ÇÁ¦ UI ¿¬ÃâÀº ºí·çÇÁ¸°Æ®¿¡ À§ÀÓ
+	// ì‹¤ì œ UI ì—°ì¶œì€ ë¸”ë£¨í”„ë¦°íŠ¸ì— ìœ„ì„
 
 	if (bProgressText)
 	{

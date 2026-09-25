@@ -51,7 +51,7 @@ void ACSMeasuringTape::BeginPlay()
 {
 	Super::BeginPlay();
 
-    // ±âº» Æ®·£½ºÆû ÀúÀå
+    // ê¸°ë³¸ íŠ¸ëœìŠ¤í¼ ì €ì¥
     EyesBaseRotation = EyesMesh->GetRelativeRotation();
 
     NoseBaseRotation = NoseMesh->GetRelativeRotation();
@@ -64,7 +64,7 @@ void ACSMeasuringTape::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    // ±âÁ¸ ÁÙÀÚ ·ÎÁ÷ ±×´ë·Î
+    // ê¸°ì¡´ ì¤„ì ë¡œì§ ê·¸ëŒ€ë¡œ
     CurrentScaleInternal = FMath::FInterpTo(
         CurrentScaleInternal,
         TargetScale,
@@ -74,7 +74,7 @@ void ACSMeasuringTape::Tick(float DeltaTime)
 
     RulerMesh->SetRelativeScale3D(FVector(CurrentScaleInternal, 1.f, 1.f));
 
-    // ¾ó±¼ ¹İÀÀ º¸°£
+    // ì–¼êµ´ ë°˜ì‘ ë³´ê°„
     if (bFaceReacting)
     {
 
@@ -120,7 +120,7 @@ void ACSMeasuringTape::OnTriggerBegin(
 
     SetRulerScale(TargetRulerScale);
 
-    // ¸ñÇ¥°ª °è»ê¸¸ ¼öÇà
+    // ëª©í‘œê°’ ê³„ì‚°ë§Œ ìˆ˜í–‰
     EyesTargetRotation = EyesBaseRotation + EyesReactRotation;
     NoseTargetRotation = NoseBaseRotation + NoseReactRotation;
 
@@ -138,7 +138,7 @@ void ACSMeasuringTape::OnTriggerEnd(
 
     SetRulerScale(1.0f);
 
-    // ¹«Á¶°Ç º£ÀÌ½º·Î º¹±Í
+    // ë¬´ì¡°ê±´ ë² ì´ìŠ¤ë¡œ ë³µê·€
     EyesTargetRotation = EyesBaseRotation;
     NoseTargetRotation = NoseBaseRotation;
 
@@ -178,8 +178,8 @@ void ACSMeasuringTape::OnRep_TargetScale()
 
 void ACSMeasuringTape::OnRep_FaceReact()
 {
-    // ¾Æ¹« °Íµµ ¾È ÇØµµ µÊ
-    // Tick¿¡¼­ bFaceReacting º¸°í º¸°£ ½ÃÀÛ
+    // ì•„ë¬´ ê²ƒë„ ì•ˆ í•´ë„ ë¨
+    // Tickì—ì„œ bFaceReacting ë³´ê³  ë³´ê°„ ì‹œì‘
 }
 
 void ACSMeasuringTape::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

@@ -7,7 +7,7 @@
 #include "Character/CSF_CharacterFrameData.h"
 #include "CSAT_TimeRewind.generated.h"
 
-/** Task ¿Ï·á ½Ã ºê·ÎµåÄ³½ºÆ®ÇÒ µ¨¸®°ÔÀÌÆ® */
+/** Task ì™„ë£Œ ì‹œ ë¸Œë¡œë“œìºìŠ¤íŠ¸í•  ë¸ë¦¬ê²Œì´íŠ¸ */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnTimeRewindFinished);
 
 /**
@@ -22,7 +22,7 @@ public:
     UPROPERTY(BlueprintAssignable)
     FOnTimeRewindFinished OnTimeRewindFinished;
 
-    /** ½Ã°£ µÇ°¨±â Task »ı¼º */
+    /** ì‹œê°„ ë˜ê°ê¸° Task ìƒì„± */
     static UCSAT_TimeRewind* CreateTimeRewindTask(
         UGameplayAbility* OwningAbility,
         AActor* TargetActor,
@@ -30,15 +30,15 @@ public:
         float Duration);
 
 protected:
-    virtual void Activate() override; // Task ½ÇÇà
-    void MoveToNextFrame();           // Áö³ª¿Â ±æÀ» µû¶ó ÀÌµ¿
-    void FinishRewind();              // µÇ°¨±â Á¾·á
+    virtual void Activate() override; // Task ì‹¤í–‰
+    void MoveToNextFrame();           // ì§€ë‚˜ì˜¨ ê¸¸ì„ ë”°ë¼ ì´ë™
+    void FinishRewind();              // ë˜ê°ê¸° ì¢…ë£Œ
 
 private:
     UPROPERTY()
-    TObjectPtr<AActor> TargetActor;   // µÇ°¨±â ´ë»ó ¾×ÅÍ (UPROPERTY ¾øÀ¸¸é GC °¡ ÃßÀûÇÏÁö ¾Ê¾Æ ´ó±Û¸µ)
-    TArray<FCSF_CharacterFrameData> TransformFrames; // ÀúÀåµÈ ÇÁ·¹ÀÓµé
-    int32 CurrentFrameIndex;          // ÇöÀç ÀÌµ¿ ÁßÀÎ ÇÁ·¹ÀÓ ÀÎµ¦½º
-    float DurationPerFrame;           // ÇÑ ÇÁ·¹ÀÓ´ç ÀÌµ¿ ½Ã°£
-    FTimerHandle RewindTimerHandle;   // Å¸ÀÌ¸Ó ÇÚµé
+    TObjectPtr<AActor> TargetActor;   // ë˜ê°ê¸° ëŒ€ìƒ ì•¡í„° (UPROPERTY ì—†ìœ¼ë©´ GC ê°€ ì¶”ì í•˜ì§€ ì•Šì•„ ëŒ•ê¸€ë§)
+    TArray<FCSF_CharacterFrameData> TransformFrames; // ì €ì¥ëœ í”„ë ˆì„ë“¤
+    int32 CurrentFrameIndex;          // í˜„ì¬ ì´ë™ ì¤‘ì¸ í”„ë ˆì„ ì¸ë±ìŠ¤
+    float DurationPerFrame;           // í•œ í”„ë ˆì„ë‹¹ ì´ë™ ì‹œê°„
+    FTimerHandle RewindTimerHandle;   // íƒ€ì´ë¨¸ í•¸ë“¤
 };

@@ -10,7 +10,7 @@
 UCSTextWidget::UCSTextWidget(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
 {
-    // ±âº»°ª ¼³Á¤
+    // ê¸°ë³¸ê°’ ì„¤ì •
     TextColor = FLinearColor::White;
     FontSize = 24;
     BackgroundColor = FLinearColor(0.0f, 0.0f, 0.0f, 0.7f);
@@ -27,10 +27,10 @@ void UCSTextWidget::NativeConstruct()
 
 void UCSTextWidget::InitializeWidget()
 {
-    // ÅØ½ºÆ® ½ºÅ¸ÀÏ Àû¿ë
+    // í…ìŠ¤íŠ¸ ìŠ¤íƒ€ì¼ ì ìš©
     UpdateTextStyle();
 
-    // ÃÊ±â¿¡´Â ¼û±è
+    // ì´ˆê¸°ì—ëŠ” ìˆ¨ê¹€
     SetVisibility(ESlateVisibility::Hidden);
 
     UE_LOG(LogTemp, Warning, TEXT("CSTextWidget: Widget initialized"));
@@ -44,24 +44,24 @@ void UCSTextWidget::ShowText(const FString& TextToShow)
         return;
     }
 
-    // Å¸ÀÌÇÎ È¿°ú ÁßÁö
+    // íƒ€ì´í•‘ íš¨ê³¼ ì¤‘ì§€
     if (bIsTyping)
     {
         GetWorld()->GetTimerManager().ClearTimer(TypewriterTimer);
         bIsTyping = false;
     }
 
-    // ÅØ½ºÆ® ¼³Á¤
+    // í…ìŠ¤íŠ¸ ì„¤ì •
     MainTextBlock->SetText(FText::FromString(TextToShow));
     FullText = TextToShow;
     CurrentDisplayText = TextToShow;
 
     UE_LOG(LogTemp, Warning, TEXT("CSTextWidget: Showing text: %s"), *TextToShow);
 
-    // À§Á¬ Áï½Ã Ç¥½Ã
+    // ìœ„ì ¯ ì¦‰ì‹œ í‘œì‹œ
     SetVisibility(ESlateVisibility::Visible);
 
-    // ÀÌº¥Æ® È£Ãâ
+    // ì´ë²¤íŠ¸ í˜¸ì¶œ
     OnTextShowCompleted.Broadcast();
     OnTextChanged(TextToShow);
     OnWidgetShown();
@@ -72,7 +72,7 @@ void UCSTextWidget::HideText()
     if (!IsVisible())
         return;
 
-    // Å¸ÀÌÇÎ È¿°ú ÁßÁö
+    // íƒ€ì´í•‘ íš¨ê³¼ ì¤‘ì§€
     if (bIsTyping)
     {
         GetWorld()->GetTimerManager().ClearTimer(TypewriterTimer);
@@ -81,7 +81,7 @@ void UCSTextWidget::HideText()
 
     UE_LOG(LogTemp, Warning, TEXT("CSTextWidget: Hiding text"));
 
-    // Áï½Ã ¼û±è
+    // ì¦‰ì‹œ ìˆ¨ê¹€
     SetVisibility(ESlateVisibility::Hidden);
 
     OnTextHideCompleted.Broadcast();
@@ -98,25 +98,25 @@ void UCSTextWidget::ShowTextWithTypewriter(const FString& TextToShow, float Type
         return;
     }
 
-    // ±âÁ¸ Å¸ÀÌÇÎ È¿°ú ÁßÁö
+    // ê¸°ì¡´ íƒ€ì´í•‘ íš¨ê³¼ ì¤‘ì§€
     if (bIsTyping)
     {
         GetWorld()->GetTimerManager().ClearTimer(TypewriterTimer);
     }
 
-    // ÃÊ±âÈ­
+    // ì´ˆê¸°í™”
     FullText = TextToShow;
     CurrentDisplayText = TEXT("");
     CurrentCharIndex = 0;
     bIsTyping = true;
 
-    // À§Á¬ Ç¥½Ã
+    // ìœ„ì ¯ í‘œì‹œ
     SetVisibility(ESlateVisibility::Visible);
     MainTextBlock->SetText(FText::FromString(CurrentDisplayText));
 
     UE_LOG(LogTemp, Warning, TEXT("CSTextWidget: Starting typewriter effect: %s"), *TextToShow);
 
-    // Å¸ÀÌÇÎ È¿°ú ½ÃÀÛ
+    // íƒ€ì´í•‘ íš¨ê³¼ ì‹œìž‘
     GetWorld()->GetTimerManager().SetTimer(
         TypewriterTimer,
         this,
@@ -125,7 +125,7 @@ void UCSTextWidget::ShowTextWithTypewriter(const FString& TextToShow, float Type
         true
     );
 
-    // ºí·çÇÁ¸°Æ® ÀÌº¥Æ® È£Ãâ
+    // ë¸”ë£¨í”„ë¦°íŠ¸ ì´ë²¤íŠ¸ í˜¸ì¶œ
     OnWidgetShown();
 }
 
@@ -133,7 +133,7 @@ void UCSTextWidget::UpdateTypewriter()
 {
     if (CurrentCharIndex >= FullText.Len())
     {
-        // Å¸ÀÌÇÎ ¿Ï·á
+        // íƒ€ì´í•‘ ì™„ë£Œ
         GetWorld()->GetTimerManager().ClearTimer(TypewriterTimer);
         bIsTyping = false;
 
@@ -144,11 +144,11 @@ void UCSTextWidget::UpdateTypewriter()
         return;
     }
 
-    // ´ÙÀ½ ¹®ÀÚ Ãß°¡
+    // ë‹¤ìŒ ë¬¸ìž ì¶”ê°€
     CurrentDisplayText += FullText[CurrentCharIndex];
     CurrentCharIndex++;
 
-    // ÅØ½ºÆ® ¾÷µ¥ÀÌÆ®
+    // í…ìŠ¤íŠ¸ ì—…ë°ì´íŠ¸
     if (MainTextBlock)
     {
         MainTextBlock->SetText(FText::FromString(CurrentDisplayText));
@@ -161,13 +161,13 @@ void UCSTextWidget::UpdateTextStyle()
     if (!MainTextBlock || !TextBackground)
         return;
 
-    // ÅØ½ºÆ® ½ºÅ¸ÀÏ Àû¿ë
+    // í…ìŠ¤íŠ¸ ìŠ¤íƒ€ì¼ ì ìš©
     FSlateFontInfo FontInfo = MainTextBlock->GetFont();
     FontInfo.Size = FontSize;
     MainTextBlock->SetFont(FontInfo);
     MainTextBlock->SetColorAndOpacity(TextColor);
 
-    // ¹è°æ »ö»ó Àû¿ë
+    // ë°°ê²½ ìƒ‰ìƒ ì ìš©
     TextBackground->SetBrushColor(BackgroundColor);
 
     UE_LOG(LogTemp, Warning, TEXT("CSTextWidget: Text style updated"));

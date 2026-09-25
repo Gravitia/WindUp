@@ -3832,6 +3832,14 @@
 			"Type": "RequiredResource"
 		},
 		{
+			"Path": "$(EngineDir)/Plugins/Experimental/WebSocketNetworking/Binaries/Win64/UnrealEditor-WebSocketNetworking.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Experimental/WebSocketNetworking/Binaries/Win64/UnrealEditor.modules",
+			"Type": "RequiredResource"
+		},
+		{
 			"Path": "$(EngineDir)/Plugins/Experimental/Workspace/Binaries/Win64/UnrealEditor-WorkspaceEditor.dll",
 			"Type": "DynamicLibrary"
 		},
@@ -4037,6 +4045,18 @@
 		},
 		{
 			"Path": "$(EngineDir)/Plugins/Marketplace/Blockoute60d8e1bd542V15/Binaries/Win64/UnrealEditor.modules",
+			"Type": "RequiredResource"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/Binaries/Win64/UnrealEditor-NarshaMCP.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/Binaries/Win64/UnrealEditor-NarshaMCP.pdb",
+			"Type": "SymbolFile"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/Binaries/Win64/UnrealEditor.modules",
 			"Type": "RequiredResource"
 		},
 		{
@@ -5129,6 +5149,50 @@
 		},
 		{
 			"Path": "$(EngineDir)/Plugins/UbaController/Binaries/Win64/UnrealEditor.modules",
+			"Type": "RequiredResource"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/VirtualProduction/RemoteControlInterception/Binaries/Win64/UnrealEditor-RemoteControlInterception.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/VirtualProduction/RemoteControlInterception/Binaries/Win64/UnrealEditor.modules",
+			"Type": "RequiredResource"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/VirtualProduction/RemoteControl/Binaries/Win64/UnrealEditor-RemoteControl.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/VirtualProduction/RemoteControl/Binaries/Win64/UnrealEditor-RemoteControlCommon.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/VirtualProduction/RemoteControl/Binaries/Win64/UnrealEditor-RemoteControlLogic.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/VirtualProduction/RemoteControl/Binaries/Win64/UnrealEditor-RemoteControlMultiUser.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/VirtualProduction/RemoteControl/Binaries/Win64/UnrealEditor-RemoteControlProtocol.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/VirtualProduction/RemoteControl/Binaries/Win64/UnrealEditor-RemoteControlProtocolWidgets.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/VirtualProduction/RemoteControl/Binaries/Win64/UnrealEditor-RemoteControlUI.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/VirtualProduction/RemoteControl/Binaries/Win64/UnrealEditor-WebRemoteControl.dll",
+			"Type": "DynamicLibrary"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/VirtualProduction/RemoteControl/Binaries/Win64/UnrealEditor.modules",
 			"Type": "RequiredResource"
 		},
 		{
@@ -29910,6 +29974,10 @@
 			"Type": "UFS"
 		},
 		{
+			"Path": "$(EngineDir)/Plugins/Experimental/WebSocketNetworking/WebSocketNetworking.uplugin",
+			"Type": "UFS"
+		},
+		{
 			"Path": "$(EngineDir)/Plugins/FX/Cascade/Cascade.uplugin",
 			"Type": "UFS"
 		},
@@ -29955,6 +30023,2258 @@
 		},
 		{
 			"Path": "$(EngineDir)/Plugins/Marketplace/Blockoute60d8e1bd542V15/BlockoutToolsPlugin.uplugin",
+			"Type": "UFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/Config/DefaultAIChatPanel.ini",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/Config/FilterPlugin.ini",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/antigravity/templates/rules.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/antigravity/workflows/skill--api-diff-analyzer.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/antigravity/workflows/skill--asset-modification-wizard.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/antigravity/workflows/skill--blueprint-flow.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/antigravity/workflows/skill--caller-graph-visualizer.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/antigravity/workflows/skill--execution-flow-explorer.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/antigravity/workflows/skill--game-design-intelligence.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/antigravity/workflows/skill--module-analyzer.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/antigravity/workflows/skill--module-mapper.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/antigravity/workflows/skill--performance-health-check.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/antigravity/workflows/skill--ue-architecture-lint.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/antigravity/workflows/skill--ue-asset-discovery.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/antigravity/workflows/skill--ue-audit.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/antigravity/workflows/skill--ue-build-automate.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/antigravity/workflows/skill--ue-cl-tracker.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/antigravity/workflows/skill--ue-cpp-refactor.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/antigravity/workflows/skill--ue-cvar-explorer.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/antigravity/workflows/skill--ue-debug.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/antigravity/workflows/skill--ue-dev-cycle.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/antigravity/workflows/skill--ue-diff.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/antigravity/workflows/skill--ue-engine-content.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/antigravity/workflows/skill--ue-execution-trace.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/antigravity/workflows/skill--ue-explain.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/antigravity/workflows/skill--ue-ik-rig-analysis.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/antigravity/workflows/skill--ue-impact.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/antigravity/workflows/skill--ue-insights-profiler.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/antigravity/workflows/skill--ue-livecoding-fix.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/antigravity/workflows/skill--ue-migrate.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/antigravity/workflows/skill--ue-network-audit.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/antigravity/workflows/skill--ue-network-lint.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/antigravity/workflows/skill--ue-perf-lint.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/antigravity/workflows/skill--ue-pre-commit.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/antigravity/workflows/skill--ue-project-ops.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/antigravity/workflows/skill--ue-safe-modify.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/antigravity/workflows/skill--ue-scaffold.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/antigravity/workflows/skill--ue-sequencer-cinematics.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/antigravity/workflows/skill--ue-test-gen.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/antigravity/workflows/skill--ue-validate.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/antigravity/workflows/skill--unreal-error-doctor.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/_shared/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/animation-workflow/ADVANCED.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/animation-workflow/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/animation-workflow/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/animation-workflow/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/animation-workflow/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/animation-workflow/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/api-diff-analyzer/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/api-diff-analyzer/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/api-diff-analyzer/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/api-diff-analyzer/resources/API_CHANGES_TEMPLATE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/asset-modification-wizard/ADVANCED.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/asset-modification-wizard/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/asset-modification-wizard/README.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/asset-modification-wizard/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/asset-modification-wizard/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/asset-modification-wizard/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/asset-modification-wizard/evals/example-smoke.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/asset-modification-wizard/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/audio-workflow/ADVANCED.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/audio-workflow/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/audio-workflow/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/audio-workflow/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/audio-workflow/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/audio-workflow/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/blueprint-flow/ADVANCED.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/blueprint-flow/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/blueprint-flow/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/blueprint-flow/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/blueprint-flow/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/blueprint-flow/evals/grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/blueprint-flow/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/blueprint-generator/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/blueprint-generator/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/blueprint-generator/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/blueprint-generator/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/blueprint-generator/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/blueprint-linker/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/bp-cpp-project-init/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/bp-cpp-project-init/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/bp-cpp-project-init/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/bp-cpp-project-init/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/bp-cpp-project-init/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/bp-to-cpp-validator/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/bp-to-cpp-validator/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/bp-to-cpp-validator/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/bp-to-cpp-validator/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/bp-to-cpp-validator/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/bp-to-cpp/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/bp-to-cpp/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/bp-to-cpp/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/caller-graph-visualizer/ADVANCED.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/caller-graph-visualizer/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/caller-graph-visualizer/README.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/caller-graph-visualizer/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/caller-graph-visualizer/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/caller-graph-visualizer/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/caller-graph-visualizer/evals/example-smoke.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/caller-graph-visualizer/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/character-movement/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/character-movement/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/code-generation-power/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/code-generation-power/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/code-generation-power/SCENARIOS.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/code-generation-power/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/code-generation-power/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/code-generation-power/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/code-generation/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/code-generation/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/code-generation/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/code-generation/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/code-generation/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/codex-project-bootstrap/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/codex-project-bootstrap/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/codex-project-bootstrap/agents/openai.yaml",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/control-rig-workflow/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/control-rig-workflow/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/control-rig-workflow/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/control-rig-workflow/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/control-rig-workflow/evals/example-smoke.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/control-rig-workflow/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/cpp-foundations/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/cpp-foundations/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/cross-domain-flow/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/cross-domain-flow/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/cross-domain-flow/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/cross-domain-flow/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/cross-domain-flow/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/data-assets-tables/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/data-assets-tables/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/doc-progressive-explorer/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/doc-progressive-explorer/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/doc-progressive-explorer/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/doc-progressive-explorer/examples/advanced-patterns.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/doc-progressive-explorer/examples/basic-usage.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/doc-progressive-explorer/examples/multi-document.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/doc-progressive-explorer/reference/algorithms.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/doc-progressive-explorer/reference/api.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/doc-progressive-explorer/reference/implementation.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/doc-progressive-explorer/templates/output-format.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/execution-flow-explorer/ADVANCED.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/execution-flow-explorer/E2E_TEST_PLAN.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/execution-flow-explorer/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/execution-flow-explorer/README.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/execution-flow-explorer/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/execution-flow-explorer/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/execution-flow-explorer/TEST_EXECUTION_GUIDE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/execution-flow-explorer/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/execution-flow-explorer/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/game-design-intelligence/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/game-design-intelligence/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/game-design-intelligence/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/game-design-intelligence/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/gameplay-flow-doc/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/gameplay-framework/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/gameplay-framework/_verification/README.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/gameplay-framework/_verification/op_responses.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/gameplay-framework/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/gas-development/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/gas-development/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/gas-development/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/gas-development/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/gas-development/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/image-bbox-refine/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/image-bbox-refine/_verification/README.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/image-bbox-refine/_verification/op_responses.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/image-bbox-refine/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/image-bbox-refine/schemas/refinement.schema.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/image-to-design-spec/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/image-to-design-spec/_verification/README.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/image-to-design-spec/_verification/op_responses.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/image-to-design-spec/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/image-to-design-spec/schemas/manifest.schema.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/image-to-design-spec/schemas/stage1_analysis.schema.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/image-to-design-spec/schemas/stage2_research_brief.schema.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/image-to-design-spec/schemas/stage3_detailed_spec.schema.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/image-to-design-spec/schemas/sync_state.schema.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/image-to-design-spec/templates/README.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/image-to-design-spec/templates/concept_brief.md.template",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/image-to-design-spec/templates/hybrid_brief.md.template",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/image-to-design-spec/templates/system_brief.md.template",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/image-to-design-spec/templates/ui_brief.md.template",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/image-to-design-spec/vocab/game_design_vocab.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/lighting-workflow/ADVANCED.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/lighting-workflow/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/lighting-workflow/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/lighting-workflow/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/lighting-workflow/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/lighting-workflow/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/material-analysis/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/material-analysis/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/material-analysis/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/material-analysis/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/mcp-analyze/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/mcp-analyze/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/mcp-analyze/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/mcp-doctor/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/mcp-doctor/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/mcp-doctor/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/mcp-doctor/tests/fixtures/d11_clean_processes.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/mcp-doctor/tests/fixtures/d11_clean_registry.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/mcp-doctor/tests/fixtures/d11_collision_processes.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/mcp-doctor/tests/fixtures/d11_collision_registry.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/mcp-doctor/tests/fixtures/real_on_disk_burst1.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/mcp-doctor/tests/fixtures/real_on_disk_burst2.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/mcp-doctor/tests/fixtures/real_on_disk_external_kill.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/mcp-doctor/tests/fixtures/recent_crashes_diverse.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/mcp-doctor/tests/fixtures/recent_crashes_old.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/mcp-doctor/tests/fixtures/recent_crashes_repeated.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/mcp-restart/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/mcp-restart/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/mcp-restart/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/module-mapper/ADVANCED.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/module-mapper/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/module-mapper/README.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/module-mapper/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/module-mapper/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/module-mapper/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/module-mapper/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/pcg-workflow/ADVANCED.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/pcg-workflow/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/pcg-workflow/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/pcg-workflow/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/pcg-workflow/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/pcg-workflow/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/per-module/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/performance-health-check/ADVANCED.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/performance-health-check/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/performance-health-check/README.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/performance-health-check/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/performance-health-check/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/performance-health-check/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/performance-health-check/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/project-docs-export/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/project-docs-generate/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/project-map/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/project-map/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/project-map/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/project-map/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/project-onboarding/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/project-onboarding/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/project-onboarding/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/project-onboarding/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/project-onboarding/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/project-scan/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/release-recovery/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/routing.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/safe-class-rename/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/safe-class-rename/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/safe-class-rename/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/safe-class-rename/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/safe-class-rename/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/screenshot-vision-analyzer/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/session-health-check/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/session-health-check/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/session-health-check/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/session-health-check/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/session-health-check/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/skill-finder/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/skill-finder/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/skill-finder/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/skill-finder/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/skill-finder/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/trace-html-visualizer/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/trace-html-visualizer/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/trace-html-visualizer/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-architecture-lint/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-architecture-lint/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-architecture-lint/_verification/README.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-architecture-lint/_verification/op_responses.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-architecture-lint/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-architecture-lint/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-asset-audit/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-asset-audit/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-asset-audit/evals/grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-asset-discovery/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-asset-discovery/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-asset-discovery/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-audit/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-audit/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-audit/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-audit/evals/grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-audit/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-auto-fix/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-automation-test-builder/ADVANCED.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-automation-test-builder/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-automation-test-builder/PROMPT.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-automation-test-builder/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-automation-test-builder/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-automation-test-builder/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-automation-test-builder/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-build-automate/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-build-automate/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-build-automate/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-build-automate/evals/evals.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-build-automate/evals/grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-build-automate/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-cinematics-audit/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-cinematics-audit/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-cinematics-audit/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-cinematics-audit/_verification/README.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-cinematics-audit/_verification/op_responses.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-cinematics-audit/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-config-audit/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-config-audit/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-cpp-refactor/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-cpp-refactor/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-cpp-refactor/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-create-system/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-create-system/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-create-system/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-create-system/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-create-system/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-cvar-explorer/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-cvar-explorer/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-cvar-explorer/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-cvar-explorer/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-cvar-explorer/evals/grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-cvar-explorer/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-data-audit/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-data-audit/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-data-audit/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-debug/CL_SEARCH.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-debug/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-debug/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-debug/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-debug/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-debug/evals/grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-debug/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-deep-research/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-dev-cycle/CODE_EXEC.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-dev-cycle/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-dev-cycle/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-dev-cycle/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-dev-cycle/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-dev-cycle/evals/grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-dev-cycle/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-diff/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-diff/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-diff/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-diff/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-docs-audit/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-docs-audit/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-editor-launcher/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-editor-launcher/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-editor-launcher/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-editor-launcher/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-engine-content/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-engine-content/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-engine-content/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-engine-content/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-engine-content/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-execution-trace/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-execution-trace/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-execution-trace/evals/evals.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-execution-trace/evals/grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-execution-trace/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-explain/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-explain/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-explain/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-explain/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-explain/evals/grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-explain/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-gauntlet-orchestration/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-gauntlet-orchestration/PROMPT.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-gauntlet-orchestration/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-gauntlet-orchestration/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-gauntlet-orchestration/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-gauntlet-orchestration/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-ik-rig-analysis/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-ik-rig-analysis/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-ik-rig-analysis/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-ik-rig-analysis/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-ik-rig-analysis/evals/example-smoke.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-ik-rig-analysis/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-impact/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-impact/XREF_REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-impact/_verification/README.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-impact/_verification/op_responses.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-impact/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-impact/evals/example-smoke.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-impact/evals/grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-impact/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-insights-profiler/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-insights-profiler/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-insights-profiler/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-insights-profiler/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-insights-profiler/evals/README.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-insights-profiler/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-insights-profiler/evals/verdict-consistency-judge.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-insights-profiler/evals/verdict-consistency.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-level-analysis/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-level-analysis/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-level-analysis/evals/example-smoke.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-level-analysis/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-livecoding-fix/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-livecoding-fix/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-livecoding-fix/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-migrate/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-migrate/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-migrate/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-network-audit/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-network-lint/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-network-lint/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-network-lint/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-perf-audit/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-perf-audit/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-perf-audit/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-perf-audit/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-perf-lint/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-perf-replay/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-physics-audit/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-physics-audit/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-physics-debug/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-physics-debug/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-physics-debug/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-pr-asset-review/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-pre-commit/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-pre-commit/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-pre-commit/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-pre-commit/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-pre-commit/evals/eval-results.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-pre-commit/evals/evals.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-pre-commit/evals/grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-pre-commit/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-project-init/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-project-init/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-project-init/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-project-ops/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-project-ops/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-project-ops/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-refactor-bp/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-refactor-bp/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-refactor-bp/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-repeat/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-safe-modify/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-safe-modify/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-safe-modify/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-scaffold/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-scaffold/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-scaffold/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-scaffold/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-scaffold/evals/grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-scaffold/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-security-lint/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-security-lint/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-security-lint/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-sequencer-cinematics/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-sequencer-cinematics/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-sequencer-cinematics/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-slate-debug/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-slate-debug/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-slate-debug/_verification/README.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-slate-debug/_verification/op_responses.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-slate-debug/_verification/pie_responses.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-slate-debug/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-slate-debug/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-test-autofix/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-test-autofix/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-test-autofix/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-test-framework-advisor/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-test-framework-advisor/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-test-framework-advisor/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-test-gen/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-test-gen/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-test-gen/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-test-gen/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-test-gen/evals/grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-test-gen/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-test-record/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-test-record/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-test-record/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-test-record/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-test-record/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-test-scenario/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-test-scenario/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-test-scenario/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-test-scenario/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-test-scenario/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-trace-audit/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-trace-audit/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-validate/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-validate/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-validate/evals/grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-validate/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-vcs-diff/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-vcs-diff/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-vcs-diff/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-vcs-diff/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-vfx-audit/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-vfx-audit/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-vfx-audit/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-widget-authoring/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-widget-authoring/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-widget-authoring/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-world-audit/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-world-audit/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-world-build/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-world-build/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/ue-world-build/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/unreal-error-doctor/ADVANCED.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/unreal-error-doctor/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/unreal-error-doctor/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/unreal-error-doctor/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/unreal-error-doctor/benchmarks/benchmark.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/unreal-error-doctor/evals/trigger-grading.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/vcs-lock/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/vcs-lock/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/vcs-lock/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/vcs-resolve/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/vcs-resolve/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/vcs-resolve/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/vcs-submit/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/vcs-submit/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/vcs-submit/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/vcs-update/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/vcs-update/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/vcs-update/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/visual-regression-test/EXAMPLES.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/visual-regression-test/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/visual-regression-test/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/vscode-restart/REFERENCE.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/vscode-restart/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/vscode-restart/scripts/fixtures/settings_all.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/vscode-restart/scripts/fixtures/settings_none.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/vscode-restart/scripts/fixtures/settings_one.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/vscode-restart/scripts/fixtures/storage_empty.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/vscode-restart/scripts/fixtures/storage_one_folder.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/vscode-restart/scripts/fixtures/storage_one_folder_posix.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/vscode-restart/scripts/fixtures/storage_two_folders.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/vscode-restart/scripts/fixtures/storage_two_folders_posix.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/release/world-section-doc/SKILL.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/skills/routing.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/templates/CLAUDE_SECTION.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/claude-code/templates/unreal-specialist.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/agents/codex/templates/AGENTS.md",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/config/config.ini",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/data/common_classes.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/data/config_relationships/base.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/data/config_relationships/schema.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/data/design_patterns.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/data/engine_headers.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/data/engine_migrations/5.2_to_5.3.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/data/engine_migrations/5.3_to_5.4.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/data/engine_migrations/5.4_to_5.5.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/data/engine_migrations/5.5_to_5.6.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/data/engine_migrations/5.6_to_5.7.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/data/engine_migrations/5.7_to_5.8.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/data/meta_type_rules.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/data/templates/organisms/attribute_set.organism",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/data/templates/organisms/character.organism",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/data/templates/organisms/component.organism",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/data/templates/organisms/data_asset.organism",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/data/templates/organisms/gameplay_ability.organism",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/data/ue56_breaking_changes.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/data/ue_type_database.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/docs/engine.ndb",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/templates/.mcp.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/templates/antigravity-config.json",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/templates/codex-config.toml",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/MCP/templates/plugin/NarshaMCP-Dashboard.bat.template",
+			"Type": "NonUFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/Marketplace/NarshaADa670d888da08V2/NarshaMCP.uplugin",
 			"Type": "UFS"
 		},
 		{
@@ -30318,6 +32638,14 @@
 			"Type": "UFS"
 		},
 		{
+			"Path": "$(EngineDir)/Plugins/VirtualProduction/RemoteControlInterception/RemoteControlInterception.uplugin",
+			"Type": "UFS"
+		},
+		{
+			"Path": "$(EngineDir)/Plugins/VirtualProduction/RemoteControl/RemoteControl.uplugin",
+			"Type": "UFS"
+		},
+		{
 			"Path": "$(EngineDir)/Plugins/VirtualProduction/Takes/Takes.uplugin",
 			"Type": "UFS"
 		},
@@ -30542,6 +32870,7 @@
 		"NNEDenoiser",
 		"NNERuntimeORT",
 		"NamingTokens",
+		"NarshaMCP",
 		"Niagara",
 		"NiagaraInsights",
 		"NiagaraPreviewContent",
@@ -30578,6 +32907,8 @@
 		"PropertyBindingUtils",
 		"ProxyLODPlugin",
 		"PythonScriptPlugin",
+		"RemoteControl",
+		"RemoteControlInterception",
 		"RenderDocPlugin",
 		"RenderGraphInsights",
 		"RenderTraceInsights",
@@ -30629,6 +32960,7 @@
 		"WaveTable",
 		"WebMMedia",
 		"WebMMoviePlayer",
+		"WebSocketNetworking",
 		"WindowsDeviceProfileSelector",
 		"WindowsMoviePlayer",
 		"WmfMedia",

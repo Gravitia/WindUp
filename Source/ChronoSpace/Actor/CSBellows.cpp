@@ -23,7 +23,7 @@ ACSBellows::ACSBellows()
     PressTrigger->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
     PressTrigger->SetGenerateOverlapEvents(true);
 
-    // ÃÊ±â Mesh ½ºÄÉÀÏ
+    // ì´ˆê¸° Mesh ìŠ¤ì¼€ì¼
     Mesh->SetRelativeScale3D(IdleScale);
 }
 
@@ -237,7 +237,7 @@ void ACSBellows::StartLinkedActorLerp()
 
 void ACSBellows::OnRep_LinkedMoved()
 {
-    // ÀÌ¹Ì ¿Å°ÜÁø »óÅÂ·Î Á¢¼ÓÇß´Âµ¥ ·¯ÇÁ°¡ µ¹Áö ¾Ê´Â °æ¿ì(´ÊÀº Á¢¼Ó) ÃÖÁ¾ À§Ä¡·Î ¸ÂÃá´Ù.
+    // ì´ë¯¸ ì˜®ê²¨ì§„ ìƒíƒœë¡œ ì ‘ì†í–ˆëŠ”ë° ëŸ¬í”„ê°€ ëŒì§€ ì•ŠëŠ” ê²½ìš°(ëŠ¦ì€ ì ‘ì†) ìµœì¢… ìœ„ì¹˜ë¡œ ë§ì¶˜ë‹¤.
     if (bLinkedMoved && !bLinkedLerping && IsValid(LinkedActor))
     {
         const FVector BellowsBackwardDir = -GetActorForwardVector();

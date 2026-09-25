@@ -14,10 +14,10 @@ ACSTextTrigger::ACSTextTrigger()
 {
     PrimaryActorTick.bCanEverTick = false;
 
-    // Root Component ¼³Á¤
+    // Root Component ì„¤ì •
     RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
 
-    // Collision Box »ı¼º
+    // Collision Box ìƒì„±
     CollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("CollisionBox"));
     CollisionBox->SetupAttachment(RootComponent);
     CollisionBox->SetBoxExtent(FVector(100.0f, 100.0f, 50.0f));
@@ -25,19 +25,19 @@ ACSTextTrigger::ACSTextTrigger()
     CollisionBox->SetCollisionResponseToAllChannels(ECR_Ignore);
     CollisionBox->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 
-    // Visual Mesh »ı¼º (¼±ÅÃÀû)
+    // Visual Mesh ìƒì„± (ì„ íƒì )
     TriggerMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TriggerMesh"));
     TriggerMesh->SetupAttachment(CollisionBox);
     TriggerMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-    // ±âº» ÅØ½ºÆ® µ¥ÀÌÅÍ ¼³Á¤
+    // ê¸°ë³¸ í…ìŠ¤íŠ¸ ë°ì´í„° ì„¤ì •
     FCSTextData DefaultText;
     DefaultText.Text = TEXT("Welcome to the game!");
     DefaultText.DisplayDuration = 3.0f;
     DefaultText.TransitionSpeed = 1.0f;
     TextDataArray.Add(DefaultText);
 
-    // ÃÊ±âÈ­
+    // ì´ˆê¸°í™”
     bHasTriggered = false;
     CurrentTextIndex = 0;
     bIsDisplayingText = false;
@@ -50,7 +50,7 @@ void ACSTextTrigger::BeginPlay()
 {
     Super::BeginPlay();
 
-    // Overlap ÀÌº¥Æ® ¹ÙÀÎµù
+    // Overlap ì´ë²¤íŠ¸ ë°”ì¸ë”©
     if (CollisionBox)
     {
         CollisionBox->OnComponentBeginOverlap.AddDynamic(this, &ACSTextTrigger::OnOverlapBegin);
@@ -62,25 +62,25 @@ void ACSTextTrigger::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor*
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
     bool bFromSweep, const FHitResult& SweepResult)
 {
-    // ÇÃ·¹ÀÌ¾îÀÎÁö È®ÀÎ
+    // í”Œë ˆì´ì–´ì¸ì§€ í™•ì¸
     if (!IsPlayer(OtherActor))
         return;
 
-    // ÀÌ¹Ì Æ®¸®°ÅµÇ¾ú°í ÇÑ ¹ø¸¸ ÀÛµ¿ÇÏ´Â ¼³Á¤ÀÌ¸é ¹«½Ã
+    // ì´ë¯¸ íŠ¸ë¦¬ê±°ë˜ì—ˆê³  í•œ ë²ˆë§Œ ì‘ë™í•˜ëŠ” ì„¤ì •ì´ë©´ ë¬´ì‹œ
     if (bHasTriggered && bTriggerOnce)
         return;
 
-    // ÀÌ¹Ì ÅØ½ºÆ®¸¦ Ç¥½Ã ÁßÀÌ¸é ¹«½Ã
+    // ì´ë¯¸ í…ìŠ¤íŠ¸ë¥¼ í‘œì‹œ ì¤‘ì´ë©´ ë¬´ì‹œ
     if (bIsDisplayingText)
         return;
 
-    // ÅØ½ºÆ® µ¥ÀÌÅÍ°¡ ¾øÀ¸¸é ¹«½Ã
+    // í…ìŠ¤íŠ¸ ë°ì´í„°ê°€ ì—†ìœ¼ë©´ ë¬´ì‹œ
     if (TextDataArray.Num() == 0)
         return;
 
     UE_LOG(LogTemp, Warning, TEXT("CSTextTrigger: Player entered trigger zone"));
 
-    // ÅØ½ºÆ® ½ÃÄö½º ½ÃÀÛ
+    // í…ìŠ¤íŠ¸ ì‹œí€€ìŠ¤ ì‹œì‘
     StartTextSequence();
 }
 
@@ -104,13 +104,13 @@ void ACSTextTrigger::StartTextSequence()
 
     UE_LOG(LogTemp, Warning, TEXT("CSTextTrigger: Starting text sequence with %d texts"), TextDataArray.Num());
 
-    // Ã¹ ¹øÂ° ÅØ½ºÆ® Ç¥½Ã
+    // ì²« ë²ˆì§¸ í…ìŠ¤íŠ¸ í‘œì‹œ
     ShowNextText();
 }
 
 void ACSTextTrigger::ShowNextText()
 {
-    // ¹üÀ§ Ã¼Å©
+    // ë²”ìœ„ ì²´í¬
     if (CurrentTextIndex >= TextDataArray.Num())
     {
         CompleteTextSequence();
@@ -121,13 +121,13 @@ void ACSTextTrigger::ShowNextText()
 
     UE_LOG(LogTemp, Warning, TEXT("CSTextTrigger: Showing text %d: %s"), CurrentTextIndex, *CurrentText.Text);
 
-    // À§Á¬ÀÌ ¾øÀ¸¸é »ı¼º
+    // ìœ„ì ¯ì´ ì—†ìœ¼ë©´ ìƒì„±
     if (!CurrentTextWidget && TextWidgetClass)
     {
         CurrentTextWidget = CreateWidget<UCSTextWidget>(GetWorld(), TextWidgetClass);
         if (CurrentTextWidget)
         {
-            CurrentTextWidget->AddToViewport(100); // ³ôÀº Z-Order·Î ¼³Á¤
+            CurrentTextWidget->AddToViewport(100); // ë†’ì€ Z-Orderë¡œ ì„¤ì •
             UE_LOG(LogTemp, Warning, TEXT("CSTextTrigger: Created new text widget"));
         }
         else
@@ -137,7 +137,7 @@ void ACSTextTrigger::ShowNextText()
         }
     }
 
-    // ÅØ½ºÆ® Ç¥½Ã
+    // í…ìŠ¤íŠ¸ í‘œì‹œ
     if (CurrentTextWidget)
     {
         if (bUseTypewriterEffect)
@@ -150,7 +150,7 @@ void ACSTextTrigger::ShowNextText()
         }
     }
 
-    // ÅØ½ºÆ® Ç¥½Ã ½Ã°£ ÈÄ¿¡ ¼û±â±â
+    // í…ìŠ¤íŠ¸ í‘œì‹œ ì‹œê°„ í›„ì— ìˆ¨ê¸°ê¸°
     GetWorldTimerManager().SetTimer(
         TextDisplayTimer,
         this,
@@ -162,7 +162,7 @@ void ACSTextTrigger::ShowNextText()
 
 void ACSTextTrigger::HideCurrentText()
 {
-    // ÅØ½ºÆ® ¼û±â±â
+    // í…ìŠ¤íŠ¸ ìˆ¨ê¸°ê¸°
     if (CurrentTextWidget)
     {
         CurrentTextWidget->HideText();
@@ -171,7 +171,7 @@ void ACSTextTrigger::HideCurrentText()
     const FCSTextData& CurrentText = TextDataArray[CurrentTextIndex];
     CurrentTextIndex++;
 
-    // ´ÙÀ½ ÅØ½ºÆ®°¡ ÀÖÀ¸¸é ÀüÈ¯ ½Ã°£ ÈÄ¿¡ Ç¥½Ã
+    // ë‹¤ìŒ í…ìŠ¤íŠ¸ê°€ ìˆìœ¼ë©´ ì „í™˜ ì‹œê°„ í›„ì— í‘œì‹œ
     if (CurrentTextIndex < TextDataArray.Num())
     {
         GetWorldTimerManager().SetTimer(
@@ -184,7 +184,7 @@ void ACSTextTrigger::HideCurrentText()
     }
     else
     {
-        // ¸ğµç ÅØ½ºÆ®¸¦ Ç¥½ÃÇßÀ¸¸é ½ÃÄö½º ¿Ï·á
+        // ëª¨ë“  í…ìŠ¤íŠ¸ë¥¼ í‘œì‹œí–ˆìœ¼ë©´ ì‹œí€€ìŠ¤ ì™„ë£Œ
         CompleteTextSequence();
     }
 }
@@ -196,15 +196,15 @@ void ACSTextTrigger::CompleteTextSequence()
     bIsDisplayingText = false;
     CurrentTextIndex = 0;
 
-    // ¸ğµç Å¸ÀÌ¸Ó Å¬¸®¾î
+    // ëª¨ë“  íƒ€ì´ë¨¸ í´ë¦¬ì–´
     GetWorldTimerManager().ClearTimer(TextDisplayTimer);
     GetWorldTimerManager().ClearTimer(TextTransitionTimer);
 
-    // À§Á¬ Á¤¸®
+    // ìœ„ì ¯ ì •ë¦¬
     if (CurrentTextWidget)
     {
         CurrentTextWidget->HideText();
-        // À§Á¬Àº À¯ÁöÇÏµÇ ¼û±è »óÅÂ·Î ÀüÈ¯
+        // ìœ„ì ¯ì€ ìœ ì§€í•˜ë˜ ìˆ¨ê¹€ ìƒíƒœë¡œ ì „í™˜
     }
 }
 
@@ -213,12 +213,12 @@ bool ACSTextTrigger::IsPlayer(AActor* Actor)
     if (!Actor)
         return false;
 
-    // CharacterÀÎÁö È®ÀÎ (ÀÏ¹İÀûÀ¸·Î ÇÃ·¹ÀÌ¾î´Â Character Å¬·¡½º)
+    // Characterì¸ì§€ í™•ì¸ (ì¼ë°˜ì ìœ¼ë¡œ í”Œë ˆì´ì–´ëŠ” Character í´ë˜ìŠ¤)
     ACharacter* Character = Cast<ACharacter>(Actor);
     if (!Character)
         return false;
 
-    // Ãß°¡ÀûÀ¸·Î PlayerController°¡ ÀÖ´ÂÁö È®ÀÎ
+    // ì¶”ê°€ì ìœ¼ë¡œ PlayerControllerê°€ ìˆëŠ”ì§€ í™•ì¸
     APawn* Pawn = Cast<APawn>(Actor);
     if (Pawn && Pawn->IsPlayerControlled())
         return true;
@@ -244,14 +244,14 @@ void ACSTextTrigger::ResetTrigger()
     bIsDisplayingText = false;
     CurrentTextIndex = 0;
 
-    // ¸ğµç Å¸ÀÌ¸Ó Å¬¸®¾î
+    // ëª¨ë“  íƒ€ì´ë¨¸ í´ë¦¬ì–´
     GetWorldTimerManager().ClearTimer(TextDisplayTimer);
     GetWorldTimerManager().ClearTimer(TextTransitionTimer);
 
-    // À§Á¬ ¼û±â±â
+    // ìœ„ì ¯ ìˆ¨ê¸°ê¸°
     if (CurrentTextWidget)
     {
-        CurrentTextWidget->HideText(); // Áï½Ã ¼û±è
+        CurrentTextWidget->HideText(); // ì¦‰ì‹œ ìˆ¨ê¹€
     }
 
     UE_LOG(LogTemp, Warning, TEXT("CSTextTrigger: Trigger reset"));
@@ -267,11 +267,11 @@ void ACSTextTrigger::StopTextSequence()
     bIsDisplayingText = false;
     CurrentTextIndex = 0;
 
-    // ¸ğµç Å¸ÀÌ¸Ó Å¬¸®¾î
+    // ëª¨ë“  íƒ€ì´ë¨¸ í´ë¦¬ì–´
     GetWorldTimerManager().ClearTimer(TextDisplayTimer);
     GetWorldTimerManager().ClearTimer(TextTransitionTimer);
 
-    // À§Á¬ ¼û±â±â
+    // ìœ„ì ¯ ìˆ¨ê¸°ê¸°
     if (CurrentTextWidget)
     {
         CurrentTextWidget->HideText();

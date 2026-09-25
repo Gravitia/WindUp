@@ -9,18 +9,18 @@
 
 ACSMoveObjectSwitch::ACSMoveObjectSwitch()
 {
-	// Tick È°¼ºÈ­
+	// Tick í™œì„±í™”
 	PrimaryActorTick.bCanEverTick = true;
 
-	// ±âº»°ª ¼³Á¤
-	MoveSpeed = 200.0f;           // 200 À¯´Ö/ÃÊ
-	RotationSpeed = 90.0f;        // 90µµ/ÃÊ
-	MoveTolerance = 5.0f;         // 5 À¯´Ö Çã¿ë ¿ÀÂ÷
-	RotationTolerance = 1.0f;     // 1µµ Çã¿ë ¿ÀÂ÷
+	// ê¸°ë³¸ê°’ ì„¤ì •
+	MoveSpeed = 200.0f;           // 200 ìœ ë‹›/ì´ˆ
+	RotationSpeed = 90.0f;        // 90ë„/ì´ˆ
+	MoveTolerance = 5.0f;         // 5 ìœ ë‹› í—ˆìš© ì˜¤ì°¨
+	RotationTolerance = 1.0f;     // 1ë„ í—ˆìš© ì˜¤ì°¨
 	bIsMoving = false;
 	bMovingToTarget = false;
 
-	// ³×Æ®¿öÅ© º¹Á¦ ¼³Á¤
+	// ë„¤íŠ¸ì›Œí¬ ë³µì œ ì„¤ì •
 	bReplicates = true;
 	SetReplicateMovement(true);
 }
@@ -29,7 +29,7 @@ void ACSMoveObjectSwitch::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// ¼­¹ö¿¡¼­¸¸ ÃÊ±â À§Ä¡/È¸Àü ¼³Á¤
+	// ì„œë²„ì—ì„œë§Œ ì´ˆê¸° ìœ„ì¹˜/íšŒì „ ì„¤ì •
 	if (HasAuthority())
 	{
 		InitializeObjectPositions();
@@ -41,9 +41,9 @@ void ACSMoveObjectSwitch::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	// ¼­¹ö¿Í Å¬¶ó°¡ °°Àº µî¼Ó º¸°£À» °¢ÀÚ µ·´Ù. (ÀÌÀü: ¼­¹ö°¡ ¸Å Æ½ Reliable Multicast ·Î À§Ä¡ ¹è¿­À» Àü¼Û -
-	// Å¬¶ó hitch ½Ã reliable ¹öÆÛ ¿À¹öÇÃ·Î·Î Á¢¼ÓÀÌ ²÷°å´Ù.) ½ÃÀÛÀº NetMulticastStartMovement, ³¡Àº
-	// NetMulticastFinishMovement 1È¸·Î ¼­¹ö ÃÖÁ¾ À§Ä¡¿¡ ½º³ÀÇÑ´Ù. ¸ñÇ¥/ÃÊ±â Æ®·£½ºÆûÀº MoveObjects º¹Á¦·Î ¹Ş´Â´Ù.
+	// ì„œë²„ì™€ í´ë¼ê°€ ê°™ì€ ë“±ì† ë³´ê°„ì„ ê°ì ëˆë‹¤. (ì´ì „: ì„œë²„ê°€ ë§¤ í‹± Reliable Multicast ë¡œ ìœ„ì¹˜ ë°°ì—´ì„ ì „ì†¡ -
+	// í´ë¼ hitch ì‹œ reliable ë²„í¼ ì˜¤ë²„í”Œë¡œë¡œ ì ‘ì†ì´ ëŠê²¼ë‹¤.) ì‹œì‘ì€ NetMulticastStartMovement, ëì€
+	// NetMulticastFinishMovement 1íšŒë¡œ ì„œë²„ ìµœì¢… ìœ„ì¹˜ì— ìŠ¤ëƒ…í•œë‹¤. ëª©í‘œ/ì´ˆê¸° íŠ¸ëœìŠ¤í¼ì€ MoveObjects ë³µì œë¡œ ë°›ëŠ”ë‹¤.
 	if (bIsMoving)
 	{
 		UpdateMovement(DeltaTime);
@@ -69,10 +69,10 @@ void ACSMoveObjectSwitch::Interact()
 	UE_LOG(LogCS, Log, TEXT("[NetMode: %d] Interact MoveObjectSwitch - Current State: %s"),
 		GetWorld()->GetNetMode(), bIsInteracted ? TEXT("ON") : TEXT("OFF"));
 
-	// ºÎ¸ğ Å¬·¡½ºÀÇ »óÈ£ÀÛ¿ë (½ºÀ§Ä¡ »óÅÂ º¯°æ)
+	// ë¶€ëª¨ í´ë˜ìŠ¤ì˜ ìƒí˜¸ì‘ìš© (ìŠ¤ìœ„ì¹˜ ìƒíƒœ ë³€ê²½)
 	Super::Interact();
 
-	// ÀÌµ¿ ½ÃÀÛ
+	// ì´ë™ ì‹œì‘
 	StartMovement();
 }
 
@@ -87,7 +87,7 @@ void ACSMoveObjectSwitch::SetInteracted(bool bInInteracted)
 	bIsInteracted = bInInteracted;
 	SetMaterial();
 
-	// »óÅÂ°¡ º¯°æµÈ °æ¿ì¿¡¸¸ ÀÌµ¿ ½ÃÀÛ
+	// ìƒíƒœê°€ ë³€ê²½ëœ ê²½ìš°ì—ë§Œ ì´ë™ ì‹œì‘
 	if (bStateChanged)
 	{
 		StartMovement();
@@ -100,7 +100,7 @@ void ACSMoveObjectSwitch::InitializeObjectPositions()
 	{
 		if (IsValid(MoveData.TargetActor))
 		{
-			// ÃÊ±â À§Ä¡¿Í È¸Àü ÀúÀå
+			// ì´ˆê¸° ìœ„ì¹˜ì™€ íšŒì „ ì €ì¥
 			MoveData.InitialLocation = MoveData.TargetActor->GetActorLocation();
 			MoveData.InitialRotation = MoveData.TargetActor->GetActorRotation();
 			MoveData.bIsAtTarget = false;
@@ -119,33 +119,33 @@ void ACSMoveObjectSwitch::CalculateTargetTransforms()
 	{
 		if (IsValid(MoveData.TargetActor))
 		{
-			// À§Ä¡ °è»ê
+			// ìœ„ì¹˜ ê³„ì‚°
 			if (MoveData.bUseActorLocalSpace)
 			{
-				// ¾×ÅÍÀÇ ·ÎÄÃ ÁÂÇ¥°è ±âÁØÀ¸·Î ¿ÀÇÁ¼Â Àû¿ë
+				// ì•¡í„°ì˜ ë¡œì»¬ ì¢Œí‘œê³„ ê¸°ì¤€ìœ¼ë¡œ ì˜¤í”„ì…‹ ì ìš©
 				FTransform ActorTransform = MoveData.TargetActor->GetActorTransform();
 
 				if (MoveData.bIgnoreScale)
 				{
-					// ½ºÄÉÀÏÀ» ¹«½ÃÇÏ°í ¼ø¼öÇÑ È¸Àü¸¸ Àû¿ë
+					// ìŠ¤ì¼€ì¼ì„ ë¬´ì‹œí•˜ê³  ìˆœìˆ˜í•œ íšŒì „ë§Œ ì ìš©
 					FQuat ActorRotation = ActorTransform.GetRotation();
 					FVector WorldOffset = ActorRotation.RotateVector(MoveData.LocalMovementOffset);
 					MoveData.CalculatedTargetLocation = MoveData.InitialLocation + WorldOffset;
 				}
 				else
 				{
-					// ½ºÄÉÀÏ Æ÷ÇÔÇÏ¿© º¯È¯
+					// ìŠ¤ì¼€ì¼ í¬í•¨í•˜ì—¬ ë³€í™˜
 					FVector WorldOffset = ActorTransform.TransformVector(MoveData.LocalMovementOffset);
 					MoveData.CalculatedTargetLocation = MoveData.InitialLocation + WorldOffset;
 				}
 			}
 			else
 			{
-				// ¿ùµå ÁÂÇ¥°è ±âÁØÀ¸·Î ¿ÀÇÁ¼Â Àû¿ë (½ºÄÉÀÏ ¹«°ü)
+				// ì›”ë“œ ì¢Œí‘œê³„ ê¸°ì¤€ìœ¼ë¡œ ì˜¤í”„ì…‹ ì ìš© (ìŠ¤ì¼€ì¼ ë¬´ê´€)
 				MoveData.CalculatedTargetLocation = MoveData.InitialLocation + MoveData.LocalMovementOffset;
 			}
 
-			// È¸Àü °è»ê (Ç×»ó »ó´ëÀûÀ¸·Î Àû¿ë)
+			// íšŒì „ ê³„ì‚° (í•­ìƒ ìƒëŒ€ì ìœ¼ë¡œ ì ìš©)
 			MoveData.CalculatedTargetRotation = MoveData.InitialRotation + MoveData.LocalRotationOffset;
 
 			UE_LOG(LogCS, Log, TEXT("Calculated Target for %s:"),
@@ -168,7 +168,7 @@ void ACSMoveObjectSwitch::CalculateTargetTransforms()
 
 void ACSMoveObjectSwitch::StartMovement()
 {
-	// ÀÌµ¿ÇÒ À¯È¿ÇÑ ¿ÀºêÁ§Æ®°¡ ÀÖ´ÂÁö È®ÀÎ
+	// ì´ë™í•  ìœ íš¨í•œ ì˜¤ë¸Œì íŠ¸ê°€ ìˆëŠ”ì§€ í™•ì¸
 	bool bHasValidTargets = false;
 	for (const FMoveObjectData& MoveData : MoveObjects)
 	{
@@ -185,17 +185,17 @@ void ACSMoveObjectSwitch::StartMovement()
 		return;
 	}
 
-	// ÀÌµ¿ ¹æÇâÀº Ç×»ó ½ºÀ§Ä¡ »óÅÂ¸¦ µû¸¥´Ù.
-	// ¿¹Àü¿£ ÀÌµ¿ ÁßÀÌ¸é ¿©±â¼­ ±×³É ¸®ÅÏÇØ ½ºÀ§Ä¡ Ç¥½Ã¿Í ¿ÀºêÁ§Æ® À§Ä¡°¡ ¿µ±¸È÷ ¾î±ß³µ´Ù
-	// (¹®ÀÌ ¿­¸®´Â µµÁß ´Ù½Ã ´©¸£¸é Ç¥½Ã´Â OFF ÀÎµ¥ ¹®Àº °è¼Ó ¿­¸²).
-	// ÀÌÁ¦´Â ÀÌµ¿ Áß¿¡ ´­·¯µµ ±× ÀÚ¸®¿¡¼­ ¹æÇâ¸¸ µÚÁıÈù´Ù.
+	// ì´ë™ ë°©í–¥ì€ í•­ìƒ ìŠ¤ìœ„ì¹˜ ìƒíƒœë¥¼ ë”°ë¥¸ë‹¤.
+	// ì˜ˆì „ì—” ì´ë™ ì¤‘ì´ë©´ ì—¬ê¸°ì„œ ê·¸ëƒ¥ ë¦¬í„´í•´ ìŠ¤ìœ„ì¹˜ í‘œì‹œì™€ ì˜¤ë¸Œì íŠ¸ ìœ„ì¹˜ê°€ ì˜êµ¬íˆ ì–´ê¸‹ë‚¬ë‹¤
+	// (ë¬¸ì´ ì—´ë¦¬ëŠ” ë„ì¤‘ ë‹¤ì‹œ ëˆ„ë¥´ë©´ í‘œì‹œëŠ” OFF ì¸ë° ë¬¸ì€ ê³„ì† ì—´ë¦¼).
+	// ì´ì œëŠ” ì´ë™ ì¤‘ì— ëˆŒëŸ¬ë„ ê·¸ ìë¦¬ì—ì„œ ë°©í–¥ë§Œ ë’¤ì§‘íŒë‹¤.
 	bMovingToTarget = bIsInteracted;
 	bIsMoving = true;
 
 	UE_LOG(LogCS, Log, TEXT("Starting movement - Direction: %s"),
 		bMovingToTarget ? TEXT("To Target") : TEXT("To Initial"));
 
-	// Å¬¶óÀÌ¾ğÆ®¿¡ ÀÌµ¿ ½ÃÀÛ/¹æÇâ ÀüÈ¯ ¾Ë¸²
+	// í´ë¼ì´ì–¸íŠ¸ì— ì´ë™ ì‹œì‘/ë°©í–¥ ì „í™˜ ì•Œë¦¼
 	NetMulticastStartMovement(bMovingToTarget);
 }
 
@@ -214,7 +214,7 @@ void ACSMoveObjectSwitch::UpdateMovement(float DeltaTime)
 			continue;
 		}
 
-		// === À§Ä¡ ÀÌµ¿ Ã³¸® ===
+		// === ìœ„ì¹˜ ì´ë™ ì²˜ë¦¬ ===
 		FVector CurrentLocation = MoveData.TargetActor->GetActorLocation();
 		FVector TargetPosition = bMovingToTarget ? MoveData.CalculatedTargetLocation : MoveData.InitialLocation;
 		FVector NewLocation = CurrentLocation;
@@ -225,19 +225,19 @@ void ACSMoveObjectSwitch::UpdateMovement(float DeltaTime)
 			float DistanceToTarget = FVector::Dist(CurrentLocation, TargetPosition);
 			if (DistanceToTarget > MoveTolerance)
 			{
-				// ÀÏÁ¤ÇÑ ¼Óµµ·Î À§Ä¡ ÀÌµ¿ (MoveSpeed À¯´Ö/ÃÊ)
+				// ì¼ì •í•œ ì†ë„ë¡œ ìœ„ì¹˜ ì´ë™ (MoveSpeed ìœ ë‹›/ì´ˆ)
 				NewLocation = FMath::VInterpConstantTo(CurrentLocation, TargetPosition, DeltaTime, MoveSpeed);
 				bLocationReached = false;
 			}
 			else
 			{
-				// ¸ñÇ¥¿¡ µµ´ŞÇßÀ¸¸é Á¤È®ÇÑ À§Ä¡·Î ½º³À
+				// ëª©í‘œì— ë„ë‹¬í–ˆìœ¼ë©´ ì •í™•í•œ ìœ„ì¹˜ë¡œ ìŠ¤ëƒ…
 				NewLocation = TargetPosition;
 			}
 			MoveData.TargetActor->SetActorLocation(NewLocation);
 		}
 
-		// === È¸Àü Ã³¸® ===
+		// === íšŒì „ ì²˜ë¦¬ ===
 		FRotator CurrentRotation = MoveData.TargetActor->GetActorRotation();
 		FRotator TargetRotationValue = bMovingToTarget ? MoveData.CalculatedTargetRotation : MoveData.InitialRotation;
 		FRotator NewRotation = CurrentRotation;
@@ -245,9 +245,9 @@ void ACSMoveObjectSwitch::UpdateMovement(float DeltaTime)
 		bool bRotationReached = true;
 		if (MoveData.bEnableRotationMovement)
 		{
-			// È¸Àü °Å¸® °è»ê (°¢µµ Â÷ÀÌ)
+			// íšŒì „ ê±°ë¦¬ ê³„ì‚° (ê°ë„ ì°¨ì´)
 			FRotator RotationDifference = TargetRotationValue - CurrentRotation;
-			RotationDifference.Normalize(); // -180~180 ¹üÀ§·Î Á¤±ÔÈ­
+			RotationDifference.Normalize(); // -180~180 ë²”ìœ„ë¡œ ì •ê·œí™”
 
 			float RotationDistance = FMath::Abs(RotationDifference.Pitch) +
 				FMath::Abs(RotationDifference.Yaw) +
@@ -255,19 +255,19 @@ void ACSMoveObjectSwitch::UpdateMovement(float DeltaTime)
 
 			if (RotationDistance > RotationTolerance)
 			{
-				// ÀÏÁ¤ÇÑ ¼Óµµ·Î È¸Àü (RotationSpeed µµ/ÃÊ)
+				// ì¼ì •í•œ ì†ë„ë¡œ íšŒì „ (RotationSpeed ë„/ì´ˆ)
 				NewRotation = FMath::RInterpConstantTo(CurrentRotation, TargetRotationValue, DeltaTime, RotationSpeed);
 				bRotationReached = false;
 			}
 			else
 			{
-				// ¸ñÇ¥¿¡ µµ´ŞÇßÀ¸¸é Á¤È®ÇÑ È¸ÀüÀ¸·Î ½º³À
+				// ëª©í‘œì— ë„ë‹¬í–ˆìœ¼ë©´ ì •í™•í•œ íšŒì „ìœ¼ë¡œ ìŠ¤ëƒ…
 				NewRotation = TargetRotationValue;
 			}
 			MoveData.TargetActor->SetActorRotation(NewRotation);
 		}
 
-		// À§Ä¡¿Í È¸Àü ¸ğµÎ ¸ñÇ¥¿¡ µµ´ŞÇß´ÂÁö È®ÀÎ
+		// ìœ„ì¹˜ì™€ íšŒì „ ëª¨ë‘ ëª©í‘œì— ë„ë‹¬í–ˆëŠ”ì§€ í™•ì¸
 		if (!bLocationReached || !bRotationReached)
 		{
 			bAllReachedDestination = false;
@@ -281,12 +281,12 @@ void ACSMoveObjectSwitch::UpdateMovement(float DeltaTime)
 		NewRotations.Add(NewRotation);
 	}
 
-	// ¸ğµç ¿ÀºêÁ§Æ®°¡ ¸ñÇ¥¿¡ µµ´ŞÇßÀ¸¸é ÀÌµ¿ ¿Ï·á
+	// ëª¨ë“  ì˜¤ë¸Œì íŠ¸ê°€ ëª©í‘œì— ë„ë‹¬í–ˆìœ¼ë©´ ì´ë™ ì™„ë£Œ
 	if (bAllReachedDestination)
 	{
 		bIsMoving = false;
 
-		// ¼­¹ö¸¸ ÃÖÁ¾ À§Ä¡¸¦ 1È¸ Àü¼Û - Å¬¶ó´Â ·ÎÄÃ º¸°£ÀÇ ¹Ì¼¼ÇÑ Â÷ÀÌ¸¦ ¿©±â¼­ ½º³ÀÇÑ´Ù.
+		// ì„œë²„ë§Œ ìµœì¢… ìœ„ì¹˜ë¥¼ 1íšŒ ì „ì†¡ - í´ë¼ëŠ” ë¡œì»¬ ë³´ê°„ì˜ ë¯¸ì„¸í•œ ì°¨ì´ë¥¼ ì—¬ê¸°ì„œ ìŠ¤ëƒ…í•œë‹¤.
 		if (HasAuthority())
 		{
 			NetMulticastFinishMovement(NewLocations, NewRotations);
@@ -297,14 +297,14 @@ void ACSMoveObjectSwitch::UpdateMovement(float DeltaTime)
 
 void ACSMoveObjectSwitch::NetMulticastStartMovement_Implementation(bool bInMoveToTarget)
 {
-	// Å¬¶óÀÌ¾ğÆ®¿¡¼­´Â ÀÌµ¿ »óÅÂ¸¸ ¾÷µ¥ÀÌÆ®
+	// í´ë¼ì´ì–¸íŠ¸ì—ì„œëŠ” ì´ë™ ìƒíƒœë§Œ ì—…ë°ì´íŠ¸
 	bMovingToTarget = bInMoveToTarget;
 	bIsMoving = true;
 }
 
 void ACSMoveObjectSwitch::NetMulticastFinishMovement_Implementation(const TArray<FVector>& FinalLocations, const TArray<FRotator>& FinalRotations)
 {
-	// Å¬¶óÀÌ¾ğÆ®: ·ÎÄÃ º¸°£À» ¸ØÃß°í ¼­¹ö ÃÖÁ¾ À§Ä¡/È¸ÀüÀ¸·Î ½º³À
+	// í´ë¼ì´ì–¸íŠ¸: ë¡œì»¬ ë³´ê°„ì„ ë©ˆì¶”ê³  ì„œë²„ ìµœì¢… ìœ„ì¹˜/íšŒì „ìœ¼ë¡œ ìŠ¤ëƒ…
 	if (!HasAuthority())
 	{
 		bIsMoving = false;

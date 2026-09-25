@@ -58,10 +58,10 @@ protected:
 	UAudioComponent* RulerAudioComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|MeasuringTape|Sound")
-	USoundBase* ExtendSound;   // ´Ã¾î³¯ ¶§
+	USoundBase* ExtendSound;   // ëŠ˜ì–´ë‚  ë•Œ
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|MeasuringTape|Sound")
-	USoundBase* RetractSound;  // ÁÙ¾îµé ¶§
+	USoundBase* RetractSound;  // ì¤„ì–´ë“¤ ë•Œ
 
 	/* */
 
@@ -69,16 +69,16 @@ protected:
 	float TargetScale = 1.0f;
 
 	UPROPERTY(EditAnywhere, Category = "CSEditable|MeasuringTape|Ruler")
-	float LerpSpeed = 5.0f;  // ºÎµå·´°Ô ´Ã¾î³ª´Â ¼Óµµ
+	float LerpSpeed = 5.0f;  // ë¶€ë“œëŸ½ê²Œ ëŠ˜ì–´ë‚˜ëŠ” ì†ë„
 
 	UPROPERTY(EditAnywhere, Category = "CSEditable|MeasuringTape|Ruler")
 	float TargetRulerScale = 5.0f;  // Ruler Scale
 
-	// ¿¬Ãâ ¼Óµµ
+	// ì—°ì¶œ ì†ë„
 	UPROPERTY(EditAnywhere, Category = "CSEditable|MeasuringTape|Face")
 	float FaceLerpSpeed = 8.f;
 
-	// »óÅÂ
+	// ìƒíƒœ
 	UPROPERTY(ReplicatedUsing = OnRep_FaceReact)
 	bool bFaceReacting = false;
 

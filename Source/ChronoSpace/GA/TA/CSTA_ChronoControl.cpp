@@ -28,7 +28,7 @@ ACSTA_ChronoControl::ACSTA_ChronoControl()
 
 void ACSTA_ChronoControl::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-    // ¼øÈ¸ Áß ¸ÊÀ» ¼öÁ¤ÇÏÁö ¾Ê´Â´Ù - º¹¿ø¸¸ ÇÏ°í ¸¶Áö¸·¿¡ ÇÑ ¹ø¿¡ ºñ¿î´Ù.
+    // ìˆœíšŒ ì¤‘ ë§µì„ ìˆ˜ì •í•˜ì§€ ì•ŠëŠ”ë‹¤ - ë³µì›ë§Œ í•˜ê³  ë§ˆì§€ë§‰ì— í•œ ë²ˆì— ë¹„ìš´ë‹¤.
     for (const auto& Pair : ActorsInBoxTrigger)
     {
         if (!IsValid(Pair.Value)) continue;
@@ -36,7 +36,7 @@ void ACSTA_ChronoControl::EndPlay(const EEndPlayReason::Type EndPlayReason)
         ACharacter* RemainedCharacter = Cast<ACharacter>(Pair.Value);
         if (RemainedCharacter)
         {
-            // ½Ã°£ º¹¿ø
+            // ì‹œê°„ ë³µì›
             if (RemainedCharacter->CustomTimeDilation != 1.0f)
             {
                 RemainedCharacter->CustomTimeDilation = 1.0f;
@@ -72,16 +72,16 @@ void ACSTA_ChronoControl::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedC
 
     if (DetectedCharacterPlayer)
     {
-        // ½Ã°£ Á¤ÁöÀÇ ¿µÇâÀ» ¹ŞÁö ¾Êµµ·Ï Á¦¿Ü
+        // ì‹œê°„ ì •ì§€ì˜ ì˜í–¥ì„ ë°›ì§€ ì•Šë„ë¡ ì œì™¸
         return;
     }
 
     if (DetectedCharacter)
     {
-        // ½Ã°£ ÁøÇà ¸ØÃß±â
+        // ì‹œê°„ ì§„í–‰ ë©ˆì¶”ê¸°
         if (DetectedCharacter->CustomTimeDilation == 0.0f)
         {
-            // ÀÌ¹Ì ¸ØÃá »óÅÂ¶ó¸é ´Ù½Ã Ã³¸®ÇÏÁö ¾ÊÀ½
+            // ì´ë¯¸ ë©ˆì¶˜ ìƒíƒœë¼ë©´ ë‹¤ì‹œ ì²˜ë¦¬í•˜ì§€ ì•ŠìŒ
             return;
         }
         DetectedCharacter->CustomTimeDilation = 0.0f;
@@ -95,9 +95,9 @@ void ACSTA_ChronoControl::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedCom
     ACharacter* DetectedCharacter = Cast<ACharacter>(OtherActor);
     if (DetectedCharacter)
     {
-        // ÀÌ ¹Ú½º°¡ Á÷Á¢ ¸ØÃá ¾×ÅÍ¸¸ º¹¿øÇÑ´Ù. (´Ù¸¥ ¹Ú½º°¡ ¸ØÃá ¾×ÅÍ¸¦ ¿ì¸®°¡ Ç®¾îÁÖÁö ¾Êµµ·Ï)
-        // BeginOverlap ¿¡¼­ ÀÌ¹Ì ¸ØÃá »óÅÂ¸é µî·ÏÇÏÁö ¾ÊÀ¸¹Ç·Î, µî·Ï ¿©ºÎ·Î ÆÇ´ÜÇÑ´Ù.
-        // ¸Ê¿¡ ¾ø´Â Å°¸¦ FindAndRemoveChecked ÇÏ¸é check Å©·¡½Ã - Remove ´Â 0 À» µ¹·ÁÁØ´Ù.
+        // ì´ ë°•ìŠ¤ê°€ ì§ì ‘ ë©ˆì¶˜ ì•¡í„°ë§Œ ë³µì›í•œë‹¤. (ë‹¤ë¥¸ ë°•ìŠ¤ê°€ ë©ˆì¶˜ ì•¡í„°ë¥¼ ìš°ë¦¬ê°€ í’€ì–´ì£¼ì§€ ì•Šë„ë¡)
+        // BeginOverlap ì—ì„œ ì´ë¯¸ ë©ˆì¶˜ ìƒíƒœë©´ ë“±ë¡í•˜ì§€ ì•Šìœ¼ë¯€ë¡œ, ë“±ë¡ ì—¬ë¶€ë¡œ íŒë‹¨í•œë‹¤.
+        // ë§µì— ì—†ëŠ” í‚¤ë¥¼ FindAndRemoveChecked í•˜ë©´ check í¬ë˜ì‹œ - Remove ëŠ” 0 ì„ ëŒë ¤ì¤€ë‹¤.
         if (ActorsInBoxTrigger.Remove(OtherActor->GetFName()) > 0)
         {
             DetectedCharacter->CustomTimeDilation = 1.0f;

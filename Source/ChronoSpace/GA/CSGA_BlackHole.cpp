@@ -34,7 +34,7 @@ void UCSGA_BlackHole::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
     Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
     UE_LOG(LogCS, Log, TEXT("UCSGA_BlackHole ActivateAbility"));
 
-    // ´ë±â ÁßÀÎ À§Ä¡ Á¤º¸ È®ÀÎ
+    // ëŒ€ê¸° ì¤‘ì¸ ìœ„ì¹˜ ì •ë³´ í™•ì¸
     FVector TargetLocation = FVector::ZeroVector;
     bool bHasValidLocation = bHasPendingTargetLocation;
 
@@ -43,7 +43,7 @@ void UCSGA_BlackHole::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
         TargetLocation = PendingTargetLocation;
         UE_LOG(LogCS, Log, TEXT("BlackHole using pending target location: %s"), *TargetLocation.ToString());
 
-        // »ç¿ë ÈÄ ¸®¼Â
+        // ì‚¬ìš© í›„ ë¦¬ì…‹
         bHasPendingTargetLocation = false;
         PendingTargetLocation = FVector::ZeroVector;
     }
@@ -66,7 +66,7 @@ void UCSGA_BlackHole::ActivateTask(const FVector& TargetLocation, bool bHasValid
     UE_LOG(LogCS, Log, TEXT("Using Target Actor Class"));
     UCSAT_BlackHoleSphere* SphereTask = UCSAT_BlackHoleSphere::CreateTask(this, TargetActorClass);
 
-    // À¯È¿ÇÑ À§Ä¡°¡ ÀÖÀ¸¸é ¼³Á¤
+    // ìœ íš¨í•œ ìœ„ì¹˜ê°€ ìžˆìœ¼ë©´ ì„¤ì •
     if (bHasValidLocation)
     {
         SphereTask->SetTargetLocation(TargetLocation);

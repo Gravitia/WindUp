@@ -37,70 +37,70 @@ protected:
         OUT FGameplayTagContainer* OptionalRelevantTags = nullptr) const override;
 
 private:
-    // WindUp ¿Ï·á ÇÔ¼ö (1ÃÊ ÈÄ È£Ãâ)
+    // WindUp ì™„ë£Œ í•¨ìˆ˜ (1ì´ˆ í›„ í˜¸ì¶œ)
     UFUNCTION()
     void OnWindUpComplete();
 
-    // °Å¸® Ã¼Å© ÇÔ¼ö (0.1ÃÊ¸¶´Ù È£Ãâ)
+    // ê±°ë¦¬ ì²´í¬ í•¨ìˆ˜ (0.1ì´ˆë§ˆë‹¤ í˜¸ì¶œ)
     UFUNCTION()
     void CheckDistanceToTarget();
 
-    // ±ÙÃ³ ÇÃ·¹ÀÌ¾î Ã£±â
+    // ê·¼ì²˜ í”Œë ˆì´ì–´ ì°¾ê¸°
     UFUNCTION(BlueprintCallable)
     ACharacter* FindNearbyPlayer();
 
-    // ÅÂ¿± °¨±â ½ÃÀÛ/Á¾·á
+    // íƒœì—½ ê°ê¸° ì‹œì‘/ì¢…ë£Œ
     UFUNCTION(BlueprintCallable)
     void StartWindUpEffect(ACharacter* TargetPlayer);
 
     UFUNCTION(BlueprintCallable)
     void StopWindUpEffect();
 
-    // GameplayEffect Àû¿ë
+    // GameplayEffect ì ìš©
     void ApplyHealingEffect(ACharacter* TargetPlayer);
 
 protected:
-    // === WindUp ¼³Á¤ ===
-    // WindUp ¹üÀ§ (´ÜÀ§: cm)
+    // === WindUp ì„¤ì • ===
+    // WindUp ë²”ìœ„ (ë‹¨ìœ„: cm)
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WindUp Settings")
     float WindUpRange = 300.0f;
 
-    // WindUp ¿Ï·á±îÁö ÇÊ¿äÇÑ ½Ã°£ (ÃÊ)
+    // WindUp ì™„ë£Œê¹Œì§€ í•„ìš”í•œ ì‹œê°„ (ì´ˆ)
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WindUp Settings")
     float WindUpDuration = 1.0f;
 
-    // °Å¸® Ã¼Å© °£°İ (ÃÊ)
+    // ê±°ë¦¬ ì²´í¬ ê°„ê²© (ì´ˆ)
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WindUp Settings")
     float DistanceCheckInterval = 0.1f;
 
     // === GameplayEffect ===
-    // Ã¼·Â È¸º¹ GameplayEffect
+    // ì²´ë ¥ íšŒë³µ GameplayEffect
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WindUp Effects")
     TSubclassOf<class UGameplayEffect> HealingEffect;
 
-    // === ½Ã°¢/Ã»°¢ È¿°ú ===
-    // WindUp ÀÌÆåÆ® ÆÄÆ¼Å¬
+    // === ì‹œê°/ì²­ê° íš¨ê³¼ ===
+    // WindUp ì´í™íŠ¸ íŒŒí‹°í´
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WindUp Effects")
     class UParticleSystem* WindUpParticleEffect;
 
-    // WindUp »ç¿îµå
+    // WindUp ì‚¬ìš´ë“œ
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WindUp Effects")
     class USoundBase* WindUpSound;
 
-    // WindUp ¾Ö´Ï¸ŞÀÌ¼Ç
+    // WindUp ì• ë‹ˆë©”ì´ì…˜
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WindUp Effects")
     class UAnimMontage* WindUpAnimation;
 
 private:
-    // Å¸ÀÌ¸Ó ÇÚµéµé
-    FTimerHandle WindUpCompleteTimerHandle;  // 1ÃÊ ÈÄ ¿Ï·á
-    FTimerHandle DistanceCheckTimerHandle;   // °Å¸® Ã¼Å©¿ë
+    // íƒ€ì´ë¨¸ í•¸ë“¤ë“¤
+    FTimerHandle WindUpCompleteTimerHandle;  // 1ì´ˆ í›„ ì™„ë£Œ
+    FTimerHandle DistanceCheckTimerHandle;   // ê±°ë¦¬ ì²´í¬ìš©
 
-    // ÇöÀç Å¸°Ù ÇÃ·¹ÀÌ¾î
+    // í˜„ì¬ íƒ€ê²Ÿ í”Œë ˆì´ì–´
     UPROPERTY()
     ACharacter* CurrentTargetPlayer;
 
-    // ÀÌÆåÆ® ÄÄÆ÷³ÍÆ®µé
+    // ì´í™íŠ¸ ì»´í¬ë„ŒíŠ¸ë“¤
     UPROPERTY()
     class UParticleSystemComponent* CurrentParticleComponent;
 

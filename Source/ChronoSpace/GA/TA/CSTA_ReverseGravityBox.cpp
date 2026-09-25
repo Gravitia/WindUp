@@ -25,7 +25,7 @@ ACSTA_ReverseGravityBox::ACSTA_ReverseGravityBox()
     SetSteticMeshMaterial(MaterialRef.Object, MeshScale.X);
 
 
-    // ÇÃ·¹ÀÌ¾î Ã¤³Î¸¸ Overlap
+    // í”Œë ˆì´ì–´ ì±„ë„ë§Œ Overlap
     BoxTrigger->SetCollisionResponseToChannel(CCHANNEL_CSPLAYER, ECR_Overlap);
 }
 

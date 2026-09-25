@@ -27,26 +27,26 @@ class CHRONOSPACE_API UCSGA_CharacterScale : public UGameplayAbility
 public:
     UCSGA_CharacterScale();
 
-    // ¾îºô¸®Æ¼ È°¼ºÈ­
+    // ì–´ë¹Œë¦¬í‹° í™œì„±í™”
     virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 
-    // ¾îºô¸®Æ¼ Á¾·á
+    // ì–´ë¹Œë¦¬í‹° ì¢…ë£Œ
     virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 
-    // Å©±â º¯°æ ÇÔ¼ö
+    // í¬ê¸° ë³€ê²½ í•¨ìˆ˜
     UFUNCTION(BlueprintCallable, Category = "Character Scale")
     void ChangeCharacterScale(ECharacterScaleType NewScaleType);
 
 protected:
-    // ¸ñÇ¥ ½ºÄÉÀÏ Å¸ÀÔ (ºí·çÇÁ¸°Æ®¿¡¼­ ¼³Á¤)
+    // ëª©í‘œ ìŠ¤ì¼€ì¼ íƒ€ì… (ë¸”ë£¨í”„ë¦°íŠ¸ì—ì„œ ì„¤ì •)
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Scale")
     ECharacterScaleType TargetScaleType;
 
-    // ÇöÀç ½ºÄÉÀÏ Å¸ÀÔ
+    // í˜„ì¬ ìŠ¤ì¼€ì¼ íƒ€ì…
     UPROPERTY(BlueprintReadOnly, Category = "Character Scale")
     ECharacterScaleType CurrentScaleType;
 
-    // °¢ ½ºÄÉÀÏ Å¸ÀÔº° Å©±â °ª
+    // ê° ìŠ¤ì¼€ì¼ íƒ€ì…ë³„ í¬ê¸° ê°’
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Scale")
     float NormalScale;
 
@@ -56,7 +56,7 @@ protected:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Scale")
     float SmallScale;
 
-    // ½ºÄÉÀÏ º¯È­ ¼Óµµ
+    // ìŠ¤ì¼€ì¼ ë³€í™” ì†ë„
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Scale")
     float ScaleTransitionSpeed;
 
@@ -71,19 +71,19 @@ protected:
     FGameplayTag ScaleNormalTag;
 
 private:
-    // Å¸ÀÌ¸Ó ÇÚµé
+    // íƒ€ì´ë¨¸ í•¸ë“¤
     FTimerHandle ScaleTransitionTimer;
 
-    // ½ºÄÉÀÏ º¸°£À» À§ÇÑ º¯¼öµé
+    // ìŠ¤ì¼€ì¼ ë³´ê°„ì„ ìœ„í•œ ë³€ìˆ˜ë“¤
     float StartScale;
     float TargetScale;
     float TransitionTime;
     float ElapsedTime;
 
-    // ½ÇÁ¦ ½ºÄÉÀÏ Àû¿ë ÇÔ¼ö
+    // ì‹¤ì œ ìŠ¤ì¼€ì¼ ì ìš© í•¨ìˆ˜
     void ApplyScale(float NewScale);
 
-    // ½ºÄÉÀÏ º¸°£ ¾÷µ¥ÀÌÆ®
+    // ìŠ¤ì¼€ì¼ ë³´ê°„ ì—…ë°ì´íŠ¸
     void UpdateScaleTransition();
 	
 };

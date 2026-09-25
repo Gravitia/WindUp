@@ -91,6 +91,14 @@
 		{
 			"Name": "BlueprintInternalsToolset",
 			"Enabled": true
+		},
+		{
+			"Name": "NarshaMCP",
+			"Enabled": true,
+			"Optional": true,
+			"TargetAllowList": [
+				"Editor"
+			]
 		}
 	]
 }

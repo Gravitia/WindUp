@@ -15,8 +15,8 @@ ACSTrackManager::ACSTrackManager()
 	Spline = CreateDefaultSubobject<USplineComponent>(TEXT("Spline"));
 	RootComponent = Spline;
 
-	NetUpdateFrequency = 60.f;     // ±âº»º¸´Ù ÈÎ¾À ÀÚÁÖ
-	MinNetUpdateFrequency = 30.f;  // ¶³¾îÁú ¶§ ¹Ù´Ú°ª
+	NetUpdateFrequency = 60.f;     // ê¸°ë³¸ë³´ë‹¤ í›¨ì”¬ ìì£¼
+	MinNetUpdateFrequency = 30.f;  // ë–¨ì–´ì§ˆ ë•Œ ë°”ë‹¥ê°’
 }
 
 void ACSTrackManager::BeginPlay()

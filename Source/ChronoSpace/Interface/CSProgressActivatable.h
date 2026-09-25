@@ -22,7 +22,7 @@ class CHRONOSPACE_API ICSProgressActivatable
 
 
 public:
-    // BP¿¡¼­µµ ±¸Çö °¡´É + C++¿¡¼­µµ override °¡´É
+    // BPì—ì„œë„ êµ¬í˜„ ê°€ëŠ¥ + C++ì—ì„œë„ override ê°€ëŠ¥
     UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Default|Progress")
     void Activate(AActor* InstigatorActor, FName TriggerId);
 

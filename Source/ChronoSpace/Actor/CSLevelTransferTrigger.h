@@ -29,28 +29,28 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     UStaticMeshComponent* TriggerMesh;
 
-    // ÀÌµ¿ÇÒ ·¹º§ ÀÌ¸§
+    // ì´ë™í•  ë ˆë²¨ ì´ë¦„
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level Transfer")
     FString TargetLevelName = TEXT("Level2");
 
-    // ½ºÆù À§Ä¡ ÅÂ±× (¸ñÇ¥ ·¹º§¿¡¼­ Ã£À» PlayerStart ÅÂ±×)
+    // ìŠ¤í° ìœ„ì¹˜ íƒœê·¸ (ëª©í‘œ ë ˆë²¨ì—ì„œ ì°¾ì„ PlayerStart íƒœê·¸)
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level Transfer")
     FString SpawnPointTag = TEXT("");
 
-    // Æ®¸®°Å°¡ ÇÑ ¹ø¸¸ ÀÛµ¿ÇÏ´ÂÁö ¿©ºÎ
+    // íŠ¸ë¦¬ê±°ê°€ í•œ ë²ˆë§Œ ì‘ë™í•˜ëŠ”ì§€ ì—¬ë¶€
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trigger Settings")
     bool bTriggerOnce = true;
 
-    // ÀüÈ¯ Áö¿¬ ½Ã°£ (ÃÊ)
+    // ì „í™˜ ì§€ì—° ì‹œê°„ (ì´ˆ)
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trigger Settings", meta = (ClampMin = "0.0"))
     float TransferDelay = 0.0f;
 
-    // Æ®¸®°Å°¡ ÀÌ¹Ì ÀÛµ¿Çß´ÂÁö ¿©ºÎ
+    // íŠ¸ë¦¬ê±°ê°€ ì´ë¯¸ ì‘ë™í–ˆëŠ”ì§€ ì—¬ë¶€
     UPROPERTY(BlueprintReadOnly, Category = "Runtime")
     bool bHasTriggered = false;
 
 public:
-    // Overlap ÀÌº¥Æ®
+    // Overlap ì´ë²¤íŠ¸
     UFUNCTION()
     void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
         UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
@@ -61,30 +61,30 @@ public:
         UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 protected:
-    // ·¹º§ ÀüÈ¯ ½ÇÇà
+    // ë ˆë²¨ ì „í™˜ ì‹¤í–‰
     UFUNCTION(BlueprintCallable, Category = "Level Transfer")
     void ExecuteLevelTransfer();
 
-    // ÇÃ·¹ÀÌ¾îÀÎÁö È®ÀÎ
+    // í”Œë ˆì´ì–´ì¸ì§€ í™•ì¸
     UFUNCTION(BlueprintCallable, Category = "Utils")
     bool IsPlayer(AActor* Actor);
 
 public:
-    // Æ®¸®°Å ¸®¼Â (Àç»ç¿ë °¡´ÉÇÏ°Ô)
+    // íŠ¸ë¦¬ê±° ë¦¬ì…‹ (ì¬ì‚¬ìš© ê°€ëŠ¥í•˜ê²Œ)
     UFUNCTION(BlueprintCallable, Category = "Trigger")
     void ResetTrigger();
 
-    // ·¹º§ ÀüÈ¯ °­Á¦ ½ÇÇà
+    // ë ˆë²¨ ì „í™˜ ê°•ì œ ì‹¤í–‰
     UFUNCTION(BlueprintCallable, Category = "Level Transfer")
     void ForceLevelTransfer();
 
-    // ÀÌº¥Æ® ¹ÙÀÎµù
+    // ì´ë²¤íŠ¸ ë°”ì¸ë”©
     DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLevelTransferStarted, const FString&, LevelName);
 
     UPROPERTY(BlueprintAssignable, Category = "Events")
     FOnLevelTransferStarted OnLevelTransferStarted;
 
-    // Getter ÇÔ¼öµé
+    // Getter í•¨ìˆ˜ë“¤
     UFUNCTION(BlueprintPure, Category = "State")
     bool HasTriggered() const { return bHasTriggered; }
 

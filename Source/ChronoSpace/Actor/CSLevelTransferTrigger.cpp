@@ -14,10 +14,10 @@ ACSLevelTransferTrigger::ACSLevelTransferTrigger()
 {
     PrimaryActorTick.bCanEverTick = false;
 
-    // Root Component ¼³Á¤
+    // Root Component ì„¤ì •
     RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
 
-    // Collision Box »ı¼º
+    // Collision Box ìƒì„±
     CollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("CollisionBox"));
     CollisionBox->SetupAttachment(RootComponent);
     CollisionBox->SetBoxExtent(FVector(100.0f, 100.0f, 50.0f));
@@ -25,12 +25,12 @@ ACSLevelTransferTrigger::ACSLevelTransferTrigger()
     CollisionBox->SetCollisionResponseToAllChannels(ECR_Ignore);
     CollisionBox->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 
-    // Visual Mesh »ı¼º (¼±ÅÃÀû)
+    // Visual Mesh ìƒì„± (ì„ íƒì )
     TriggerMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TriggerMesh"));
     TriggerMesh->SetupAttachment(CollisionBox);
     TriggerMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-    // ±âº»°ª ¼³Á¤
+    // ê¸°ë³¸ê°’ ì„¤ì •
     TargetLevelName = TEXT("Level2");
     SpawnPointTag = TEXT("");
     bTriggerOnce = true;
@@ -42,7 +42,7 @@ void ACSLevelTransferTrigger::BeginPlay()
 {
     Super::BeginPlay();
 
-    // Overlap ÀÌº¥Æ® ¹ÙÀÎµù
+    // Overlap ì´ë²¤íŠ¸ ë°”ì¸ë”©
     if (CollisionBox)
     {
         CollisionBox->OnComponentBeginOverlap.AddDynamic(this, &ACSLevelTransferTrigger::OnOverlapBegin);
@@ -56,19 +56,19 @@ void ACSLevelTransferTrigger::OnOverlapBegin(UPrimitiveComponent* OverlappedComp
     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
     bool bFromSweep, const FHitResult& SweepResult)
 {
-    // ÇÃ·¹ÀÌ¾îÀÎÁö È®ÀÎ
+    // í”Œë ˆì´ì–´ì¸ì§€ í™•ì¸
     if (!IsPlayer(OtherActor))
         return;
 
-    // ¼­¹ö¿¡¼­¸¸ Ã³¸®
+    // ì„œë²„ì—ì„œë§Œ ì²˜ë¦¬
     if (!HasAuthority())
         return;
 
-    // ÀÌ¹Ì Æ®¸®°ÅµÇ¾ú°í ÇÑ ¹ø¸¸ ÀÛµ¿ÇÏ´Â ¼³Á¤ÀÌ¸é ¹«½Ã
+    // ì´ë¯¸ íŠ¸ë¦¬ê±°ë˜ì—ˆê³  í•œ ë²ˆë§Œ ì‘ë™í•˜ëŠ” ì„¤ì •ì´ë©´ ë¬´ì‹œ
     if (bHasTriggered && bTriggerOnce)
         return;
 
-    // ¸ñÇ¥ ·¹º§ ÀÌ¸§ Ã¼Å©
+    // ëª©í‘œ ë ˆë²¨ ì´ë¦„ ì²´í¬
     if (TargetLevelName.IsEmpty())
     {
         UE_LOG(LogTemp, Error, TEXT("CSLevelTransferTrigger: Target level name is empty"));
@@ -77,13 +77,13 @@ void ACSLevelTransferTrigger::OnOverlapBegin(UPrimitiveComponent* OverlappedComp
 
     UE_LOG(LogTemp, Warning, TEXT("CSLevelTransferTrigger: Player entered trigger zone - transferring to %s"), *TargetLevelName);
 
-    // Æ®¸®°Å »óÅÂ ¾÷µ¥ÀÌÆ®
+    // íŠ¸ë¦¬ê±° ìƒíƒœ ì—…ë°ì´íŠ¸
     bHasTriggered = true;
 
-    // ÀÌº¥Æ® ºê·ÎµåÄ³½ºÆ® (¸ğµç Å¬¶óÀÌ¾ğÆ®¿¡¼­ ½ÇÇàµÇµµ·Ï ÇÏ·Á¸é Multicast RPC »ç¿ë)
+    // ì´ë²¤íŠ¸ ë¸Œë¡œë“œìºìŠ¤íŠ¸ (ëª¨ë“  í´ë¼ì´ì–¸íŠ¸ì—ì„œ ì‹¤í–‰ë˜ë„ë¡ í•˜ë ¤ë©´ Multicast RPC ì‚¬ìš©)
     OnLevelTransferStarted.Broadcast(TargetLevelName);
 
-    // Áö¿¬ ½Ã°£ÀÌ ÀÖÀ¸¸é Å¸ÀÌ¸Ó »ç¿ë, ¾øÀ¸¸é Áï½Ã ½ÇÇà
+    // ì§€ì—° ì‹œê°„ì´ ìˆìœ¼ë©´ íƒ€ì´ë¨¸ ì‚¬ìš©, ì—†ìœ¼ë©´ ì¦‰ì‹œ ì‹¤í–‰
     if (TransferDelay > 0.0f)
     {
         FTimerHandle DelayTimer;
@@ -118,14 +118,14 @@ void ACSLevelTransferTrigger::ExecuteLevelTransfer()
         return;
     }
 
-    // ¸ÖÆ¼ÇÃ·¹ÀÌ¾î¿¡¼­´Â ¼­¹ö¿¡¼­¸¸ ·¹º§ ÀüÈ¯À» Ã³¸®ÇØ¾ß ÇÔ
+    // ë©€í‹°í”Œë ˆì´ì–´ì—ì„œëŠ” ì„œë²„ì—ì„œë§Œ ë ˆë²¨ ì „í™˜ì„ ì²˜ë¦¬í•´ì•¼ í•¨
     if (!HasAuthority())
     {
         UE_LOG(LogTemp, Warning, TEXT("CSLevelTransferTrigger: Not server, ignoring level transfer"));
         return;
     }
 
-    // ½ºÆù Æ÷ÀÎÆ® ÅÂ±×°¡ ÀÖÀ¸¸é ¿É¼Ç¿¡ Ãß°¡
+    // ìŠ¤í° í¬ì¸íŠ¸ íƒœê·¸ê°€ ìˆìœ¼ë©´ ì˜µì…˜ì— ì¶”ê°€
     FString Options = TEXT("");
     if (!SpawnPointTag.IsEmpty())
     {
@@ -134,11 +134,11 @@ void ACSLevelTransferTrigger::ExecuteLevelTransfer()
 
     UE_LOG(LogTemp, Warning, TEXT("CSLevelTransferTrigger: Server executing level transfer to: %s%s"), *TargetLevelName, *Options);
 
-    // ¸ÖÆ¼ÇÃ·¹ÀÌ¾î¸¦ À§ÇÑ ¼­¹ö Æ®·¡ºí »ç¿ë
+    // ë©€í‹°í”Œë ˆì´ì–´ë¥¼ ìœ„í•œ ì„œë²„ íŠ¸ë˜ë¸” ì‚¬ìš©
     UWorld* World = GetWorld();
     if (World)
     {
-        // bAbsolute¸¦ false·Î ¼³Á¤ÇÏ¿© ¸ğµç Å¬¶óÀÌ¾ğÆ®°¡ ÇÔ²² ÀÌµ¿
+        // bAbsoluteë¥¼ falseë¡œ ì„¤ì •í•˜ì—¬ ëª¨ë“  í´ë¼ì´ì–¸íŠ¸ê°€ í•¨ê»˜ ì´ë™
         World->ServerTravel(TargetLevelName + Options, false);
     }
 }
@@ -148,12 +148,12 @@ bool ACSLevelTransferTrigger::IsPlayer(AActor* Actor)
     if (!Actor)
         return false;
 
-    // CharacterÀÎÁö È®ÀÎ
+    // Characterì¸ì§€ í™•ì¸
     ACharacter* Character = Cast<ACharacter>(Actor);
     if (!Character)
         return false;
 
-    // PlayerController°¡ ÀÖ´ÂÁö È®ÀÎ
+    // PlayerControllerê°€ ìˆëŠ”ì§€ í™•ì¸
     APawn* Pawn = Cast<APawn>(Actor);
     if (Pawn && Pawn->IsPlayerControlled())
         return true;
@@ -165,7 +165,7 @@ void ACSLevelTransferTrigger::ResetTrigger()
 {
     bHasTriggered = false;
 
-    // ¸ğµç Å¸ÀÌ¸Ó Å¬¸®¾î
+    // ëª¨ë“  íƒ€ì´ë¨¸ í´ë¦¬ì–´
     GetWorldTimerManager().ClearAllTimersForObject(this);
 
     UE_LOG(LogTemp, Warning, TEXT("CSLevelTransferTrigger: Trigger reset"));

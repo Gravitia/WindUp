@@ -23,18 +23,18 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	// Static Mesh ÄÄÆ÷³ÍÆ® (ºí·çÇÁ¸°Æ®¿¡¼­ ¼³Á¤ °¡´É)
+	// Static Mesh ì»´í¬ë„ŒíŠ¸ (ë¸”ë£¨í”„ë¦°íŠ¸ì—ì„œ ì„¤ì • ê°€ëŠ¥)
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Mesh")
 	UStaticMeshComponent* MeshComponent;
 
-	// È¸Àü ¼Óµµ (ºí·çÇÁ¸°Æ®¿¡¼­ ¼³Á¤ °¡´É)
+	// íšŒì „ ì†ë„ (ë¸”ë£¨í”„ë¦°íŠ¸ì—ì„œ ì„¤ì • ê°€ëŠ¥)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rotation")
-	float RotationSpeed = 360.0f; // ÃÊ´ç 360µµ È¸Àü
+	float RotationSpeed = 360.0f; // ì´ˆë‹¹ 360ë„ íšŒì „
 
 private:
-	// ¼­¹ö ½Ã°¢ ±âÁØ °áÁ¤·Ğ È¸Àü¿ë (¸ğµç ¸Ó½ÅÀÌ °°Àº °¢µµ¸¦ °è»ê - º¹Á¦ Æ®·¡ÇÈ 0)
+	// ì„œë²„ ì‹œê° ê¸°ì¤€ ê²°ì •ë¡  íšŒì „ìš© (ëª¨ë“  ë¨¸ì‹ ì´ ê°™ì€ ê°ë„ë¥¼ ê³„ì‚° - ë³µì œ íŠ¸ë˜í”½ 0)
 	FRotator InitialRotation = FRotator::ZeroRotator;
 
-	/** GameState ÀÇ ¼­¹ö µ¿±âÈ­ ½Ã°¢. GameState °¡ ¾ÆÁ÷ ¾øÀ¸¸é ·ÎÄÃ ½Ã°£À¸·Î Æú¹é. */
+	/** GameState ì˜ ì„œë²„ ë™ê¸°í™” ì‹œê°. GameState ê°€ ì•„ì§ ì—†ìœ¼ë©´ ë¡œì»¬ ì‹œê°„ìœ¼ë¡œ í´ë°±. */
 	float GetSynchronizedWorldTime() const;
 };

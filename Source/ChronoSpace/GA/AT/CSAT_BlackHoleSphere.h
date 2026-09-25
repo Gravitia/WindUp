@@ -37,7 +37,7 @@ private:
 	bool bHasTargetLocation = false;
 
 public:
-	// ¸ñÇ¥ À§Ä¡ ¼³Á¤ ÇÔ¼ö
+	// ëª©í‘œ ìœ„ì¹˜ ì„¤ì • í•¨ìˆ˜
 	void SetTargetLocation(const FVector& InTargetLocation);
 
 };

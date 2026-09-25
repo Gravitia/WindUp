@@ -18,7 +18,7 @@ void SCSServerTravelWidget::Construct(const FArguments& InArgs)
     ChildSlot
         [
             SNew(SVerticalBox)
-                // Stage 1 ¹öÆ°
+                // Stage 1 ë²„íŠ¼
                 + SVerticalBox::Slot()
                 .AutoHeight()
                 .Padding(10)
@@ -30,7 +30,7 @@ void SCSServerTravelWidget::Construct(const FArguments& InArgs)
                                 return OnStageTravelClicked("L_TestLevel1");
                             })
                 ]
-                // Stage 2 ¹öÆ°
+                // Stage 2 ë²„íŠ¼
                 + SVerticalBox::Slot()
                 .AutoHeight()
                 .Padding(10)
@@ -42,7 +42,7 @@ void SCSServerTravelWidget::Construct(const FArguments& InArgs)
                                 return OnStageTravelClicked("L_TestLevel2");
                             })
                 ]
-                // Stage 3 ¹öÆ°
+                // Stage 3 ë²„íŠ¼
                 + SVerticalBox::Slot()
                 .AutoHeight()
                 .Padding(10)
@@ -54,7 +54,7 @@ void SCSServerTravelWidget::Construct(const FArguments& InArgs)
                                 return OnStageTravelClicked("L_TestLevel3");
                             })
                 ]
-                // Stage 4 ¹öÆ°
+                // Stage 4 ë²„íŠ¼
                 + SVerticalBox::Slot()
                 .AutoHeight()
                 .Padding(10)
@@ -66,7 +66,7 @@ void SCSServerTravelWidget::Construct(const FArguments& InArgs)
                                 return OnStageTravelClicked("L_TestLevel4");
                             })
                 ]
-                // Stage 5 ¹öÆ°
+                // Stage 5 ë²„íŠ¼
                 + SVerticalBox::Slot()
                 .AutoHeight()
                 .Padding(10)

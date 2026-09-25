@@ -4,7 +4,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "TimerManager.h"
 
-/** ½Ã°£ µÇ°¨±â Task »ı¼º */
+/** ì‹œê°„ ë˜ê°ê¸° Task ìƒì„± */
 UCSAT_TimeRewind* UCSAT_TimeRewind::CreateTimeRewindTask(
     UGameplayAbility* OwningAbility,
     AActor* TargetActor,
@@ -16,13 +16,13 @@ UCSAT_TimeRewind* UCSAT_TimeRewind::CreateTimeRewindTask(
     {
         Task->TargetActor = TargetActor;
         Task->TransformFrames = TransformHistory;
-        Task->CurrentFrameIndex = TransformHistory.Num() - 1;  // °¡Àå ÃÖ½Å ÇÁ·¹ÀÓºÎÅÍ ÀÌµ¿ ½ÃÀÛ
-        Task->DurationPerFrame = Duration / TransformHistory.Num(); // 1ÃÊ µ¿¾È 300°³ÀÇ ÇÁ·¹ÀÓÀ» µû¶ó ÀÌµ¿
+        Task->CurrentFrameIndex = TransformHistory.Num() - 1;  // ê°€ì¥ ìµœì‹  í”„ë ˆì„ë¶€í„° ì´ë™ ì‹œì‘
+        Task->DurationPerFrame = Duration / TransformHistory.Num(); // 1ì´ˆ ë™ì•ˆ 300ê°œì˜ í”„ë ˆì„ì„ ë”°ë¼ ì´ë™
     }
     return Task;
 }
 
-/** Task È°¼ºÈ­ */
+/** Task í™œì„±í™” */
 void UCSAT_TimeRewind::Activate()
 {
     if (!TargetActor || TransformFrames.Num() == 0)
@@ -36,7 +36,7 @@ void UCSAT_TimeRewind::Activate()
     MoveToNextFrame();
 }
 
-/** Áö³ª¿Â ±æÀ» µû¶ó ÀÌµ¿ */
+/** ì§€ë‚˜ì˜¨ ê¸¸ì„ ë”°ë¼ ì´ë™ */
 void UCSAT_TimeRewind::MoveToNextFrame()
 {
     if (CurrentFrameIndex <= 0)
@@ -45,22 +45,22 @@ void UCSAT_TimeRewind::MoveToNextFrame()
         return;
     }
 
-    // ÇöÀç ÇÁ·¹ÀÓ°ú ÀÌÀü ÇÁ·¹ÀÓ ¼³Á¤
+    // í˜„ì¬ í”„ë ˆì„ê³¼ ì´ì „ í”„ë ˆì„ ì„¤ì •
     FCSF_CharacterFrameData CurrentFrame = TransformFrames[CurrentFrameIndex];
     FCSF_CharacterFrameData NextFrame = TransformFrames[CurrentFrameIndex - 1];
 
-    // Lerp·Î ºÎµå·´°Ô º¸°£ÇÏ¸ç ÀÌµ¿
+    // Lerpë¡œ ë¶€ë“œëŸ½ê²Œ ë³´ê°„í•˜ë©° ì´ë™
     FVector NewLocation = FMath::VInterpTo(TargetActor->GetActorLocation(), NextFrame.Location, GetWorld()->GetDeltaSeconds(), 10.0f);
     FRotator NewRotation = FMath::RInterpTo(TargetActor->GetActorRotation(), NextFrame.Rotation, GetWorld()->GetDeltaSeconds(), 10.0f);
 
     TargetActor->SetActorLocationAndRotation(NewLocation, NewRotation);
 
-    // ´ÙÀ½ ÇÁ·¹ÀÓÀ¸·Î ÁøÇà
+    // ë‹¤ìŒ í”„ë ˆì„ìœ¼ë¡œ ì§„í–‰
     CurrentFrameIndex--;
-    if (CurrentFrameIndex < 0) CurrentFrameIndex = 0; // À½¼ö ¹æÁö
+    if (CurrentFrameIndex < 0) CurrentFrameIndex = 0; // ìŒìˆ˜ ë°©ì§€
 
 
-    // ÀÏÁ¤ ½Ã°£ ÈÄ ´Ù½Ã ½ÇÇà 
+    // ì¼ì • ì‹œê°„ í›„ ë‹¤ì‹œ ì‹¤í–‰ 
     GetWorld()->GetTimerManager().SetTimer(
         RewindTimerHandle,
         this,
@@ -70,7 +70,7 @@ void UCSAT_TimeRewind::MoveToNextFrame()
     );
 }
 
-/** µÇ°¨±â Á¾·á */
+/** ë˜ê°ê¸° ì¢…ë£Œ */
 void UCSAT_TimeRewind::FinishRewind()
 {
     GetWorld()->GetTimerManager().ClearTimer(RewindTimerHandle);

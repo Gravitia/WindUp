@@ -12,7 +12,7 @@ ACSProgressTrigger::ACSProgressTrigger()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
-	// ¸ÖÆ¼¿¡¼­ ¼­¹ö°¡ »óÅÂ¸¦ ¹Ù²Ü °Å¸é, Æ®¸®°Åµµ º¹Á¦ ÄÑµÎ´Â °Ô ¾ÈÁ¤Àû
+	// ë©€í‹°ì—ì„œ ì„œë²„ê°€ ìƒíƒœë¥¼ ë°”ê¿€ ê±°ë©´, íŠ¸ë¦¬ê±°ë„ ë³µì œ ì¼œë‘ëŠ” ê²Œ ì•ˆì •ì 
 	bReplicates = true;
 
 	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
@@ -52,7 +52,7 @@ void ACSProgressTrigger::OnTriggerBegin(
 	}
 
 	// =================
-	// 1) UI´Â "ÇØ´ç ÇÃ·¹ÀÌ¾î ·ÎÄÃ"¿¡¼­¸¸ ¶ç¿ì±â
+	// 1) UIëŠ” "í•´ë‹¹ í”Œë ˆì´ì–´ ë¡œì»¬"ì—ì„œë§Œ ë„ìš°ê¸°
 	// =================
 	if (Pawn->IsLocallyControlled())
 	{
@@ -68,7 +68,7 @@ void ACSProgressTrigger::OnTriggerBegin(
 	}
 
 	// =================
-	// 2) °¡µ¿/Á¤Áö´Â ¼­¹ö¿¡¼­¸¸ Ã³¸®
+	// 2) ê°€ë™/ì •ì§€ëŠ” ì„œë²„ì—ì„œë§Œ ì²˜ë¦¬
 	// =================
 	if (!HasAuthority())
 	{
@@ -99,13 +99,13 @@ void ACSProgressTrigger::OnTriggerBegin(
 		}
 	}
 
-	// Æ®¸®°Å »óÅÂ Ã³¸®
+	// íŠ¸ë¦¬ê±° ìƒíƒœ ì²˜ë¦¬
 	bTriggered = true;
 
-	// Ãæµ¹ ºñÈ°¼º(Àç¹ßµ¿ ¹æÁö)
+	// ì¶©ëŒ ë¹„í™œì„±(ì¬ë°œë™ ë°©ì§€)
 	SetActorEnableCollision(false);
 
-	// ÀüÆÄ »¡¸®
+	// ì „íŒŒ ë¹¨ë¦¬
 	ForceNetUpdate();
 }
 

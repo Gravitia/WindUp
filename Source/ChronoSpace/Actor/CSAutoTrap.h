@@ -20,11 +20,11 @@ struct FTrapStep
 {
     GENERATED_BODY()
 
-    // ÀÌ ½ºÅÜ±îÁöÀÇ ´ë±â ½Ã°£
+    // ì´ ìŠ¤í…ê¹Œì§€ì˜ ëŒ€ê¸° ì‹œê°„
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|AutoTrap|Step")
     float Delay = 1.0f;
 
-    // ¸î ¹øÂ° ½ºÅÜÀÎÁö
+    // ëª‡ ë²ˆì§¸ ìŠ¤í…ì¸ì§€
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CSEditable|AutoTrap|Step")
     ETrapStepSlot StepSlot = ETrapStepSlot::First;
 };
@@ -62,11 +62,11 @@ protected:
      * Replication
      * ========================= */
 
-     // ÇöÀç ½ºÅÜ ½½·Ô (°ª ÀÚÃ¼´Â º¹Á¦µÇÁö¸¸, º¯°æÀÌ ¾øÀ¸¸é OnRep´Â ¾È ¶ã ¼ö ÀÖÀ½)
+     // í˜„ì¬ ìŠ¤í… ìŠ¬ë¡¯ (ê°’ ìì²´ëŠ” ë³µì œë˜ì§€ë§Œ, ë³€ê²½ì´ ì—†ìœ¼ë©´ OnRepëŠ” ì•ˆ ëœ° ìˆ˜ ìˆìŒ)
     UPROPERTY(Replicated)
     ETrapStepSlot CurrentStepSlot = ETrapStepSlot::First;
 
-    // "½ºÅÜÀÌ ½ÇÇàµÆ´Ù"¸¦ º¸ÀåÇÏ´Â ½Ã¸®¾ó (¸Å ½ºÅÜ¸¶´Ù ¹«Á¶°Ç Áõ°¡ -> OnRep°¡ Ç×»ó È£Ãâ)
+    // "ìŠ¤í…ì´ ì‹¤í–‰ëë‹¤"ë¥¼ ë³´ì¥í•˜ëŠ” ì‹œë¦¬ì–¼ (ë§¤ ìŠ¤í…ë§ˆë‹¤ ë¬´ì¡°ê±´ ì¦ê°€ -> OnRepê°€ í•­ìƒ í˜¸ì¶œ)
     UPROPERTY(ReplicatedUsing = OnRep_StepSerial)
     uint8 StepSerial = 0;
 
@@ -77,15 +77,15 @@ protected:
      * Blueprint Hooks
      * ========================= */
 
-     // ´­¸²/ÇØÁ¦ °°Àº »óÅÂ ¿¬Ãâ¿ë(ÇÊ¿äÇÏ¸é BP¿¡¼­ »ç¿ë)
+     // ëˆŒë¦¼/í•´ì œ ê°™ì€ ìƒíƒœ ì—°ì¶œìš©(í•„ìš”í•˜ë©´ BPì—ì„œ ì‚¬ìš©)
     UFUNCTION(BlueprintImplementableEvent)
     void PlayTrapAnim(bool bPressed);
 
-    // ½ºÅÜ ½ÇÇà ÀÌº¥Æ® (Çàµ¿ ÇØ¼®Àº BP Ã¥ÀÓ)
+    // ìŠ¤í… ì‹¤í–‰ ì´ë²¤íŠ¸ (í–‰ë™ í•´ì„ì€ BP ì±…ì„)
     UFUNCTION(BlueprintImplementableEvent)
     void OnTrapStep(ETrapStepSlot StepSlot);
 
 private:
-    // µğ¹ö±×/¾ÈÀü¿ë: ¼­¹ö¿¡¼­¸¸ ½ºÅÜ ÁøÇàÀ» ½ÃÀÛÇÏµµ·Ï °­Á¦
+    // ë””ë²„ê·¸/ì•ˆì „ìš©: ì„œë²„ì—ì„œë§Œ ìŠ¤í… ì§„í–‰ì„ ì‹œì‘í•˜ë„ë¡ ê°•ì œ
     void StartServerPattern();
 };

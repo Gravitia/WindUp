@@ -12,16 +12,16 @@ void UCSGameUIWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	// °ÔÀÓ »óÅÂ ÂüÁ¶ È¹µæ
+	// ê²Œì„ ìƒíƒœ ì°¸ì¡° íšë“
 	if (UWorld* World = GetWorld())
 	{
 		GameState = World->GetGameState<ACSGameState>();
 		if (GameState)
 		{
-			// ÇÃ·¹ÀÌ¾î ¾÷µ¥ÀÌÆ® µ¨¸®°ÔÀÌÆ® ¹ÙÀÎµù
+			// í”Œë ˆì´ì–´ ì—…ë°ì´íŠ¸ ë¸ë¦¬ê²Œì´íŠ¸ ë°”ì¸ë”©
 			GameState->OnPlayersUpdated.AddDynamic(this, &UCSGameUIWidget::OnPlayersUpdated);
 
-			// ÃÊ±â UI ¼³Á¤
+			// ì´ˆê¸° UI ì„¤ì •
 			RefreshPlayerUI();
 		}
 	}
@@ -29,7 +29,7 @@ void UCSGameUIWidget::NativeConstruct()
 
 void UCSGameUIWidget::NativeDestruct()
 {
-	// µ¨¸®°ÔÀÌÆ® ¾ğ¹ÙÀÎµù
+	// ë¸ë¦¬ê²Œì´íŠ¸ ì–¸ë°”ì¸ë”©
 	if (GameState)
 	{
 		GameState->OnPlayersUpdated.RemoveAll(this);
@@ -66,7 +66,7 @@ void UCSGameUIWidget::CreateHPDisplayWidgets(const TArray<ACSPlayerState*>& Play
 	{
 		if (PlayerState)
 		{
-			// HP µğ½ºÇÃ·¹ÀÌ À§Á¬ »ı¼º
+			// HP ë””ìŠ¤í”Œë ˆì´ ìœ„ì ¯ ìƒì„±
 			UCSHPDisplayWidget* HPWidget = CreateWidget<UCSHPDisplayWidget>(this, HPDisplayWidgetClass);
 			if (HPWidget)
 			{

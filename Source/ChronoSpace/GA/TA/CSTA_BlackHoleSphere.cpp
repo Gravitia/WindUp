@@ -76,12 +76,12 @@ void ACSTA_BlackHoleSphere::BeginPlay()
 			GetWorld(),
 			SphereLocation,
 			SphereRadius,
-			12,          // ¼¼±×¸ÕÆ® ¼ö (±¸ÀÇ ¸Å²ô·¯¿ò)
+			12,          // ì„¸ê·¸ë¨¼íŠ¸ ìˆ˜ (êµ¬ì˜ ë§¤ë„ëŸ¬ì›€)
 			FColor::Green,
-			false,       // Áö¼Ó Ç¥½Ã
-			DurationTime,           // Áö¼Ó ½Ã°£
-			0,           // µğ¹ö±× ¼± ¿ì¼±¼øÀ§
-			2.0f         // ¼± µÎ²²
+			false,       // ì§€ì† í‘œì‹œ
+			DurationTime,           // ì§€ì† ì‹œê°„
+			0,           // ë””ë²„ê·¸ ì„  ìš°ì„ ìˆœìœ„
+			2.0f         // ì„  ë‘ê»˜
 		);
 		*/
 	}
@@ -145,13 +145,13 @@ void ACSTA_BlackHoleSphere::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedC
 
 void ACSTA_BlackHoleSphere::OnEventHorizonBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepHitResult)
 {
-	// PatrolÀÌ È­ÀÌÆ®È¦¿¡ ÈÖ¸»¸®¸é NavMesh ²¿ÀÏ ¼ö ÀÖÀ½
+	// Patrolì´ í™”ì´íŠ¸í™€ì— íœ˜ë§ë¦¬ë©´ NavMesh ê¼¬ì¼ ìˆ˜ ìˆìŒ
 	if (ACSCharacterPatrol* Patrol = Cast<ACSCharacterPatrol>(OtherActor))
 	{
 		return;
 	}
 
-	// ÅÚ·¹Æ÷Æ®´Â ¼­¹ö ±ÇÇÑ. (Å¬¶ó º¹Á¦º»Àº WhiteHall À» ¸ğ¸£¹Ç·Î ¿ø·¡µµ ¾Æ¹« ÀÏ ¾ø¾úÀ½)
+	// í…”ë ˆí¬íŠ¸ëŠ” ì„œë²„ ê¶Œí•œ. (í´ë¼ ë³µì œë³¸ì€ WhiteHall ì„ ëª¨ë¥´ë¯€ë¡œ ì›ë˜ë„ ì•„ë¬´ ì¼ ì—†ì—ˆìŒ)
 	if (!HasAuthority() || !IsValid(OtherActor))
 	{
 		return;
@@ -160,8 +160,8 @@ void ACSTA_BlackHoleSphere::OnEventHorizonBeginOverlap(UPrimitiveComponent* Over
 	ACharacter* OverlapedCharacter = Cast<ACharacter>(OtherActor);
 	ACSCharacterPlayer* OverlapedCharacterPlayer = Cast<ACSCharacterPlayer>(OtherActor);
 
-	// ÀÌ ºí·¢È¦À» ½ğ ÇÃ·¹ÀÌ¾îÀÇ È­ÀÌÆ®È¦À» ¾´´Ù.
-	// (GetPlayerCharacter(0) Àº ¼­¹ö¿¡¼­ Ç×»ó È£½ºÆ® - Å¬¶ó°¡ ½ğ ºí·¢È¦ÀÌ È£½ºÆ® È­ÀÌÆ®È¦·Î º¸³»°í, null ÀÌ¸é Å©·¡½Ã)
+	// ì´ ë¸”ë™í™€ì„ ìœ í”Œë ˆì´ì–´ì˜ í™”ì´íŠ¸í™€ì„ ì“´ë‹¤.
+	// (GetPlayerCharacter(0) ì€ ì„œë²„ì—ì„œ í•­ìƒ í˜¸ìŠ¤íŠ¸ - í´ë¼ê°€ ìœ ë¸”ë™í™€ì´ í˜¸ìŠ¤íŠ¸ í™”ì´íŠ¸í™€ë¡œ ë³´ë‚´ê³ , null ì´ë©´ í¬ë˜ì‹œ)
 	ACSCharacterPlayer* Player = Cast<ACSCharacterPlayer>(SourceActor);
 	ACSWhiteHall* WhiteHall = Player ? Player->GetWhiteHall() : nullptr;
 

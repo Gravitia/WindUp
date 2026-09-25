@@ -57,7 +57,7 @@ void ACSCharacterBase::SetDead()
 	if (!HasAuthority() || bIsDead) return;
 
 	bIsDead = true;
-	OnRep_IsDead();	// ¸®½¼ È£½ºÆ®´Â OnRep À» ¹ŞÁö ¾ÊÀ¸¹Ç·Î ¼­¹ö¿¡¼­ Á÷Á¢ È£Ãâ
+	OnRep_IsDead();	// ë¦¬ìŠ¨ í˜¸ìŠ¤íŠ¸ëŠ” OnRep ì„ ë°›ì§€ ì•Šìœ¼ë¯€ë¡œ ì„œë²„ì—ì„œ ì§ì ‘ í˜¸ì¶œ
 }
 
 void ACSCharacterBase::SetRevive()
@@ -97,7 +97,7 @@ void ACSCharacterBase::HandleRevive()
 /*
 void ACSCharacterBase::AttachWindUpKeyToSocket()
 {
-	// 1. ºí·çÇÁ¸°Æ® Å¬·¡½º ·Îµå
+	// 1. ë¸”ë£¨í”„ë¦°íŠ¸ í´ë˜ìŠ¤ ë¡œë“œ
 	const FString WindUpKeyBPPath = TEXT("/Game/01_Blueprint/Character/WindUpKey.WindUpKey_C");
 	UClass* WindUpKeyBPClass = Cast<UClass>(StaticLoadObject(UClass::StaticClass(), nullptr, *WindUpKeyBPPath));
 
@@ -107,7 +107,7 @@ void ACSCharacterBase::AttachWindUpKeyToSocket()
 		return;
 	}
 
-	// 2. ºí·çÇÁ¸°Æ® ¾×ÅÍ »ı¼º
+	// 2. ë¸”ë£¨í”„ë¦°íŠ¸ ì•¡í„° ìƒì„±
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.Owner = this;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
@@ -119,15 +119,15 @@ void ACSCharacterBase::AttachWindUpKeyToSocket()
 		return;
 	}
 
-	// 3. Å©±â Á¶Á¤ (½ºÆùµÈ ºí·çÇÁ¸°Æ®ÀÇ ·çÆ® ÄÄÆ÷³ÍÆ®¿¡ Àû¿ë)
+	// 3. í¬ê¸° ì¡°ì • (ìŠ¤í°ëœ ë¸”ë£¨í”„ë¦°íŠ¸ì˜ ë£¨íŠ¸ ì»´í¬ë„ŒíŠ¸ì— ì ìš©)
 	FVector DesiredScale(0.18f, 0.18f, 0.18f);
 	WindUpKeyActor->SetActorScale3D(DesiredScale);
 
-	// 4. ¼ÒÄÏ À§Ä¡ °¡Á®¿À±â
+	// 4. ì†Œì¼“ ìœ„ì¹˜ ê°€ì ¸ì˜¤ê¸°
 	FName SocketName = TEXT("pelvisSocket");
 	FTransform SocketTransform = GetMesh()->GetSocketTransform(SocketName, RTS_World);
 
-	// 5. ¼ÒÄÏ¿¡ ºí·çÇÁ¸°Æ® ¾×ÅÍ ºÎÂø
+	// 5. ì†Œì¼“ì— ë¸”ë£¨í”„ë¦°íŠ¸ ì•¡í„° ë¶€ì°©
 	WindUpKeyActor->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, SocketName);
 
 	UE_LOG(LogTemp, Log, TEXT("Blueprint Actor attached to socket: %s"), *SocketName.ToString());

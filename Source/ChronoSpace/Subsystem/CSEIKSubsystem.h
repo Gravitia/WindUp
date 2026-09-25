@@ -23,16 +23,16 @@ public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 
-	/** ¼¼¼Ç Âü°¡ ½ÇÆĞ ¾Ë¸² (Result ÄÚµå). UI °¡ ±¸µ¶ÇØ »ç¿ëÀÚ¿¡°Ô ¾Ë¸°´Ù - ¿¹Àü¿£ ½ÇÆĞÇØµµ ¾Æ¹« ½ÅÈ£°¡ ¾ø¾ú´Ù. */
+	/** ì„¸ì…˜ ì°¸ê°€ ì‹¤íŒ¨ ì•Œë¦¼ (Result ì½”ë“œ). UI ê°€ êµ¬ë…í•´ ì‚¬ìš©ìì—ê²Œ ì•Œë¦°ë‹¤ - ì˜ˆì „ì—” ì‹¤íŒ¨í•´ë„ ì•„ë¬´ ì‹ í˜¸ê°€ ì—†ì—ˆë‹¤. */
 	UPROPERTY(BlueprintAssignable)
 	FCSJoinSessionFailedSignature OnJoinSessionFailed;
 
-	/** ¼¼¼Ç ½ÃÀÛ ÈÄ È£½ºÆ®°¡ ÀÌµ¿ÇÒ ¸Ê (¿¹: /Game/02_Map/L_Stage01). ºñ¿ì¸é Æ®·¡ºíÇÏÁö ¾Ê´Â´Ù. */
+	/** ì„¸ì…˜ ì‹œì‘ í›„ í˜¸ìŠ¤íŠ¸ê°€ ì´ë™í•  ë§µ (ì˜ˆ: /Game/02_Map/L_Stage01). ë¹„ìš°ë©´ íŠ¸ë˜ë¸”í•˜ì§€ ì•ŠëŠ”ë‹¤. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "CSEditable|Session")
 	FString LobbyMapPath;
 
 protected:
-	/** ·Î±×ÀÎ¿¡ ¼º°øÇÑ ÀûÀÌ ÀÖ´Â°¡ - Deinitialize ¿¡¼­ ºÒÇÊ¿äÇÑ Logout À» ÇÇÇÑ´Ù */
+	/** ë¡œê·¸ì¸ì— ì„±ê³µí•œ ì ì´ ìˆëŠ”ê°€ - Deinitialize ì—ì„œ ë¶ˆí•„ìš”í•œ Logout ì„ í”¼í•œë‹¤ */
 	bool bLoggedIn = false;
 
 	// Login
@@ -78,7 +78,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void JoinSessionForBlueprint(FBlueprintSessionResult& SearchResult);
 
-	void JoinSession(const FOnlineSessionSearchResult& SearchResult);   // FOnlineSessionSearchResult´Â ¸®ÇÃ·º¼Ç Áö¿øÀÌ ¾ÈµÊ
+	void JoinSession(const FOnlineSessionSearchResult& SearchResult);   // FOnlineSessionSearchResultëŠ” ë¦¬í”Œë ‰ì…˜ ì§€ì›ì´ ì•ˆë¨
 
 protected:
 	void OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result);

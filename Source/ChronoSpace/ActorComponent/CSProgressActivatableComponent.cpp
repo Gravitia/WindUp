@@ -8,7 +8,7 @@ UCSProgressActivatableComponent::UCSProgressActivatableComponent()
 {
     PrimaryComponentTick.bCanEverTick = false;
 
-    // ÄÄÆ÷³ÍÆ® ÀÚÃ¼°¡ º¹Á¦ ´ë»óÀÌ µÇµµ·Ï
+    // ì»´í¬ë„ŒíŠ¸ ìžì²´ê°€ ë³µì œ ëŒ€ìƒì´ ë˜ë„ë¡
     SetIsReplicatedByDefault(true);
 }
 
@@ -16,7 +16,7 @@ void UCSProgressActivatableComponent::BeginPlay()
 {
     Super::BeginPlay();
 
-    // ÃÊ±â°ªÀº ¼­¹ö¿¡¼­ °áÁ¤ÇØ¼­ º¹Á¦µÇ°Ô ÇÏ´Â °Ô ¾ÈÀü
+    // ì´ˆê¸°ê°’ì€ ì„œë²„ì—ì„œ ê²°ì •í•´ì„œ ë³µì œë˜ê²Œ í•˜ëŠ” ê²Œ ì•ˆì „
     if (GetOwner() && GetOwner()->HasAuthority())
     {
         bIsProgressActive = bStartActive;
@@ -32,8 +32,8 @@ void UCSProgressActivatableComponent::GetLifetimeReplicatedProps(TArray<FLifetim
 
 void UCSProgressActivatableComponent::OnRep_ProgressActive()
 {
-    // Å¬¶ó¿¡¼­ »óÅÂ ¹Ù²ð ¶§ ¿¬Ãâ/·ÎÁ÷ ºÙÀÏ ÀÚ¸®
-    // ¿¹: OwnerÀÇ VFX Åä±Û, »ç¿îµå, À§Á¬ Ç¥½Ã µî
+    // í´ë¼ì—ì„œ ìƒíƒœ ë°”ë€” ë•Œ ì—°ì¶œ/ë¡œì§ ë¶™ì¼ ìžë¦¬
+    // ì˜ˆ: Ownerì˜ VFX í† ê¸€, ì‚¬ìš´ë“œ, ìœ„ì ¯ í‘œì‹œ ë“±
 }
 
 void UCSProgressActivatableComponent::SetProgressActive(bool bInActive)
@@ -41,16 +41,16 @@ void UCSProgressActivatableComponent::SetProgressActive(bool bInActive)
     AActor* Owner = GetOwner();
     if (!Owner || !Owner->HasAuthority())
     {
-        return; // ¼­¹ö¸¸ »óÅÂ º¯°æ
+        return; // ì„œë²„ë§Œ ìƒíƒœ ë³€ê²½
     }
 
     if (bIsProgressActive == bInActive)
     {
-        return; // ¸èµî
+        return; // ë©±ë“±
     }
 
     bIsProgressActive = bInActive;
 
-    // Áï½Ã ÀüÆÄ Ã¼°¨ °³¼±
+    // ì¦‰ì‹œ ì „íŒŒ ì²´ê° ê°œì„ 
     Owner->ForceNetUpdate();
 }

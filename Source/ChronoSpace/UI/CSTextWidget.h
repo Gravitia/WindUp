@@ -23,7 +23,7 @@ public:
 protected:
     virtual void NativeConstruct() override;
 
-    // UI ÄÄÆ÷³ÍÆ®µé
+    // UI ì»´í¬ë„ŒíŠ¸ë“¤
     UPROPERTY(meta = (BindWidget))
     class UTextBlock* MainTextBlock;
 
@@ -31,20 +31,20 @@ protected:
     class UBorder* TextBackground;
 
 public:
-    // ÅØ½ºÆ® ¼³Á¤ ¹× Ç¥½Ã
+    // í…ìŠ¤íŠ¸ ì„¤ì • ë° í‘œì‹œ
     UFUNCTION(BlueprintCallable, Category = "Text Display")
     void ShowText(const FString& TextToShow);
 
-    // ÅØ½ºÆ® ¼û±â±â
+    // í…ìŠ¤íŠ¸ ìˆ¨ê¸°ê¸°
     UFUNCTION(BlueprintCallable, Category = "Text Display")
     void HideText();
 
-    // Å¸ÀÌÇÎ È¿°ú·Î ÅØ½ºÆ® Ç¥½Ã
+    // íƒ€ì´í•‘ íš¨ê³¼ë¡œ í…ìŠ¤íŠ¸ í‘œì‹œ
     UFUNCTION(BlueprintCallable, Category = "Text Display")
     void ShowTextWithTypewriter(const FString& TextToShow, float TypeSpeed = 0.05f);
 
 protected:
-    // ÅØ½ºÆ® ½ºÅ¸ÀÏ ¼³Á¤
+    // í…ìŠ¤íŠ¸ ìŠ¤íƒ€ì¼ ì„¤ì •
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Text Style")
     FLinearColor TextColor = FLinearColor::White;
 
@@ -54,7 +54,7 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Text Style")
     FLinearColor BackgroundColor = FLinearColor(0.0f, 0.0f, 0.0f, 0.7f);
 
-    // Å¸ÀÌÇÎ È¿°ú °ü·Ã
+    // íƒ€ì´í•‘ íš¨ê³¼ ê´€ë ¨
     UPROPERTY(BlueprintReadOnly, Category = "Typewriter")
     FString FullText;
 
@@ -67,31 +67,31 @@ protected:
     UPROPERTY(BlueprintReadOnly, Category = "Typewriter")
     bool bIsTyping = false;
 
-    // Å¸ÀÌ¸Ó ÇÚµé
+    // íƒ€ì´ë¨¸ í•¸ë“¤
     FTimerHandle TypewriterTimer;
 
 private:
-    // Å¸ÀÌÇÎ È¿°ú ¾÷µ¥ÀÌÆ®
+    // íƒ€ì´í•‘ íš¨ê³¼ ì—…ë°ì´íŠ¸
     UFUNCTION()
     void UpdateTypewriter();
 
 public:
-    // ÅØ½ºÆ® ½ºÅ¸ÀÏ ¾÷µ¥ÀÌÆ®
+    // í…ìŠ¤íŠ¸ ìŠ¤íƒ€ì¼ ì—…ë°ì´íŠ¸
     UFUNCTION(BlueprintCallable, Category = "Text Style")
     void UpdateTextStyle();
 
-    // À§Á¬ ÃÊ±âÈ­
+    // ìœ„ì ¯ ì´ˆê¸°í™”
     UFUNCTION(BlueprintCallable, Category = "Widget")
     void InitializeWidget();
 
-    // ÇöÀç »óÅÂ È®ÀÎ
+    // í˜„ì¬ ìƒíƒœ í™•ì¸
     UFUNCTION(BlueprintPure, Category = "Widget State")
     bool IsTextVisible() const;
 
     UFUNCTION(BlueprintPure, Category = "Widget State")
     bool IsTyping() const { return bIsTyping; }
 
-    // ÀÌº¥Æ® ¹ÙÀÎµù
+    // ì´ë²¤íŠ¸ ë°”ì¸ë”©
     DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnTextShowCompleted);
     DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnTextHideCompleted);
     DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnTypewriterCompleted);
@@ -106,7 +106,7 @@ public:
     FOnTypewriterCompleted OnTypewriterCompleted;
 
 protected:
-    // ºí·çÇÁ¸°Æ®¿¡¼­ ¿À¹ö¶óÀÌµå °¡´ÉÇÑ ÀÌº¥Æ®µé
+    // ë¸”ë£¨í”„ë¦°íŠ¸ì—ì„œ ì˜¤ë²„ë¼ì´ë“œ ê°€ëŠ¥í•œ ì´ë²¤íŠ¸ë“¤
     UFUNCTION(BlueprintImplementableEvent, Category = "Events")
     void OnTextChanged(const FString& NewText);
 

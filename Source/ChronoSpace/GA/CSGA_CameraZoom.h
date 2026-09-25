@@ -18,11 +18,11 @@ public:
 	UCSGA_CameraZoom();
 
 protected:
-	/** ¡‹ ∞≈∏Æ */
+	/** Ï§å Í±∞Î¶¨ */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera Zoom")
 	float ZoomLength = 600.0f;
 
-	/** ¡‹ ∫∏∞£ º”µµ */
+	/** Ï§å Î≥¥Í∞Ñ ÏÜçÎèÑ */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera Zoom")
 	float ZoomSpeed = 50.0f;
 

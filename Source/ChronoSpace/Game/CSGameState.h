@@ -16,13 +16,13 @@ struct FPlayerDeathState
 {
 	GENERATED_BODY()
 
-    UPROPERTY(BlueprintReadOnly)  // Replicated Á¦°Å
+    UPROPERTY(BlueprintReadOnly)  // Replicated ì œê±°
     class APawn* Player;
 
-    UPROPERTY(BlueprintReadOnly)  // Replicated Á¦°Å
+    UPROPERTY(BlueprintReadOnly)  // Replicated ì œê±°
     bool bIsDead;
 
-    UPROPERTY(BlueprintReadOnly)  // Replicated Á¦°Å
+    UPROPERTY(BlueprintReadOnly)  // Replicated ì œê±°
     float DeathTime;
 
     FPlayerDeathState()
@@ -54,7 +54,7 @@ protected:
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
     virtual void BeginPlay() override;
 
-    // === ÇÃ·¹ÀÌ¾î Á×À½ »óÅÂ °ü¸® ===
+    // === í”Œë ˆì´ì–´ ì£½ìŒ ìƒíƒœ ê´€ë¦¬ ===
     UPROPERTY(Replicated, BlueprintReadOnly, Category = "Player Death")
     TArray<FPlayerDeathState> PlayerDeathStates;
 
@@ -64,14 +64,14 @@ protected:
     FTimerHandle AllDeadRespawnTimer;
 
 public:
-    // === ÇÃ·¹ÀÌ¾î »óÅÂ °ü¸® ===
+    // === í”Œë ˆì´ì–´ ìƒíƒœ ê´€ë¦¬ ===
     UFUNCTION(BlueprintCallable, Category = "Players")
     TArray<ACSPlayerState*> GetAllMyPlayerStates() const;
 
     UFUNCTION(BlueprintCallable, Category = "Players")
     ACSPlayerState* GetMyPlayerState(int32 PlayerIndex) const;
 
-    // === ÇÃ·¹ÀÌ¾î Á×À½ °ü¸® ===
+    // === í”Œë ˆì´ì–´ ì£½ìŒ ê´€ë¦¬ ===
     UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Player Death")
     void HandlePlayerDeath(APawn* DeadPlayer);
 
@@ -84,10 +84,10 @@ public:
     UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Player Death")
     void RemovePlayerFromDeathTracking(APawn* Player);
 
-    // ¸®½ºÆùÀ¸·Î Pawn ÀÌ ±³Ã¼µÉ ¶§ ÃßÀû ¿£Æ®¸®¸¦ »õ Pawn À¸·Î ¿Å±ä´Ù (bIsDead À¯Áö). ¿£Æ®¸®°¡ ¾øÀ¸¸é »õ·Î Ãß°¡.
+    // ë¦¬ìŠ¤í°ìœ¼ë¡œ Pawn ì´ êµì²´ë  ë•Œ ì¶”ì  ì—”íŠ¸ë¦¬ë¥¼ ìƒˆ Pawn ìœ¼ë¡œ ì˜®ê¸´ë‹¤ (bIsDead ìœ ì§€). ì—”íŠ¸ë¦¬ê°€ ì—†ìœ¼ë©´ ìƒˆë¡œ ì¶”ê°€.
     void TransferDeathTracking(APawn* OldPawn, APawn* NewPawn);
 
-    // === ÇÃ·¹ÀÌ¾î »óÅÂ Á¶È¸ ===
+    // === í”Œë ˆì´ì–´ ìƒíƒœ ì¡°íšŒ ===
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Player State")
     bool AreAllPlayersDead() const;
 
@@ -106,11 +106,11 @@ public:
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Player State")
     TArray<APawn*> GetDeadPlayers() const;
 
-    // === µ¨¸®°ÔÀÌÆ® ===
+    // === ë¸ë¦¬ê²Œì´íŠ¸ ===
     UPROPERTY(BlueprintAssignable, Category = "Players")
     FOnPlayersUpdated OnPlayersUpdated;
 
-    // === ÇÃ·¹ÀÌ¾î Á×À½ ÀÌº¥Æ® ===
+    // === í”Œë ˆì´ì–´ ì£½ìŒ ì´ë²¤íŠ¸ ===
     DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerDied, APawn*, DeadPlayer);
     DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerRevived, APawn*, RevivedPlayer);
     DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAllPlayersDead);
@@ -132,7 +132,7 @@ protected:
     virtual void AddPlayerState(APlayerState* PlayerState) override;
     virtual void RemovePlayerState(APlayerState* PlayerState) override;
 
-    // === ÇÃ·¹ÀÌ¾î °ü·Ã ¸ÖÆ¼Ä³½ºÆ® ÀÌº¥Æ® ===
+    // === í”Œë ˆì´ì–´ ê´€ë ¨ ë©€í‹°ìºìŠ¤íŠ¸ ì´ë²¤íŠ¸ ===
     UFUNCTION(NetMulticast, Reliable)
     void MulticastOnPlayerDied(APawn* DeadPlayer);
 

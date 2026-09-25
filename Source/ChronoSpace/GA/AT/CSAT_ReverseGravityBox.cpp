@@ -45,7 +45,7 @@ void UCSAT_ReverseGravityBox::FinalizeTargetActor()
 		ASC->SpawnedTargetActors.Add(SpawnedTargetActor);
 		SpawnedTargetActor->StartTargeting(Ability);
 
-		// ¸î ÃÊ ÈÄ Á¾·á
+		// ëª‡ ì´ˆ í›„ ì¢…ë£Œ
 		GetWorld()->GetTimerManager().SetTimer(EndTimer, this, &UCSAT_ReverseGravityBox::EndTargetActor, DurationTime, false);
 	}
 }

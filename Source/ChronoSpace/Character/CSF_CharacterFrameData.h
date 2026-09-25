@@ -19,13 +19,13 @@ public:
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Transform History")
     float Timestamp;
 
-    // ±âº» »ı¼ºÀÚ
+    // ê¸°ë³¸ ìƒì„±ì
     FCSF_CharacterFrameData()
         : Location(FVector::ZeroVector), Rotation(FRotator::ZeroRotator), Timestamp(0.0f)
     {
     }
 
-    // Ãß°¡ »ı¼ºÀÚ
+    // ì¶”ê°€ ìƒì„±ì
     FCSF_CharacterFrameData(const FVector& InLocation, const FRotator& InRotation, float InTimestamp)
         : Location(InLocation), Rotation(InRotation), Timestamp(InTimestamp)
     {

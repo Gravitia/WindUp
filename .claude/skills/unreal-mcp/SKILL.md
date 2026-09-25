@@ -42,6 +42,17 @@ call_tool(
 2. `AssetTools.save_assets`로 저장한다. 빈 리스트를 넘기면 dirty 에셋 전체가 저장된다.
 3. 저장하지 않으면 에디터를 닫을 때 변경분이 사라진다.
 
+## 읽기 / 쓰기 축
+
+아래 라우팅 표는 **`unreal-mcp`(에디터 안에서 도는 것)** 기준이다. 조회만 필요한데 에디터가 꺼져 있으면 NarshaMCP 가 디스크에서 바로 읽는다.
+
+| | 에디터 켜짐 | 에디터 꺼짐 |
+|---|---|---|
+| `.uasset` 읽기 | 둘 다 가능. 저장 안 된 변경은 `unreal-mcp` 만 보인다 | NarshaMCP |
+| `.uasset` 쓰기 | `unreal-mcp` | 불가. 에디터를 켠다 |
+
+`unreal-mcp` 로 고친 뒤 NarshaMCP 로 조회하려면 `AssetTools.save_assets` 를 **먼저** 한다. 저장 전 변경은 디스크에 없어서 NarshaMCP 가 옛 내용을 답한다. 자세한 건 `.claude/rules/07-narsha-mcp.md`.
+
 ## 어떤 작업에 어떤 스킬/툴셋인가
 
 | 하려는 작업 | 스킬 | 주요 툴셋 |

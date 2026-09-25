@@ -13,7 +13,7 @@ void UCSHPDisplayWidget::NativeConstruct()
 
 void UCSHPDisplayWidget::NativeDestruct()
 {
-	// µ¨¸®°ÔÀÌÆ® ¾ð¹ÙÀÎµù
+	// ë¸ë¦¬ê²Œì´íŠ¸ ì–¸ë°”ì¸ë”©
 	if (BoundPlayerState)
 	{
 		BoundPlayerState->OnHealthChanged.RemoveAll(this);
@@ -39,7 +39,7 @@ void UCSHPDisplayWidget::UpdateHP(float CurrentHP, float MaxHP)
 
 void UCSHPDisplayWidget::SetPlayerState(ACSPlayerState* PlayerState)
 {
-	// ±âÁ¸ µ¨¸®°ÔÀÌÆ® ¾ð¹ÙÀÎµù
+	// ê¸°ì¡´ ë¸ë¦¬ê²Œì´íŠ¸ ì–¸ë°”ì¸ë”©
 	if (BoundPlayerState)
 	{
 		BoundPlayerState->OnHealthChanged.RemoveAll(this);
@@ -49,10 +49,10 @@ void UCSHPDisplayWidget::SetPlayerState(ACSPlayerState* PlayerState)
 
 	if (BoundPlayerState)
 	{
-		// »õ µ¨¸®°ÔÀÌÆ® ¹ÙÀÎµù
+		// ìƒˆ ë¸ë¦¬ê²Œì´íŠ¸ ë°”ì¸ë”©
 		BoundPlayerState->OnHealthChanged.AddDynamic(this, &UCSHPDisplayWidget::OnHealthChanged);
 
-		// ÇÃ·¹ÀÌ¾î ÀÌ¸§ ¼³Á¤
+		// í”Œë ˆì´ì–´ ì´ë¦„ ì„¤ì •
 		if (PlayerNameText)
 		{
 			FString PlayerName = BoundPlayerState->GetPlayerName();
@@ -63,7 +63,7 @@ void UCSHPDisplayWidget::SetPlayerState(ACSPlayerState* PlayerState)
 			PlayerNameText->SetText(FText::FromString(PlayerName));
 		}
 
-		// ÃÊ±â HP °ª ¼³Á¤
+		// ì´ˆê¸° HP ê°’ ì„¤ì •
 		UpdateHP(BoundPlayerState->GetHealth(), BoundPlayerState->GetMaxHealth());
 	}
 }

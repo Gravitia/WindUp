@@ -8,17 +8,17 @@ void ACSHUD::BeginPlay()
 {
 	Super::BeginPlay();
 
-    return;   // SCSServerTravelWidget ÀÏ´Ü »ç¿ë¾ÈÇÔ. 
+    return;   // SCSServerTravelWidget ì¼ë‹¨ ì‚¬ìš©ì•ˆí•¨. 
 
     if (GEngine && GEngine->GameViewport)
     {
-        // Slate À§Á¬ »ı¼º
+        // Slate ìœ„ì ¯ ìƒì„±
         ServerTravelWidget = SNew(SCSServerTravelWidget);
 
-        // °ÔÀÓ ºäÆ÷Æ®¿¡ Ãß°¡
+        // ê²Œì„ ë·°í¬íŠ¸ì— ì¶”ê°€
         GEngine->GameViewport->AddViewportWidgetContent(
             ServerTravelWidget.ToSharedRef(),
-            1000  // Z-Order (³ôÀ»¼ö·Ï ¾Õ¿¡ Ç¥½Ã)
+            1000  // Z-Order (ë†’ì„ìˆ˜ë¡ ì•ì— í‘œì‹œ)
         );
     }
 }

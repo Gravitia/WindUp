@@ -10,20 +10,20 @@
 
 UCSGA_CharacterScale::UCSGA_CharacterScale()
 {
-    // ¾îºô¸®Æ¼ ±âº» ¼³Á¤
+    // ì–´ë¹Œë¦¬í‹° ê¸°ë³¸ ì„¤ì •
     NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::ServerOnly;
 
-    // »ı¼ºÀÚ È£Ãâ -> ºí·çÇÁ¸°Æ® È£Ãâ ÀÌ¶ó ¼³Á¤ÇØ³öµµ µÈ´Ù. 
+    // ìƒì„±ì í˜¸ì¶œ -> ë¸”ë£¨í”„ë¦°íŠ¸ í˜¸ì¶œ ì´ë¼ ì„¤ì •í•´ë†”ë„ ëœë‹¤. 
     TargetScaleType = ECharacterScaleType::Large;
 
-    // ±âº»°ª ¼³Á¤
+    // ê¸°ë³¸ê°’ ì„¤ì •
 
     NormalScale = 1.0f;
     LargeScale = 1.5f;
     SmallScale = 0.5f;
     ScaleTransitionSpeed = 2.0f;
 
-    // Gameplay Tags ÃÊ±âÈ­
+    // Gameplay Tags ì´ˆê¸°í™”
     ScaleNormalTag = FGameplayTag::RequestGameplayTag(FName("Ability.Scale.Normal"));
     ScaleLargeTag = FGameplayTag::RequestGameplayTag(FName("Ability.Scale.Large"));
     ScaleSmallTag = FGameplayTag::RequestGameplayTag(FName("Ability.Scale.Small"));
@@ -36,7 +36,7 @@ void UCSGA_CharacterScale::ActivateAbility(const FGameplayAbilitySpecHandle Hand
     UE_LOG(LogTemp, Log, TEXT("CharacterScaleLog ! Activate Ability "));
     UE_LOG(LogTemp, Warning, TEXT("CharacterScaleLog Final TargetScaleType: %d"), (int32)TargetScaleType);
 
-    // ½ºÄÉÀÏ ÄÄÆ÷³ÍÆ® Ã£±â
+    // ìŠ¤ì¼€ì¼ ì»´í¬ë„ŒíŠ¸ ì°¾ê¸°
     ACharacter* Character = Cast<ACharacter>(GetAvatarActorFromActorInfo());
     if (!Character)
     {
@@ -51,16 +51,16 @@ void UCSGA_CharacterScale::ActivateAbility(const FGameplayAbilitySpecHandle Hand
         return;
     }
 
-    // ¼³Á¤µÈ ¸ñÇ¥ ½ºÄÉÀÏ·Î º¯°æ
+    // ì„¤ì •ëœ ëª©í‘œ ìŠ¤ì¼€ì¼ë¡œ ë³€ê²½
     ScaleComponent->RequestScaleChange(TargetScaleType);
 
-    // ¾îºô¸®Æ¼ Áï½Ã Á¾·á (½ÇÁ¦ ½ºÄÉÀÏ º¯°æÀº ÄÄÆ÷³ÍÆ®¿¡¼­ Ã³¸®)
+    // ì–´ë¹Œë¦¬í‹° ì¦‰ì‹œ ì¢…ë£Œ (ì‹¤ì œ ìŠ¤ì¼€ì¼ ë³€ê²½ì€ ì»´í¬ë„ŒíŠ¸ì—ì„œ ì²˜ë¦¬)
     EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }
 
 void UCSGA_CharacterScale::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
-    // Å¸ÀÌ¸Ó Á¤¸®
+    // íƒ€ì´ë¨¸ ì •ë¦¬
     if (GetWorld())
     {
         GetWorld()->GetTimerManager().ClearTimer(ScaleTransitionTimer);
@@ -76,10 +76,10 @@ void UCSGA_CharacterScale::ChangeCharacterScale(ECharacterScaleType NewScaleType
         return;
     }
 
-    // »õ·Î¿î ½ºÄÉÀÏ Å¸ÀÔ ¼³Á¤
+    // ìƒˆë¡œìš´ ìŠ¤ì¼€ì¼ íƒ€ì… ì„¤ì •
     CurrentScaleType = NewScaleType;
 
-    // Å¸°Ù ½ºÄÉÀÏ °è»ê
+    // íƒ€ê²Ÿ ìŠ¤ì¼€ì¼ ê³„ì‚°
     switch (NewScaleType)
     {
     case ECharacterScaleType::Normal:
@@ -93,7 +93,7 @@ void UCSGA_CharacterScale::ChangeCharacterScale(ECharacterScaleType NewScaleType
         break;
     }
 
-    // ÇöÀç ½ºÄÉÀÏ¿¡¼­ ½ÃÀÛÇÏ¿© º¸°£ ½ÃÀÛ
+    // í˜„ì¬ ìŠ¤ì¼€ì¼ì—ì„œ ì‹œì‘í•˜ì—¬ ë³´ê°„ ì‹œì‘
     ACharacter* Character = Cast<ACharacter>(GetAvatarActorFromActorInfo());
     if (Character)
     {
@@ -101,7 +101,7 @@ void UCSGA_CharacterScale::ChangeCharacterScale(ECharacterScaleType NewScaleType
         ElapsedTime = 0.0f;
         TransitionTime = FMath::Abs(TargetScale - StartScale) / ScaleTransitionSpeed;
 
-        // Å¸ÀÌ¸Ó ½ÃÀÛ
+        // íƒ€ì´ë¨¸ ì‹œì‘
         if (GetWorld())
         {
             GetWorld()->GetTimerManager().SetTimer(
@@ -126,7 +126,7 @@ void UCSGA_CharacterScale::UpdateScaleTransition()
     float CurrentScale = FMath::Lerp(StartScale, TargetScale, Alpha);
     ApplyScale(CurrentScale);
 
-    // º¸°£ ¿Ï·á È®ÀÎ
+    // ë³´ê°„ ì™„ë£Œ í™•ì¸
     if (Alpha >= 1.0f)
     {
         if (GetWorld())
@@ -146,14 +146,14 @@ void UCSGA_CharacterScale::ApplyScale(float NewScale)
 
     FVector NewScaleVector(NewScale, NewScale, NewScale);
 
-    // Ä³¸¯ÅÍ ½ºÄÉÀÏ Àû¿ë
+    // ìºë¦­í„° ìŠ¤ì¼€ì¼ ì ìš©
     Character->SetActorScale3D(NewScaleVector);
 
-    // Ä¸½¶ ÄÄÆ÷³ÍÆ® Å©±âµµ Á¶Á¤ (¼±ÅÃÀû)
+    // ìº¡ìŠ ì»´í¬ë„ŒíŠ¸ í¬ê¸°ë„ ì¡°ì • (ì„ íƒì )
     if (UCapsuleComponent* CapsuleComp = Character->GetCapsuleComponent())
     {
-        float BaseRadius = 34.0f; // ±âº» Ä³¸¯ÅÍ Ä¸½¶ ¹İÁö¸§
-        float BaseHalfHeight = 88.0f; // ±âº» Ä³¸¯ÅÍ Ä¸½¶ Àı¹İ ³ôÀÌ
+        float BaseRadius = 34.0f; // ê¸°ë³¸ ìºë¦­í„° ìº¡ìŠ ë°˜ì§€ë¦„
+        float BaseHalfHeight = 88.0f; // ê¸°ë³¸ ìºë¦­í„° ìº¡ìŠ ì ˆë°˜ ë†’ì´
 
         CapsuleComp->SetCapsuleSize(BaseRadius * NewScale, BaseHalfHeight * NewScale);
     }

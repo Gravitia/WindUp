@@ -30,7 +30,7 @@ void UCSMapSelectionWidget::TravelToMap(FName MapName)
         return;
     }
 
-    // ¸ÖÆ¼ÇÃ·¹ÀÌ¾î¿¡¼­´Â ¼­¹ö¿¡¼­¸¸ ·¹º§ ÀüÈ¯À» Ã³¸®ÇØ¾ß ÇÔ
+    // ë©€í‹°í”Œë ˆì´ì–´ì—ì„œëŠ” ì„œë²„ì—ì„œë§Œ ë ˆë²¨ ì „í™˜ì„ ì²˜ë¦¬í•´ì•¼ í•¨
     UWorld* World = GetWorld();
     if (!World)
     {
@@ -38,19 +38,19 @@ void UCSMapSelectionWidget::TravelToMap(FName MapName)
         return;
     }
 
-    // ¼­¹ö ±ÇÇÑ Ã¼Å© (UserWidget¿¡¼­´Â GetAuthGameMode·Î Ã¼Å©)
+    // ì„œë²„ ê¶Œí•œ ì²´í¬ (UserWidgetì—ì„œëŠ” GetAuthGameModeë¡œ ì²´í¬)
     if (!World->GetAuthGameMode())
     {
         UE_LOG(LogTemp, Warning, TEXT("CSMapSelectionWidget: Not server, ignoring level transfer"));
         return;
     }
 
-    // ¸Ê °æ·Î »ý¼º
+    // ë§µ ê²½ë¡œ ìƒì„±
     FString MapPath = FString::Printf(TEXT("/Game/Maps/%s"), *MapName.ToString());
 
     UE_LOG(LogTemp, Warning, TEXT("CSMapSelectionWidget: Server executing level transfer to: %s"), *MapPath);
 
-    // ¸ÖÆ¼ÇÃ·¹ÀÌ¾î¸¦ À§ÇÑ ¼­¹ö Æ®·¡ºí »ç¿ë
-    // bAbsolute¸¦ false·Î ¼³Á¤ÇÏ¿© ¸ðµç Å¬¶óÀÌ¾ðÆ®°¡ ÇÔ²² ÀÌµ¿
+    // ë©€í‹°í”Œë ˆì´ì–´ë¥¼ ìœ„í•œ ì„œë²„ íŠ¸ëž˜ë¸” ì‚¬ìš©
+    // bAbsoluteë¥¼ falseë¡œ ì„¤ì •í•˜ì—¬ ëª¨ë“  í´ë¼ì´ì–¸íŠ¸ê°€ í•¨ê»˜ ì´ë™
     World->ServerTravel(MapPath, false);
 }

@@ -16,7 +16,7 @@ void ACSGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLife
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    // ÇÃ·¹ÀÌ¾î Á×À½ »óÅÂ º¹Á¦
+    // í”Œë ˆì´ì–´ ì£½ìŒ ìƒíƒœ ë³µì œ
     DOREPLIFETIME(ACSGameState, PlayerDeathStates);
 }
 
@@ -24,14 +24,14 @@ void ACSGameState::BeginPlay()
 {
     Super::BeginPlay();
 
-    // ¼­¹ö¿¡¼­¸¸ ÃÊ±âÈ­
+    // ì„œë²„ì—ì„œë§Œ ì´ˆê¸°í™”
     if (HasAuthority())
     {
         UE_LOG(LogTemp, Log, TEXT("CSGameState initialized on server"));
     }
 }
 
-// === ÇÃ·¹ÀÌ¾î »óÅÂ °ü¸® ===
+// === í”Œë ˆì´ì–´ ìƒíƒœ ê´€ë¦¬ ===
 TArray<ACSPlayerState*> ACSGameState::GetAllMyPlayerStates() const
 {
     TArray<ACSPlayerState*> MyPlayerStates;
@@ -60,7 +60,7 @@ void ACSGameState::AddPlayerState(APlayerState* PlayerState)
     Super::AddPlayerState(PlayerState);
     BroadcastPlayersUpdated();
 
-    // ÇÃ·¹ÀÌ¾î¸¦ Á×À½ ÃßÀû¿¡ Ãß°¡
+    // í”Œë ˆì´ì–´ë¥¼ ì£½ìŒ ì¶”ì ì— ì¶”ê°€
     if (HasAuthority())
     {
         if (APlayerController* PC = Cast<APlayerController>(PlayerState->GetOwner()))
@@ -75,7 +75,7 @@ void ACSGameState::AddPlayerState(APlayerState* PlayerState)
 
 void ACSGameState::RemovePlayerState(APlayerState* PlayerState)
 {
-    // ÇÃ·¹ÀÌ¾î¸¦ Á×À½ ÃßÀû¿¡¼­ Á¦°Å
+    // í”Œë ˆì´ì–´ë¥¼ ì£½ìŒ ì¶”ì ì—ì„œ ì œê±°
     if (HasAuthority())
     {
         if (APlayerController* PC = Cast<APlayerController>(PlayerState->GetOwner()))
@@ -96,7 +96,7 @@ void ACSGameState::BroadcastPlayersUpdated()
     OnPlayersUpdated.Broadcast(GetAllMyPlayerStates());
 }
 
-// === ÇÃ·¹ÀÌ¾î Á×À½ °ü¸® ===
+// === í”Œë ˆì´ì–´ ì£½ìŒ ê´€ë¦¬ ===
 void ACSGameState::HandlePlayerDeath(APawn* DeadPlayer)
 {
     if (!HasAuthority() || !DeadPlayer)
@@ -149,8 +149,8 @@ void ACSGameState::TransferDeathTracking(APawn* OldPawn, APawn* NewPawn)
     if (!HasAuthority() || !NewPawn)
         return;
 
-    // ¿¹Àü¿£ RespawnSinglePlayer °¡ ÀÌ ÀÛ¾÷À» ÇÏÁö ¾Ê¾Æ »õ Pawn ÀÇ ¿£Æ®¸®°¡ ¾ø¾ú°í,
-    // HandlePlayerRevive °¡ ¾Æ¹«°Íµµ ¸ø ÇØ Ã¹ »ç¸Á ÀÌÈÄ »ç¸Á/ºÎÈ° ÃßÀûÀÌ ¿µ±¸È÷ ±úÁ³´Ù.
+    // ì˜ˆì „ì—” RespawnSinglePlayer ê°€ ì´ ì‘ì—…ì„ í•˜ì§€ ì•Šì•„ ìƒˆ Pawn ì˜ ì—”íŠ¸ë¦¬ê°€ ì—†ì—ˆê³ ,
+    // HandlePlayerRevive ê°€ ì•„ë¬´ê²ƒë„ ëª» í•´ ì²« ì‚¬ë§ ì´í›„ ì‚¬ë§/ë¶€í™œ ì¶”ì ì´ ì˜êµ¬íˆ ê¹¨ì¡Œë‹¤.
     if (FPlayerDeathState* OldState = OldPawn ? FindPlayerDeathState(OldPawn) : nullptr)
     {
         OldState->Player = NewPawn;
@@ -248,7 +248,7 @@ TArray<APawn*> ACSGameState::GetDeadPlayers() const
     return DeadPlayers;
 }
 
-// === ÇÃ·¹ÀÌ¾î °ü·Ã ¸ÖÆ¼Ä³½ºÆ® ÀÌº¥Æ® ±¸Çö ===
+// === í”Œë ˆì´ì–´ ê´€ë ¨ ë©€í‹°ìºìŠ¤íŠ¸ ì´ë²¤íŠ¸ êµ¬í˜„ ===
 void ACSGameState::MulticastOnPlayerDied_Implementation(APawn* DeadPlayer)
 {
     OnPlayerDied.Broadcast(DeadPlayer);
@@ -269,7 +269,7 @@ void ACSGameState::MulticastOnAllPlayersAboutToRespawn_Implementation(float Dela
     OnAllPlayersAboutToRespawn.Broadcast(DelayTime);
 }
 
-// === ³»ºÎ ÇïÆÛ ÇÔ¼ö ===
+// === ë‚´ë¶€ í—¬í¼ í•¨ìˆ˜ ===
 FPlayerDeathState* ACSGameState::FindPlayerDeathState(APawn* Player)
 {
     for (FPlayerDeathState& DeathState : PlayerDeathStates)

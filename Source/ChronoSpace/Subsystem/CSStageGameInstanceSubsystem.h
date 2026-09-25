@@ -32,27 +32,27 @@ public:
     virtual void Initialize(FSubsystemCollectionBase& Collection) override;
     virtual void Deinitialize() override;
 
-    // ÇöÀç ½ºÅ×ÀÌÁö ÀÌ¸§
+    // í˜„ì¬ ìŠ¤í…Œì´ì§€ ì´ë¦„
     UPROPERTY(BlueprintReadWrite, Category = "Stage")
     FString CurrentStage;
 
-    // ½ºÅ×ÀÌÁö º¯°æ ÀÌº¥Æ® (UI ¾÷µ¥ÀÌÆ® µî¿¡ È°¿ë °¡´É)
+    // ìŠ¤í…Œì´ì§€ ë³€ê²½ ì´ë²¤íŠ¸ (UI ì—…ë°ì´íŠ¸ ë“±ì— í™œìš© ê°€ëŠ¥)
     UPROPERTY(BlueprintAssignable, Category = "Stage")
     FOnStageChanged OnStageChanged;
 
-    // ½ºÅ×ÀÌÁö º¯°æ ÇÔ¼ö
+    // ìŠ¤í…Œì´ì§€ ë³€ê²½ í•¨ìˆ˜
     UFUNCTION(BlueprintCallable, Category = "Stage")
     void ChangeStage(FString NewStage);
 
-    // ½ºÅ×ÀÌÁöº° »ç¿ë °¡´ÉÇÑ ¾îºô¸®Æ¼ ¸ñ·Ï
+    // ìŠ¤í…Œì´ì§€ë³„ ì‚¬ìš© ê°€ëŠ¥í•œ ì–´ë¹Œë¦¬í‹° ëª©ë¡
     UPROPERTY()
     TMap<FString, FStageAbilityList> StageAbilities;
 
-    // ÇöÀç ½ºÅ×ÀÌÁö¿¡¼­ »ç¿ë °¡´ÉÇÑ ¾îºô¸®Æ¼ °¡Á®¿À±â
+    // í˜„ì¬ ìŠ¤í…Œì´ì§€ì—ì„œ ì‚¬ìš© ê°€ëŠ¥í•œ ì–´ë¹Œë¦¬í‹° ê°€ì ¸ì˜¤ê¸°
     UFUNCTION(BlueprintCallable, Category = "Stage")
     TArray<FString> GetAvailableAbilities();
 
-    // ½ºÅ×ÀÌÁö ¾îºô¸®Æ¼ µ¥ÀÌÅÍ ÃÊ±âÈ­
+    // ìŠ¤í…Œì´ì§€ ì–´ë¹Œë¦¬í‹° ë°ì´í„° ì´ˆê¸°í™”
     void InitializeStageAbilities();
 
     UPROPERTY(EditDefaultsOnly, Category = "UI")

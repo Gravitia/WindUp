@@ -18,14 +18,14 @@ class CHRONOSPACE_API UCSGA_TimeRewind : public UGameplayAbility
 public:
 	UCSGA_TimeRewind();
 
-	/** Gameplay Ability ¹ßµ¿ ½Ã È£Ãâ */
+	/** Gameplay Ability ë°œë™ ì‹œ í˜¸ì¶œ */
 	virtual void ActivateAbility(
 		const FGameplayAbilitySpecHandle Handle,
 		const FGameplayAbilityActorInfo* ActorInfo,
 		const FGameplayAbilityActivationInfo ActivationInfo,
 		const FGameplayEventData* TriggerEventData) override;
 
-	/** Ãë¼Ò/»ç¸Á/¾îºô¸®Æ¼ Á¦°Å µî ¾î¶² °æ·Î·Î ³¡³ªµµ ÀÔ·Â/Áß·ÂÀ» º¹±¸ÇÑ´Ù */
+	/** ì·¨ì†Œ/ì‚¬ë§/ì–´ë¹Œë¦¬í‹° ì œê±° ë“± ì–´ë–¤ ê²½ë¡œë¡œ ëë‚˜ë„ ì…ë ¥/ì¤‘ë ¥ì„ ë³µêµ¬í•œë‹¤ */
 	virtual void EndAbility(
 		const FGameplayAbilitySpecHandle Handle,
 		const FGameplayAbilityActorInfo* ActorInfo,
@@ -36,15 +36,15 @@ public:
 protected:
 	virtual void OnAvatarSet(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec) override;
 
-	/** Ability Task°¡ ¿Ï·áµÇ¾úÀ» ¶§ È£ÃâÇÒ µ¨¸®°ÔÀÌÆ® ÇÔ¼ö */
+	/** Ability Taskê°€ ì™„ë£Œë˜ì—ˆì„ ë•Œ í˜¸ì¶œí•  ë¸ë¦¬ê²Œì´íŠ¸ í•¨ìˆ˜ */
 	UFUNCTION()
 	void OnTimeRewindFinishedDelegate();
 
 private:
-	/** ActivateAbility ¿¡¼­ ÀÔ·Â/Áß·ÂÀ» °Çµå·È´Â°¡ - EndAbility º¹±¸ÀÇ ¸èµî¼º º¸Àå */
+	/** ActivateAbility ì—ì„œ ì…ë ¥/ì¤‘ë ¥ì„ ê±´ë“œë ¸ëŠ”ê°€ - EndAbility ë³µêµ¬ì˜ ë©±ë“±ì„± ë³´ì¥ */
 	bool bStateApplied = false;
 
-	/** º¹±¸ ´ë»ó (µÇ°¨±â Áß ¾Æ¹ÙÅ¸/ÄÁÆ®·Ñ·¯°¡ ¹Ù²î¾îµµ ¿ì¸®°¡ °Çµå¸° °Í¸¸ µÇµ¹¸°´Ù) */
+	/** ë³µêµ¬ ëŒ€ìƒ (ë˜ê°ê¸° ì¤‘ ì•„ë°”íƒ€/ì»¨íŠ¸ë¡¤ëŸ¬ê°€ ë°”ë€Œì–´ë„ ìš°ë¦¬ê°€ ê±´ë“œë¦° ê²ƒë§Œ ë˜ëŒë¦°ë‹¤) */
 	TWeakObjectPtr<APlayerController> DisabledPC;
 	TWeakObjectPtr<class UCharacterMovementComponent> ModifiedMovement;
 	float SavedGravityScale = 1.0f;

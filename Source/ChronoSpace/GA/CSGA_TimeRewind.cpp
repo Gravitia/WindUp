@@ -2,23 +2,23 @@
 #include "GA/AT/CSAT_TimeRewind.h"
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemInterface.h"
-#include "GameplayTagContainer.h"  // GameplayTag »ç¿ëÀ» À§ÇÑ Çì´õ Ãß°¡
-#include "Abilities/GameplayAbility.h"  // BlockAbilitiesWithTag »ç¿ëÀ» À§ÇØ ÇÊ¿ä
+#include "GameplayTagContainer.h"  // GameplayTag ì‚¬ìš©ì„ ìœ„í•œ í—¤ë” ì¶”ê°€
+#include "Abilities/GameplayAbility.h"  // BlockAbilitiesWithTag ì‚¬ìš©ì„ ìœ„í•´ í•„ìš”
 #include "Character/CSCharacterPlayer.h"
 #include "GameFramework/Actor.h"
 #include "Kismet/KismetSystemLibrary.h"
-#include "GameFramework/CharacterMovementComponent.h"  // Áß·Â Á¶ÀıÀ» À§ÇØ ÇÊ¿ä 
+#include "GameFramework/CharacterMovementComponent.h"  // ì¤‘ë ¥ ì¡°ì ˆì„ ìœ„í•´ í•„ìš” 
 #include "ActorComponent/CSTransformRecordComponent.h"
 
 UCSGA_TimeRewind::UCSGA_TimeRewind()
 {
-    // ¾çÃø ½ÇÇà(ÀÇµµ): ¼­¹ö¿Í ¼ÒÀ¯ Å¬¶ó°¡ °¢ÀÚ ÀÚ±â ±â·ÏÀ» µû¶ó µÇ°¨´Â´Ù. Å¬¶ó°¡ ÀÚ±â Ä³¸¯ÅÍ¸¦ Á÷Á¢ ¿òÁ÷¿©¾ß
-    // µÇ°¨±â°¡ ºÎµå·´´Ù (ServerOnly ·Î ¹Ù²Ù¸é ¿ø°İ Å¬¶ó´Â ¼­¹ö º¸Á¤À¸·Î ²ø·Á°¡¸ç ¶³¸°´Ù).
-    // ±× ´ë½Å ActivateAbility ¿¡¼­ °Çµå¸° ÀÔ·Â/Áß·ÂÀº EndAbility ¿¡¼­ ¹İµå½Ã µÇµ¹¸°´Ù.
+    // ì–‘ì¸¡ ì‹¤í–‰(ì˜ë„): ì„œë²„ì™€ ì†Œìœ  í´ë¼ê°€ ê°ì ìê¸° ê¸°ë¡ì„ ë”°ë¼ ë˜ê°ëŠ”ë‹¤. í´ë¼ê°€ ìê¸° ìºë¦­í„°ë¥¼ ì§ì ‘ ì›€ì§ì—¬ì•¼
+    // ë˜ê°ê¸°ê°€ ë¶€ë“œëŸ½ë‹¤ (ServerOnly ë¡œ ë°”ê¾¸ë©´ ì›ê²© í´ë¼ëŠ” ì„œë²„ ë³´ì •ìœ¼ë¡œ ëŒë ¤ê°€ë©° ë–¨ë¦°ë‹¤).
+    // ê·¸ ëŒ€ì‹  ActivateAbility ì—ì„œ ê±´ë“œë¦° ì…ë ¥/ì¤‘ë ¥ì€ EndAbility ì—ì„œ ë°˜ë“œì‹œ ë˜ëŒë¦°ë‹¤.
     NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::LocalPredicted;
     InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerExecution;
 
-    // ÅÂ±× ¼³Á¤
+    // íƒœê·¸ ì„¤ì •
     FGameplayTagContainer AbilityTagsContainer;
     AbilityTagsContainer.AddTag(FGameplayTag::RequestGameplayTag(FName("Ability.TimeRewind")));
     SetAssetTags(AbilityTagsContainer);
@@ -59,7 +59,7 @@ void UCSGA_TimeRewind::ActivateAbility(
         return;
     }
 
-    // µÇ°¨À» ÇÁ·¹ÀÓ ¼ö´Â ±â·Ï ÄÄÆ÷³ÍÆ®ÀÇ »óÇÑÀ» µû¸¥´Ù (¿¹Àü¿£ 99 ¸¦ µû·Î ÇÏµåÄÚµùÇØ MaxHistorySize ¸¦ ³·Ãß¸é ¿µ¿øÈ÷ ¹ßµ¿ÇÏÁö ¾Ê¾Ò´Ù)
+    // ë˜ê°ì„ í”„ë ˆì„ ìˆ˜ëŠ” ê¸°ë¡ ì»´í¬ë„ŒíŠ¸ì˜ ìƒí•œì„ ë”°ë¥¸ë‹¤ (ì˜ˆì „ì—” 99 ë¥¼ ë”°ë¡œ í•˜ë“œì½”ë”©í•´ MaxHistorySize ë¥¼ ë‚®ì¶”ë©´ ì˜ì›íˆ ë°œë™í•˜ì§€ ì•Šì•˜ë‹¤)
     const int32 RewindFrameCount = TransformRecordComponent ? TransformRecordComponent->GetMaxHistorySize() : 0;
     if (!TransformRecordComponent || RewindFrameCount <= 0 || TransformRecordComponent->GetTransformHistory().Num() < RewindFrameCount)
     {
@@ -68,7 +68,7 @@ void UCSGA_TimeRewind::ActivateAbility(
         return;
     }
 
-    // ÀÔ·Â ºñÈ°¼ºÈ­ - ´©±¸¸¦ ²°´ÂÁö ±â¾ïÇØ EndAbility ¿¡¼­ °°Àº ´ë»ó¸¸ ÄÒ´Ù
+    // ì…ë ¥ ë¹„í™œì„±í™” - ëˆ„êµ¬ë¥¼ ê»ëŠ”ì§€ ê¸°ì–µí•´ EndAbility ì—ì„œ ê°™ì€ ëŒ€ìƒë§Œ ì¼ ë‹¤
     if (APlayerController* PC = Cast<APlayerController>(PlayerCharacter->GetController()))
     {
         PC->DisableInput(PC);
@@ -76,18 +76,18 @@ void UCSGA_TimeRewind::ActivateAbility(
         UE_LOG(LogTemp, Log, TEXT("Player input disabled during Time Rewind."));
     }
 
-    // Áß·Â ºñÈ°¼ºÈ­ - ¿ø·¡ °ªÀ» ÀúÀåÇØ EndAbility ¿¡¼­ º¹±¸
+    // ì¤‘ë ¥ ë¹„í™œì„±í™” - ì›ë˜ ê°’ì„ ì €ì¥í•´ EndAbility ì—ì„œ ë³µêµ¬
     if (UCharacterMovementComponent* MovementComp = PlayerCharacter->GetCharacterMovement())
     {
         SavedGravityScale = MovementComp->GravityScale;
         MovementComp->GravityScale = 0.0f;
-        MovementComp->StopMovementImmediately(); // ÇöÀç ¼Óµµ Á¤Áö
+        MovementComp->StopMovementImmediately(); // í˜„ì¬ ì†ë„ ì •ì§€
         ModifiedMovement = MovementComp;
         UE_LOG(LogTemp, Log, TEXT("Gravity disabled during Time Rewind."));
     }
     bStateApplied = true;
 
-    // Ability Task »ı¼º (0.5ÃÊ µ¿¾È µÇ°¨±â)
+    // Ability Task ìƒì„± (0.5ì´ˆ ë™ì•ˆ ë˜ê°ê¸°)
     TArray<FCSF_CharacterFrameData> RewindFrames;
     const TArray<FCSF_CharacterFrameData>& History = TransformRecordComponent->GetTransformHistory();
     for (int32 i = History.Num() - RewindFrameCount; i < History.Num(); i++)
@@ -114,7 +114,7 @@ void UCSGA_TimeRewind::OnAvatarSet(const FGameplayAbilityActorInfo* ActorInfo, c
 void UCSGA_TimeRewind::OnTimeRewindFinishedDelegate()
 {
     UE_LOG(LogTemp, Log, TEXT("Time rewind finished. Ending ability."));
-    // º¹±¸´Â EndAbility °¡ ´ã´ç (Á¤»ó Á¾·á/Ãë¼Ò/»ç¸Á ¸ğµÎ °°Àº °æ·Î)
+    // ë³µêµ¬ëŠ” EndAbility ê°€ ë‹´ë‹¹ (ì •ìƒ ì¢…ë£Œ/ì·¨ì†Œ/ì‚¬ë§ ëª¨ë‘ ê°™ì€ ê²½ë¡œ)
     EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);
 }
 
@@ -125,7 +125,7 @@ void UCSGA_TimeRewind::EndAbility(
     bool bReplicateEndAbility,
     bool bWasCancelled)
 {
-    // ¿¹Àü¿£ º¹±¸°¡ ÅÂ½ºÅ© ¿Ï·á µ¨¸®°ÔÀÌÆ®¿¡¸¸ ÀÖ¾î¼­ Ãë¼Ò/»ç¸ÁÀ¸·Î ³¡³ª¸é ÀÔ·Â ºñÈ°¼º + Áß·Â 0 ÀÌ ¿µ±¸ °íÂøµÆ´Ù.
+    // ì˜ˆì „ì—” ë³µêµ¬ê°€ íƒœìŠ¤í¬ ì™„ë£Œ ë¸ë¦¬ê²Œì´íŠ¸ì—ë§Œ ìˆì–´ì„œ ì·¨ì†Œ/ì‚¬ë§ìœ¼ë¡œ ëë‚˜ë©´ ì…ë ¥ ë¹„í™œì„± + ì¤‘ë ¥ 0 ì´ ì˜êµ¬ ê³ ì°©ëë‹¤.
     if (bStateApplied)
     {
         bStateApplied = false;

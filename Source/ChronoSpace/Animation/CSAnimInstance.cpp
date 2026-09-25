@@ -37,14 +37,14 @@ void UCSAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		bIsJumping = bIsFalling & (Velocity.Z > JumpingThreshold); 
 	}
 
-	/* х╜╦И ╣П╧Ж╠в цБ╥б ---------------------------
+	/* М≥■К╘╢ К■■К╡└Й╥╦ Л╤°К═╔ ---------------------------
 	if (GEngine)
 
 	{
 		GEngine->AddOnScreenDebugMessage(
-			1,                            // ╟Ма╓ ID ║Ф ╟╟ю╨ аы©║ ╣╓╬Н╬╡╠Б
-			0.f,                          // аЖ╪с╫ц╟ё 0 = ╦е га╥╧юс ╟╩╫е
-			FColor::Yellow,               // ╩Ж╩С
+			1,                            // ЙЁ═Л═∙ ID Б├▓ Й╟≥Л²─ Л╓└Л≈░ К█╝Л√╢Л⌠╟Й╦╟
+			0.f,                          // Л╖─Л├█Л▀°Й╟└ 0 = К╖╓ М■└К═┬Л·└ Й╟╠Л▀═
+			FColor::Yellow,               // Л┐┴Л┐│
 			FString::Printf(TEXT("GroundSpeed: %.2f"), GroundSpeed)
 		);
 	}

@@ -18,30 +18,30 @@ void UCSKillZoneResetComponent::BeginPlay()
     AActor* Owner = GetOwner();
     if (!Owner) return;
 
-    // 1) ½ÃÀÛ À§Ä¡ ÀúÀå
+    // 1) ì‹œì‘ ìœ„ì¹˜ ì €ì¥
     StartLocation = Owner->GetActorLocation();
 
-    // 2) Overlap Àü¿ë BoxCollision »ı¼º
+    // 2) Overlap ì „ìš© BoxCollision ìƒì„±
     OverlapBox = NewObject<UBoxComponent>(Owner, TEXT("AutoOverlapBox"));
     if (!OverlapBox) return;
 
     OverlapBox->SetupAttachment(Owner->GetRootComponent());
     OverlapBox->RegisterComponent();
 
-    // 3) Box Å©±â (ÇÊ¿äÇÏ¸é Á¶Àı)
+    // 3) Box í¬ê¸° (í•„ìš”í•˜ë©´ ì¡°ì ˆ)
     OverlapBox->SetBoxExtent(FVector(50.f));
 
-    // 4) Collision ¼¼ÆÃ (KillZone Àü¿ë)
+    // 4) Collision ì„¸íŒ… (KillZone ì „ìš©)
     OverlapBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
     OverlapBox->SetGenerateOverlapEvents(true);
     OverlapBox->SetCollisionProfileName(TEXT("Trigger"));
 
-    // Pawn µî ºÒÇÊ¿äÇÑ ¿À¹ö·¦ Á¦°Å
+    // Pawn ë“± ë¶ˆí•„ìš”í•œ ì˜¤ë²„ë© ì œê±°
     OverlapBox->SetCollisionResponseToAllChannels(ECR_Ignore);
     OverlapBox->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
     OverlapBox->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Overlap);
 
-    // 5) Overlap ¹ÙÀÎµù
+    // 5) Overlap ë°”ì¸ë”©
     OverlapBox->OnComponentBeginOverlap.AddDynamic(
         this, &UCSKillZoneResetComponent::OnBeginOverlap
     );
@@ -59,15 +59,15 @@ void UCSKillZoneResetComponent::OnBeginOverlap(
     AActor* Owner = GetOwner();
     if (!Owner || !OtherActor) return;
 
-    // ¼­¹ö¿¡¼­¸¸ À§Ä¡ º¯°æ (¸ÖÆ¼ µ¿±âÈ­ ÇÙ½É)
+    // ì„œë²„ì—ì„œë§Œ ìœ„ì¹˜ ë³€ê²½ (ë©€í‹° ë™ê¸°í™” í•µì‹¬)
     if (!Owner->HasAuthority())
         return;
     
     if (bIgnoreKillZone) return;
 
-    // Å³Á¸ÀÌ ¾Æ´Ï¸é ¾Æ¹«°Íµµ ÇÏÁö ¾Ê´Â´Ù.
-    // (¿¹Àü¿£ ¼Óµµ ¸®¼ÂÀÌ ÀÌ °Ë»ç ¹Û¿¡ ÀÖ¾î¼­ ºí·¢È¦ ½ºÇÇ¾î, ÇÃ·¹ÀÌ¾î Æ®¸®°Å µî ¾Æ¹« ¿À¹ö·¦¿¡¼­³ª
-    //  ¹°¸® ÇÁ·ÓÀÌ ±× ÀÚ¸®¿¡ ¸ØÃè´Ù - ¿À¹ö·¦ ¹Ú½º°¡ WorldStatic/WorldDynamic À» ÀüºÎ °¨ÁöÇÑ´Ù.)
+    // í‚¬ì¡´ì´ ì•„ë‹ˆë©´ ì•„ë¬´ê²ƒë„ í•˜ì§€ ì•ŠëŠ”ë‹¤.
+    // (ì˜ˆì „ì—” ì†ë„ ë¦¬ì…‹ì´ ì´ ê²€ì‚¬ ë°–ì— ìˆì–´ì„œ ë¸”ë™í™€ ìŠ¤í”¼ì–´, í”Œë ˆì´ì–´ íŠ¸ë¦¬ê±° ë“± ì•„ë¬´ ì˜¤ë²„ë©ì—ì„œë‚˜
+    //  ë¬¼ë¦¬ í”„ë¡­ì´ ê·¸ ìë¦¬ì— ë©ˆì·„ë‹¤ - ì˜¤ë²„ë© ë°•ìŠ¤ê°€ WorldStatic/WorldDynamic ì„ ì „ë¶€ ê°ì§€í•œë‹¤.)
     if (!OtherActor->IsA(ACSKillZone::StaticClass()))
         return;
 
@@ -78,7 +78,7 @@ void UCSKillZoneResetComponent::OnBeginOverlap(
         ETeleportType::TeleportPhysics
     );
 
-    // µÇµ¹¸° ÀÚ¸®¿¡¼­ ÀÌÀü ¼Óµµ·Î °è¼Ó ³¯¾Æ°¡Áö ¾Êµµ·Ï Á¤Áö
+    // ë˜ëŒë¦° ìë¦¬ì—ì„œ ì´ì „ ì†ë„ë¡œ ê³„ì† ë‚ ì•„ê°€ì§€ ì•Šë„ë¡ ì •ì§€
     if (UPrimitiveComponent* PrimComp =
         Cast<UPrimitiveComponent>(Owner->GetRootComponent()))
     {

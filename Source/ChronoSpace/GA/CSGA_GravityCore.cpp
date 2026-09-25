@@ -27,9 +27,9 @@ void UCSGA_GravityCore::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 
 	UE_LOG(LogCS, Log, TEXT("[NetMode: %d] UCSGA_GravityCore - ActivateAbility"), GetWorld()->GetNetMode());
 
-	// ¾îºô¸®Æ¼ ÀÎ½ºÅÏ½º´Â PlayerState ÀÇ ASC ¿¡ »ì¾Æ¼­ Pawn º¸´Ù ¿À·¡ »ê´Ù.
-	// Á×¾î¼­ ÄÚ¾î°¡ ÆÄ±«µÇ¸é ÀÌ Æ÷ÀÎÅÍ´Â GC Àü±îÁö ÆÄ±« ´ë±â »óÅÂ·Î ³²À¸¹Ç·Î nullptr ºñ±³·Î´Â °É·¯ÁöÁö ¾Ê´Â´Ù
-	// (±×·¡¼­ ºÎÈ° Á÷ÈÄ Ã¹ ÀÔ·ÂÀÌ ÄÚ¾î¸¦ ÄÑÁö ¾Ê°í OffCore ·Î ºüÁ³´Ù).
+	// ì–´ë¹Œë¦¬í‹° ì¸ìŠ¤í„´ìŠ¤ëŠ” PlayerState ì˜ ASC ì— ì‚´ì•„ì„œ Pawn ë³´ë‹¤ ì˜¤ëž˜ ì‚°ë‹¤.
+	// ì£½ì–´ì„œ ì½”ì–´ê°€ íŒŒê´´ë˜ë©´ ì´ í¬ì¸í„°ëŠ” GC ì „ê¹Œì§€ íŒŒê´´ ëŒ€ê¸° ìƒíƒœë¡œ ë‚¨ìœ¼ë¯€ë¡œ nullptr ë¹„êµë¡œëŠ” ê±¸ëŸ¬ì§€ì§€ ì•ŠëŠ”ë‹¤
+	// (ê·¸ëž˜ì„œ ë¶€í™œ ì§í›„ ì²« ìž…ë ¥ì´ ì½”ì–´ë¥¼ ì¼œì§€ ì•Šê³  OffCore ë¡œ ë¹ ì¡Œë‹¤).
 	if (!IsValid(GravityCore))
 	{
 		GravityCore = nullptr;
@@ -52,7 +52,7 @@ void UCSGA_GravityCore::OnCore()
 	OwnerCharacter = Cast<ACharacter>(CurrentActorInfo->AvatarActor.Get());
 	if (!OwnerCharacter) return;
 	
-	// ±âÁ¸ On »ç¿îµå°¡ ³²¾ÆÀÖ´Ù¸é Á¤¸® (Ä³¸¯ÅÍ¿¡ ºÙ¾î ÀÖÀ¸¹Ç·Î »ç¸Á ½Ã ÇÔ²² ÆÄ±«µÆÀ» ¼ö ÀÖ´Ù)
+	// ê¸°ì¡´ On ì‚¬ìš´ë“œê°€ ë‚¨ì•„ìžˆë‹¤ë©´ ì •ë¦¬ (ìºë¦­í„°ì— ë¶™ì–´ ìžˆìœ¼ë¯€ë¡œ ì‚¬ë§ ì‹œ í•¨ê»˜ íŒŒê´´ëì„ ìˆ˜ ìžˆë‹¤)
 	if (IsValid(GravityCoreOnAudioComp))
 	{
 		GravityCoreOnAudioComp->Stop();
@@ -101,7 +101,7 @@ void UCSGA_GravityCore::OnCore()
 
 void UCSGA_GravityCore::OffCore()
 {
-	// On »ç¿îµå °­Á¦ Á¾·á
+	// On ì‚¬ìš´ë“œ ê°•ì œ ì¢…ë£Œ
 	if (IsValid(GravityCoreOnAudioComp))
 	{
 		GravityCoreOnAudioComp->Stop();
@@ -123,7 +123,7 @@ void UCSGA_GravityCore::OffCore()
 	}
 	GravityCore = nullptr;
 
-	// Ä³½ÃµÈ OwnerCharacter ´Â ¸®½ºÆù ÈÄ ÆÄ±«µÈ ±¸ Pawn À» °¡¸®Å³ ¼ö ÀÖ´Ù - ÇöÀç ¾Æ¹ÙÅ¸¸¦ ¾´´Ù
+	// ìºì‹œëœ OwnerCharacter ëŠ” ë¦¬ìŠ¤í° í›„ íŒŒê´´ëœ êµ¬ Pawn ì„ ê°€ë¦¬í‚¬ ìˆ˜ ìžˆë‹¤ - í˜„ìž¬ ì•„ë°”íƒ€ë¥¼ ì“´ë‹¤
 	if (ACSCharacterPlayer* CSCharacter = Cast<ACSCharacterPlayer>(CurrentActorInfo ? CurrentActorInfo->AvatarActor.Get() : nullptr))
 	{
 		CSCharacter->NetMulticastDestroyGravityCoreSphere();

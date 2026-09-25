@@ -12,7 +12,7 @@
 
 UCSAT_AbilityPreviewBox::UCSAT_AbilityPreviewBox()
 {
-    // TickTask È°¼ºÈ­
+    // TickTask í™œì„±í™”
     bTickingTask = true;
 
     Dist = 350.0f;
@@ -48,7 +48,7 @@ void UCSAT_AbilityPreviewBox::Activate()
     CreatePreviewBox();
     CreateStaticMesh();
 
-    // ÀÔ·Â ¹ÙÀÎµù Ãß°¡
+    // ì…ë ¥ ë°”ì¸ë”© ì¶”ê°€
     if (Ability && Ability->GetCurrentActorInfo()->PlayerController.IsValid())
     {
         APlayerController* PlayerController = Ability->GetCurrentActorInfo()->PlayerController.Get();
@@ -84,7 +84,7 @@ void UCSAT_AbilityPreviewBox::CreateStaticMesh()
         StaticMeshComp->RegisterComponent();
         StaticMeshComp->AttachToComponent(PreviewBox, FAttachmentTransformRules::KeepRelativeTransform);
 
-        // ·±Å¸ÀÓ¿¡¼­ Static Mesh ·Îµå
+        // ëŸ°íƒ€ì„ì—ì„œ Static Mesh ë¡œë“œ
         UStaticMesh* StaticMeshRef = Cast<UStaticMesh>(
             StaticLoadObject(UStaticMesh::StaticClass(), nullptr, TEXT("/Game/30_Mesh/StaticMesh/SM_Cube.SM_Cube"))
         );
@@ -94,14 +94,14 @@ void UCSAT_AbilityPreviewBox::CreateStaticMesh()
         }
 
         FVector BoxExtent(BoxExtentSize, BoxExtentSize, BoxExtentSize);
-        float HalfSizeOfSide = 50.0f; // ±âº» ¹Ú½º Å©±â
+        float HalfSizeOfSide = 50.0f; // ê¸°ë³¸ ë°•ìŠ¤ í¬ê¸°
         FVector LocationOffset = FVector(-HalfSizeOfSide, -HalfSizeOfSide, -HalfSizeOfSide);
         FVector MeshScale = BoxExtent / HalfSizeOfSide;
 
         StaticMeshComp->SetRelativeLocation(LocationOffset * MeshScale);
         StaticMeshComp->SetRelativeScale3D(MeshScale);
 
-        // ·±Å¸ÀÓ¿¡¼­ ¸ŞÅ×¸®¾ó ·Îµå
+        // ëŸ°íƒ€ì„ì—ì„œ ë©”í…Œë¦¬ì–¼ ë¡œë“œ
         if ( Cast<UCSGA_AbilityPreviewBox>(Ability)->Ability == EAbilityIndex::ChronoControl )
         {
             UMaterial* MaterialRef = Cast<UMaterial>(
@@ -161,13 +161,13 @@ void UCSAT_AbilityPreviewBox::PlayerFollowPreviewBox()
         return;
     }
 
-    // Çã¿ëµÈ Å©±â °ª ¹è¿­°ú ¿ÀÇÁ¼Â ¸ÅÇÎ
+    // í—ˆìš©ëœ í¬ê¸° ê°’ ë°°ì—´ê³¼ ì˜¤í”„ì…‹ ë§¤í•‘
     TArray<float> YOffsets = { 150.0f, 100.0f, 50.0f, 0.0f, -50.0f, -100.0f, -150.0f, -200.0f, -250.0f, -300.0f };
 
-    // PreviewBox Å©±â °¡Á®¿À±â
+    // PreviewBox í¬ê¸° ê°€ì ¸ì˜¤ê¸°
     float CurrentSize = PreviewBox->GetUnscaledBoxExtent().X;
 
-    // ÇöÀç Å©±â¿¡ ÇØ´çÇÏ´Â ¿ÀÇÁ¼ÂÀ» Ã£À½
+    // í˜„ì¬ í¬ê¸°ì— í•´ë‹¹í•˜ëŠ” ì˜¤í”„ì…‹ì„ ì°¾ìŒ
     int32 CurrentIndex = AllowedSizes.IndexOfByPredicate([CurrentSize](float Size) {
         return FMath::IsNearlyEqual(Size, CurrentSize, KINDA_SMALL_NUMBER);
         });
@@ -183,7 +183,7 @@ void UCSAT_AbilityPreviewBox::PlayerFollowPreviewBox()
     FVector LocalOffset(Dist, 0.0f, CalcedVert);
     FVector WorldOffset = AvatarActor->GetActorTransform().TransformVectorNoScale(LocalOffset);
 
-    // ¹Ú½º À§Ä¡ ¾÷µ¥ÀÌÆ®
+    // ë°•ìŠ¤ ìœ„ì¹˜ ì—…ë°ì´íŠ¸
     PreviewBox->SetWorldLocation( AvatarActor->GetActorLocation() + WorldOffset );
 }
 
@@ -193,7 +193,7 @@ void UCSAT_AbilityPreviewBox::TickTask(float DeltaTime)
 
     PlayerFollowPreviewBox();
 
-    // ÀÔ·Â Ã³¸®
+    // ì…ë ¥ ì²˜ë¦¬
     if (Ability->GetCurrentActorInfo()->PlayerController->IsInputKeyDown(EKeys::LeftMouseButton))
     {
         HandleLeftMouseClick();
@@ -214,35 +214,35 @@ void UCSAT_AbilityPreviewBox::AdjustPreviewBoxScale(bool bIncrease)
         return;
     }
 
-    // ÇöÀç BoxExtentÀÇ X Å©±â¸¦ °¡Á®¿É´Ï´Ù.
+    // í˜„ì¬ BoxExtentì˜ X í¬ê¸°ë¥¼ ê°€ì ¸ì˜µë‹ˆë‹¤.
     float CurrentSize = PreviewBox->GetUnscaledBoxExtent().X;
 
-    // ÇöÀç Å©±âÀÇ ÀÎµ¦½º¸¦ Ã£½À´Ï´Ù.
+    // í˜„ì¬ í¬ê¸°ì˜ ì¸ë±ìŠ¤ë¥¼ ì°¾ìŠµë‹ˆë‹¤.
     int32 CurrentIndex = AllowedSizes.IndexOfByPredicate([CurrentSize](float Size) {
         return FMath::IsNearlyEqual(Size, CurrentSize, KINDA_SMALL_NUMBER);
         });
 
-    // ÇöÀç ÀÎµ¦½º°¡ À¯È¿ÇÑ °æ¿ì Å©±â Á¶Á¤
+    // í˜„ì¬ ì¸ë±ìŠ¤ê°€ ìœ íš¨í•œ ê²½ìš° í¬ê¸° ì¡°ì •
     if (CurrentIndex != INDEX_NONE)
     {
         if (bIncrease && CurrentIndex < AllowedSizes.Num() - 1)
         {
-            CurrentIndex++; // Å©±â Áõ°¡
+            CurrentIndex++; // í¬ê¸° ì¦ê°€
         }
         else if (!bIncrease && CurrentIndex > 0)
         {
-            CurrentIndex--; // Å©±â °¨¼Ò
+            CurrentIndex--; // í¬ê¸° ê°ì†Œ
         }
     }
 
-    // »õ·Î¿î Å©±â¸¦ ¼³Á¤
+    // ìƒˆë¡œìš´ í¬ê¸°ë¥¼ ì„¤ì •
     float NewSize = AllowedSizes[CurrentIndex];
     FVector NewExtent(NewSize, NewSize, NewSize);
     PreviewBox->SetBoxExtent(NewExtent);
 
-    // Static Mesh Å©±âµµ º¯°æ
+    // Static Mesh í¬ê¸°ë„ ë³€ê²½
     float HalfSizeOfSide = 50.0f;
-    FVector MeshScale = NewExtent / HalfSizeOfSide; // ±âº» ¹Ú½º Å©±â¸¦ ±âÁØÀ¸·Î ½ºÄÉÀÏ °è»ê
+    FVector MeshScale = NewExtent / HalfSizeOfSide; // ê¸°ë³¸ ë°•ìŠ¤ í¬ê¸°ë¥¼ ê¸°ì¤€ìœ¼ë¡œ ìŠ¤ì¼€ì¼ ê³„ì‚°
     StaticMeshComp->SetRelativeScale3D(MeshScale);
     FVector LocationOffset = FVector(-HalfSizeOfSide, -HalfSizeOfSide, -HalfSizeOfSide);
     StaticMeshComp->SetRelativeLocation(LocationOffset * MeshScale);
@@ -251,29 +251,29 @@ void UCSAT_AbilityPreviewBox::AdjustPreviewBoxScale(bool bIncrease)
     UE_LOG(LogTemp, Log, TEXT("PreviewBox Adjusted Extent: X=%.2f, Y=%.2f, Z=%.2f"), NewExtent.X, NewExtent.Y, NewExtent.Z);
 }
 
-void UCSAT_AbilityPreviewBox::HandleLeftMouseClick()   // »õ·Î¿î ¾îºô¸®Æ¼ ½ÃÀÛ
+void UCSAT_AbilityPreviewBox::HandleLeftMouseClick()   // ìƒˆë¡œìš´ ì–´ë¹Œë¦¬í‹° ì‹œì‘
 {
-    float CurrentBoxSize = PreviewBox->GetUnscaledBoxExtent().X; // ÇöÀç ¹Ú½º Å©±â
-    RunAbility.Broadcast(CurrentBoxSize); // ÇöÀç ¹Ú½º Å©±â¸¦ ¸Å°³º¯¼ö·Î Àü´Ş
+    float CurrentBoxSize = PreviewBox->GetUnscaledBoxExtent().X; // í˜„ì¬ ë°•ìŠ¤ í¬ê¸°
+    RunAbility.Broadcast(CurrentBoxSize); // í˜„ì¬ ë°•ìŠ¤ í¬ê¸°ë¥¼ ë§¤ê°œë³€ìˆ˜ë¡œ ì „ë‹¬
     EndTask();
 }
 
-void UCSAT_AbilityPreviewBox::HandleRightMouseClick()  // ¾îºô¸®Æ¼ ½ÇÇà Ãë¼Ò 
+void UCSAT_AbilityPreviewBox::HandleRightMouseClick()  // ì–´ë¹Œë¦¬í‹° ì‹¤í–‰ ì·¨ì†Œ 
 {
-    // Á¾·á Ã³¸®
+    // ì¢…ë£Œ ì²˜ë¦¬
     StopAbility.Broadcast();
     EndTask();
 }
 
 void UCSAT_AbilityPreviewBox::HandleWheelUp()
 {
-    AdjustPreviewBoxScale(true); // Å©±â Áõ°¡
+    AdjustPreviewBoxScale(true); // í¬ê¸° ì¦ê°€
     UE_LOG(LogTemp, Log, TEXT("Wheel Up Pressed"));
 }
 
 void UCSAT_AbilityPreviewBox::HandleWheelDown()
 {
-    AdjustPreviewBoxScale(false); // Å©±â °¨¼Ò
+    AdjustPreviewBoxScale(false); // í¬ê¸° ê°ì†Œ
     UE_LOG(LogTemp, Log, TEXT("Wheel Down Pressed"));
 }
 
@@ -282,13 +282,13 @@ void UCSAT_AbilityPreviewBox::OnDestroy(bool AbilityEnded)
     if (PreviewBox)
     {
         PreviewBox->DestroyComponent();
-        PreviewBox = nullptr; // Null·Î ¼³Á¤ÇÏ¿© ´Ù½Ã »ı¼ºµÇµµ·Ï ÇÔ
+        PreviewBox = nullptr; // Nullë¡œ ì„¤ì •í•˜ì—¬ ë‹¤ì‹œ ìƒì„±ë˜ë„ë¡ í•¨
     }
 
     if (StaticMeshComp)
     {
         StaticMeshComp->DestroyComponent();
-        StaticMeshComp = nullptr; // Null·Î ¼³Á¤ÇÏ¿© ´Ù½Ã »ı¼ºµÇµµ·Ï ÇÔ
+        StaticMeshComp = nullptr; // Nullë¡œ ì„¤ì •í•˜ì—¬ ë‹¤ì‹œ ìƒì„±ë˜ë„ë¡ í•¨
     }
     
     UE_LOG(LogTemp, Log, TEXT("UCSAT_AbilityPreviewBox destroyed"));

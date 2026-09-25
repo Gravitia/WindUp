@@ -34,7 +34,7 @@ void UCSAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallback
 
 	float MinimumHealth = 0.0f;
 
-	// HP ≈¨∑•«Œ
+	// HP ÌÅ¥Îû®Ìïë
 	if (Data.EvaluatedData.Attribute == GetHealthAttribute())
 	{
 		SetHealth(FMath::Clamp(GetHealth(), MinimumHealth, GetMaxHealth()));

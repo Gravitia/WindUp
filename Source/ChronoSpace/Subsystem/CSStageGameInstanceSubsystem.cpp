@@ -5,9 +5,9 @@
 
 UCSStageGameInstanceSubsystem::UCSStageGameInstanceSubsystem()
 {
-    CurrentStage = "L_Main";  // ±‚∫ª Ω∫≈◊¿Ã¡ˆ º≥¡§
+    CurrentStage = "L_Main";  // Í∏∞Î≥∏ Ïä§ÌÖåÏù¥ÏßÄ ÏÑ§Ï†ï
 
-    //  AbilityHUDClass∞° NULL¿Ã∏È ±‚∫ª ∫Ì∑Á«¡∏∞∆Æ ≈¨∑°Ω∫ º≥¡§
+    //  AbilityHUDClassÍ∞Ä NULLÏù¥Î©¥ Í∏∞Î≥∏ Î∏îÎ£®ÌîÑÎ¶∞Ìä∏ ÌÅ¥ÎûòÏä§ ÏÑ§Ï†ï
     if (!AbilityHUDClass)
     {
         // /Script/UMGEditor.WidgetBlueprint'/Game/Blueprint/UI/BP_AbilityHUD.BP_AbilityHUD'
@@ -24,7 +24,7 @@ void UCSStageGameInstanceSubsystem::Initialize(FSubsystemCollectionBase& Collect
 {
     Super::Initialize(Collection);
 
-    //  Ω∫≈◊¿Ã¡ˆ æÓ∫Ù∏Æ∆º µ•¿Ã≈Õ √ ±‚»≠
+    //  Ïä§ÌÖåÏù¥ÏßÄ Ïñ¥ÎπåÎ¶¨Ìã∞ Îç∞Ïù¥ÌÑ∞ Ï¥àÍ∏∞Ìôî
     InitializeStageAbilities();
 
     UE_LOG(LogTemp, Warning, TEXT("CSStageGameInstanceSubsystem Initialized!"));
@@ -46,8 +46,8 @@ void UCSStageGameInstanceSubsystem::ChangeStage(FString NewStage)
     UWorld* World = GetWorld();
     if (!World) return;
 
-    // OpenLevel ¿∫ ∑Œƒ√ ∆Æ∑°∫Ì¿Ã¥Ÿ - ∏ÆΩº º≠πˆø°º≠ ∫Œ∏£∏È ¡¢º”«— ≈¨∂Û∞° ¿¸∫Œ ≤˜±‚∞Ì,
-    // ≈¨∂Ûø°º≠ ∫Œ∏£∏È ±◊ ≈¨∂Û∏∏ ººº«¿ª ∂∞≥≠¥Ÿ. ƒ⁄ø…ø°º≠¥¬ º≠πˆ ±««— + ServerTravel ¿ÃæÓæﬂ «—¥Ÿ.
+    // OpenLevel ÏùÄ Î°úÏª¨ Ìä∏ÎûòÎ∏îÏù¥Îã§ - Î¶¨Ïä® ÏÑúÎ≤ÑÏóêÏÑú Î∂ÄÎ•¥Î©¥ Ï†ëÏÜçÌïú ÌÅ¥ÎùºÍ∞Ä Ï†ÑÎ∂Ä ÎÅäÍ∏∞Í≥†,
+    // ÌÅ¥ÎùºÏóêÏÑú Î∂ÄÎ•¥Î©¥ Í∑∏ ÌÅ¥ÎùºÎßå ÏÑ∏ÏÖòÏùÑ Îñ†ÎÇúÎã§. ÏΩîÏòµÏóêÏÑúÎäî ÏÑúÎ≤Ñ Í∂åÌïú + ServerTravel Ïù¥Ïñ¥Ïïº ÌïúÎã§.
     if (!World->GetAuthGameMode())
     {
         UE_LOG(LogTemp, Warning, TEXT("ChangeStage: server only (ignored on client) - %s"), *NewStage);
@@ -68,7 +68,7 @@ TArray<FString> UCSStageGameInstanceSubsystem::GetAvailableAbilities()
 
 void UCSStageGameInstanceSubsystem::InitializeStageAbilities()
 {
-    //  øπ¡¶ µ•¿Ã≈Õ √ﬂ∞°
+    //  ÏòàÏ†ú Îç∞Ïù¥ÌÑ∞ Ï∂îÍ∞Ä
     FStageAbilityList Stage1Abilities;
     Stage1Abilities.Abilities = { "ReverseGravity", "TimeStop" };
 

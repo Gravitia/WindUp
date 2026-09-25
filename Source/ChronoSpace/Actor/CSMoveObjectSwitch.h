@@ -12,56 +12,56 @@ struct FMoveObjectData
 {
 	GENERATED_BODY()
 
-	// ÀÌµ¿½ÃÅ³ Actor ÂüÁ¶
+	// ì´ë™ì‹œí‚¬ Actor ì°¸ì¡°
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Move Object")
 	TObjectPtr<AActor> TargetActor;
 
-	// === À§Ä¡ °ü·Ã ===
-	// ·ÎÄÃ ÁÂÇ¥ ±âÁØ ÀÌµ¿ ¿ÀÇÁ¼Â (»ó´ëÀû ÀÌµ¿·®)
+	// === ìœ„ì¹˜ ê´€ë ¨ ===
+	// ë¡œì»¬ ì¢Œí‘œ ê¸°ì¤€ ì´ë™ ì˜¤í”„ì…‹ (ìƒëŒ€ì  ì´ë™ëŸ‰)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Move Object|Location",
 		meta = (DisplayName = "Local Movement Offset (X, Y, Z)"))
 	FVector LocalMovementOffset;
 
-	// ÃÊ±â À§Ä¡ (·±Å¸ÀÓ¿¡ ¼³Á¤µÊ)
+	// ì´ˆê¸° ìœ„ì¹˜ (ëŸ°íƒ€ì„ì— ì„¤ì •ë¨)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Move Object|Location")
 	FVector InitialLocation;
 
-	// °è»êµÈ ¸ñÇ¥ À§Ä¡ (ÃÊ±â À§Ä¡ + ¿ÀÇÁ¼Â)
+	// ê³„ì‚°ëœ ëª©í‘œ ìœ„ì¹˜ (ì´ˆê¸° ìœ„ì¹˜ + ì˜¤í”„ì…‹)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Move Object|Location")
 	FVector CalculatedTargetLocation;
 
-	// === È¸Àü °ü·Ã ===
-	// ·ÎÄÃ È¸Àü ¿ÀÇÁ¼Â (»ó´ëÀû È¸Àü·®)
+	// === íšŒì „ ê´€ë ¨ ===
+	// ë¡œì»¬ íšŒì „ ì˜¤í”„ì…‹ (ìƒëŒ€ì  íšŒì „ëŸ‰)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Move Object|Rotation",
 		meta = (DisplayName = "Local Rotation Offset (Pitch, Yaw, Roll)"))
 	FRotator LocalRotationOffset;
 
-	// ÃÊ±â È¸Àü (·±Å¸ÀÓ¿¡ ¼³Á¤µÊ)
+	// ì´ˆê¸° íšŒì „ (ëŸ°íƒ€ì„ì— ì„¤ì •ë¨)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Move Object|Rotation")
 	FRotator InitialRotation;
 
-	// °è»êµÈ ¸ñÇ¥ È¸Àü (ÃÊ±â È¸Àü + ¿ÀÇÁ¼Â)
+	// ê³„ì‚°ëœ ëª©í‘œ íšŒì „ (ì´ˆê¸° íšŒì „ + ì˜¤í”„ì…‹)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Move Object|Rotation")
 	FRotator CalculatedTargetRotation;
 
-	// === ¼³Á¤ ¿É¼Ç ===
-	// À§Ä¡ ÀÌµ¿ È°¼ºÈ­
+	// === ì„¤ì • ì˜µì…˜ ===
+	// ìœ„ì¹˜ ì´ë™ í™œì„±í™”
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Move Object|Settings")
 	bool bEnableLocationMovement;
 
-	// È¸Àü È°¼ºÈ­
+	// íšŒì „ í™œì„±í™”
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Move Object|Settings")
 	bool bEnableRotationMovement;
 
-	// ·ÎÄÃ °ø°£ ±âÁØ ÀÌµ¿ (true: ¾×ÅÍÀÇ ·ÎÄÃ ÁÂÇ¥°è ±âÁØ, false: ¿ùµå ÁÂÇ¥°è ±âÁØ)
+	// ë¡œì»¬ ê³µê°„ ê¸°ì¤€ ì´ë™ (true: ì•¡í„°ì˜ ë¡œì»¬ ì¢Œí‘œê³„ ê¸°ì¤€, false: ì›”ë“œ ì¢Œí‘œê³„ ê¸°ì¤€)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Move Object|Settings")
 	bool bUseActorLocalSpace;
 
-	// ½ºÄÉÀÏ ¹«½Ã (true: ¾×ÅÍÀÇ ½ºÄÉÀÏÀ» ¹«½ÃÇÏ°í Àı´ë °Å¸® ÀÌµ¿)
+	// ìŠ¤ì¼€ì¼ ë¬´ì‹œ (true: ì•¡í„°ì˜ ìŠ¤ì¼€ì¼ì„ ë¬´ì‹œí•˜ê³  ì ˆëŒ€ ê±°ë¦¬ ì´ë™)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Move Object|Settings")
 	bool bIgnoreScale;
 
-	// ÀÌµ¿ ¿Ï·á ¿©ºÎ
+	// ì´ë™ ì™„ë£Œ ì—¬ë¶€
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Move Object|Status")
 	bool bIsAtTarget;
 
@@ -76,8 +76,8 @@ struct FMoveObjectData
 		CalculatedTargetRotation = FRotator::ZeroRotator;
 		bEnableLocationMovement = true;
 		bEnableRotationMovement = true;
-		bUseActorLocalSpace = true;  // ±âº»ÀûÀ¸·Î ·ÎÄÃ °ø°£ »ç¿ë
-		bIgnoreScale = true;  // ±âº»ÀûÀ¸·Î ½ºÄÉÀÏ ¹«½Ã
+		bUseActorLocalSpace = true;  // ê¸°ë³¸ì ìœ¼ë¡œ ë¡œì»¬ ê³µê°„ ì‚¬ìš©
+		bIgnoreScale = true;  // ê¸°ë³¸ì ìœ¼ë¡œ ìŠ¤ì¼€ì¼ ë¬´ì‹œ
 		bIsAtTarget = false;
 	}
 };
@@ -101,48 +101,48 @@ public:
 	void SetInteracted(bool bInInteracted);
 
 protected:
-	// ÀÌµ¿ °ü·Ã ³×Æ®¿öÅ© ÇÔ¼öµé
+	// ì´ë™ ê´€ë ¨ ë„¤íŠ¸ì›Œí¬ í•¨ìˆ˜ë“¤
 	UFUNCTION(NetMulticast, Reliable)
 	void NetMulticastStartMovement(bool bMoveToTarget);
 
-	// ÀÌµ¿ ¿Ï·á ½Ã 1È¸¸¸ Àü¼Û - Å¬¶ó ·ÎÄÃ º¸°£ °á°ú¸¦ ¼­¹ö ÃÖÁ¾ À§Ä¡·Î ½º³À(µå¸®ÇÁÆ® º¸Á¤)
+	// ì´ë™ ì™„ë£Œ ì‹œ 1íšŒë§Œ ì „ì†¡ - í´ë¼ ë¡œì»¬ ë³´ê°„ ê²°ê³¼ë¥¼ ì„œë²„ ìµœì¢… ìœ„ì¹˜ë¡œ ìŠ¤ëƒ…(ë“œë¦¬í”„íŠ¸ ë³´ì •)
 	UFUNCTION(NetMulticast, Reliable)
 	void NetMulticastFinishMovement(const TArray<FVector>& FinalLocations, const TArray<FRotator>& FinalRotations);
 
-	// ÀÌµ¿ ·ÎÁ÷
+	// ì´ë™ ë¡œì§
 	void StartMovement();
 	void UpdateMovement(float DeltaTime);
 	void InitializeObjectPositions();
 
-	// ¸ñÇ¥ À§Ä¡/È¸Àü °è»ê
+	// ëª©í‘œ ìœ„ì¹˜/íšŒì „ ê³„ì‚°
 	void CalculateTargetTransforms();
 
 protected:
-	// ÀÌµ¿½ÃÅ³ ¿ÀºêÁ§Æ®µéÀÇ µ¥ÀÌÅÍ
+	// ì´ë™ì‹œí‚¬ ì˜¤ë¸Œì íŠ¸ë“¤ì˜ ë°ì´í„°
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "Move Object", meta = (AllowPrivateAccess = "true"))
 	TArray<FMoveObjectData> MoveObjects;
 
-	// ÀÌµ¿ ¼Óµµ (À¯´Ö/ÃÊ)
+	// ì´ë™ ì†ë„ (ìœ ë‹›/ì´ˆ)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Move Object", meta = (AllowPrivateAccess = "true"))
 	float MoveSpeed;
 
-	// È¸Àü ¼Óµµ (µµ/ÃÊ)
+	// íšŒì „ ì†ë„ (ë„/ì´ˆ)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Move Object", meta = (AllowPrivateAccess = "true"))
 	float RotationSpeed;
 
-	// ÀÌµ¿ ¿Ï·á Çã¿ë ¿ÀÂ÷
+	// ì´ë™ ì™„ë£Œ í—ˆìš© ì˜¤ì°¨
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Move Object", meta = (AllowPrivateAccess = "true"))
 	float MoveTolerance;
 
-	// È¸Àü ¿Ï·á Çã¿ë ¿ÀÂ÷ (µµ)
+	// íšŒì „ ì™„ë£Œ í—ˆìš© ì˜¤ì°¨ (ë„)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Move Object", meta = (AllowPrivateAccess = "true"))
 	float RotationTolerance;
 
-	// ÇöÀç ÀÌµ¿ ÁßÀÎÁö ¿©ºÎ
+	// í˜„ì¬ ì´ë™ ì¤‘ì¸ì§€ ì—¬ë¶€
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated, Category = "Move Object", meta = (AllowPrivateAccess = "true"))
 	bool bIsMoving;
 
-	// ÀÌµ¿ ¹æÇâ (true: ¸ñÇ¥·Î, false: ÃÊ±â À§Ä¡·Î)
+	// ì´ë™ ë°©í–¥ (true: ëª©í‘œë¡œ, false: ì´ˆê¸° ìœ„ì¹˜ë¡œ)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated, Category = "Move Object", meta = (AllowPrivateAccess = "true"))
 	bool bMovingToTarget;
 };

@@ -46,18 +46,18 @@ void UCSVFXComponent::PlayActorAttackedVFX( EActorAttachedVFX VFX )
 
     USceneComponent* ParentComp = nullptr;
 
-    // ¼ÒÄÏÀÌ ÀÖÀ» °æ¿ì ½ºÄÌ·¹Å» ¸Ş½Ã ¿ì¼±
+    // ì†Œì¼“ì´ ìˆì„ ê²½ìš° ìŠ¤ì¼ˆë ˆíƒˆ ë©”ì‹œ ìš°ì„ 
     if ( ActorAttackedVFXMap[VFX].SocketName != NAME_None )
     {
         if (USkeletalMeshComponent* Skel = GetOwner()->FindComponentByClass<USkeletalMeshComponent>())
             ParentComp = Skel;
     }
 
-    // ±×·¡µµ ¾øÀ¸¸é ·çÆ®·Î
+    // ê·¸ë˜ë„ ì—†ìœ¼ë©´ ë£¨íŠ¸ë¡œ
     if (!ParentComp)
         ParentComp = GetOwner()->GetRootComponent();
 
-    // Actor ¿¡ ºÎÂøÇÏ¿© Áï½Ã Àç»ı
+    // Actor ì— ë¶€ì°©í•˜ì—¬ ì¦‰ì‹œ ì¬ìƒ
     UNiagaraComponent* NiagaraComp = UNiagaraFunctionLibrary::SpawnSystemAttached(
         FXAsset, 
         ParentComp, 

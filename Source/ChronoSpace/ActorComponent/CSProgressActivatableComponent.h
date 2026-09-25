@@ -18,14 +18,14 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Default|Progress")
     bool bStartActive = true;
 
-    // ÇöÀç »óÅÂ(RepNotify)
+    // í˜„ì¬ ìƒíƒœ(RepNotify)
     UPROPERTY(ReplicatedUsing = OnRep_ProgressActive, VisibleInstanceOnly, BlueprintReadOnly, Category = "Default|Progress")
     bool bIsProgressActive = false;
 
     UFUNCTION(BlueprintPure, Category = "Default|Progress")
     bool IsProgressActive() const { return bIsProgressActive; }
 
-    // ¼­¹ö¿¡¼­¸¸ È£ÃâÇÏ´Â °É ÃßÃµ (±ÇÇÑ Ã¼Å©´Â ±¸ÇöºÎ¿¡¼­)
+    // ì„œë²„ì—ì„œë§Œ í˜¸ì¶œí•˜ëŠ” ê±¸ ì¶”ì²œ (ê¶Œí•œ ì²´í¬ëŠ” êµ¬í˜„ë¶€ì—ì„œ)
     UFUNCTION(BlueprintCallable, Category = "Default|Progress")
     void SetProgressActive(bool bInActive);
 

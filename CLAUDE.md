@@ -17,6 +17,7 @@ Unreal Engine 5.8 프로젝트. 게임 모듈은 `Source/ChronoSpace` (단일 Ru
 @.claude/rules/04-multiplayer.md
 @.claude/rules/05-editor-workflow.md
 @.claude/rules/06-blueprint-category.md
+@.claude/rules/07-narsha-mcp.md
 
 ## 스킬
 

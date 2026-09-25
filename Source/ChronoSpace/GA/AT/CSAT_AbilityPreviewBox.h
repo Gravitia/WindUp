@@ -57,7 +57,7 @@ private:
     UPROPERTY()
     TObjectPtr<class UStaticMeshComponent> StaticMeshComp;
 
-    bool bIsAbilityPreviewActive = true; // Preview ╩Себ
+    bool bIsAbilityPreviewActive = true; // Preview Л┐│М┐°
     
     float LastScrollTime = 0.0f;
 
