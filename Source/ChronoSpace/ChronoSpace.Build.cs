@@ -34,7 +34,8 @@ public class ChronoSpace : ModuleRules
 			"GameplayAbilities",
             "GameplayTasks",
             "GameplayTags",
-            "AssetRegistry"	// Editor/CSCameraFadeMaterialSetup.cpp 가 IAssetRegistry 를 직접 쓴다
+            "AssetRegistry",	// Editor/CSCameraFadeMaterialSetup.cpp 가 IAssetRegistry 를 직접 쓴다
+            "Json"			// Editor/CSMcpConfigBootstrap.cpp 가 .mcp.json 을 읽고 쓴다
         });
 
 		// Uncomment if you are using Slate UI
